@@ -16,6 +16,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     
     <style>
+        /* CSS bleibt gleich wie zuvor */
         :root {
             --primary: #3b82f6;
             --primary-dark: #1e40af;
@@ -1136,10 +1137,6 @@
                         <div class="stat-label">Mitarbeiter</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-value" id="completedInductions">0</div>
-                        <div class="stat-label">Vollständig</div>
-                    </div>
-                    <div class="stat-card">
                         <div class="stat-value" id="pendingInductions">0</div>
                         <div class="stat-label">Ausstehend</div>
                     </div>
@@ -1236,26 +1233,26 @@
                         <div class="form-grid">
                             <div class="form-group">
                                 <label class="form-label">Datum</label>
-                                <input type="date" class="form-input" id="oralDate" onchange="updateTemplates()">
+                                <input type="date" class="form-input" id="oralDate">
                             </div>
                             
                             <div class="form-group">
                                 <label class="form-label">Uhrzeit</label>
                                 <div class="time-container">
-                                    <input type="time" class="form-input" id="oralTimeStart" onchange="updateTemplates()">
+                                    <input type="time" class="form-input" id="oralTimeStart">
                                     <div class="time-separator">bis</div>
-                                    <input type="time" class="form-input" id="oralTimeEnd" onchange="updateTemplates()">
+                                    <input type="time" class="form-input" id="oralTimeEnd">
                                 </div>
                             </div>
                             
                             <div class="form-group">
                                 <label class="form-label">Beteiligte Person</label>
-                                <input type="text" class="form-input" id="oralPerson" placeholder="Name der einweisenden Person" onchange="updateTemplates()">
+                                <input type="text" class="form-input" id="oralPerson" placeholder="Name der einweisenden Person">
                             </div>
                             
                             <div class="form-group">
                                 <label class="form-label">Unit</label>
-                                <select class="form-select" id="unitSelect" onchange="updateTemplates()">
+                                <select class="form-select" id="unitSelect">
                                     <option value="">Unit auswählen</option>
                                     <option value="Air Force">Air Force</option>
                                     <option value="S.O.C">S.O.C</option>
@@ -1268,7 +1265,7 @@
                             
                             <div class="form-group">
                                 <label class="form-label">Rang</label>
-                                <select class="form-select" id="rankSelect" onchange="updateTemplates()">
+                                <select class="form-select" id="rankSelect">
                                     <option value="">Rang auswählen</option>
                                     <option value="Private">Private</option>
                                     <option value="Private First Class">Private First Class</option>
@@ -1293,7 +1290,7 @@
                         
                         <div class="form-group">
                             <label class="form-label">Sonstige Bemerkungen</label>
-                            <textarea class="form-textarea" id="oralNotes" placeholder="Weitere Informationen..." onchange="updateTemplates()"></textarea>
+                            <textarea class="form-textarea" id="oralNotes" placeholder="Weitere Informationen..."></textarea>
                         </div>
                     </div>
                     
@@ -1320,26 +1317,26 @@
                         <div class="form-grid">
                             <div class="form-group">
                                 <label class="form-label">Datum</label>
-                                <input type="date" class="form-input" id="orgDate" onchange="updateTemplates()">
+                                <input type="date" class="form-input" id="orgDate">
                             </div>
                             
                             <div class="form-group">
                                 <label class="form-label">Uhrzeit</label>
                                 <div class="time-container">
-                                    <input type="time" class="form-input" id="orgTimeStart" onchange="updateTemplates()">
+                                    <input type="time" class="form-input" id="orgTimeStart">
                                     <div class="time-separator">-</div>
-                                    <input type="time" class="form-input" id="orgTimeEnd" onchange="updateTemplates()">
+                                    <input type="time" class="form-input" id="orgTimeEnd">
                                 </div>
                             </div>
                             
                             <div class="form-group">
                                 <label class="form-label">Beteiligte Person</label>
-                                <input type="text" class="form-input" id="orgPerson" placeholder="Name der einweisenden Person" onchange="updateTemplates()">
+                                <input type="text" class="form-input" id="orgPerson" placeholder="Name der einweisenden Person">
                             </div>
                             
                             <div class="form-group">
                                 <label class="form-label">Unit</label>
-                                <select class="form-select" id="unitSelect2" onchange="updateTemplates()">
+                                <select class="form-select" id="unitSelect2">
                                     <option value="">Unit auswählen</option>
                                     <option value="Air Force">Air Force</option>
                                     <option value="S.O.C">S.O.C</option>
@@ -1352,7 +1349,7 @@
                             
                             <div class="form-group">
                                 <label class="form-label">Rang</label>
-                                <select class="form-select" id="rankSelect2" onchange="updateTemplates()">
+                                <select class="form-select" id="rankSelect2">
                                     <option value="">Rang auswählen</option>
                                     <option value="Private">Private</option>
                                     <option value="Private First Class">Private First Class</option>
@@ -1377,7 +1374,7 @@
                         
                         <div class="form-group">
                             <label class="form-label">Sonstige Bemerkungen</label>
-                            <textarea class="form-textarea" id="orgNotes" placeholder="Weitere Informationen..." onchange="updateTemplates()"></textarea>
+                            <textarea class="form-textarea" id="orgNotes" placeholder="Weitere Informationen..."></textarea>
                         </div>
                     </div>
                 </div>
@@ -1692,6 +1689,9 @@ Sonstiges: -
             
             // Start auto-save interval (every 1 second)
             startAutoSaveInterval();
+            
+            // Form Change Listener hinzufügen
+            setupFormChangeListeners();
         }
 
         function setupEventListeners() {
@@ -1699,13 +1699,6 @@ Sonstiges: -
             document.getElementById('searchEmployees').addEventListener('input', function(e) {
                 filterEmployees(e.target.value);
             });
-            
-            // Auto-save on input
-            document.addEventListener('input', debounce(function(e) {
-                if (currentEmployee) {
-                    updateTemplates();
-                }
-            }, 1000));
             
             // Keyboard shortcuts
             document.addEventListener('keydown', function(e) {
@@ -1724,16 +1717,40 @@ Sonstiges: -
             });
         }
 
-        function debounce(func, wait) {
-            let timeout;
-            return function executedFunction(...args) {
-                const later = () => {
-                    clearTimeout(timeout);
-                    func(...args);
-                };
-                clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
-            };
+        // Form Change Listeners
+        function setupFormChangeListeners() {
+            // Alle Input-Felder überwachen
+            const formInputs = document.querySelectorAll('.form-input, .form-select, .form-textarea, .toggle-switch input');
+            formInputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    if (currentEmployee) {
+                        // Sofort Formulardaten speichern
+                        saveFormData();
+                        updateTemplates();
+                    }
+                });
+                
+                input.addEventListener('change', function() {
+                    if (currentEmployee) {
+                        // Sofort Formulardaten speichern
+                        saveFormData();
+                        updateTemplates();
+                    }
+                });
+            });
+            
+            // Spezielle Behandlung für Toggle-Switches
+            const toggleSwitches = document.querySelectorAll('.toggle-switch input');
+            toggleSwitches.forEach(toggle => {
+                toggle.addEventListener('change', function() {
+                    if (currentEmployee) {
+                        // Sofort speichern
+                        saveFormData();
+                        const type = this.id.includes('oral') ? 'oral' : 'org';
+                        toggleInduction(type, this.checked);
+                    }
+                });
+            });
         }
 
         // Auto-Save Funktionen
@@ -1741,7 +1758,10 @@ Sonstiges: -
             // Alle 1 Sekunde automatisch speichern
             autoSaveInterval = setInterval(function() {
                 if (currentEmployee) {
-                    autoSave();
+                    // Formulardaten speichern
+                    saveFormData();
+                    // In Firebase speichern
+                    saveEmployeeData(true);
                 }
             }, 1000); // 1000ms = 1 Sekunde
         }
@@ -1750,16 +1770,6 @@ Sonstiges: -
             if (autoSaveInterval) {
                 clearInterval(autoSaveInterval);
             }
-        }
-
-        function autoSave() {
-            if (!currentEmployee) return;
-            
-            // Save form data
-            saveFormData();
-            
-            // Save to Firebase
-            saveEmployeeData(true);
         }
 
         // Firebase Functions
@@ -1981,6 +1991,49 @@ Sonstiges: -
             }
         }
 
+        // Save Form Data
+        function saveFormData() {
+            if (!currentEmployee) return;
+            
+            try {
+                // Save oral data with unit and rank from dropdowns
+                currentEmployee.oralData = {
+                    date: document.getElementById('oralDate').value,
+                    timeStart: document.getElementById('oralTimeStart').value,
+                    timeEnd: document.getElementById('oralTimeEnd').value,
+                    person: document.getElementById('oralPerson').value,
+                    notes: document.getElementById('oralNotes').value,
+                    unit: document.getElementById('unitSelect').value,
+                    rank: document.getElementById('rankSelect').value
+                };
+                
+                // Save organizational data with unit and rank from dropdowns
+                currentEmployee.orgData = {
+                    date: document.getElementById('orgDate').value,
+                    timeStart: document.getElementById('orgTimeStart').value,
+                    timeEnd: document.getElementById('orgTimeEnd').value,
+                    person: document.getElementById('orgPerson').value,
+                    notes: document.getElementById('orgNotes').value,
+                    unit: document.getElementById('unitSelect2').value,
+                    rank: document.getElementById('rankSelect2').value
+                };
+                
+                // Update employee's main unit and rank if not set
+                if (!currentEmployee.unit && document.getElementById('unitSelect').value) {
+                    currentEmployee.unit = document.getElementById('unitSelect').value;
+                }
+                if (!currentEmployee.rank && document.getElementById('rankSelect').value) {
+                    currentEmployee.rank = document.getElementById('rankSelect').value;
+                }
+                
+                // Timestamp aktualisieren
+                currentEmployee.lastUpdated = new Date().toISOString();
+                
+            } catch (error) {
+                console.error('Fehler beim Speichern der Formulardaten:', error);
+            }
+        }
+
         // Employee Edit Functions
         function openEditEmployeeModal() {
             if (!currentEmployee) {
@@ -2076,6 +2129,9 @@ Sonstiges: -
             
             updateInductionUI(type, completed);
             updateTemplates();
+            
+            // Sofort in Firebase speichern
+            saveEmployeeData(true);
             
             // Check if both inductions are now completed
             checkBothInductionsCompleted();
@@ -2199,175 +2255,50 @@ Sonstiges: ${notes}
 ╚══════════════════╝`;
         }
 
-        function saveFormData() {
-            if (!currentEmployee) return;
-            
-            // Save oral data with unit and rank from dropdowns
-            currentEmployee.oralData = {
-                date: document.getElementById('oralDate').value,
-                timeStart: document.getElementById('oralTimeStart').value,
-                timeEnd: document.getElementById('oralTimeEnd').value,
-                person: document.getElementById('oralPerson').value,
-                notes: document.getElementById('oralNotes').value,
-                unit: document.getElementById('unitSelect').value,
-                rank: document.getElementById('rankSelect').value
-            };
-            
-            // Save organizational data with unit and rank from dropdowns
-            currentEmployee.orgData = {
-                date: document.getElementById('orgDate').value,
-                timeStart: document.getElementById('orgTimeStart').value,
-                timeEnd: document.getElementById('orgTimeEnd').value,
-                person: document.getElementById('orgPerson').value,
-                notes: document.getElementById('orgNotes').value,
-                unit: document.getElementById('unitSelect2').value,
-                rank: document.getElementById('rankSelect2').value
-            };
-            
-            // Update employee's main unit and rank if not set
-            if (!currentEmployee.unit && document.getElementById('unitSelect').value) {
-                currentEmployee.unit = document.getElementById('unitSelect').value;
-            }
-            if (!currentEmployee.rank && document.getElementById('rankSelect').value) {
-                currentEmployee.rank = document.getElementById('rankSelect').value;
-            }
-        }
-
-        // Copy Functions
-        async function copyToClipboard(text) {
-            try {
-                await navigator.clipboard.writeText(text);
-                return true;
-            } catch (err) {
-                console.error('Fehler beim Kopieren:', err);
-                return false;
-            }
-        }
-
-        async function copyOralTemplate() {
-            const template = document.getElementById('oralTemplateContent').textContent;
-            const success = await copyToClipboard(template);
-            
-            if (success) {
-                showNotification('Mündliche Einweisung kopiert', 'success');
-            } else {
-                showNotification('Fehler beim Kopieren', 'error');
-            }
-        }
-
-        async function copyOrgTemplate() {
-            const template = document.getElementById('orgTemplateContent').textContent;
-            const success = await copyToClipboard(template);
-            
-            if (success) {
-                showNotification('Organisatorische Einweisung kopiert', 'success');
-            } else {
-                showNotification('Fehler beim Kopieren', 'error');
-            }
-        }
-
-        // Modal Functions
-        function openModal(modalId) {
-            document.getElementById(modalId).classList.add('active');
-        }
-
-        function closeModal(modalId) {
-            document.getElementById(modalId).classList.remove('active');
-        }
-
-        function openNewEmployeeModal() {
-            openModal('newEmployeeModal');
-        }
-
-        async function createNewEmployee() {
-            const name = document.getElementById('newEmployeeName').value.trim();
-            const dn = document.getElementById('newEmployeeDN').value;
-            const unit = document.getElementById('newEmployeeUnit').value;
-            const rank = document.getElementById('newEmployeeRank').value;
-            
-            if (!name || !dn) {
-                showNotification('Bitte füllen Sie alle Pflichtfelder aus (*)', 'warning');
-                return;
-            }
-            
-            const employeeId = `EMP-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-            
-            const newEmployee = {
-                id: employeeId,
-                name: name,
-                dn: dn,
-                unit: unit || '',
-                rank: rank || '',
-                lastUpdated: new Date().toISOString(),
-                inductions: {},
-                oralData: {},
-                orgData: {}
-            };
-            
-            // Save to Firebase
-            const success = await saveEmployeeToFirebase(newEmployee);
-            
-            if (success) {
-                employees.unshift(newEmployee);
-                
-                closeModal('newEmployeeModal');
-                renderEmployeeList();
-                selectEmployee(newEmployee);
-                updateStats();
-                
-                // Clear form
-                document.getElementById('newEmployeeName').value = '';
-                document.getElementById('newEmployeeDN').value = '';
-                document.getElementById('newEmployeeUnit').value = '';
-                document.getElementById('newEmployeeRank').value = '';
-                
-                showNotification(`Mitarbeiter "${name}" erstellt`, 'success');
-            }
-        }
-
         // Save Functions
         async function saveEmployeeData(isAutoSave = false) {
             if (!currentEmployee) {
                 return;
             }
             
-            // Save form data
-            saveFormData();
-            
-            // Save to Firebase
-            const success = await saveEmployeeToFirebase(currentEmployee);
-            
-            if (success) {
-                if (!isAutoSave) {
-                    showNotification('Änderungen gespeichert', 'success');
-                }
+            try {
+                // Save to Firebase
+                const success = await saveEmployeeToFirebase(currentEmployee);
                 
-                // Update employee list
-                renderEmployeeList();
-                updateStats();
+                if (success) {
+                    if (!isAutoSave) {
+                        showNotification('Änderungen gespeichert', 'success');
+                    }
+                    
+                    // Update employee list
+                    renderEmployeeList();
+                    updateStats();
+                }
+            } catch (error) {
+                console.error('Fehler beim Speichern:', error);
+                if (!isAutoSave) {
+                    showNotification('Fehler beim Speichern', 'error');
+                }
             }
         }
 
-        // Statistics
+        // Statistics - NUR "Mitarbeiter" und "Ausstehend"
         function updateStats() {
             const total = employees.length;
             
-            let completed = 0;
             let pending = 0;
             
             employees.forEach(employee => {
                 const oralCompleted = employee.inductions?.oral?.completed || false;
                 const orgCompleted = employee.inductions?.org?.completed || false;
                 
-                if (oralCompleted && orgCompleted) {
-                    completed++;
-                } else if (!oralCompleted && !orgCompleted) {
+                // Zähle nur die Mitarbeiter, bei denen BEIDE Einweisungen ausstehend sind
+                if (!oralCompleted && !orgCompleted) {
                     pending++;
                 }
             });
             
             document.getElementById('totalEmployees').textContent = total;
-            document.getElementById('completedInductions').textContent = completed;
             document.getElementById('pendingInductions').textContent = pending;
         }
 
@@ -2498,6 +2429,98 @@ Sonstiges: ${notes}
             URL.revokeObjectURL(url);
             
             showNotification('Mitarbeiter exportiert', 'success');
+        }
+
+        // Copy Functions
+        async function copyToClipboard(text) {
+            try {
+                await navigator.clipboard.writeText(text);
+                return true;
+            } catch (err) {
+                console.error('Fehler beim Kopieren:', err);
+                return false;
+            }
+        }
+
+        async function copyOralTemplate() {
+            const template = document.getElementById('oralTemplateContent').textContent;
+            const success = await copyToClipboard(template);
+            
+            if (success) {
+                showNotification('Mündliche Einweisung kopiert', 'success');
+            } else {
+                showNotification('Fehler beim Kopieren', 'error');
+            }
+        }
+
+        async function copyOrgTemplate() {
+            const template = document.getElementById('orgTemplateContent').textContent;
+            const success = await copyToClipboard(template);
+            
+            if (success) {
+                showNotification('Organisatorische Einweisung kopiert', 'success');
+            } else {
+                showNotification('Fehler beim Kopieren', 'error');
+            }
+        }
+
+        // Modal Functions
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        function openNewEmployeeModal() {
+            openModal('newEmployeeModal');
+        }
+
+        async function createNewEmployee() {
+            const name = document.getElementById('newEmployeeName').value.trim();
+            const dn = document.getElementById('newEmployeeDN').value;
+            const unit = document.getElementById('newEmployeeUnit').value;
+            const rank = document.getElementById('newEmployeeRank').value;
+            
+            if (!name || !dn) {
+                showNotification('Bitte füllen Sie alle Pflichtfelder aus (*)', 'warning');
+                return;
+            }
+            
+            const employeeId = `EMP-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+            
+            const newEmployee = {
+                id: employeeId,
+                name: name,
+                dn: dn,
+                unit: unit || '',
+                rank: rank || '',
+                lastUpdated: new Date().toISOString(),
+                inductions: {},
+                oralData: {},
+                orgData: {}
+            };
+            
+            // Save to Firebase
+            const success = await saveEmployeeToFirebase(newEmployee);
+            
+            if (success) {
+                employees.unshift(newEmployee);
+                
+                closeModal('newEmployeeModal');
+                renderEmployeeList();
+                selectEmployee(newEmployee);
+                updateStats();
+                
+                // Clear form
+                document.getElementById('newEmployeeName').value = '';
+                document.getElementById('newEmployeeDN').value = '';
+                document.getElementById('newEmployeeUnit').value = '';
+                document.getElementById('newEmployeeRank').value = '';
+                
+                showNotification(`Mitarbeiter "${name}" erstellt`, 'success');
+            }
         }
 
         // UI Helpers
