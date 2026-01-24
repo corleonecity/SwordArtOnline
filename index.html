@@ -23,6 +23,7 @@
             --secondary: #10b981;
             --secondary-dark: #059669;
             --danger: #ef4444;
+            --danger-dark: #7f1d1d;
             --warning: #f59e0b;
             --dark: #0f172a;
             --dark-card: #1e293b;
@@ -516,6 +517,16 @@
             transform: translateY(-2px);
         }
         
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger) 0%, var(--danger-dark) 100%);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+        }
+        
         /* Induction Content */
         .induction-content {
             padding: 24px;
@@ -666,6 +677,7 @@
             letter-spacing: 0.3px;
         }
         
+        /* Form-Inputs mit dunklem Design */
         .form-input, .form-select, .form-textarea {
             padding: 12px 14px;
             background: rgba(255, 255, 255, 0.07);
@@ -677,15 +689,15 @@
             transition: var(--transition);
         }
         
-        /* Spezifische Styles für Select-Elemente mit schwarzer Schrift */
+        /* Select-Elemente mit dunklem Design */
         .form-select {
-            color: #000000 !important;
-            background-color: #ffffff !important;
+            color: white !important;
+            background-color: rgba(255, 255, 255, 0.07) !important;
         }
         
         .form-select option {
-            color: #000000 !important;
-            background-color: #ffffff !important;
+            color: white !important;
+            background-color: var(--dark-card) !important;
         }
         
         .form-input:focus, .form-select:focus, .form-textarea:focus {
@@ -990,6 +1002,7 @@
             
             .action-buttons {
                 justify-content: space-between;
+                flex-wrap: wrap;
             }
             
             .induction-content {
@@ -1188,6 +1201,11 @@
                             <span class="tag-value" id="currentEmployeeRank">Rang</span>
                         </div>
                     </div>
+                </div>
+                <div class="action-buttons">
+                    <button class="btn btn-secondary" onclick="openEditEmployeeModal()">
+                        <i class="fas fa-edit"></i> Bearbeiten
+                    </button>
                 </div>
             </div>
             
@@ -1518,6 +1536,84 @@ Sonstiges: -
         </div>
     </div>
     
+    <!-- Edit Employee Modal -->
+    <div class="modal-overlay" id="editEmployeeModal" onclick="if(event.target===this)closeModal('editEmployeeModal')">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fas fa-edit"></i>
+                    Mitarbeiter bearbeiten
+                </div>
+                <button class="modal-close" onclick="closeModal('editEmployeeModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">Vollständiger Name *</label>
+                    <input type="text" class="form-input" id="editEmployeeName" placeholder="z.B. Max Fiart">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Discord Nummer (DN) *</label>
+                    <input type="number" class="form-input" id="editEmployeeDN" placeholder="z.B. 43" min="1" max="9999">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Unit</label>
+                    <select class="form-select" id="editEmployeeUnit">
+                        <option value="">Unit auswählen</option>
+                        <option value="Air Force">Air Force</option>
+                        <option value="S.O.C">S.O.C</option>
+                        <option value="Infantry">Infantry</option>
+                        <option value="Military Police">Military Police</option>
+                        <option value="Navy Marine">Navy Marine</option>
+                        <option value="Navy SEALs">Navy SEALs</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Rang</label>
+                    <select class="form-select" id="editEmployeeRank">
+                        <option value="">Rang auswählen</option>
+                        <option value="Private">Private</option>
+                        <option value="Private First Class">Private First Class</option>
+                        <option value="Specialist">Specialist</option>
+                        <option value="Corporal">Corporal</option>
+                        <option value="Sergeant">Sergeant</option>
+                        <option value="Staff Sergeant">Staff Sergeant</option>
+                        <option value="Sergeant First Class">Sergeant First Class</option>
+                        <option value="Master Sergeant">Master Sergeant</option>
+                        <option value="Sergeant Major">Sergeant Major</option>
+                        <option value="Lieutenant">Lieutenant</option>
+                        <option value="Captain">Captain</option>
+                        <option value="Major">Major</option>
+                        <option value="Colonel">Colonel</option>
+                        <option value="Major General">Major General</option>
+                        <option value="Lieutenant General">Lieutenant General</option>
+                        <option value="Vice General of Army">Vice General of Army</option>
+                        <option value="General of Army">General of Army</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 24px;">
+                <button class="btn btn-danger" onclick="deleteCurrentEmployee()" style="margin-right: auto;">
+                    <i class="fas fa-trash"></i> Löschen
+                </button>
+                <div style="display: flex; gap: 12px;">
+                    <button class="btn btn-secondary" onclick="closeModal('editEmployeeModal')">
+                        Abbrechen
+                    </button>
+                    <button class="btn btn-primary" onclick="saveEditedEmployee()">
+                        <i class="fas fa-save"></i> Änderungen speichern
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <script>
         // Firebase Configuration
         const firebaseConfig = {
@@ -1569,6 +1665,7 @@ Sonstiges: -
         let currentEmployee = null;
         let employees = [];
         let autoSaveTimer = null;
+        let autoSaveInterval = null;
         let bothInductionsCompleted = false;
 
         // Initialize App
@@ -1592,6 +1689,9 @@ Sonstiges: -
             
             // Load employees from Firebase
             loadEmployees();
+            
+            // Start auto-save interval (every 1 second)
+            startAutoSaveInterval();
         }
 
         function setupEventListeners() {
@@ -1603,7 +1703,6 @@ Sonstiges: -
             // Auto-save on input
             document.addEventListener('input', debounce(function(e) {
                 if (currentEmployee) {
-                    autoSave();
                     updateTemplates();
                 }
             }, 1000));
@@ -1618,6 +1717,10 @@ Sonstiges: -
                     e.preventDefault();
                     document.getElementById('searchEmployees').focus();
                 }
+                if (e.ctrlKey && e.key === 'e' && currentEmployee) {
+                    e.preventDefault();
+                    openEditEmployeeModal();
+                }
             });
         }
 
@@ -1631,6 +1734,32 @@ Sonstiges: -
                 clearTimeout(timeout);
                 timeout = setTimeout(later, wait);
             };
+        }
+
+        // Auto-Save Funktionen
+        function startAutoSaveInterval() {
+            // Alle 1 Sekunde automatisch speichern
+            autoSaveInterval = setInterval(function() {
+                if (currentEmployee) {
+                    autoSave();
+                }
+            }, 1000); // 1000ms = 1 Sekunde
+        }
+
+        function stopAutoSaveInterval() {
+            if (autoSaveInterval) {
+                clearInterval(autoSaveInterval);
+            }
+        }
+
+        function autoSave() {
+            if (!currentEmployee) return;
+            
+            // Save form data
+            saveFormData();
+            
+            // Save to Firebase
+            saveEmployeeData(true);
         }
 
         // Firebase Functions
@@ -1673,7 +1802,6 @@ Sonstiges: -
                 return true;
             } catch (error) {
                 console.error('Fehler beim Speichern:', error);
-                showNotification('Fehler beim Speichern', 'error');
                 return false;
             }
         }
@@ -1774,10 +1902,7 @@ Sonstiges: -
             document.getElementById('inductionContent').style.display = 'block';
             
             // Update header
-            document.getElementById('currentEmployeeName').textContent = employee.name;
-            document.getElementById('currentEmployeeDN').textContent = `DN ${employee.dn}`;
-            document.getElementById('currentEmployeeUnit').textContent = employee.unit || 'Keine Unit';
-            document.getElementById('currentEmployeeRank').textContent = employee.rank || 'Kein Rang';
+            updateEmployeeHeader();
             
             // Update cards
             document.querySelectorAll('.employee-card').forEach(card => {
@@ -1830,6 +1955,15 @@ Sonstiges: -
             updateTemplates();
         }
 
+        function updateEmployeeHeader() {
+            if (!currentEmployee) return;
+            
+            document.getElementById('currentEmployeeName').textContent = currentEmployee.name;
+            document.getElementById('currentEmployeeDN').textContent = `DN ${currentEmployee.dn}`;
+            document.getElementById('currentEmployeeUnit').textContent = currentEmployee.unit || 'Keine Unit';
+            document.getElementById('currentEmployeeRank').textContent = currentEmployee.rank || 'Kein Rang';
+        }
+
         function updateInductionUI(type, completed) {
             const card = document.getElementById(`${type}InductionCard`);
             const status = document.getElementById(`${type}InductionStatus`);
@@ -1844,6 +1978,85 @@ Sonstiges: -
                 status.textContent = 'AUSSTEHEND';
                 status.style.background = 'rgba(255, 255, 255, 0.1)';
                 status.style.color = 'var(--gray)';
+            }
+        }
+
+        // Employee Edit Functions
+        function openEditEmployeeModal() {
+            if (!currentEmployee) {
+                showNotification('Bitte wählen Sie zuerst einen Mitarbeiter aus', 'warning');
+                return;
+            }
+            
+            // Formular mit aktuellen Daten füllen
+            document.getElementById('editEmployeeName').value = currentEmployee.name;
+            document.getElementById('editEmployeeDN').value = currentEmployee.dn;
+            document.getElementById('editEmployeeUnit').value = currentEmployee.unit || '';
+            document.getElementById('editEmployeeRank').value = currentEmployee.rank || '';
+            
+            openModal('editEmployeeModal');
+        }
+
+        async function saveEditedEmployee() {
+            if (!currentEmployee) return;
+            
+            const name = document.getElementById('editEmployeeName').value.trim();
+            const dn = document.getElementById('editEmployeeDN').value;
+            
+            if (!name || !dn) {
+                showNotification('Name und DN sind Pflichtfelder', 'warning');
+                return;
+            }
+            
+            // Daten aktualisieren
+            currentEmployee.name = name;
+            currentEmployee.dn = dn;
+            currentEmployee.unit = document.getElementById('editEmployeeUnit').value || '';
+            currentEmployee.rank = document.getElementById('editEmployeeRank').value || '';
+            
+            // In Firebase speichern
+            const success = await saveEmployeeToFirebase(currentEmployee);
+            
+            if (success) {
+                closeModal('editEmployeeModal');
+                
+                // UI aktualisieren
+                updateEmployeeHeader();
+                renderEmployeeList();
+                updateTemplates();
+                
+                showNotification('Mitarbeiterdaten erfolgreich aktualisiert', 'success');
+            }
+        }
+
+        // Employee Delete Functions
+        async function deleteCurrentEmployee() {
+            if (!currentEmployee) {
+                showNotification('Bitte wählen Sie zuerst einen Mitarbeiter aus', 'warning');
+                return;
+            }
+            
+            if (!confirm(`Mitarbeiter "${currentEmployee.name}" (DN ${currentEmployee.dn}) wirklich löschen?\n\nDiese Aktion kann nicht rückgängig gemacht werden!`)) {
+                return;
+            }
+            
+            const success = await deleteEmployeeFromFirebase(currentEmployee.id);
+            
+            if (success) {
+                employees = employees.filter(emp => emp.id !== currentEmployee.id);
+                
+                // Modal schließen
+                closeModal('editEmployeeModal');
+                
+                // Zurücksetzen der Ansicht
+                currentEmployee = null;
+                document.getElementById('employeeHeader').style.display = 'none';
+                document.getElementById('inductionContent').style.display = 'none';
+                
+                // UI aktualisieren
+                renderEmployeeList();
+                updateStats();
+                showNotification('Mitarbeiter erfolgreich gelöscht', 'success');
             }
         }
 
@@ -1863,7 +2076,6 @@ Sonstiges: -
             
             updateInductionUI(type, completed);
             updateTemplates();
-            autoSave();
             
             // Check if both inductions are now completed
             checkBothInductionsCompleted();
@@ -2114,18 +2326,6 @@ Sonstiges: ${notes}
         }
 
         // Save Functions
-        function autoSave() {
-            if (!currentEmployee) return;
-            
-            if (autoSaveTimer) {
-                clearTimeout(autoSaveTimer);
-            }
-            
-            autoSaveTimer = setTimeout(() => {
-                saveEmployeeData(true);
-            }, 2000);
-        }
-
         async function saveEmployeeData(isAutoSave = false) {
             if (!currentEmployee) {
                 return;
@@ -2202,6 +2402,9 @@ Sonstiges: ${notes}
                     <div style="font-size: 11px; color: var(--gray);">DN ${employee.dn}</div>
                 </div>
                 <div style="padding: 8px 0;">
+                    <button onclick="selectEmployee(employees.find(e => e.id === '${employee.id}')); openEditEmployeeModal(); document.getElementById('contextMenu')?.remove();" style="width: 100%; text-align: left; padding: 10px 14px; background: none; border: none; color: var(--primary-light); font-weight: 600; cursor: pointer; transition: all 0.2s; border-radius: 6px; display: flex; align-items: center; gap: 8px; font-size: 13px;">
+                        <i class="fas fa-edit"></i> Bearbeiten
+                    </button>
                     <button onclick="deleteEmployee('${employee.id}')" style="width: 100%; text-align: left; padding: 10px 14px; background: none; border: none; color: var(--danger); font-weight: 600; cursor: pointer; transition: all 0.2s; border-radius: 6px; display: flex; align-items: center; gap: 8px; font-size: 13px;">
                         <i class="fas fa-trash"></i> Löschen
                     </button>
