@@ -16,7 +16,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     
     <style>
-        /* CSS bleibt gleich wie zuvor */
         :root {
             --primary: #3b82f6;
             --primary-dark: #1e40af;
@@ -59,7 +58,6 @@
             overflow-x: hidden;
         }
         
-        /* Background Effects */
         .bg-effects {
             position: fixed;
             top: 0;
@@ -81,7 +79,6 @@
                 radial-gradient(circle at 80% 20%, rgba(16, 185, 129, 0.1) 0%, transparent 50%);
         }
         
-        /* Container */
         .app-container {
             max-width: 1400px;
             margin: 0 auto;
@@ -92,7 +89,6 @@
             min-height: 100vh;
         }
         
-        /* Header */
         .app-header {
             grid-column: 1 / -1;
             background: linear-gradient(135deg, rgba(30, 58, 138, 0.9) 0%, rgba(30, 64, 175, 0.95) 100%);
@@ -193,7 +189,6 @@
             font-weight: 600;
         }
         
-        /* Sidebar */
         .sidebar {
             background: rgba(30, 41, 59, 0.9);
             backdrop-filter: blur(20px);
@@ -266,7 +261,6 @@
             font-size: 14px;
         }
         
-        /* Employee List */
         .employee-list {
             display: flex;
             flex-direction: column;
@@ -383,7 +377,6 @@
         .badge-org.completed { background: rgba(59, 130, 246, 0.2); color: var(--primary-light); border: 2px solid rgba(59, 130, 246, 0.3); }
         .badge-org.pending { background: rgba(239, 68, 68, 0.2); color: var(--danger); border: 2px solid rgba(239, 68, 68, 0.3); }
         
-        /* Quick Actions */
         .quick-actions {
             display: grid;
             grid-template-columns: 1fr;
@@ -413,7 +406,6 @@
             box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2);
         }
         
-        /* Main Content */
         .main-content {
             background: rgba(30, 41, 59, 0.9);
             backdrop-filter: blur(20px);
@@ -425,7 +417,6 @@
             flex-direction: column;
         }
         
-        /* Content Header */
         .content-header {
             padding: 20px 24px;
             background: linear-gradient(135deg, rgba(30, 64, 175, 0.2) 0%, rgba(30, 41, 59, 0.4) 100%);
@@ -471,7 +462,6 @@
             gap: 10px;
         }
         
-        /* Buttons */
         .btn {
             padding: 12px 20px;
             border: none;
@@ -528,7 +518,6 @@
             box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
         }
         
-        /* Induction Content */
         .induction-content {
             padding: 24px;
             flex: 1;
@@ -536,7 +525,6 @@
             display: none;
         }
         
-        /* Induction Grid */
         .induction-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -550,13 +538,13 @@
             }
         }
         
-        /* Induction Card */
         .induction-card {
             background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(30, 41, 59, 0.2) 100%);
             border-radius: var(--radius-lg);
             padding: 20px;
             border: 2px solid rgba(255, 255, 255, 0.1);
             transition: var(--transition);
+            position: relative;
         }
         
         .induction-card.completed {
@@ -610,7 +598,6 @@
             color: var(--secondary);
         }
         
-        /* Toggle Switch */
         .toggle-switch {
             position: relative;
             display: inline-block;
@@ -656,7 +643,6 @@
             transform: translateX(24px);
         }
         
-        /* Form Grid */
         .form-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -678,7 +664,6 @@
             letter-spacing: 0.3px;
         }
         
-        /* Form-Inputs mit dunklem Design */
         .form-input, .form-select, .form-textarea {
             padding: 12px 14px;
             background: rgba(255, 255, 255, 0.07);
@@ -688,9 +673,11 @@
             font-size: 14px;
             font-weight: 500;
             transition: var(--transition);
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
         }
         
-        /* Select-Elemente mit dunklem Design */
         .form-select {
             color: white !important;
             background-color: rgba(255, 255, 255, 0.07) !important;
@@ -714,7 +701,6 @@
             font-family: 'Inter', sans-serif;
         }
         
-        /* Time Input Container */
         .time-container {
             display: grid;
             grid-template-columns: 1fr auto 1fr;
@@ -729,7 +715,15 @@
             font-size: 13px;
         }
         
-        /* Templates Section */
+        /* FIX 4: Time input fixes to prevent overflow */
+        input[type="time"] {
+            font-size: 14px;
+            padding: 11px 10px;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+        
         .templates-section {
             background: linear-gradient(135deg, rgba(30, 64, 175, 0.1) 0%, rgba(30, 41, 59, 0.3) 100%);
             border-radius: var(--radius-lg);
@@ -758,7 +752,6 @@
             gap: 10px;
         }
         
-        /* Template Cards */
         .template-cards {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -824,7 +817,6 @@
             border-left-color: var(--secondary);
         }
         
-        /* Modal */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -902,7 +894,6 @@
             transform: rotate(90deg);
         }
         
-        /* Empty State */
         .empty-state {
             text-align: center;
             padding: 60px 32px;
@@ -929,7 +920,6 @@
             margin: 0 auto 20px;
         }
         
-        /* Loading State */
         .loading {
             display: flex;
             flex-direction: column;
@@ -952,6 +942,18 @@
             to { transform: rotate(360deg); }
         }
         
+        /* FIX 5: Header stats fix to prevent resizing */
+        .header-stats {
+            flex-shrink: 0;
+            min-width: 240px;
+        }
+        
+        .stat-card {
+            min-width: 110px;
+            width: 110px;
+            flex-shrink: 0;
+        }
+        
         /* Responsive */
         @media (max-width: 1200px) {
             .app-container {
@@ -960,6 +962,10 @@
             
             .sidebar {
                 position: static;
+            }
+            
+            .header-stats {
+                min-width: 200px;
             }
         }
         
@@ -983,10 +989,14 @@
             .header-stats {
                 justify-content: space-between;
                 gap: 8px;
+                min-width: auto;
+                width: 100%;
             }
             
             .stat-card {
                 min-width: 90px;
+                width: auto;
+                flex: 1;
                 padding: 10px 12px;
             }
             
@@ -1051,7 +1061,6 @@
             }
         }
         
-        /* Animation Classes */
         .pulse {
             animation: pulse 2s infinite;
         }
@@ -1071,7 +1080,6 @@
             20%, 40%, 60%, 80% { transform: translateX(2px); }
         }
         
-        /* Notification */
         .notification {
             position: fixed;
             bottom: 20px;
@@ -1131,14 +1139,11 @@
                         <div class="subtitle">Mündliche & Organisatorische Einweisungen • HR</div>
                     </div>
                 </div>
+                <!-- FIX 3: Removed "Ausstehend", only showing "Mitarbeiter" -->
                 <div class="header-stats">
                     <div class="stat-card">
                         <div class="stat-value" id="totalEmployees">0</div>
                         <div class="stat-label">Mitarbeiter</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value" id="pendingInductions">0</div>
-                        <div class="stat-label">Ausstehend</div>
                     </div>
                 </div>
             </div>
@@ -1661,8 +1666,6 @@ Sonstiges: -
         // App State
         let currentEmployee = null;
         let employees = [];
-        let autoSaveTimer = null;
-        let autoSaveInterval = null;
         let bothInductionsCompleted = false;
 
         // Initialize App
@@ -1678,7 +1681,7 @@ Sonstiges: -
             document.getElementById('oralDate').value = today;
             document.getElementById('orgDate').value = today;
             
-            // Set default times
+            // Set default times with proper formatting
             document.getElementById('oralTimeStart').value = '16:40';
             document.getElementById('oralTimeEnd').value = '18:00';
             document.getElementById('orgTimeStart').value = '22:10';
@@ -1686,9 +1689,6 @@ Sonstiges: -
             
             // Load employees from Firebase
             loadEmployees();
-            
-            // Start auto-save interval (every 1 second)
-            startAutoSaveInterval();
             
             // Form Change Listener hinzufügen
             setupFormChangeListeners();
@@ -1715,6 +1715,19 @@ Sonstiges: -
                     openEditEmployeeModal();
                 }
             });
+            
+            // FIX 5: Window resize handler to prevent header box resizing
+            window.addEventListener('resize', function() {
+                updateHeaderLayout();
+            });
+        }
+
+        function updateHeaderLayout() {
+            // Ensure header stats maintain consistent size
+            const headerStats = document.querySelector('.header-stats');
+            if (headerStats) {
+                headerStats.style.minWidth = headerStats.offsetWidth + 'px';
+            }
         }
 
         // Form Change Listeners
@@ -1722,53 +1735,18 @@ Sonstiges: -
             // Alle Input-Felder überwachen
             const formInputs = document.querySelectorAll('.form-input, .form-select, .form-textarea, .toggle-switch input');
             formInputs.forEach(input => {
-                input.addEventListener('input', function() {
-                    if (currentEmployee) {
-                        // Sofort Formulardaten speichern
-                        saveFormData();
-                        updateTemplates();
-                    }
-                });
-                
-                input.addEventListener('change', function() {
-                    if (currentEmployee) {
-                        // Sofort Formulardaten speichern
-                        saveFormData();
-                        updateTemplates();
-                    }
-                });
-            });
-            
-            // Spezielle Behandlung für Toggle-Switches
-            const toggleSwitches = document.querySelectorAll('.toggle-switch input');
-            toggleSwitches.forEach(toggle => {
-                toggle.addEventListener('change', function() {
-                    if (currentEmployee) {
-                        // Sofort speichern
-                        saveFormData();
-                        const type = this.id.includes('oral') ? 'oral' : 'org';
-                        toggleInduction(type, this.checked);
-                    }
-                });
+                input.addEventListener('input', handleFormChange);
+                input.addEventListener('change', handleFormChange);
             });
         }
 
-        // Auto-Save Funktionen
-        function startAutoSaveInterval() {
-            // Alle 1 Sekunde automatisch speichern
-            autoSaveInterval = setInterval(function() {
-                if (currentEmployee) {
-                    // Formulardaten speichern
-                    saveFormData();
-                    // In Firebase speichern
-                    saveEmployeeData(true);
-                }
-            }, 1000); // 1000ms = 1 Sekunde
-        }
-
-        function stopAutoSaveInterval() {
-            if (autoSaveInterval) {
-                clearInterval(autoSaveInterval);
+        function handleFormChange() {
+            if (currentEmployee) {
+                // Sofort Formulardaten speichern
+                saveFormData();
+                updateTemplates();
+                // Sofort in Firebase speichern
+                saveEmployeeData(true);
             }
         }
 
@@ -1790,6 +1768,9 @@ Sonstiges: -
                 updateStats();
                 hideLoading();
                 
+                // FIX 1: Ensure UI updates correctly after loading
+                setTimeout(updateInductionDisplay, 100);
+                
             } catch (error) {
                 console.error('Fehler beim Laden der Mitarbeiter:', error);
                 loadMockEmployees();
@@ -1799,7 +1780,7 @@ Sonstiges: -
 
         async function saveEmployeeToFirebase(employee) {
             try {
-                await db.collection('hrEmployees').doc(employee.id).set({
+                const dataToSave = {
                     name: employee.name,
                     dn: employee.dn,
                     unit: employee.unit,
@@ -1808,10 +1789,15 @@ Sonstiges: -
                     inductions: employee.inductions || {},
                     oralData: employee.oralData || {},
                     orgData: employee.orgData || {}
-                }, { merge: true });
+                };
+                
+                console.log('Saving to Firebase:', dataToSave);
+                
+                await db.collection('hrEmployees').doc(employee.id).set(dataToSave, { merge: true });
                 return true;
             } catch (error) {
                 console.error('Fehler beim Speichern:', error);
+                showNotification('Fehler beim Speichern: ' + error.message, 'error');
                 return false;
             }
         }
@@ -1822,6 +1808,7 @@ Sonstiges: -
                 return true;
             } catch (error) {
                 console.error('Fehler beim Löschen:', error);
+                showNotification('Fehler beim Löschen: ' + error.message, 'error');
                 return false;
             }
         }
@@ -1848,7 +1835,11 @@ Sonstiges: -
             container.innerHTML = '';
             countElement.textContent = employees.length;
             
-            employees.forEach(employee => {
+            // FIX 1: Limit displayed employees to prevent UI issues
+            const maxDisplayedEmployees = 50;
+            const employeesToDisplay = employees.slice(0, maxDisplayedEmployees);
+            
+            employeesToDisplay.forEach(employee => {
                 const card = document.createElement('div');
                 card.className = `employee-card ${currentEmployee?.id === employee.id ? 'active' : ''}`;
                 card.onclick = () => selectEmployee(employee);
@@ -1860,6 +1851,7 @@ Sonstiges: -
                 const oralCompleted = employee.inductions?.oral?.completed || false;
                 const orgCompleted = employee.inductions?.org?.completed || false;
                 
+                // FIX 1: Ensure badges are always displayed
                 card.innerHTML = `
                     <div class="employee-header">
                         <div class="employee-name">${employee.name}</div>
@@ -1883,6 +1875,21 @@ Sonstiges: -
                 
                 container.appendChild(card);
             });
+            
+            // FIX 1: Show message if too many employees
+            if (employees.length > maxDisplayedEmployees) {
+                const warning = document.createElement('div');
+                warning.className = 'empty-state';
+                warning.style.padding = '20px';
+                warning.innerHTML = `
+                    <div class="empty-icon">
+                        <i class="fas fa-info-circle"></i>
+                    </div>
+                    <div class="empty-title">Zu viele Mitarbeiter</div>
+                    <div class="empty-description">${employees.length - maxDisplayedEmployees} weitere Mitarbeiter werden nicht angezeigt</div>
+                `;
+                container.appendChild(warning);
+            }
         }
 
         function filterEmployees(searchTerm) {
@@ -1921,34 +1928,37 @@ Sonstiges: -
             
             // Load data
             loadEmployeeData();
+            
+            // FIX 1: Update UI immediately
+            updateInductionDisplay();
         }
 
         function loadEmployeeData() {
             if (!currentEmployee) return;
             
-            // Oral induction
-            if (currentEmployee.oralData) {
-                document.getElementById('oralDate').value = currentEmployee.oralData.date || '';
-                document.getElementById('oralTimeStart').value = currentEmployee.oralData.timeStart || '16:40';
-                document.getElementById('oralTimeEnd').value = currentEmployee.oralData.timeEnd || '18:00';
-                document.getElementById('oralPerson').value = currentEmployee.oralData.person || '';
-                document.getElementById('oralNotes').value = currentEmployee.oralData.notes || '';
-                document.getElementById('unitSelect').value = currentEmployee.oralData.unit || currentEmployee.unit || '';
-                document.getElementById('rankSelect').value = currentEmployee.oralData.rank || currentEmployee.rank || '';
-            }
+            // FIX 2: Ensure data is loaded from Firebase properly
+            const oralData = currentEmployee.oralData || {};
+            const orgData = currentEmployee.orgData || {};
             
-            // Organizational induction
-            if (currentEmployee.orgData) {
-                document.getElementById('orgDate').value = currentEmployee.orgData.date || '';
-                document.getElementById('orgTimeStart').value = currentEmployee.orgData.timeStart || '22:10';
-                document.getElementById('orgTimeEnd').value = currentEmployee.orgData.timeEnd || '23:05';
-                document.getElementById('orgPerson').value = currentEmployee.orgData.person || '';
-                document.getElementById('orgNotes').value = currentEmployee.orgData.notes || '';
-                document.getElementById('unitSelect2').value = currentEmployee.orgData.unit || currentEmployee.unit || '';
-                document.getElementById('rankSelect2').value = currentEmployee.orgData.rank || currentEmployee.rank || '';
-            }
+            // Oral induction - FIX 2: Use saved data or defaults
+            document.getElementById('oralDate').value = oralData.date || '';
+            document.getElementById('oralTimeStart').value = oralData.timeStart || '16:40';
+            document.getElementById('oralTimeEnd').value = oralData.timeEnd || '18:00';
+            document.getElementById('oralPerson').value = oralData.person || '';
+            document.getElementById('oralNotes').value = oralData.notes || '';
+            document.getElementById('unitSelect').value = oralData.unit || currentEmployee.unit || '';
+            document.getElementById('rankSelect').value = oralData.rank || currentEmployee.rank || '';
             
-            // Induction status
+            // Organizational induction - FIX 2: Use saved data or defaults
+            document.getElementById('orgDate').value = orgData.date || '';
+            document.getElementById('orgTimeStart').value = orgData.timeStart || '22:10';
+            document.getElementById('orgTimeEnd').value = orgData.timeEnd || '23:05';
+            document.getElementById('orgPerson').value = orgData.person || '';
+            document.getElementById('orgNotes').value = orgData.notes || '';
+            document.getElementById('unitSelect2').value = orgData.unit || currentEmployee.unit || '';
+            document.getElementById('rankSelect2').value = orgData.rank || currentEmployee.rank || '';
+            
+            // Induction status - FIX 1: Ensure status is displayed
             const oralCompleted = currentEmployee.inductions?.oral?.completed || false;
             const orgCompleted = currentEmployee.inductions?.org?.completed || false;
             
@@ -1963,6 +1973,19 @@ Sonstiges: -
             
             // Update templates
             updateTemplates();
+        }
+
+        function updateInductionDisplay() {
+            if (!currentEmployee) return;
+            
+            const oralCompleted = currentEmployee.inductions?.oral?.completed || false;
+            const orgCompleted = currentEmployee.inductions?.org?.completed || false;
+            
+            updateInductionUI('oral', oralCompleted);
+            updateInductionUI('org', orgCompleted);
+            
+            // Update employee list badges
+            renderEmployeeList();
         }
 
         function updateEmployeeHeader() {
@@ -1991,7 +2014,7 @@ Sonstiges: -
             }
         }
 
-        // Save Form Data
+        // Save Form Data - FIX 2: Properly save all data
         function saveFormData() {
             if (!currentEmployee) return;
             
@@ -2018,15 +2041,19 @@ Sonstiges: -
                     rank: document.getElementById('rankSelect2').value
                 };
                 
-                // Update employee's main unit and rank if not set
-                if (!currentEmployee.unit && document.getElementById('unitSelect').value) {
-                    currentEmployee.unit = document.getElementById('unitSelect').value;
-                }
-                if (!currentEmployee.rank && document.getElementById('rankSelect').value) {
-                    currentEmployee.rank = document.getElementById('rankSelect').value;
+                // FIX 2: Also update employee's main unit and rank if changed in form
+                const unitSelectValue = document.getElementById('unitSelect').value;
+                const rankSelectValue = document.getElementById('rankSelect').value;
+                
+                if (unitSelectValue && (!currentEmployee.unit || currentEmployee.unit !== unitSelectValue)) {
+                    currentEmployee.unit = unitSelectValue;
                 }
                 
-                // Timestamp aktualisieren
+                if (rankSelectValue && (!currentEmployee.rank || currentEmployee.rank !== rankSelectValue)) {
+                    currentEmployee.rank = rankSelectValue;
+                }
+                
+                // FIX 2: Update lastUpdated timestamp
                 currentEmployee.lastUpdated = new Date().toISOString();
                 
             } catch (error) {
@@ -2067,7 +2094,7 @@ Sonstiges: -
             currentEmployee.unit = document.getElementById('editEmployeeUnit').value || '';
             currentEmployee.rank = document.getElementById('editEmployeeRank').value || '';
             
-            // In Firebase speichern
+            // FIX 2: Force save to Firebase
             const success = await saveEmployeeToFirebase(currentEmployee);
             
             if (success) {
@@ -2082,7 +2109,7 @@ Sonstiges: -
             }
         }
 
-        // Employee Delete Functions
+        // Employee Delete Functions - FIX 2: Ensure proper deletion
         async function deleteCurrentEmployee() {
             if (!currentEmployee) {
                 showNotification('Bitte wählen Sie zuerst einen Mitarbeiter aus', 'warning');
@@ -2096,7 +2123,11 @@ Sonstiges: -
             const success = await deleteEmployeeFromFirebase(currentEmployee.id);
             
             if (success) {
-                employees = employees.filter(emp => emp.id !== currentEmployee.id);
+                // Remove from local array
+                const employeeIndex = employees.findIndex(emp => emp.id === currentEmployee.id);
+                if (employeeIndex !== -1) {
+                    employees.splice(employeeIndex, 1);
+                }
                 
                 // Modal schließen
                 closeModal('editEmployeeModal');
@@ -2113,7 +2144,7 @@ Sonstiges: -
             }
         }
 
-        // Induction Management
+        // Induction Management - FIX 2: Ensure changes are saved
         function toggleInduction(type, completed) {
             if (!currentEmployee) return;
             
@@ -2130,7 +2161,7 @@ Sonstiges: -
             updateInductionUI(type, completed);
             updateTemplates();
             
-            // Sofort in Firebase speichern
+            // FIX 2: Immediately save to Firebase
             saveEmployeeData(true);
             
             // Check if both inductions are now completed
@@ -2255,7 +2286,7 @@ Sonstiges: ${notes}
 ╚══════════════════╝`;
         }
 
-        // Save Functions
+        // Save Functions - FIX 2: Improved save function
         async function saveEmployeeData(isAutoSave = false) {
             if (!currentEmployee) {
                 return;
@@ -2282,24 +2313,10 @@ Sonstiges: ${notes}
             }
         }
 
-        // Statistics - NUR "Mitarbeiter" und "Ausstehend"
+        // Statistics - FIX 3: Removed "Ausstehend", only showing "Mitarbeiter"
         function updateStats() {
             const total = employees.length;
-            
-            let pending = 0;
-            
-            employees.forEach(employee => {
-                const oralCompleted = employee.inductions?.oral?.completed || false;
-                const orgCompleted = employee.inductions?.org?.completed || false;
-                
-                // Zähle nur die Mitarbeiter, bei denen BEIDE Einweisungen ausstehend sind
-                if (!oralCompleted && !orgCompleted) {
-                    pending++;
-                }
-            });
-            
             document.getElementById('totalEmployees').textContent = total;
-            document.getElementById('pendingInductions').textContent = pending;
         }
 
         // Context Menu
@@ -2349,8 +2366,8 @@ Sonstiges: ${notes}
             `;
             
             // Position menu
-            menu.style.left = `${e.pageX}px`;
-            menu.style.top = `${e.pageY}px`;
+            menu.style.left = `${Math.min(e.pageX, window.innerWidth - 200)}px`;
+            menu.style.top = `${Math.min(e.pageY, window.innerHeight - 250)}px`;
             
             document.body.appendChild(menu);
             
@@ -2385,6 +2402,10 @@ Sonstiges: ${notes}
                 renderEmployeeList();
                 updateStats();
                 showNotification('Mitarbeiter gelöscht', 'success');
+                
+                // Remove context menu
+                const contextMenu = document.getElementById('contextMenu');
+                if (contextMenu) contextMenu.remove();
             }
         }
 
@@ -2409,6 +2430,10 @@ Sonstiges: ${notes}
                 renderEmployeeList();
                 updateStats();
                 showNotification('Mitarbeiter dupliziert', 'success');
+                
+                // Remove context menu
+                const contextMenu = document.getElementById('contextMenu');
+                if (contextMenu) contextMenu.remove();
             }
         }
 
@@ -2429,6 +2454,10 @@ Sonstiges: ${notes}
             URL.revokeObjectURL(url);
             
             showNotification('Mitarbeiter exportiert', 'success');
+            
+            // Remove context menu
+            const contextMenu = document.getElementById('contextMenu');
+            if (contextMenu) contextMenu.remove();
         }
 
         // Copy Functions
@@ -2438,7 +2467,19 @@ Sonstiges: ${notes}
                 return true;
             } catch (err) {
                 console.error('Fehler beim Kopieren:', err);
-                return false;
+                // Fallback method
+                try {
+                    const textArea = document.createElement('textarea');
+                    textArea.value = text;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    return true;
+                } catch (err2) {
+                    console.error('Fallback copy failed:', err2);
+                    return false;
+                }
             }
         }
 
@@ -2612,6 +2653,9 @@ Sonstiges: ${notes}
             renderEmployeeList();
             updateStats();
         }
+        
+        // FIX 5: Initialize header layout on load
+        setTimeout(updateHeaderLayout, 100);
     </script>
 </body>
 </html>
