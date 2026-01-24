@@ -201,6 +201,8 @@
             height: fit-content;
             position: sticky;
             top: 16px;
+            display: flex;
+            flex-direction: column;
         }
         
         .sidebar-header {
@@ -208,6 +210,7 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 16px;
+            flex-shrink: 0;
         }
         
         .sidebar-title {
@@ -233,6 +236,7 @@
         .search-container {
             position: relative;
             margin-bottom: 20px;
+            flex-shrink: 0;
         }
         
         .search-input {
@@ -263,16 +267,22 @@
             font-size: 14px;
         }
         
+        .employee-list-container {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 16px;
+        }
+        
         .employee-list {
             display: flex;
             flex-direction: column;
             gap: 10px;
-            max-height: 450px;
             overflow-y: auto;
-            padding-right: 6px;
-            margin-bottom: 16px;
-            scrollbar-width: thin;
-            scrollbar-color: var(--primary) rgba(255, 255, 255, 0.05);
+            padding-right: 8px;
+            flex: 1;
+            max-height: 450px;
         }
         
         .employee-list::-webkit-scrollbar {
@@ -302,6 +312,7 @@
             transition: var(--transition);
             position: relative;
             overflow: hidden;
+            flex-shrink: 0;
         }
         
         .employee-card:hover {
@@ -389,7 +400,8 @@
             display: grid;
             grid-template-columns: 1fr;
             gap: 10px;
-            margin-top: 16px;
+            margin-top: auto;
+            flex-shrink: 0;
         }
         
         .quick-action-btn {
@@ -958,6 +970,7 @@
             
             .sidebar {
                 position: static;
+                max-height: 600px;
             }
         }
         
@@ -1163,13 +1176,15 @@
                 <input type="text" class="search-input" id="searchEmployees" placeholder="Nach Namen oder DN suchen...">
             </div>
             
-            <div class="employee-list" id="employeeList">
-                <div class="empty-state">
-                    <div class="empty-icon">
-                        <i class="fas fa-user-plus"></i>
+            <div class="employee-list-container">
+                <div class="employee-list" id="employeeList">
+                    <div class="empty-state">
+                        <div class="empty-icon">
+                            <i class="fas fa-user-plus"></i>
+                        </div>
+                        <div class="empty-title">Keine Mitarbeiter</div>
+                        <div class="empty-description">Fügen Sie Ihren ersten Mitarbeiter hinzu</div>
                     </div>
-                    <div class="empty-title">Keine Mitarbeiter</div>
-                    <div class="empty-description">Fügen Sie Ihren ersten Mitarbeiter hinzu</div>
                 </div>
             </div>
             
@@ -1813,9 +1828,6 @@ Sonstiges: -
             
             container.innerHTML = '';
             countElement.textContent = employees.length;
-            
-            // Scrollbar aktivieren wenn mehr als 4 Mitarbeiter
-            container.style.overflowY = employees.length > 4 ? 'auto' : 'visible';
             
             employees.forEach(employee => {
                 const card = document.createElement('div');
