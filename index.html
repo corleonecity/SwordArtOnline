@@ -159,33 +159,35 @@
         
         .header-stats {
             display: flex;
-            gap: 20px;
+            gap: 15px;
+            flex-shrink: 0;
         }
         
         .stat-card {
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 12px 16px;
+            padding: 10px 12px;
             background: rgba(255, 255, 255, 0.1);
             border-radius: var(--radius-lg);
             border: 1px solid rgba(255, 255, 255, 0.15);
-            min-width: 110px;
+            min-width: 95px;
+            width: 95px;
             backdrop-filter: blur(10px);
         }
         
         .stat-value {
-            font-size: 22px;
+            font-size: 18px;
             font-weight: 800;
             color: white;
             margin-bottom: 4px;
         }
         
         .stat-label {
-            font-size: 11px;
+            font-size: 10px;
             color: var(--gray-light);
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.3px;
             font-weight: 600;
         }
         
@@ -269,20 +271,26 @@
             overflow-y: auto;
             padding-right: 6px;
             margin-bottom: 16px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary) rgba(255, 255, 255, 0.05);
         }
         
         .employee-list::-webkit-scrollbar {
-            width: 6px;
+            width: 8px;
         }
         
         .employee-list::-webkit-scrollbar-track {
             background: rgba(255, 255, 255, 0.05);
-            border-radius: 3px;
+            border-radius: 4px;
         }
         
         .employee-list::-webkit-scrollbar-thumb {
             background: var(--primary);
-            border-radius: 3px;
+            border-radius: 4px;
+        }
+        
+        .employee-list::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-dark);
         }
         
         .employee-card {
@@ -942,18 +950,6 @@
             to { transform: rotate(360deg); }
         }
         
-        /* FIX 5: Header stats fix to prevent resizing */
-        .header-stats {
-            flex-shrink: 0;
-            min-width: 240px;
-        }
-        
-        .stat-card {
-            min-width: 110px;
-            width: 110px;
-            flex-shrink: 0;
-        }
-        
         /* Responsive */
         @media (max-width: 1200px) {
             .app-container {
@@ -962,10 +958,6 @@
             
             .sidebar {
                 position: static;
-            }
-            
-            .header-stats {
-                min-width: 200px;
             }
         }
         
@@ -994,14 +986,22 @@
             }
             
             .stat-card {
-                min-width: 90px;
+                min-width: 80px;
                 width: auto;
                 flex: 1;
-                padding: 10px 12px;
+                padding: 8px 10px;
             }
             
             .stat-value {
-                font-size: 18px;
+                font-size: 16px;
+            }
+            
+            .stat-label {
+                font-size: 9px;
+            }
+            
+            .employee-list {
+                max-height: 350px;
             }
             
             .content-header {
@@ -1139,7 +1139,6 @@
                         <div class="subtitle">Mündliche & Organisatorische Einweisungen • HR</div>
                     </div>
                 </div>
-                <!-- FIX 3: Removed "Ausstehend", only showing "Mitarbeiter" -->
                 <div class="header-stats">
                     <div class="stat-card">
                         <div class="stat-value" id="totalEmployees">0</div>
@@ -1165,7 +1164,6 @@
             </div>
             
             <div class="employee-list" id="employeeList">
-                <!-- Employees will be loaded here -->
                 <div class="empty-state">
                     <div class="empty-icon">
                         <i class="fas fa-user-plus"></i>
@@ -1715,24 +1713,10 @@ Sonstiges: -
                     openEditEmployeeModal();
                 }
             });
-            
-            // FIX 5: Window resize handler to prevent header box resizing
-            window.addEventListener('resize', function() {
-                updateHeaderLayout();
-            });
-        }
-
-        function updateHeaderLayout() {
-            // Ensure header stats maintain consistent size
-            const headerStats = document.querySelector('.header-stats');
-            if (headerStats) {
-                headerStats.style.minWidth = headerStats.offsetWidth + 'px';
-            }
         }
 
         // Form Change Listeners
         function setupFormChangeListeners() {
-            // Alle Input-Felder überwachen
             const formInputs = document.querySelectorAll('.form-input, .form-select, .form-textarea, .toggle-switch input');
             formInputs.forEach(input => {
                 input.addEventListener('input', handleFormChange);
@@ -1742,10 +1726,8 @@ Sonstiges: -
 
         function handleFormChange() {
             if (currentEmployee) {
-                // Sofort Formulardaten speichern
                 saveFormData();
                 updateTemplates();
-                // Sofort in Firebase speichern
                 saveEmployeeData(true);
             }
         }
@@ -1768,7 +1750,6 @@ Sonstiges: -
                 updateStats();
                 hideLoading();
                 
-                // FIX 1: Ensure UI updates correctly after loading
                 setTimeout(updateInductionDisplay, 100);
                 
             } catch (error) {
@@ -1790,8 +1771,6 @@ Sonstiges: -
                     oralData: employee.oralData || {},
                     orgData: employee.orgData || {}
                 };
-                
-                console.log('Saving to Firebase:', dataToSave);
                 
                 await db.collection('hrEmployees').doc(employee.id).set(dataToSave, { merge: true });
                 return true;
@@ -1835,11 +1814,10 @@ Sonstiges: -
             container.innerHTML = '';
             countElement.textContent = employees.length;
             
-            // FIX 1: Limit displayed employees to prevent UI issues
-            const maxDisplayedEmployees = 50;
-            const employeesToDisplay = employees.slice(0, maxDisplayedEmployees);
+            // Scrollbar aktivieren wenn mehr als 4 Mitarbeiter
+            container.style.overflowY = employees.length > 4 ? 'auto' : 'visible';
             
-            employeesToDisplay.forEach(employee => {
+            employees.forEach(employee => {
                 const card = document.createElement('div');
                 card.className = `employee-card ${currentEmployee?.id === employee.id ? 'active' : ''}`;
                 card.onclick = () => selectEmployee(employee);
@@ -1851,7 +1829,6 @@ Sonstiges: -
                 const oralCompleted = employee.inductions?.oral?.completed || false;
                 const orgCompleted = employee.inductions?.org?.completed || false;
                 
-                // FIX 1: Ensure badges are always displayed
                 card.innerHTML = `
                     <div class="employee-header">
                         <div class="employee-name">${employee.name}</div>
@@ -1875,21 +1852,6 @@ Sonstiges: -
                 
                 container.appendChild(card);
             });
-            
-            // FIX 1: Show message if too many employees
-            if (employees.length > maxDisplayedEmployees) {
-                const warning = document.createElement('div');
-                warning.className = 'empty-state';
-                warning.style.padding = '20px';
-                warning.innerHTML = `
-                    <div class="empty-icon">
-                        <i class="fas fa-info-circle"></i>
-                    </div>
-                    <div class="empty-title">Zu viele Mitarbeiter</div>
-                    <div class="empty-description">${employees.length - maxDisplayedEmployees} weitere Mitarbeiter werden nicht angezeigt</div>
-                `;
-                container.appendChild(warning);
-            }
         }
 
         function filterEmployees(searchTerm) {
@@ -1929,18 +1891,17 @@ Sonstiges: -
             // Load data
             loadEmployeeData();
             
-            // FIX 1: Update UI immediately
+            // Update UI immediately
             updateInductionDisplay();
         }
 
         function loadEmployeeData() {
             if (!currentEmployee) return;
             
-            // FIX 2: Ensure data is loaded from Firebase properly
             const oralData = currentEmployee.oralData || {};
             const orgData = currentEmployee.orgData || {};
             
-            // Oral induction - FIX 2: Use saved data or defaults
+            // Oral induction
             document.getElementById('oralDate').value = oralData.date || '';
             document.getElementById('oralTimeStart').value = oralData.timeStart || '16:40';
             document.getElementById('oralTimeEnd').value = oralData.timeEnd || '18:00';
@@ -1949,7 +1910,7 @@ Sonstiges: -
             document.getElementById('unitSelect').value = oralData.unit || currentEmployee.unit || '';
             document.getElementById('rankSelect').value = oralData.rank || currentEmployee.rank || '';
             
-            // Organizational induction - FIX 2: Use saved data or defaults
+            // Organizational induction
             document.getElementById('orgDate').value = orgData.date || '';
             document.getElementById('orgTimeStart').value = orgData.timeStart || '22:10';
             document.getElementById('orgTimeEnd').value = orgData.timeEnd || '23:05';
@@ -1958,7 +1919,7 @@ Sonstiges: -
             document.getElementById('unitSelect2').value = orgData.unit || currentEmployee.unit || '';
             document.getElementById('rankSelect2').value = orgData.rank || currentEmployee.rank || '';
             
-            // Induction status - FIX 1: Ensure status is displayed
+            // Induction status
             const oralCompleted = currentEmployee.inductions?.oral?.completed || false;
             const orgCompleted = currentEmployee.inductions?.org?.completed || false;
             
@@ -2014,7 +1975,7 @@ Sonstiges: -
             }
         }
 
-        // Save Form Data - FIX 2: Properly save all data
+        // Save Form Data
         function saveFormData() {
             if (!currentEmployee) return;
             
@@ -2041,7 +2002,7 @@ Sonstiges: -
                     rank: document.getElementById('rankSelect2').value
                 };
                 
-                // FIX 2: Also update employee's main unit and rank if changed in form
+                // Update employee's main unit and rank if changed in form
                 const unitSelectValue = document.getElementById('unitSelect').value;
                 const rankSelectValue = document.getElementById('rankSelect').value;
                 
@@ -2053,7 +2014,7 @@ Sonstiges: -
                     currentEmployee.rank = rankSelectValue;
                 }
                 
-                // FIX 2: Update lastUpdated timestamp
+                // Update lastUpdated timestamp
                 currentEmployee.lastUpdated = new Date().toISOString();
                 
             } catch (error) {
@@ -2068,7 +2029,6 @@ Sonstiges: -
                 return;
             }
             
-            // Formular mit aktuellen Daten füllen
             document.getElementById('editEmployeeName').value = currentEmployee.name;
             document.getElementById('editEmployeeDN').value = currentEmployee.dn;
             document.getElementById('editEmployeeUnit').value = currentEmployee.unit || '';
@@ -2094,7 +2054,6 @@ Sonstiges: -
             currentEmployee.unit = document.getElementById('editEmployeeUnit').value || '';
             currentEmployee.rank = document.getElementById('editEmployeeRank').value || '';
             
-            // FIX 2: Force save to Firebase
             const success = await saveEmployeeToFirebase(currentEmployee);
             
             if (success) {
@@ -2109,7 +2068,7 @@ Sonstiges: -
             }
         }
 
-        // Employee Delete Functions - FIX 2: Ensure proper deletion
+        // Employee Delete Functions
         async function deleteCurrentEmployee() {
             if (!currentEmployee) {
                 showNotification('Bitte wählen Sie zuerst einen Mitarbeiter aus', 'warning');
@@ -2129,7 +2088,6 @@ Sonstiges: -
                     employees.splice(employeeIndex, 1);
                 }
                 
-                // Modal schließen
                 closeModal('editEmployeeModal');
                 
                 // Zurücksetzen der Ansicht
@@ -2144,7 +2102,7 @@ Sonstiges: -
             }
         }
 
-        // Induction Management - FIX 2: Ensure changes are saved
+        // Induction Management
         function toggleInduction(type, completed) {
             if (!currentEmployee) return;
             
@@ -2161,7 +2119,7 @@ Sonstiges: -
             updateInductionUI(type, completed);
             updateTemplates();
             
-            // FIX 2: Immediately save to Firebase
+            // Immediately save to Firebase
             saveEmployeeData(true);
             
             // Check if both inductions are now completed
@@ -2192,7 +2150,6 @@ Sonstiges: -
         }
 
         function copyBothTemplatesAutomatically() {
-            // Wait a moment for the UI to update
             setTimeout(() => {
                 const oralTemplate = generateTemplate('oral');
                 const orgTemplate = generateTemplate('org');
@@ -2286,14 +2243,13 @@ Sonstiges: ${notes}
 ╚══════════════════╝`;
         }
 
-        // Save Functions - FIX 2: Improved save function
+        // Save Functions
         async function saveEmployeeData(isAutoSave = false) {
             if (!currentEmployee) {
                 return;
             }
             
             try {
-                // Save to Firebase
                 const success = await saveEmployeeToFirebase(currentEmployee);
                 
                 if (success) {
@@ -2301,7 +2257,6 @@ Sonstiges: ${notes}
                         showNotification('Änderungen gespeichert', 'success');
                     }
                     
-                    // Update employee list
                     renderEmployeeList();
                     updateStats();
                 }
@@ -2313,7 +2268,7 @@ Sonstiges: ${notes}
             }
         }
 
-        // Statistics - FIX 3: Removed "Ausstehend", only showing "Mitarbeiter"
+        // Statistics
         function updateStats() {
             const total = employees.length;
             document.getElementById('totalEmployees').textContent = total;
@@ -2323,13 +2278,11 @@ Sonstiges: ${notes}
         function showEmployeeContextMenu(e, employee) {
             e.preventDefault();
             
-            // Remove existing context menu
             const existingMenu = document.getElementById('contextMenu');
             if (existingMenu) {
                 existingMenu.remove();
             }
             
-            // Create context menu
             const menu = document.createElement('div');
             menu.id = 'contextMenu';
             menu.style.cssText = `
@@ -2365,13 +2318,11 @@ Sonstiges: ${notes}
                 </div>
             `;
             
-            // Position menu
             menu.style.left = `${Math.min(e.pageX, window.innerWidth - 200)}px`;
             menu.style.top = `${Math.min(e.pageY, window.innerHeight - 250)}px`;
             
             document.body.appendChild(menu);
             
-            // Close menu when clicking elsewhere
             setTimeout(() => {
                 const closeMenu = (event) => {
                     if (!menu.contains(event.target)) {
@@ -2403,7 +2354,6 @@ Sonstiges: ${notes}
                 updateStats();
                 showNotification('Mitarbeiter gelöscht', 'success');
                 
-                // Remove context menu
                 const contextMenu = document.getElementById('contextMenu');
                 if (contextMenu) contextMenu.remove();
             }
@@ -2431,7 +2381,6 @@ Sonstiges: ${notes}
                 updateStats();
                 showNotification('Mitarbeiter dupliziert', 'success');
                 
-                // Remove context menu
                 const contextMenu = document.getElementById('contextMenu');
                 if (contextMenu) contextMenu.remove();
             }
@@ -2455,7 +2404,6 @@ Sonstiges: ${notes}
             
             showNotification('Mitarbeiter exportiert', 'success');
             
-            // Remove context menu
             const contextMenu = document.getElementById('contextMenu');
             if (contextMenu) contextMenu.remove();
         }
@@ -2467,7 +2415,6 @@ Sonstiges: ${notes}
                 return true;
             } catch (err) {
                 console.error('Fehler beim Kopieren:', err);
-                // Fallback method
                 try {
                     const textArea = document.createElement('textarea');
                     textArea.value = text;
@@ -2543,7 +2490,6 @@ Sonstiges: ${notes}
                 orgData: {}
             };
             
-            // Save to Firebase
             const success = await saveEmployeeToFirebase(newEmployee);
             
             if (success) {
@@ -2554,7 +2500,6 @@ Sonstiges: ${notes}
                 selectEmployee(newEmployee);
                 updateStats();
                 
-                // Clear form
                 document.getElementById('newEmployeeName').value = '';
                 document.getElementById('newEmployeeDN').value = '';
                 document.getElementById('newEmployeeUnit').value = '';
@@ -2571,7 +2516,6 @@ Sonstiges: ${notes}
             
             messageElement.textContent = message;
             
-            // Set color based on type
             if (type === 'success') {
                 notification.style.background = 'var(--secondary)';
             } else if (type === 'error') {
@@ -2653,9 +2597,6 @@ Sonstiges: ${notes}
             renderEmployeeList();
             updateStats();
         }
-        
-        // FIX 5: Initialize header layout on load
-        setTimeout(updateHeaderLayout, 100);
     </script>
 </body>
 </html>
