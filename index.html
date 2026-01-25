@@ -521,6 +521,464 @@
     }
     .template-card.completed .template-content{border-left-color:var(--secondary)}
 
+    /* Beobachtungs Akten Modal */
+    .beobachtung-akten-modal{
+      display:none;
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.85);
+      backdrop-filter:blur(4px);
+      z-index:2000;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      animation:fadeIn .2s ease;
+    }
+    .beobachtung-akten-modal.active{display:flex}
+    
+    .beobachtung-akten-content{
+      background:rgba(31,41,55,.95);
+      border-radius:var(--radius-lg);
+      padding:24px;
+      width:100%;
+      max-width:900px;
+      max-height:90vh;
+      border:1px solid rgba(255,255,255,.15);
+      box-shadow:var(--shadow-lg);
+      animation:slideUp .2s ease;
+      display:flex;
+      flex-direction:column;
+    }
+    
+    .beobachtung-akten-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:24px;
+      padding-bottom:16px;
+      border-bottom:1px solid rgba(255,255,255,.1);
+      flex-shrink:0;
+    }
+    
+    .beobachtung-akten-title{
+      font-size:18px;
+      font-weight:900;
+      color:#fff;
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    
+    .beobachtung-akten-title i{
+      color:var(--primary-light);
+      font-size:20px;
+    }
+    
+    .beobachtung-akten-close{
+      background:none;
+      border:none;
+      color:var(--gray);
+      font-size:20px;
+      cursor:pointer;
+      transition:var(--transition);
+      width:32px;
+      height:32px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      border-radius:50%;
+    }
+    
+    .beobachtung-akten-close:hover{
+      color:#fff;
+      background:rgba(255,255,255,.1);
+    }
+    
+    .beobachtung-akten-body{
+      flex:1;
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+    }
+    
+    .beobachtung-tabs{
+      display:flex;
+      gap:2px;
+      margin-bottom:16px;
+      border-bottom:1px solid rgba(255,255,255,.1);
+      flex-shrink:0;
+    }
+    
+    .beobachtung-tab{
+      padding:12px 20px;
+      background:none;
+      border:none;
+      color:var(--gray);
+      font-weight:900;
+      cursor:pointer;
+      transition:var(--transition);
+      font-size:13px;
+      position:relative;
+    }
+    
+    .beobachtung-tab:hover{
+      color:var(--primary-light);
+    }
+    
+    .beobachtung-tab.active{
+      color:var(--primary);
+    }
+    
+    .beobachtung-tab.active::after{
+      content:'';
+      position:absolute;
+      bottom:-1px;
+      left:0;
+      right:0;
+      height:2px;
+      background:var(--primary);
+    }
+    
+    .akte-form-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+      margin-bottom:20px;
+    }
+    
+    .akte-form-group{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    
+    .akte-label{
+      font-weight:900;
+      color:var(--gray-light);
+      font-size:12px;
+      text-transform:uppercase;
+      letter-spacing:.5px;
+    }
+    
+    .akte-input{
+      padding:12px 16px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.1);
+      border-radius:var(--radius-md);
+      color:#fff;
+      font-size:14px;
+      transition:var(--transition);
+      width:100%;
+      font-family:'Inter',sans-serif;
+    }
+    
+    .akte-input:focus{
+      outline:none;
+      border-color:var(--primary);
+      background:rgba(255,255,255,.08);
+      box-shadow:0 0 0 3px rgba(79,70,229,.15);
+    }
+    
+    .akte-textarea{
+      min-height:120px;
+      resize:vertical;
+      line-height:1.5;
+    }
+    
+    .beobachtung-preview{
+      background:rgba(0,0,0,.3);
+      border-radius:var(--radius-md);
+      padding:20px;
+      border-left:3px solid var(--primary);
+      margin-top:10px;
+      margin-bottom:20px;
+    }
+    
+    .beobachtung-preview-title{
+      font-weight:900;
+      color:var(--gray-light);
+      margin-bottom:12px;
+      font-size:13px;
+      display:flex;
+      align-items:center;
+      gap:6px;
+    }
+    
+    .beobachtung-preview-content{
+      font-family:'Consolas','Monaco',monospace;
+      white-space:pre-wrap;
+      word-wrap:break-word;
+      font-size:12px;
+      line-height:1.4;
+      color:#fff;
+      background:rgba(0,0,0,.2);
+      padding:16px;
+      border-radius:var(--radius-sm);
+      max-height:200px;
+      overflow-y:auto;
+    }
+    
+    .beobachtung-akten-liste{
+      flex:1;
+      overflow-y:auto;
+      padding-right:4px;
+    }
+    
+    .beobachtung-akten-liste::-webkit-scrollbar{
+      width:6px;
+    }
+    
+    .beobachtung-akten-liste::-webkit-scrollbar-track{
+      background:rgba(255,255,255,.05);
+      border-radius:3px;
+    }
+    
+    .beobachtung-akten-liste::-webkit-scrollbar-thumb{
+      background:var(--primary);
+      border-radius:3px;
+    }
+    
+    .beobachtung-akte-item{
+      background:rgba(255,255,255,.03);
+      border-radius:var(--radius-md);
+      padding:16px;
+      border:1px solid rgba(255,255,255,.08);
+      margin-bottom:12px;
+      transition:var(--transition);
+    }
+    
+    .beobachtung-akte-item:hover{
+      background:rgba(255,255,255,.05);
+      border-color:var(--primary-light);
+    }
+    
+    .beobachtung-akte-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      margin-bottom:12px;
+    }
+    
+    .beobachtung-akte-name{
+      font-weight:900;
+      color:#fff;
+      font-size:15px;
+    }
+    
+    .beobachtung-akte-dn{
+      font-family:'Inter',monospace;
+      background:rgba(79,70,229,.10);
+      color:var(--primary-light);
+      padding:4px 10px;
+      border-radius:12px;
+      font-size:11px;
+      font-weight:900;
+      border:1px solid rgba(79,70,229,.20);
+    }
+    
+    .beobachtung-akte-date{
+      color:var(--gray);
+      font-size:11px;
+      margin-bottom:8px;
+      display:flex;
+      align-items:center;
+      gap:4px;
+    }
+    
+    .beobachtung-akte-grund{
+      color:var(--gray-light);
+      font-size:13px;
+      line-height:1.5;
+      margin-bottom:12px;
+      padding:12px;
+      background:rgba(0,0,0,.2);
+      border-radius:var(--radius-sm);
+      border-left:2px solid var(--primary);
+    }
+    
+    .beobachtung-akte-template{
+      font-family:'Consolas','Monaco',monospace;
+      white-space:pre-wrap;
+      word-wrap:break-word;
+      font-size:11px;
+      line-height:1.4;
+      color:var(--gray-light);
+      background:rgba(0,0,0,.3);
+      padding:12px;
+      border-radius:var(--radius-sm);
+      border:1px solid rgba(255,255,255,.08);
+      max-height:150px;
+      overflow-y:auto;
+      margin-bottom:12px;
+    }
+    
+    .beobachtung-akte-actions{
+      display:flex;
+      gap:8px;
+      justify-content:flex-end;
+    }
+    
+    .beobachtung-akte-btn{
+      padding:6px 12px;
+      border:none;
+      border-radius:var(--radius-sm);
+      font-weight:900;
+      cursor:pointer;
+      transition:var(--transition);
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:6px;
+      font-size:11px;
+    }
+    
+    .beobachtung-akte-btn-copy{
+      background:rgba(79,70,229,.15);
+      color:var(--primary-light);
+      border:1px solid rgba(79,70,229,.25);
+    }
+    
+    .beobachtung-akte-btn-copy:hover{
+      background:rgba(79,70,229,.25);
+    }
+    
+    .beobachtung-akte-btn-delete{
+      background:rgba(239,68,68,.15);
+      color:#fca5a5;
+      border:1px solid rgba(239,68,68,.25);
+    }
+    
+    .beobachtung-akte-btn-delete:hover{
+      background:rgba(239,68,68,.25);
+    }
+    
+    .empty-beobachtungen{
+      text-align:center;
+      padding:40px 20px;
+      color:var(--gray);
+    }
+    
+    .empty-beobachtungen-icon{
+      font-size:36px;
+      margin-bottom:12px;
+      opacity:.3;
+    }
+    
+    .empty-beobachtungen-title{
+      font-size:14px;
+      font-weight:900;
+      margin-bottom:6px;
+      color:var(--gray-light);
+    }
+    
+    .beobachtung-actions{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      margin-top:10px;
+      padding-top:20px;
+      border-top:1px solid rgba(255,255,255,.1);
+      flex-shrink:0;
+    }
+    
+    .beobachtung-btn{
+      padding:10px 20px;
+      border:none;
+      border-radius:var(--radius-md);
+      font-weight:900;
+      cursor:pointer;
+      transition:var(--transition);
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      font-size:13px;
+    }
+    
+    .beobachtung-btn-copy{
+      background:var(--primary);
+      color:#fff;
+    }
+    
+    .beobachtung-btn-copy:hover{
+      background:var(--primary-dark);
+      transform:translateY(-1px);
+    }
+    
+    .beobachtung-btn-save{
+      background:var(--secondary);
+      color:#fff;
+    }
+    
+    .beobachtung-btn-save:hover{
+      background:var(--secondary-dark);
+      transform:translateY(-1px);
+    }
+    
+    .beobachtung-floating-btn{
+      position:fixed;
+      bottom:20px;
+      right:20px;
+      width:56px;
+      height:56px;
+      background:var(--primary);
+      border:none;
+      border-radius:50%;
+      color:#fff;
+      font-size:20px;
+      cursor:pointer;
+      box-shadow:var(--shadow-lg);
+      z-index:1000;
+      transition:var(--transition);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    
+    .beobachtung-floating-btn:hover{
+      background:var(--primary-dark);
+      transform:scale(1.1);
+      box-shadow:0 10px 25px rgba(79,70,229,.3);
+    }
+
+    /* Akten Suche */
+    .akten-search-container{
+      position:relative;
+      margin-bottom:20px;
+    }
+    
+    .akten-search-input{
+      width:100%;
+      padding:12px 16px 12px 44px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.1);
+      border-radius:var(--radius-md);
+      color:#fff;
+      font-size:14px;
+      transition:var(--transition);
+    }
+    
+    .akten-search-input::placeholder{
+      color:rgba(255,255,255,.5);
+    }
+    
+    .akten-search-input:focus{
+      outline:none;
+      border-color:var(--primary);
+      background:rgba(255,255,255,.08);
+      box-shadow:0 0 0 3px rgba(79,70,229,.15);
+    }
+    
+    .akten-search-icon{
+      position:absolute;
+      left:16px;
+      top:50%;
+      transform:translateY(-50%);
+      color:var(--gray);
+      font-size:16px;
+    }
+
     /* Modals */
     .modal-overlay{
       display:none;
@@ -617,6 +1075,13 @@
       .employee-tags{flex-direction:column;gap:6px}
       .induction-content{padding:16px}
       .oral-form-grid,.org-form-grid{grid-template-columns:1fr}
+      .beobachtung-akten-modal{padding:12px}
+      .beobachtung-akten-content{padding:20px}
+      .beobachtung-actions{flex-direction:column;align-items:stretch}
+      .beobachtung-floating-btn{bottom:16px;right:16px}
+      .beobachtung-tabs{flex-direction:column}
+      .beobachtung-tab{text-align:left;padding:10px 16px}
+      .akte-form-grid{grid-template-columns:1fr}
     }
     @media (max-width:480px){
       .app-container{padding:12px}
@@ -626,12 +1091,161 @@
       .sidebar{padding:14px}
       .modal{padding:16px;margin:12px}
       .notification{left:12px;right:12px;bottom:12px;min-width:auto}
+      .beobachtung-akten-content{padding:16px}
+      .beobachtung-akte-actions{flex-direction:column}
     }
   </style>
 </head>
 
 <body>
   <div class="bg-effects"><div class="bg-gradient"></div></div>
+
+  <!-- Floating Button für Beobachtung -->
+  <button class="beobachtung-floating-btn" onclick="openBeobachtungAktenModal()">
+    <i class="fas fa-folder-open"></i>
+  </button>
+
+  <!-- Beobachtungs Akten Modal -->
+  <div class="beobachtung-akten-modal" id="beobachtungAktenModal" onclick="if(event.target===this)closeBeobachtungAktenModal()">
+    <div class="beobachtung-akten-content">
+      <div class="beobachtung-akten-header">
+        <div class="beobachtung-akten-title">
+          <i class="fas fa-folder-open"></i> Beobachtungs-Akten
+        </div>
+        <button class="beobachtung-akten-close" onclick="closeBeobachtungAktenModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <div class="beobachtung-akten-body">
+        <div class="beobachtung-tabs">
+          <button class="beobachtung-tab active" onclick="switchBeobachtungTab('new')">Neue Akte erstellen</button>
+          <button class="beobachtung-tab" onclick="switchBeobachtungTab('list')">Akten durchsuchen</button>
+          <button class="beobachtung-tab" onclick="switchBeobachtungTab('beobachtung')">Beobachtung hinzufügen</button>
+        </div>
+        
+        <!-- Neue Akte erstellen Tab -->
+        <div class="beobachtung-tab-content" id="beobachtungNewTab">
+          <div class="akte-form-grid">
+            <div class="akte-form-group">
+              <label class="akte-label">Name *</label>
+              <input type="text" class="akte-input" id="akteName" placeholder="Vollständiger Name">
+            </div>
+            
+            <div class="akte-form-group">
+              <label class="akte-label">Dienstnummer (DN) *</label>
+              <input type="number" class="akte-input" id="akteDN" placeholder="z.B. 43">
+            </div>
+            
+            <div class="akte-form-group">
+              <label class="akte-label">Unit</label>
+              <select class="akte-input" id="akteUnit">
+                <option value="">Unit auswählen</option>
+                <option value="Air Force">Air Force</option>
+                <option value="S.O.C">S.O.C</option>
+                <option value="Infantry">Infantry</option>
+                <option value="Military Police">Military Police</option>
+                <option value="Navy Marine">Navy Marine</option>
+                <option value="Navy SEALs">Navy SEALs</option>
+              </select>
+            </div>
+            
+            <div class="akte-form-group">
+              <label class="akte-label">Rang</label>
+              <select class="akte-input" id="akteRank">
+                <option value="">Rang auswählen</option>
+                <option value="Private">Private</option>
+                <option value="Private First Class">Private First Class</option>
+                <option value="Specialist">Specialist</option>
+                <option value="Corporal">Corporal</option>
+                <option value="Sergeant">Sergeant</option>
+                <option value="Staff Sergeant">Staff Sergeant</option>
+                <option value="Sergeant First Class">Sergeant First Class</option>
+                <option value="Master Sergeant">Master Sergeant</option>
+                <option value="Sergeant Major">Sergeant Major</option>
+                <option value="Lieutenant">Lieutenant</option>
+                <option value="Captain">Captain</option>
+                <option value="Major">Major</option>
+                <option value="Colonel">Colonel</option>
+                <option value="Major General">Major General</option>
+                <option value="Lieutenant General">Lieutenant General</option>
+                <option value="Vice General of Army">Vice General of Army</option>
+                <option value="General of Army">General of Army</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="beobachtung-actions">
+            <button class="beobachtung-btn beobachtung-btn-save" onclick="createNewAkte()">
+              <i class="fas fa-plus"></i> Neue Akte erstellen
+            </button>
+          </div>
+        </div>
+        
+        <!-- Akten durchsuchen Tab -->
+        <div class="beobachtung-tab-content" id="beobachtungListTab" style="display:none;">
+          <div class="akten-search-container">
+            <i class="fas fa-search akten-search-icon"></i>
+            <input type="text" class="akten-search-input" id="aktenSearch" placeholder="Nach Name oder DN suchen..." oninput="searchAkten(this.value)">
+          </div>
+          
+          <div class="beobachtung-akten-liste" id="aktenListe">
+            <div class="empty-beobachtungen">
+              <div class="empty-beobachtungen-icon"><i class="fas fa-folder-open"></i></div>
+              <div class="empty-beobachtungen-title">Keine Akten gefunden</div>
+              <div class="empty-description">Erstellen Sie Ihre erste Akte</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Beobachtung hinzufügen Tab -->
+        <div class="beobachtung-tab-content" id="beobachtungBeobachtungTab" style="display:none;">
+          <div class="akte-form-grid">
+            <div class="akte-form-group">
+              <label class="akte-label">Name *</label>
+              <input type="text" class="akte-input" id="beobachtungName" placeholder="Name der Person">
+            </div>
+            
+            <div class="akte-form-group">
+              <label class="akte-label">Dienstnummer (DN) *</label>
+              <input type="number" class="akte-input" id="beobachtungDN" placeholder="z.B. 43">
+            </div>
+            
+            <div class="akte-form-group" style="grid-column: span 2;">
+              <label class="akte-label">Grund der Beobachtung *</label>
+              <textarea class="akte-input akte-textarea" id="beobachtungGrund" placeholder="Beschreiben Sie den Grund der Beobachtung..."></textarea>
+            </div>
+          </div>
+          
+          <div class="beobachtung-preview">
+            <div class="beobachtung-preview-title">
+              <i class="fas fa-file-alt"></i> Vorschau
+            </div>
+            <div class="beobachtung-preview-content" id="beobachtungPreview">
+╔══════════════════╗
+/////////////////////////////////////////////////////////////////////////
+Beobachtung
+Name: 
+DN:  
+Grund:
+/////////////////////////////////////////////////////////////////////////
+<@&1097625910242447422>
+╚══════════════════╝
+            </div>
+          </div>
+          
+          <div class="beobachtung-actions">
+            <button class="beobachtung-btn beobachtung-btn-copy" onclick="copyBeobachtungTemplate()">
+              <i class="fas fa-copy"></i> In Zwischenablage kopieren
+            </button>
+            <button class="beobachtung-btn beobachtung-btn-save" onclick="saveBeobachtungToAkte()">
+              <i class="fas fa-save"></i> Zu Akte hinzufügen
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <div class="notification" id="notification">
     <i class="fas fa-check notification-icon"></i>
@@ -652,6 +1266,10 @@
           <div class="stat-card">
             <div class="stat-value" id="totalEmployees">0</div>
             <div class="stat-label">Mitarbeiter</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="totalAkten">0</div>
+            <div class="stat-label">Akten</div>
           </div>
         </div>
       </div>
@@ -1026,7 +1644,8 @@
       </div>
     </div>
   </div>
-    <script>
+
+  <script>
     // Firebase Configuration
     const firebaseConfig = {
       apiKey: "AIzaSyBTnsLNw68UuOd5Xa2ymMffWk4SYGDQjso",
@@ -1052,7 +1671,6 @@
     };
 
     // Discord IDs for Ranks
-    // Wenn eine ID leer ist, wird der Rang normal als Text ausgegeben.
     const rankDiscordIds = {
       "Private": "1097625924104626198",
       "Private First Class": "1098190829295771739",
@@ -1078,12 +1696,15 @@
     let employees = [];
     let bothInductionsCompleted = false;
     let currentFilter = 'all';
+    let akten = [];
+    let currentBeobachtungTab = 'new';
 
     document.addEventListener('DOMContentLoaded', function () {
       initializeApp();
       setupEventListeners();
       updateStats();
       adjustSidebarHeight();
+      loadAkten();
     });
 
     function initializeApp() {
@@ -1099,6 +1720,7 @@
       loadEmployees();
       setupFormChangeListeners();
       seedTemplateBoxes();
+      setupBeobachtungEventListeners();
     }
 
     function setupEventListeners() {
@@ -1110,6 +1732,7 @@
         if (e.ctrlKey && e.key === 'n') { e.preventDefault(); openNewEmployeeModal(); }
         if (e.ctrlKey && e.key === 'f') { e.preventDefault(); document.getElementById('searchEmployees').focus(); }
         if (e.ctrlKey && e.key === 'e' && currentEmployee) { e.preventDefault(); openEditEmployeeModal(); }
+        if (e.ctrlKey && e.key === 'b') { e.preventDefault(); openBeobachtungAktenModal(); }
       });
 
       window.addEventListener('resize', adjustSidebarHeight);
@@ -1120,6 +1743,13 @@
       formInputs.forEach(input => {
         input.addEventListener('input', handleFormChange);
         input.addEventListener('change', handleFormChange);
+      });
+    }
+
+    function setupBeobachtungEventListeners() {
+      const beobachtungInputs = document.querySelectorAll('#beobachtungName, #beobachtungDN, #beobachtungGrund');
+      beobachtungInputs.forEach(input => {
+        input.addEventListener('input', updateBeobachtungPreview);
       });
     }
 
@@ -1140,6 +1770,464 @@
       const availableHeight = windowHeight - headerHeight - 40;
       const newHeight = Math.max(availableHeight, 500);
       sidebar.style.height = `${newHeight}px`;
+    }
+
+    // Akten Functions
+    function openBeobachtungAktenModal() {
+      openModal('beobachtungAktenModal');
+      updateBeobachtungPreview();
+    }
+
+    function closeBeobachtungAktenModal() {
+      closeModal('beobachtungAktenModal');
+    }
+
+    function switchBeobachtungTab(tabName) {
+      currentBeobachtungTab = tabName;
+      
+      // Update tab buttons
+      document.querySelectorAll('.beobachtung-tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      document.querySelectorAll('.beobachtung-tab')[tabName === 'new' ? 0 : tabName === 'list' ? 1 : 2].classList.add('active');
+      
+      // Update tab content
+      document.querySelectorAll('.beobachtung-tab-content').forEach(content => {
+        content.style.display = 'none';
+      });
+      let tabId = '';
+      if (tabName === 'new') tabId = 'beobachtungNewTab';
+      else if (tabName === 'list') tabId = 'beobachtungListTab';
+      else tabId = 'beobachtungBeobachtungTab';
+      
+      document.getElementById(tabId).style.display = 'block';
+      
+      // Load data for the tab
+      if (tabName === 'list') {
+        renderAktenListe();
+      }
+    }
+
+    function updateBeobachtungPreview() {
+      const name = document.getElementById('beobachtungName').value;
+      const dn = document.getElementById('beobachtungDN').value;
+      const grund = document.getElementById('beobachtungGrund').value;
+
+      const template = `╔══════════════════╗
+/////////////////////////////////////////////////////////////////////////
+Beobachtung
+Name: ${name || ''}
+DN: ${dn || ''}
+Grund: ${grund || ''}
+/////////////////////////////////////////////////////////////////////////
+<@&1097625910242447422>
+╚══════════════════╝`;
+
+      document.getElementById('beobachtungPreview').textContent = template;
+    }
+
+    async function copyBeobachtungTemplate() {
+      const template = document.getElementById('beobachtungPreview').textContent;
+      const success = await copyToClipboard(template);
+      showNotification(success ? 'Beobachtung kopiert' : 'Fehler beim Kopieren', success ? 'success' : 'error');
+    }
+
+    async function createNewAkte() {
+      const name = document.getElementById('akteName').value.trim();
+      const dn = document.getElementById('akteDN').value;
+      const unit = document.getElementById('akteUnit').value;
+      const rank = document.getElementById('akteRank').value;
+
+      if (!name || !dn) {
+        showNotification('Name und Dienstnummer sind erforderlich', 'warning');
+        return;
+      }
+
+      // Check if akte already exists
+      const existingAkte = akten.find(a => a.dn == dn && a.name.toLowerCase() === name.toLowerCase());
+      if (existingAkte) {
+        showNotification('Eine Akte für diese Person existiert bereits', 'warning');
+        return;
+      }
+
+      const akte = {
+        id: `AKTE-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+        name,
+        dn,
+        unit: unit || '',
+        rank: rank || '',
+        created: new Date().toISOString(),
+        createdFormatted: new Date().toLocaleDateString('de-DE'),
+        beobachtungen: [],
+        lastUpdated: new Date().toISOString()
+      };
+
+      try {
+        await db.collection('hrAkten').doc(akte.id).set(akte);
+        akten.unshift(akte);
+        
+        showNotification('Akte erfolgreich erstellt', 'success');
+        
+        // Felder leeren
+        document.getElementById('akteName').value = '';
+        document.getElementById('akteDN').value = '';
+        document.getElementById('akteUnit').value = '';
+        document.getElementById('akteRank').value = '';
+        
+        // Update stats and lists
+        updateStats();
+        renderAktenListe();
+        
+        // Switch to list tab to show the new entry
+        switchBeobachtungTab('list');
+      } catch (error) {
+        console.error('Fehler beim Erstellen der Akte:', error);
+        showNotification('Fehler beim Erstellen: ' + error.message, 'error');
+      }
+    }
+
+    async function saveBeobachtungToAkte() {
+      const name = document.getElementById('beobachtungName').value.trim();
+      const dn = document.getElementById('beobachtungDN').value;
+      const grund = document.getElementById('beobachtungGrund').value.trim();
+
+      if (!name || !dn) {
+        showNotification('Name und Dienstnummer sind erforderlich', 'warning');
+        return;
+      }
+
+      if (!grund) {
+        showNotification('Bitte geben Sie einen Grund für die Beobachtung an', 'warning');
+        return;
+      }
+
+      // Find or create akte
+      let akte = akten.find(a => a.dn == dn && a.name.toLowerCase() === name.toLowerCase());
+      
+      if (!akte) {
+        // Create new akte if it doesn't exist
+        const newAkte = {
+          id: `AKTE-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+          name,
+          dn,
+          unit: '',
+          rank: '',
+          created: new Date().toISOString(),
+          createdFormatted: new Date().toLocaleDateString('de-DE'),
+          beobachtungen: [],
+          lastUpdated: new Date().toISOString()
+        };
+        
+        try {
+          await db.collection('hrAkten').doc(newAkte.id).set(newAkte);
+          akte = newAkte;
+          akten.unshift(akte);
+        } catch (error) {
+          console.error('Fehler beim Erstellen der Akte:', error);
+          showNotification('Fehler beim Erstellen der Akte: ' + error.message, 'error');
+          return;
+        }
+      }
+
+      // Create beobachtung
+      const beobachtung = {
+        id: `BEO-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+        name,
+        dn,
+        grund,
+        date: new Date().toISOString(),
+        dateFormatted: new Date().toLocaleDateString('de-DE'),
+        template: document.getElementById('beobachtungPreview').textContent
+      };
+
+      try {
+        // Add beobachtung to akte
+        if (!akte.beobachtungen) akte.beobachtungen = [];
+        akte.beobachtungen.unshift(beobachtung);
+        akte.lastUpdated = new Date().toISOString();
+        
+        // Update in Firebase
+        await db.collection('hrAkten').doc(akte.id).update({
+          beobachtungen: akte.beobachtungen,
+          lastUpdated: akte.lastUpdated
+        });
+        
+        showNotification('Beobachtung zur Akte hinzugefügt', 'success');
+        
+        // Felder leeren
+        document.getElementById('beobachtungName').value = '';
+        document.getElementById('beobachtungDN').value = '';
+        document.getElementById('beobachtungGrund').value = '';
+        updateBeobachtungPreview();
+        
+        // Update stats and lists
+        updateStats();
+        renderAktenListe();
+      } catch (error) {
+        console.error('Fehler beim Speichern der Beobachtung:', error);
+        showNotification('Fehler beim Speichern: ' + error.message, 'error');
+      }
+    }
+
+    async function loadAkten() {
+      try {
+        const snapshot = await db.collection('hrAkten').orderBy('lastUpdated', 'desc').limit(100).get();
+        akten = [];
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          akten.push({ 
+            id: doc.id, 
+            ...data,
+            createdFormatted: data.createdFormatted || new Date(data.created).toLocaleDateString('de-DE')
+          });
+        });
+        updateStats();
+        renderAktenListe();
+      } catch (error) {
+        console.error('Fehler beim Laden der Akten:', error);
+      }
+    }
+
+    function renderAktenListe() {
+      const container = document.getElementById('aktenListe');
+      const searchTerm = document.getElementById('aktenSearch')?.value.toLowerCase() || '';
+      
+      // Filter akten based on search term
+      let filteredAkten = akten;
+      if (searchTerm) {
+        filteredAkten = akten.filter(akte => 
+          akte.name.toLowerCase().includes(searchTerm) || 
+          akte.dn.toString().includes(searchTerm)
+        );
+      }
+      
+      if (filteredAkten.length === 0) {
+        container.innerHTML = `
+          <div class="empty-beobachtungen">
+            <div class="empty-beobachtungen-icon"><i class="fas fa-folder-open"></i></div>
+            <div class="empty-beobachtungen-title">${searchTerm ? 'Keine passenden Akten gefunden' : 'Keine Akten gefunden'}</div>
+            <div class="empty-description">${searchTerm ? 'Versuchen Sie einen anderen Suchbegriff' : 'Erstellen Sie Ihre erste Akte'}</div>
+          </div>
+        `;
+        return;
+      }
+
+      let html = '';
+      filteredAkten.forEach(akte => {
+        const beobachtungenCount = akte.beobachtungen ? akte.beobachtungen.length : 0;
+        
+        html += `
+          <div class="beobachtung-akte-item">
+            <div class="beobachtung-akte-header">
+              <div class="beobachtung-akte-name">${escapeHtml(akte.name)}</div>
+              <div class="beobachtung-akte-dn">DN ${escapeHtml(akte.dn)}</div>
+            </div>
+            <div class="beobachtung-akte-date">
+              <i class="fas fa-calendar"></i> Erstellt: ${akte.createdFormatted}
+            </div>
+            <div style="display: flex; gap: 12px; margin-bottom: 12px;">
+              <div style="background: rgba(79,70,229,.10); color: var(--primary-light); padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 900; border: 1px solid rgba(79,70,229,.20);">
+                ${akte.unit || 'Keine Unit'}
+              </div>
+              <div style="background: rgba(16,185,129,.10); color: #86efac; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 900; border: 1px solid rgba(16,185,129,.20);">
+                ${akte.rank || 'Kein Rang'}
+              </div>
+            </div>
+            <div style="color: var(--gray); font-size: 11px; margin-bottom: 12px; display: flex; align-items: center; gap: 4px;">
+              <i class="fas fa-eye"></i> ${beobachtungenCount} Beobachtung${beobachtungenCount !== 1 ? 'en' : ''}
+            </div>
+        `;
+
+        // Show latest beobachtung if exists
+        if (beobachtungenCount > 0) {
+          const latestBeobachtung = akte.beobachtungen[0];
+          html += `
+            <div class="beobachtung-akte-grund">
+              <div style="font-size: 11px; color: var(--gray); margin-bottom: 4px;">
+                <i class="fas fa-calendar"></i> Letzte Beobachtung: ${latestBeobachtung.dateFormatted}
+              </div>
+              ${escapeHtml(latestBeobachtung.grund.length > 150 ? latestBeobachtung.grund.substring(0, 150) + '...' : latestBeobachtung.grund)}
+            </div>
+          `;
+        }
+
+        html += `
+            <div class="beobachtung-akte-actions">
+              <button class="beobachtung-akte-btn beobachtung-akte-btn-copy" onclick="openAkteDetail('${akte.id}')">
+                <i class="fas fa-eye"></i> Akte öffnen
+              </button>
+              <button class="beobachtung-akte-btn beobachtung-akte-btn-delete" onclick="deleteAkte('${akte.id}')">
+                <i class="fas fa-trash"></i> Löschen
+              </button>
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    function searchAkten(searchTerm) {
+      renderAktenListe();
+    }
+
+    function openAkteDetail(akteId) {
+      const akte = akten.find(a => a.id === akteId);
+      if (!akte) return;
+
+      let beobachtungenHtml = '';
+      if (akte.beobachtungen && akte.beobachtungen.length > 0) {
+        akte.beobachtungen.forEach(beobachtung => {
+          beobachtungenHtml += `
+            <div class="beobachtung-akte-item">
+              <div class="beobachtung-akte-date">
+                <i class="fas fa-calendar"></i> ${beobachtung.dateFormatted}
+              </div>
+              <div class="beobachtung-akte-grund">
+                ${escapeHtml(beobachtung.grund)}
+              </div>
+              <div class="beobachtung-akte-template">
+                ${escapeHtml(beobachtung.template)}
+              </div>
+              <div class="beobachtung-akte-actions">
+                <button class="beobachtung-akte-btn beobachtung-akte-btn-copy" onclick="copyBeobachtungFromAkte('${akte.id}', '${beobachtung.id}')">
+                  <i class="fas fa-copy"></i> Kopieren
+                </button>
+                <button class="beobachtung-akte-btn beobachtung-akte-btn-delete" onclick="deleteBeobachtungFromAkte('${akte.id}', '${beobachtung.id}')">
+                  <i class="fas fa-trash"></i> Löschen
+                </button>
+              </div>
+            </div>
+          `;
+        });
+      } else {
+        beobachtungenHtml = `
+          <div class="empty-beobachtungen">
+            <div class="empty-beobachtungen-icon"><i class="fas fa-eye"></i></div>
+            <div class="empty-beobachtungen-title">Keine Beobachtungen</div>
+            <div class="empty-description">Fügen Sie die erste Beobachtung hinzu</div>
+          </div>
+        `;
+      }
+
+      // Show in a modal
+      const modalHtml = `
+        <div class="beobachtung-akten-modal active" onclick="if(event.target===this)closeModal('akteDetailModal')">
+          <div class="beobachtung-akten-content">
+            <div class="beobachtung-akten-header">
+              <div class="beobachtung-akten-title">
+                <i class="fas fa-folder-open"></i> Akte: ${escapeHtml(akte.name)} (DN ${escapeHtml(akte.dn)})
+              </div>
+              <button class="beobachtung-akten-close" onclick="closeModal('akteDetailModal')">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+            <div class="beobachtung-akten-body">
+              <div style="display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;">
+                <div style="background: rgba(79,70,229,.10); color: var(--primary-light); padding: 8px 16px; border-radius: var(--radius-md); font-size: 13px; font-weight: 900; border: 1px solid rgba(79,70,229,.20);">
+                  <i class="fas fa-building"></i> ${akte.unit || 'Keine Unit'}
+                </div>
+                <div style="background: rgba(16,185,129,.10); color: #86efac; padding: 8px 16px; border-radius: var(--radius-md); font-size: 13px; font-weight: 900; border: 1px solid rgba(16,185,129,.20);">
+                  <i class="fas fa-user-tie"></i> ${akte.rank || 'Kein Rang'}
+                </div>
+                <div style="background: rgba(245,158,11,.10); color: #fcd34d; padding: 8px 16px; border-radius: var(--radius-md); font-size: 13px; font-weight: 900; border: 1px solid rgba(245,158,11,.20);">
+                  <i class="fas fa-eye"></i> ${akte.beobachtungen ? akte.beobachtungen.length : 0} Beobachtungen
+                </div>
+              </div>
+              
+              <div class="beobachtung-akten-liste">
+                ${beobachtungenHtml}
+              </div>
+              
+              <div class="beobachtung-actions">
+                <button class="beobachtung-btn beobachtung-btn-save" onclick="addNewBeobachtungToAkte('${akte.id}')">
+                  <i class="fas fa-plus"></i> Neue Beobachtung hinzufügen
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      const modalContainer = document.createElement('div');
+      modalContainer.id = 'akteDetailModal';
+      modalContainer.innerHTML = modalHtml;
+      document.body.appendChild(modalContainer);
+    }
+
+    async function copyBeobachtungFromAkte(akteId, beobachtungId) {
+      const akte = akten.find(a => a.id === akteId);
+      if (!akte || !akte.beobachtungen) return;
+
+      const beobachtung = akte.beobachtungen.find(b => b.id === beobachtungId);
+      if (!beobachtung) return;
+
+      const success = await copyToClipboard(beobachtung.template);
+      showNotification(success ? 'Beobachtung kopiert' : 'Fehler beim Kopieren', success ? 'success' : 'error');
+    }
+
+    async function deleteBeobachtungFromAkte(akteId, beobachtungId) {
+      if (!confirm('Beobachtung wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.')) return;
+
+      const akte = akten.find(a => a.id === akteId);
+      if (!akte || !akte.beobachtungen) return;
+
+      try {
+        // Remove beobachtung from array
+        akte.beobachtungen = akte.beobachtungen.filter(b => b.id !== beobachtungId);
+        akte.lastUpdated = new Date().toISOString();
+        
+        // Update in Firebase
+        await db.collection('hrAkten').doc(akteId).update({
+          beobachtungen: akte.beobachtungen,
+          lastUpdated: akte.lastUpdated
+        });
+        
+        showNotification('Beobachtung gelöscht', 'success');
+        
+        // Re-open akte detail to refresh view
+        closeModal('akteDetailModal');
+        setTimeout(() => openAkteDetail(akteId), 100);
+        
+        // Update main list
+        renderAktenListe();
+      } catch (error) {
+        console.error('Fehler beim Löschen der Beobachtung:', error);
+        showNotification('Fehler beim Löschen: ' + error.message, 'error');
+      }
+    }
+
+    async function deleteAkte(akteId) {
+      if (!confirm('Akte wirklich löschen? Alle Beobachtungen werden ebenfalls gelöscht.')) return;
+
+      try {
+        await db.collection('hrAkten').doc(akteId).delete();
+        akten = akten.filter(a => a.id !== akteId);
+        
+        updateStats();
+        renderAktenListe();
+        showNotification('Akte gelöscht', 'success');
+      } catch (error) {
+        console.error('Fehler beim Löschen der Akte:', error);
+        showNotification('Fehler beim Löschen: ' + error.message, 'error');
+      }
+    }
+
+    function addNewBeobachtungToAkte(akteId) {
+      const akte = akten.find(a => a.id === akteId);
+      if (!akte) return;
+
+      // Close detail modal
+      closeModal('akteDetailModal');
+      
+      // Open main modal with beobachtung tab
+      openBeobachtungAktenModal();
+      switchBeobachtungTab('beobachtung');
+      
+      // Pre-fill name and DN
+      document.getElementById('beobachtungName').value = akte.name;
+      document.getElementById('beobachtungDN').value = akte.dn;
+      updateBeobachtungPreview();
     }
 
     // Firebase Functions
@@ -1522,7 +2610,6 @@
 
       if (nowBothCompleted && !bothInductionsCompleted) {
         bothInductionsCompleted = true;
-        // Copy-Settings-Modal wurde entfernt -> kein "beide kopieren" mehr
       } else if (!nowBothCompleted) {
         bothInductionsCompleted = false;
       }
@@ -1627,6 +2714,7 @@ Sonstiges: ${notes}
 
     function updateStats() {
       document.getElementById('totalEmployees').textContent = employees.length;
+      document.getElementById('totalAkten').textContent = akten.length;
     }
 
     function showEmployeeContextMenu(e, employee) {
@@ -1787,7 +2875,13 @@ Sonstiges: ${notes}
     }
 
     function closeModal(modalId) {
-      document.getElementById(modalId).classList.remove('active');
+      const modal = document.getElementById(modalId);
+      if (modal) {
+        modal.classList.remove('active');
+        if (modalId === 'akteDetailModal') {
+          setTimeout(() => modal.remove(), 300);
+        }
+      }
     }
 
     function openNewEmployeeModal() {
