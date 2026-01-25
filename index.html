@@ -191,35 +191,6 @@
             font-weight: 600;
         }
         
-        /* Filter Buttons im Header */
-        .filter-buttons {
-            display: flex;
-            gap: 8px;
-            margin-top: 10px;
-        }
-        
-        .filter-btn {
-            padding: 6px 12px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 20px;
-            color: var(--gray-light);
-            font-size: 11px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: var(--transition);
-        }
-        
-        .filter-btn:hover {
-            background: rgba(255, 255, 255, 0.15);
-        }
-        
-        .filter-btn.active {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
-        }
-        
         .sidebar {
             background: rgba(30, 41, 59, 0.9);
             backdrop-filter: blur(20px);
@@ -262,9 +233,15 @@
             border-radius: 20px;
         }
         
+        .sidebar-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
         .search-container {
             position: relative;
-            margin-bottom: 20px;
             flex-shrink: 0;
         }
         
@@ -711,11 +688,90 @@
             transform: translateX(24px);
         }
         
-        .form-grid {
+        /* NEU: Optimierte Form Grids für beide Einweisungen */
+        .form-grid-new {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: 1fr 1fr;
             gap: 16px;
             margin-bottom: 20px;
+        }
+        
+        .form-grid-new .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        /* Spezielle Layouts für Oral */
+        .oral-form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .oral-form-grid .form-group:nth-child(1) { /* Prüfer */
+            grid-column: 1;
+        }
+        
+        .oral-form-grid .form-group:nth-child(2) { /* Datum */
+            grid-column: 2;
+        }
+        
+        .oral-form-grid .form-group:nth-child(3) { /* Uhrzeit */
+            grid-column: 1;
+        }
+        
+        .oral-form-grid .form-group:nth-child(4) { /* Beteiligte Person */
+            grid-column: 2;
+        }
+        
+        .oral-form-grid .form-group:nth-child(5) { /* Unit */
+            grid-column: 1;
+        }
+        
+        .oral-form-grid .form-group:nth-child(6) { /* Rang */
+            grid-column: 2;
+        }
+        
+        .oral-form-grid .form-group:nth-child(7) { /* Sonstige Bemerkungen */
+            grid-column: 1 / span 2;
+        }
+        
+        /* NEU: Layout für Organisatorisch mit Prüfer */
+        .org-form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .org-form-grid .form-group:nth-child(1) { /* Prüfer */
+            grid-column: 1;
+        }
+        
+        .org-form-grid .form-group:nth-child(2) { /* Datum */
+            grid-column: 2;
+        }
+        
+        .org-form-grid .form-group:nth-child(3) { /* Uhrzeit */
+            grid-column: 1;
+        }
+        
+        .org-form-grid .form-group:nth-child(4) { /* Beteiligte Person */
+            grid-column: 2;
+        }
+        
+        .org-form-grid .form-group:nth-child(5) { /* Unit */
+            grid-column: 1;
+        }
+        
+        .org-form-grid .form-group:nth-child(6) { /* Rang */
+            grid-column: 2;
+        }
+        
+        .org-form-grid .form-group:nth-child(7) { /* Sonstige Bemerkungen */
+            grid-column: 1 / span 2;
         }
         
         .form-group {
@@ -1085,8 +1141,14 @@
                 padding: 16px;
             }
             
-            .form-grid {
+            .oral-form-grid,
+            .org-form-grid {
                 grid-template-columns: 1fr;
+            }
+            
+            .oral-form-grid .form-group,
+            .org-form-grid .form-group {
+                grid-column: 1 !important;
             }
             
             .quick-actions {
@@ -1240,6 +1302,54 @@
             font-size: 12px;
             color: var(--gray);
         }
+        
+        /* Time Input fix */
+        .time-input-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .time-input-wrapper {
+            flex: 1;
+            position: relative;
+        }
+        
+        input[type="time"]::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+            opacity: 0.6;
+        }
+        
+        /* Filter Buttons in Sidebar */
+        .sidebar-filter-buttons {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        
+        .sidebar-filter-btn {
+            padding: 6px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            color: var(--gray-light);
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            flex: 1;
+            text-align: center;
+        }
+        
+        .sidebar-filter-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        .sidebar-filter-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
     </style>
 </head>
 <body>
@@ -1275,17 +1385,6 @@
                     </div>
                 </div>
             </div>
-            <div class="filter-buttons">
-                <button class="filter-btn active" onclick="filterEmployeesByType('all')">
-                    Alle
-                </button>
-                <button class="filter-btn" onclick="filterEmployeesByType('oral')">
-                    Nur Mündliche
-                </button>
-                <button class="filter-btn" onclick="filterEmployeesByType('org')">
-                    Nur Organisatorische
-                </button>
-            </div>
         </header>
         
         <!-- Sidebar -->
@@ -1298,9 +1397,24 @@
                 <div class="employee-count" id="employeeCount">0</div>
             </div>
             
-            <div class="search-container">
-                <i class="fas fa-search search-icon"></i>
-                <input type="text" class="search-input" id="searchEmployees" placeholder="Nach Namen oder DN suchen...">
+            <div class="sidebar-controls">
+                <!-- Filter Buttons in Sidebar -->
+                <div class="sidebar-filter-buttons">
+                    <button class="sidebar-filter-btn active" onclick="filterEmployeesByType('all')">
+                        Alle
+                    </button>
+                    <button class="sidebar-filter-btn" onclick="filterEmployeesByType('oral')">
+                        Mündlich
+                    </button>
+                    <button class="sidebar-filter-btn" onclick="filterEmployeesByType('org')">
+                        Organisatorische
+                    </button>
+                </div>
+                
+                <div class="search-container">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" class="search-input" id="searchEmployees" placeholder="Nach Namen oder DN suchen...">
+                </div>
             </div>
             
             <div class="employee-list-container">
@@ -1375,7 +1489,13 @@
                             </label>
                         </div>
                         
-                        <div class="form-grid">
+                        <!-- LAYOUT für Mündliche Einweisung -->
+                        <div class="oral-form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Prüfer</label>
+                                <input type="text" class="form-input" id="oralExaminer" placeholder="Name des Prüfers">
+                            </div>
+                            
                             <div class="form-group">
                                 <label class="form-label">Datum</label>
                                 <input type="date" class="form-input" id="oralDate">
@@ -1392,7 +1512,7 @@
                             
                             <div class="form-group">
                                 <label class="form-label">Beteiligte Person</label>
-                                <input type="text" class="form-input" id="oralPerson" placeholder="Name der einweisenden Person">
+                                <input type="text" class="form-input" id="oralPerson" placeholder="Name der beteiligten Person">
                             </div>
                             
                             <div class="form-group">
@@ -1431,11 +1551,11 @@
                                     <option value="General of Army">General of Army</option>
                                 </select>
                             </div>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label">Sonstige Bemerkungen</label>
-                            <textarea class="form-textarea" id="oralNotes" placeholder="Weitere Informationen..."></textarea>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Sonstige Bemerkungen</label>
+                                <textarea class="form-textarea" id="oralNotes" placeholder="Weitere Informationen..."></textarea>
+                            </div>
                         </div>
                     </div>
                     
@@ -1459,7 +1579,13 @@
                             </label>
                         </div>
                         
-                        <div class="form-grid">
+                        <!-- NEUES LAYOUT für Organisatorische Einweisung mit Prüfer -->
+                        <div class="org-form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Prüfer</label>
+                                <input type="text" class="form-input" id="orgExaminer" placeholder="Name des Prüfers">
+                            </div>
+                            
                             <div class="form-group">
                                 <label class="form-label">Datum</label>
                                 <input type="date" class="form-input" id="orgDate">
@@ -1476,7 +1602,7 @@
                             
                             <div class="form-group">
                                 <label class="form-label">Beteiligte Person</label>
-                                <input type="text" class="form-input" id="orgPerson" placeholder="Name der einweisenden Person">
+                                <input type="text" class="form-input" id="orgPerson" placeholder="Name der beteiligten Person">
                             </div>
                             
                             <div class="form-group">
@@ -1515,11 +1641,11 @@
                                     <option value="General of Army">General of Army</option>
                                 </select>
                             </div>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label">Sonstige Bemerkungen</label>
-                            <textarea class="form-textarea" id="orgNotes" placeholder="Weitere Informationen..."></textarea>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Sonstige Bemerkungen</label>
+                                <textarea class="form-textarea" id="orgNotes" placeholder="Weitere Informationen..."></textarea>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1557,16 +1683,17 @@
                             <div class="template-content" id="oralTemplateContent">
 ╔══════════════════╗
 /////////////////////////////////////////////////////////////////////////
-Mündliche Einweisung / bestanden
+Mündliche Einweisung / ausstehend
 
-Name: -
-DN: -
-Hauptunit: -
-Rang: -
-Datum: -
-Uhrzeit: - bis -
-Beteiligte: -
-Sonstiges: -
+Prüfer :
+Name: 
+DN: 
+Hauptunit: 
+Rang: 
+Datum: 
+Uhrzeit: 
+Beteiligte: 
+Sonstiges: 
 
 /////////////////////////////////////////////////////////////////////////
 <@&1097625910242447422>
@@ -1586,16 +1713,17 @@ Sonstiges: -
                             <div class="template-content" id="orgTemplateContent">
 ╔══════════════════╗
 /////////////////////////////////////////////////////////////////////////
-Organisatorische Einweisung / bestanden
+Organisatorische Einweisung / ausstehend
 
-Name: -
-DN: -
-Hauptunit: -
-Rang: -
-Datum: -
-Uhrzeit: - bis -
-Beteiligte: -
-Sonstiges: -
+Prüfer :
+Name: 
+DN: 
+Hauptunit: 
+Rang: 
+Datum: 
+Uhrzeit: 
+Beteiligte: 
+Sonstiges: 
 
 /////////////////////////////////////////////////////////////////////////
 <@&1097625910242447422>
@@ -1621,7 +1749,7 @@ Sonstiges: -
                 </button>
             </div>
             
-            <div class="form-grid">
+            <div class="form-grid-new">
                 <div class="form-group">
                     <label class="form-label">Vollständiger Name *</label>
                     <input type="text" class="form-input" id="newEmployeeName" placeholder="z.B. Max Fiart">
@@ -1694,7 +1822,7 @@ Sonstiges: -
                 </button>
             </div>
             
-            <div class="form-grid">
+            <div class="form-grid-new">
                 <div class="form-group">
                     <label class="form-label">Vollständiger Name *</label>
                     <input type="text" class="form-input" id="editEmployeeName" placeholder="z.B. Max Fiart">
@@ -1864,6 +1992,8 @@ Sonstiges: -
         let employees = [];
         let bothInductionsCompleted = false;
         let currentFilter = 'all';
+        let currentSortType = 'name';
+        let sortAscending = true;
 
         // Initialize App
         document.addEventListener('DOMContentLoaded', function() {
@@ -1996,17 +2126,14 @@ Sonstiges: -
             const container = document.getElementById('employeeList');
             const countElement = document.getElementById('employeeCount');
             
-            let filteredEmployees = employees;
+            let filteredEmployees = getFilteredEmployees();
             
-            if (currentFilter === 'oral') {
-                filteredEmployees = employees.filter(emp => 
-                    !emp.inductions?.oral?.completed && emp.inductions?.oral?.completed !== undefined
-                );
-            } else if (currentFilter === 'org') {
-                filteredEmployees = employees.filter(emp => 
-                    !emp.inductions?.org?.completed && emp.inductions?.org?.completed !== undefined
-                );
-            }
+            // Sortieren nach Name (alphabetisch)
+            filteredEmployees.sort((a, b) => {
+                const nameA = a.name.toUpperCase();
+                const nameB = b.name.toUpperCase();
+                return nameA < nameB ? -1 : nameA > nameB ? 1 : 0;
+            });
             
             if (filteredEmployees.length === 0) {
                 container.innerHTML = `
@@ -2015,7 +2142,7 @@ Sonstiges: -
                             <i class="fas fa-user-plus"></i>
                         </div>
                         <div class="empty-title">Keine Mitarbeiter</div>
-                        <div class="empty-description">Fügen Sie Ihren ersten Mitarbeiter hinzu</div>
+                        <div class="empty-description">${getEmptyStateDescription()}</div>
                     </div>
                 `;
                 countElement.textContent = '0';
@@ -2062,6 +2189,34 @@ Sonstiges: -
             });
         }
 
+        function getFilteredEmployees() {
+            if (currentFilter === 'oral') {
+                // Nur Mitarbeiter mit AUSSTEHENDER mündlicher Einweisung (nicht bestanden)
+                return employees.filter(emp => 
+                    !emp.inductions?.oral?.completed
+                );
+            } else if (currentFilter === 'org') {
+                // Nur Mitarbeiter mit AUSSTEHENDER organisatorischer Einweisung (nicht bestanden)
+                return employees.filter(emp => 
+                    !emp.inductions?.org?.completed
+                );
+            } else {
+                // Alle Mitarbeiter
+                return employees;
+            }
+        }
+
+        function getEmptyStateDescription() {
+            switch(currentFilter) {
+                case 'oral':
+                    return 'Keine Mitarbeiter mit ausstehender mündlicher Einweisung';
+                case 'org':
+                    return 'Keine Mitarbeiter mit ausstehender organisatorischer Einweisung';
+                default:
+                    return 'Fügen Sie Ihren ersten Mitarbeiter hinzu';
+            }
+        }
+
         function filterEmployees(searchTerm) {
             const cards = document.querySelectorAll('.employee-card');
             const term = searchTerm.toLowerCase().trim();
@@ -2085,16 +2240,16 @@ Sonstiges: -
             currentFilter = type;
             
             // Update filter buttons
-            document.querySelectorAll('.filter-btn').forEach(btn => {
+            document.querySelectorAll('.sidebar-filter-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
             
             if (type === 'all') {
-                document.querySelectorAll('.filter-btn')[0].classList.add('active');
+                document.querySelectorAll('.sidebar-filter-btn')[0].classList.add('active');
             } else if (type === 'oral') {
-                document.querySelectorAll('.filter-btn')[1].classList.add('active');
+                document.querySelectorAll('.sidebar-filter-btn')[1].classList.add('active');
             } else if (type === 'org') {
-                document.querySelectorAll('.filter-btn')[2].classList.add('active');
+                document.querySelectorAll('.sidebar-filter-btn')[2].classList.add('active');
             }
             
             renderEmployeeList();
@@ -2129,6 +2284,7 @@ Sonstiges: -
             const orgData = currentEmployee.orgData || {};
             
             // Oral induction
+            document.getElementById('oralExaminer').value = oralData.examiner || '';
             document.getElementById('oralDate').value = oralData.date || '';
             document.getElementById('oralTimeStart').value = oralData.timeStart || '16:40';
             document.getElementById('oralTimeEnd').value = oralData.timeEnd || '18:00';
@@ -2137,7 +2293,8 @@ Sonstiges: -
             document.getElementById('unitSelect').value = oralData.unit || currentEmployee.unit || '';
             document.getElementById('rankSelect').value = oralData.rank || currentEmployee.rank || '';
             
-            // Organizational induction
+            // Organizational induction - NEU mit Prüfer Feld
+            document.getElementById('orgExaminer').value = orgData.examiner || '';
             document.getElementById('orgDate').value = orgData.date || '';
             document.getElementById('orgTimeStart').value = orgData.timeStart || '22:10';
             document.getElementById('orgTimeEnd').value = orgData.timeEnd || '23:05';
@@ -2207,8 +2364,9 @@ Sonstiges: -
             if (!currentEmployee) return;
             
             try {
-                // Save oral data with unit and rank from dropdowns
+                // Save oral data
                 currentEmployee.oralData = {
+                    examiner: document.getElementById('oralExaminer').value,
                     date: document.getElementById('oralDate').value,
                     timeStart: document.getElementById('oralTimeStart').value,
                     timeEnd: document.getElementById('oralTimeEnd').value,
@@ -2218,8 +2376,9 @@ Sonstiges: -
                     rank: document.getElementById('rankSelect').value
                 };
                 
-                // Save organizational data with unit and rank from dropdowns
+                // Save organizational data MIT PRÜFER
                 currentEmployee.orgData = {
+                    examiner: document.getElementById('orgExaminer').value,
                     date: document.getElementById('orgDate').value,
                     timeStart: document.getElementById('orgTimeStart').value,
                     timeEnd: document.getElementById('orgTimeEnd').value,
@@ -2460,23 +2619,24 @@ Sonstiges: -
             
             const data = isOral ? currentEmployee.oralData : currentEmployee.orgData;
             
-            const name = currentEmployee.name || '-';
-            const dn = currentEmployee.dn || '-';
+            const name = currentEmployee.name || '';
+            const dn = currentEmployee.dn || '';
             
             // Get unit and rank from the specific form or fallback to employee data
             const unit = isOral ? 
-                (document.getElementById('unitSelect').value || currentEmployee.unit || '-') :
-                (document.getElementById('unitSelect2').value || currentEmployee.unit || '-');
+                (document.getElementById('unitSelect').value || currentEmployee.unit || '') :
+                (document.getElementById('unitSelect2').value || currentEmployee.unit || '');
             
             const rank = isOral ? 
-                (document.getElementById('rankSelect').value || currentEmployee.rank || '-') :
-                (document.getElementById('rankSelect2').value || currentEmployee.rank || '-');
+                (document.getElementById('rankSelect').value || currentEmployee.rank || '') :
+                (document.getElementById('rankSelect2').value || currentEmployee.rank || '');
             
-            const date = data?.date ? new Date(data.date).toLocaleDateString('de-DE') : '-';
-            const timeStart = data?.timeStart || '-';
-            const timeEnd = data?.timeEnd || '-';
-            const person = data?.person || '-';
-            const notes = data?.notes || '-';
+            const date = data?.date ? new Date(data.date).toLocaleDateString('de-DE') : '';
+            const timeStart = data?.timeStart || '';
+            const timeEnd = data?.timeEnd || '';
+            const person = data?.person || '';
+            const notes = data?.notes || '';
+            const examiner = data?.examiner || '';
             
             const timeSeparator = isOral ? 'bis' : '-';
             
@@ -2488,42 +2648,24 @@ Sonstiges: -
             const unitDisplay = unitDiscordId ? `<@&${unitDiscordId}>` : unit;
             const rankDisplay = rankDiscordId ? `<@&${rankDiscordId}>` : rank;
             
-            // Korrekte Vorlagenformate wie angefordert
-            if (isOral) {
-                return `╔══════════════════╗
+            // Korrekte Vorlagenformate für BEIDE Einweisungen
+            return `╔══════════════════╗
 /////////////////////////////////////////////////////////////////////////
-Mündliche Einweisung / ${completed ? 'bestanden' : 'ausstehend'}
+${isOral ? 'Mündliche' : 'Organisatorische'} Einweisung / ${completed ? 'bestanden' : 'ausstehend'}
 
+Prüfer : ${examiner}
 Name: ${name}
 DN: ${dn}
 Hauptunit: ${unitDisplay}
 Rang: ${rankDisplay}
 Datum: ${date}
-Uhrzeit: ${timeStart} bis ${timeEnd}
+Uhrzeit: ${timeStart} ${timeSeparator} ${timeEnd}
 Beteiligte: ${person}
 Sonstiges: ${notes}
 
 /////////////////////////////////////////////////////////////////////////
 <@&1097625910242447422>
 ╚══════════════════╝`;
-            } else {
-                return `╔══════════════════╗
-/////////////////////////////////////////////////////////////////////////
-Organisatorische Einweisung / ${completed ? 'bestanden' : 'ausstehend'}
-
-Name: ${name}
-DN: ${dn}
-Hauptunit: ${unitDisplay}
-Rang: ${rankDisplay}
-Datum: ${date}
-Uhrzeit: ${timeStart} - ${timeEnd}
-Beteiligte: ${person}
-Sonstiges: ${notes}
-
-/////////////////////////////////////////////////////////////////////////
-<@&1097625910242447422>
-╚══════════════════╝`;
-            }
         }
 
         // Save Functions
@@ -2823,8 +2965,26 @@ Sonstiges: ${notes}
                 rank: rank || '',
                 lastUpdated: new Date().toISOString(),
                 inductions: {},
-                oralData: {},
-                orgData: {}
+                oralData: {
+                    examiner: '',
+                    date: '',
+                    timeStart: '16:40',
+                    timeEnd: '18:00',
+                    person: '',
+                    notes: '',
+                    unit: unit || '',
+                    rank: rank || ''
+                },
+                orgData: {
+                    examiner: '',
+                    date: '',
+                    timeStart: '22:10',
+                    timeEnd: '23:05',
+                    person: '',
+                    notes: '',
+                    unit: unit || '',
+                    rank: rank || ''
+                }
             };
             
             const success = await saveEmployeeToFirebase(newEmployee);
@@ -2898,6 +3058,7 @@ Sonstiges: ${notes}
                         org: { completed: false }
                     },
                     oralData: {
+                        examiner: 'HR Team',
                         date: '2026-01-21',
                         timeStart: '16:40',
                         timeEnd: '18:00',
@@ -2906,7 +3067,16 @@ Sonstiges: ${notes}
                         unit: 'Air Force',
                         rank: 'Captain'
                     },
-                    orgData: {}
+                    orgData: {
+                        examiner: 'HR Team',
+                        date: '2026-01-21',
+                        timeStart: '22:10',
+                        timeEnd: '23:05',
+                        person: 'HR Team',
+                        notes: '',
+                        unit: 'Air Force',
+                        rank: 'Captain'
+                    }
                 },
                 {
                     id: 'emp2',
@@ -2919,6 +3089,7 @@ Sonstiges: ${notes}
                         org: { completed: false }
                     },
                     oralData: {
+                        examiner: 'Nico Kickl',
                         date: '2026-01-16',
                         timeStart: '22:10',
                         timeEnd: '23:05',
@@ -2927,7 +3098,16 @@ Sonstiges: ${notes}
                         unit: 'Navy SEALs',
                         rank: 'Sergeant'
                     },
-                    orgData: {}
+                    orgData: {
+                        examiner: 'Nico Kickl',
+                        date: '2026-01-16',
+                        timeStart: '22:10',
+                        timeEnd: '23:05',
+                        person: 'Nico Kickl',
+                        notes: '',
+                        unit: 'Navy SEALs',
+                        rank: 'Sergeant'
+                    }
                 },
                 {
                     id: 'emp3',
@@ -2940,6 +3120,7 @@ Sonstiges: ${notes}
                         org: { completed: true, date: '2026-01-20' }
                     },
                     oralData: {
+                        examiner: 'HR Team',
                         date: '2026-01-20',
                         timeStart: '14:00',
                         timeEnd: '15:30',
@@ -2949,6 +3130,7 @@ Sonstiges: ${notes}
                         rank: 'Lieutenant'
                     },
                     orgData: {
+                        examiner: 'HR Team',
                         date: '2026-01-20',
                         timeStart: '16:00',
                         timeEnd: '17:30',
@@ -2956,6 +3138,37 @@ Sonstiges: ${notes}
                         notes: 'Dokumente vollständig',
                         unit: 'Military Police',
                         rank: 'Lieutenant'
+                    }
+                },
+                {
+                    id: 'emp4',
+                    name: 'Anna Schmidt',
+                    dn: '25',
+                    unit: 'Infantry',
+                    rank: 'Corporal',
+                    inductions: {
+                        oral: { completed: false },
+                        org: { completed: true, date: '2026-01-18' }
+                    },
+                    oralData: {
+                        examiner: '',
+                        date: '',
+                        timeStart: '16:40',
+                        timeEnd: '18:00',
+                        person: '',
+                        notes: '',
+                        unit: 'Infantry',
+                        rank: 'Corporal'
+                    },
+                    orgData: {
+                        examiner: 'HR Team',
+                        date: '2026-01-18',
+                        timeStart: '10:00',
+                        timeEnd: '11:30',
+                        person: 'HR Team',
+                        notes: 'Dokumente in Ordnung',
+                        unit: 'Infantry',
+                        rank: 'Corporal'
                     }
                 }
             ];
