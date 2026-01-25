@@ -203,7 +203,7 @@
             font-weight: 700;
         }
         
-        /* Sidebar - Normalgröße */
+        /* Sidebar - Optimiert für viele Mitarbeiter */
         .sidebar {
             background: rgba(31, 41, 55, 0.92);
             backdrop-filter: blur(20px);
@@ -211,11 +211,15 @@
             padding: 20px;
             border: 1px solid var(--border);
             box-shadow: var(--shadow-md);
-            height: fit-content;
+            height: calc(100vh - 120px);
             position: sticky;
             top: 20px;
             display: flex;
             flex-direction: column;
+
+            /* WICHTIG: damit der innere Scroll zuverlässig funktioniert */
+            min-height: 650px;
+            min-height: 0;
         }
         
         .sidebar-header {
@@ -326,6 +330,9 @@
             display: flex;
             flex-direction: column;
             margin-bottom: 16px;
+
+            /* WICHTIG: damit Scroll korrekt greift */
+            min-height: 0;
         }
         
         .employee-list {
@@ -335,38 +342,52 @@
             overflow-y: auto;
             padding-right: 8px;
             flex: 1;
-            max-height: 500px;
+
+            /* WICHTIG: verhindert, dass Flex-Child nicht schrumpfen darf */
+            min-height: 0;
         }
         
         .employee-list::-webkit-scrollbar {
-            width: 8px;
+            width: 10px;
         }
         
         .employee-list::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.06);
-            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
         }
         
         .employee-list::-webkit-scrollbar-thumb {
             background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            border-radius: 4px;
+            border-radius: 6px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
         }
         
         .employee-list::-webkit-scrollbar-thumb:hover {
             background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+            box-shadow: 0 0 10px rgba(79, 70, 229, 0.5);
         }
         
-        /* Employee Cards - Normalgröße */
+        /* Employee Cards - FIX: Badges unten immer sichtbar */
         .employee-card {
             background: linear-gradient(135deg, rgba(79, 70, 229, 0.12) 0%, rgba(31, 41, 55, 0.3) 100%);
             border-radius: var(--radius-md);
             padding: 16px;
+
+            /* FIX: genug Platz für Badges, auch wenn sie umbrechen */
+            padding-bottom: 86px;
+
             border: 1px solid transparent;
             cursor: pointer;
             transition: var(--transition);
             position: relative;
+
+            /* Badges liegen im Card -> darf nicht abgeschnitten werden */
             overflow: hidden;
-            min-height: 110px;
+
+            min-height: 140px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
         }
         
         .employee-card:hover {
@@ -403,6 +424,7 @@
             justify-content: space-between;
             align-items: flex-start;
             margin-bottom: 10px;
+            gap: 10px;
         }
         
         .employee-name {
@@ -410,6 +432,10 @@
             font-size: 15px;
             color: white;
             line-height: 1.3;
+
+            /* FIX: lange Namen brechen sauber um */
+            word-break: break-word;
+            overflow-wrap: anywhere;
         }
         
         .employee-dn {
@@ -422,6 +448,7 @@
             border-radius: 10px;
             border: 1px solid rgba(79, 70, 229, 0.25);
             white-space: nowrap;
+            flex-shrink: 0;
         }
         
         .employee-meta {
@@ -430,27 +457,40 @@
             gap: 4px;
             font-size: 12px;
             color: var(--gray-light);
-            margin-bottom: 12px;
             line-height: 1.3;
+
+            /* FIX: Abstand, damit nichts mit Badges kollidiert */
+            margin-bottom: 12px;
         }
         
+        /* FIX: Badges unten fix im Card */
         .induction-badges {
             display: flex;
             gap: 6px;
             flex-wrap: wrap;
+
+            position: absolute;
+            left: 16px;
+            right: 16px;
+            bottom: 12px;
+
+            margin-top: 0;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
         }
         
         .induction-badge {
             font-size: 11px;
             padding: 5px 10px;
             border-radius: 15px;
-            font-weight: 700;
+            font-weight: 800;
             display: flex;
             align-items: center;
             gap: 5px;
             letter-spacing: 0.2px;
             white-space: nowrap;
             transition: var(--transition);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
         }
         
         .induction-badge:hover {
@@ -458,27 +498,27 @@
         }
         
         .badge-oral.pending { 
-            background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.25) 100%); 
-            color: #fca5a5; 
-            border: 1px solid rgba(239, 68, 68, 0.3); 
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.25) 0%, rgba(239, 68, 68, 0.35) 100%); 
+            color: #fecaca; 
+            border: 1px solid rgba(239, 68, 68, 0.4); 
         }
         
         .badge-oral.completed { 
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(16, 185, 129, 0.25) 100%); 
-            color: #86efac; 
-            border: 1px solid rgba(16, 185, 129, 0.3); 
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.25) 0%, rgba(16, 185, 129, 0.35) 100%); 
+            color: #a7f3d0; 
+            border: 1px solid rgba(16, 185, 129, 0.4);
         }
         
         .badge-org.pending { 
-            background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.25) 100%); 
-            color: #fca5a5; 
-            border: 1px solid rgba(239, 68, 68, 0.3); 
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(245, 158, 11, 0.35) 100%); 
+            color: #fde68a; 
+            border: 1px solid rgba(245, 158, 11, 0.4);
         }
         
         .badge-org.completed { 
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(16, 185, 129, 0.25) 100%); 
-            color: #86efac; 
-            border: 1px solid rgba(16, 185, 129, 0.3); 
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.25) 0%, rgba(16, 185, 129, 0.35) 100%); 
+            color: #a7f3d0; 
+            border: 1px solid rgba(16, 185, 129, 0.4);
         }
         
         .quick-actions {
@@ -938,8 +978,8 @@
         .template-card.completed .template-content {
             border-left-color: var(--secondary);
         }
-        
-        /* Modals - Normalgröße */
+
+                /* Modals - Normalgröße */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -1185,6 +1225,7 @@
             .sidebar {
                 position: static;
                 max-height: 600px;
+                height: auto;
             }
             
             .induction-grid,
@@ -1289,6 +1330,27 @@
                 right: 12px;
                 bottom: 12px;
                 min-width: auto;
+            }
+        }
+        
+        /* Optimierungen für kleine Bildschirme */
+        @media (max-height: 900px) {
+            .sidebar {
+                height: calc(100vh - 100px);
+                min-height: 500px;
+            }
+        }
+        
+        @media (max-height: 700px) {
+            .sidebar {
+                height: calc(100vh - 80px);
+                min-height: 400px;
+            }
+            
+            .employee-card {
+                min-height: 120px;
+                padding: 12px;
+                padding-bottom: 80px;
             }
         }
     </style>
@@ -1880,8 +1942,8 @@ Sonstiges:
             </div>
         </div>
     </div>
-    
-    <script>
+
+        <script>
         // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyBTnsLNw68UuOd5Xa2ymMffWk4SYGDQjso",
@@ -1941,34 +2003,28 @@ Sonstiges:
             initializeApp();
             setupEventListeners();
             updateStats();
+            adjustSidebarHeight();
         });
 
         function initializeApp() {
-            // Set current date for forms
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('oralDate').value = today;
             document.getElementById('orgDate').value = today;
             
-            // Set default times
             document.getElementById('oralTimeStart').value = '16:40';
             document.getElementById('oralTimeEnd').value = '18:00';
             document.getElementById('orgTimeStart').value = '22:10';
             document.getElementById('orgTimeEnd').value = '23:05';
             
-            // Load employees from Firebase
             loadEmployees();
-            
-            // Form Change Listener hinzufügen
             setupFormChangeListeners();
         }
 
         function setupEventListeners() {
-            // Search functionality
             document.getElementById('searchEmployees').addEventListener('input', function(e) {
                 filterEmployees(e.target.value);
             });
             
-            // Keyboard shortcuts
             document.addEventListener('keydown', function(e) {
                 if (e.ctrlKey && e.key === 'n') {
                     e.preventDefault();
@@ -1984,11 +2040,10 @@ Sonstiges:
                 }
             });
             
-            // Listen for form changes
             setupFormChangeListeners();
+            window.addEventListener('resize', adjustSidebarHeight);
         }
 
-        // Form Change Listeners
         function setupFormChangeListeners() {
             const formInputs = document.querySelectorAll('.form-input, .form-select, .form-textarea, .toggle-switch input');
             formInputs.forEach(input => {
@@ -2003,6 +2058,17 @@ Sonstiges:
                 updateTemplates();
                 saveEmployeeData(true);
             }
+        }
+
+        function adjustSidebarHeight() {
+            const sidebar = document.querySelector('.sidebar');
+            const header = document.querySelector('.app-header');
+            const windowHeight = window.innerHeight;
+            const headerHeight = header.offsetHeight;
+            
+            const availableHeight = windowHeight - headerHeight - 40;
+            const newHeight = Math.max(availableHeight, 500);
+            sidebar.style.height = `${newHeight}px`;
         }
 
         // Firebase Functions
@@ -2073,10 +2139,9 @@ Sonstiges:
             
             let filteredEmployees = getFilteredEmployees();
             
-            // Sortieren nach Name (alphabetisch)
             filteredEmployees.sort((a, b) => {
-                const nameA = a.name.toUpperCase();
-                const nameB = b.name.toUpperCase();
+                const nameA = (a.name || '').toUpperCase();
+                const nameB = (b.name || '').toUpperCase();
                 return nameA < nameB ? -1 : nameA > nameB ? 1 : 0;
             });
             
@@ -2147,13 +2212,9 @@ Sonstiges:
 
         function getFilteredEmployees() {
             if (currentFilter === 'oral') {
-                return employees.filter(emp => 
-                    !emp.inductions?.oral?.completed
-                );
+                return employees.filter(emp => !emp.inductions?.oral?.completed);
             } else if (currentFilter === 'org') {
-                return employees.filter(emp => 
-                    !emp.inductions?.org?.completed
-                );
+                return employees.filter(emp => !emp.inductions?.org?.completed);
             } else {
                 return employees;
             }
@@ -2181,18 +2242,13 @@ Sonstiges:
             
             cards.forEach(card => {
                 const text = card.textContent.toLowerCase();
-                if (text.includes(term)) {
-                    card.style.display = 'flex';
-                } else {
-                    card.style.display = 'none';
-                }
+                card.style.display = text.includes(term) ? 'flex' : 'none';
             });
         }
 
         function filterEmployeesByType(type) {
             currentFilter = type;
             
-            // Update filter buttons
             document.querySelectorAll('.sidebar-filter-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
@@ -2211,23 +2267,15 @@ Sonstiges:
         function selectEmployee(employee) {
             currentEmployee = employee;
             
-            // Show content
             document.getElementById('employeeHeader').style.display = 'flex';
             document.getElementById('inductionContent').style.display = 'block';
             
-            // Update header
             updateEmployeeHeader();
-            
-            // Update cards
-            document.querySelectorAll('.employee-card').forEach(card => {
-                card.classList.remove('active');
-            });
-            
-            // Load data
             loadEmployeeData();
-            
-            // Update UI immediately
             updateInductionDisplay();
+
+            /* FIX: aktiven Mitarbeiter sofort sichtbar markieren */
+            renderEmployeeList();
         }
 
         function loadEmployeeData() {
@@ -2236,7 +2284,6 @@ Sonstiges:
             const oralData = currentEmployee.oralData || {};
             const orgData = currentEmployee.orgData || {};
             
-            // Oral induction
             document.getElementById('oralExaminer').value = oralData.examiner || '';
             document.getElementById('oralDate').value = oralData.date || '';
             document.getElementById('oralTimeStart').value = oralData.timeStart || '16:40';
@@ -2246,7 +2293,6 @@ Sonstiges:
             document.getElementById('unitSelect').value = oralData.unit || currentEmployee.unit || '';
             document.getElementById('rankSelect').value = oralData.rank || currentEmployee.rank || '';
             
-            // Organizational induction
             document.getElementById('orgExaminer').value = orgData.examiner || '';
             document.getElementById('orgDate').value = orgData.date || '';
             document.getElementById('orgTimeStart').value = orgData.timeStart || '22:10';
@@ -2256,7 +2302,6 @@ Sonstiges:
             document.getElementById('unitSelect2').value = orgData.unit || currentEmployee.unit || '';
             document.getElementById('rankSelect2').value = orgData.rank || currentEmployee.rank || '';
             
-            // Induction status
             const oralCompleted = currentEmployee.inductions?.oral?.completed || false;
             const orgCompleted = currentEmployee.inductions?.org?.completed || false;
             
@@ -2266,10 +2311,7 @@ Sonstiges:
             updateInductionUI('oral', oralCompleted);
             updateInductionUI('org', orgCompleted);
             
-            // Check if both inductions are completed
             checkBothInductionsCompleted();
-            
-            // Update templates
             updateTemplates();
         }
 
@@ -2282,7 +2324,6 @@ Sonstiges:
             updateInductionUI('oral', oralCompleted);
             updateInductionUI('org', orgCompleted);
             
-            // Update employee list badges
             renderEmployeeList();
         }
 
@@ -2312,12 +2353,10 @@ Sonstiges:
             }
         }
 
-        // Save Form Data
         function saveFormData() {
             if (!currentEmployee) return;
             
             try {
-                // Save oral data
                 currentEmployee.oralData = {
                     examiner: document.getElementById('oralExaminer').value,
                     date: document.getElementById('oralDate').value,
@@ -2329,7 +2368,6 @@ Sonstiges:
                     rank: document.getElementById('rankSelect').value
                 };
                 
-                // Save organizational data
                 currentEmployee.orgData = {
                     examiner: document.getElementById('orgExaminer').value,
                     date: document.getElementById('orgDate').value,
@@ -2341,7 +2379,6 @@ Sonstiges:
                     rank: document.getElementById('rankSelect2').value
                 };
                 
-                // Update employee's main unit and rank if changed in form
                 const unitSelectValue = document.getElementById('unitSelect').value;
                 const rankSelectValue = document.getElementById('rankSelect').value;
                 
@@ -2353,7 +2390,6 @@ Sonstiges:
                     currentEmployee.rank = rankSelectValue;
                 }
                 
-                // Update lastUpdated timestamp
                 currentEmployee.lastUpdated = new Date().toISOString();
                 
             } catch (error) {
@@ -2361,7 +2397,6 @@ Sonstiges:
             }
         }
 
-        // Employee Edit Functions
         function openEditEmployeeModal() {
             if (!currentEmployee) {
                 showNotification('Bitte wählen Sie zuerst einen Mitarbeiter aus', 'warning');
@@ -2387,7 +2422,6 @@ Sonstiges:
                 return;
             }
             
-            // Daten aktualisieren
             currentEmployee.name = name;
             currentEmployee.dn = dn;
             currentEmployee.unit = document.getElementById('editEmployeeUnit').value || '';
@@ -2397,17 +2431,13 @@ Sonstiges:
             
             if (success) {
                 closeModal('editEmployeeModal');
-                
-                // UI aktualisieren
                 updateEmployeeHeader();
                 renderEmployeeList();
                 updateTemplates();
-                
                 showNotification('Mitarbeiterdaten erfolgreich aktualisiert', 'success');
             }
         }
 
-        // Employee Delete Functions
         async function deleteCurrentEmployee() {
             if (!currentEmployee) {
                 showNotification('Bitte wählen Sie zuerst einen Mitarbeiter aus', 'warning');
@@ -2421,7 +2451,6 @@ Sonstiges:
             const success = await deleteEmployeeFromFirebase(currentEmployee.id);
             
             if (success) {
-                // Remove from local array
                 const employeeIndex = employees.findIndex(emp => emp.id === currentEmployee.id);
                 if (employeeIndex !== -1) {
                     employees.splice(employeeIndex, 1);
@@ -2429,19 +2458,16 @@ Sonstiges:
                 
                 closeModal('editEmployeeModal');
                 
-                // Zurücksetzen der Ansicht
                 currentEmployee = null;
                 document.getElementById('employeeHeader').style.display = 'none';
                 document.getElementById('inductionContent').style.display = 'none';
                 
-                // UI aktualisieren
                 renderEmployeeList();
                 updateStats();
                 showNotification('Mitarbeiter erfolgreich gelöscht', 'success');
             }
         }
 
-        // Induction Management
         function toggleInduction(type, completed) {
             if (!currentEmployee) return;
             
@@ -2458,17 +2484,11 @@ Sonstiges:
             updateInductionUI(type, completed);
             updateTemplates();
             
-            // Immediately save to Firebase
             saveEmployeeData(true);
-            
-            // Check if both inductions are now completed
             checkBothInductionsCompleted();
-            
-            // Update employee list
             renderEmployeeList();
             updateStats();
             
-            // Show notification
             const typeName = type === 'oral' ? 'Mündliche' : 'Organisatorische';
             const status = completed ? 'bestanden' : 'als ausstehend markiert';
             showNotification(`${typeName} Einweisung ${status}`, 'success');
@@ -2482,7 +2502,6 @@ Sonstiges:
             
             const nowBothCompleted = oralCompleted && orgCompleted;
             
-            // If both just became completed, trigger automatic copy
             if (nowBothCompleted && !bothInductionsCompleted) {
                 bothInductionsCompleted = true;
                 const copyOption = getCopyOptionFromStorage();
@@ -2514,9 +2533,7 @@ Sonstiges:
                     const combined = oralTemplate + '\n\n' + orgTemplate;
                     
                     copyToClipboard(combined).then(success => {
-                        if (success) {
-                            showNotification('Beide Einweisungen automatisch kopiert!', 'success');
-                        }
+                        if (success) showNotification('Beide Einweisungen automatisch kopiert!', 'success');
                     });
                 }, 500);
             } else if (copyOption === 'separate') {
@@ -2529,9 +2546,7 @@ Sonstiges:
                             setTimeout(() => {
                                 const orgTemplate = generateTemplate('org');
                                 copyToClipboard(orgTemplate).then(success2 => {
-                                    if (success2) {
-                                        showNotification('Organisatorische Einweisung kopiert', 'success');
-                                    }
+                                    if (success2) showNotification('Organisatorische Einweisung kopiert', 'success');
                                 });
                             }, 1000);
                         }
@@ -2540,22 +2555,17 @@ Sonstiges:
             }
         }
 
-        // Template Management
         function updateTemplates() {
             if (!currentEmployee) return;
             
-            // Save form data first
             saveFormData();
             
-            // Oral template
             const oralTemplate = generateTemplate('oral');
             document.getElementById('oralTemplateContent').textContent = oralTemplate;
             
-            // Organizational template
             const orgTemplate = generateTemplate('org');
             document.getElementById('orgTemplateContent').textContent = orgTemplate;
             
-            // Update badges
             const oralCompleted = currentEmployee.inductions?.oral?.completed || false;
             const orgCompleted = currentEmployee.inductions?.org?.completed || false;
             
@@ -2577,7 +2587,6 @@ Sonstiges:
             const name = currentEmployee.name || '';
             const dn = currentEmployee.dn || '';
             
-            // Get unit and rank from the specific form or fallback to employee data
             const unit = isOral ? 
                 (document.getElementById('unitSelect').value || currentEmployee.unit || '') :
                 (document.getElementById('unitSelect2').value || currentEmployee.unit || '');
@@ -2595,11 +2604,9 @@ Sonstiges:
             
             const timeSeparator = isOral ? 'bis' : '-';
             
-            // Get Discord IDs for unit and rank
             const unitDiscordId = unitDiscordIds[unit] || '';
             const rankDiscordId = rankDiscordIds[rank] || '';
             
-            // Format unit and rank with Discord mentions if available
             const unitDisplay = unitDiscordId ? `<@&${unitDiscordId}>` : unit;
             const rankDisplay = rankDiscordId ? `<@&${rankDiscordId}>` : rank;
             
@@ -2622,45 +2629,33 @@ Sonstiges: ${notes}
 ╚══════════════════╝`;
         }
 
-        // Save Functions
         async function saveEmployeeData(isAutoSave = false) {
-            if (!currentEmployee) {
-                return;
-            }
+            if (!currentEmployee) return;
             
             try {
                 const success = await saveEmployeeToFirebase(currentEmployee);
                 
                 if (success) {
-                    if (!isAutoSave) {
-                        showNotification('Änderungen gespeichert', 'success');
-                    }
-                    
+                    if (!isAutoSave) showNotification('Änderungen gespeichert', 'success');
                     renderEmployeeList();
                     updateStats();
                 }
             } catch (error) {
                 console.error('Fehler beim Speichern:', error);
-                if (!isAutoSave) {
-                    showNotification('Fehler beim Speichern', 'error');
-                }
+                if (!isAutoSave) showNotification('Fehler beim Speichern', 'error');
             }
         }
 
-        // Statistics
         function updateStats() {
             const total = employees.length;
             document.getElementById('totalEmployees').textContent = total;
         }
 
-        // Context Menu
         function showEmployeeContextMenu(e, employee) {
             e.preventDefault();
             
             const existingMenu = document.getElementById('contextMenu');
-            if (existingMenu) {
-                existingMenu.remove();
-            }
+            if (existingMenu) existingMenu.remove();
             
             const menu = document.createElement('div');
             menu.id = 'contextMenu';
@@ -2714,9 +2709,7 @@ Sonstiges: ${notes}
         }
 
         async function deleteEmployee(employeeId) {
-            if (!confirm('Mitarbeiter wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.')) {
-                return;
-            }
+            if (!confirm('Mitarbeiter wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.')) return;
             
             const success = await deleteEmployeeFromFirebase(employeeId);
             
@@ -2748,9 +2741,6 @@ Sonstiges: ${notes}
                 name: `${employee.name} (Kopie)`,
                 lastUpdated: new Date().toISOString()
             };
-            
-            delete newEmployee.id;
-            newEmployee.id = `EMP-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
             
             const success = await saveEmployeeToFirebase(newEmployee);
             
@@ -2787,7 +2777,6 @@ Sonstiges: ${notes}
             if (contextMenu) contextMenu.remove();
         }
 
-        // Copy Functions
         async function copyToClipboard(text) {
             try {
                 await navigator.clipboard.writeText(text);
@@ -2812,72 +2801,45 @@ Sonstiges: ${notes}
         async function copyOralTemplate() {
             const template = document.getElementById('oralTemplateContent').textContent;
             const success = await copyToClipboard(template);
-            
-            if (success) {
-                showNotification('Mündliche Einweisung kopiert', 'success');
-            } else {
-                showNotification('Fehler beim Kopieren', 'error');
-            }
+            showNotification(success ? 'Mündliche Einweisung kopiert' : 'Fehler beim Kopieren', success ? 'success' : 'error');
         }
 
         async function copyOrgTemplate() {
             const template = document.getElementById('orgTemplateContent').textContent;
             const success = await copyToClipboard(template);
-            
-            if (success) {
-                showNotification('Organisatorische Einweisung kopiert', 'success');
-            } else {
-                showNotification('Fehler beim Kopieren', 'error');
-            }
+            showNotification(success ? 'Organisatorische Einweisung kopiert' : 'Fehler beim Kopieren', success ? 'success' : 'error');
         }
 
         function openCopySettingsModal() {
-            // Lade gespeicherte Einstellung
             const savedOption = getCopyOptionFromStorage();
             document.querySelector(`input[name="copyOption"][value="${savedOption}"]`).checked = true;
-            
             openModal('copySettingsModal');
         }
 
         async function copyBothTemplates() {
             const selectedOption = document.querySelector('input[name="copyOption"]:checked').value;
-            
-            // Speichere Einstellung
             setCopyOptionToStorage(selectedOption);
             
             if (selectedOption === 'both') {
-                // Kopiere beide zusammen
                 const oralTemplate = generateTemplate('oral');
                 const orgTemplate = generateTemplate('org');
                 const combined = oralTemplate + '\n\n' + orgTemplate;
                 
                 const success = await copyToClipboard(combined);
-                
-                if (success) {
-                    showNotification('Beide Einweisungen kopiert!', 'success');
-                } else {
-                    showNotification('Fehler beim Kopieren', 'error');
-                }
+                showNotification(success ? 'Beide Einweisungen kopiert!' : 'Fehler beim Kopieren', success ? 'success' : 'error');
             } else if (selectedOption === 'separate') {
-                // Kopiere einzeln
                 const oralTemplate = generateTemplate('oral');
                 const success1 = await copyToClipboard(oralTemplate);
                 
                 if (success1) {
                     showNotification('Mündliche Einweisung kopiert', 'success');
-                    
-                    // Warte kurz, dann kopiere die zweite
                     setTimeout(async () => {
                         const orgTemplate = generateTemplate('org');
                         const success2 = await copyToClipboard(orgTemplate);
-                        
-                        if (success2) {
-                            showNotification('Organisatorische Einweisung kopiert', 'success');
-                        }
+                        if (success2) showNotification('Organisatorische Einweisung kopiert', 'success');
                     }, 1000);
                 }
             } else if (selectedOption === 'manual') {
-                // Nur aktualisieren
                 updateTemplates();
                 showNotification('Vorlagen aktualisiert', 'success');
             }
@@ -2885,7 +2847,6 @@ Sonstiges: ${notes}
             closeModal('copySettingsModal');
         }
 
-        // Modal Functions
         function openModal(modalId) {
             document.getElementById(modalId).classList.add('active');
         }
@@ -2960,7 +2921,6 @@ Sonstiges: ${notes}
             }
         }
 
-        // UI Helpers
         function showNotification(message, type = 'info') {
             const notification = document.getElementById('notification');
             const messageElement = document.getElementById('notificationMessage');
@@ -2978,10 +2938,7 @@ Sonstiges: ${notes}
             }
             
             notification.classList.add('show');
-            
-            setTimeout(() => {
-                notification.classList.remove('show');
-            }, 3000);
+            setTimeout(() => notification.classList.remove('show'), 3000);
         }
 
         function showLoading() {
@@ -2994,11 +2951,8 @@ Sonstiges: ${notes}
             `;
         }
 
-        function hideLoading() {
-            // Loading is handled by renderEmployeeList
-        }
+        function hideLoading() {}
 
-        // Mock Data for Demo
         function loadMockEmployees() {
             employees = [
                 {
@@ -3030,99 +2984,6 @@ Sonstiges: ${notes}
                         notes: '',
                         unit: 'Air Force',
                         rank: 'Captain'
-                    }
-                },
-                {
-                    id: 'emp2',
-                    name: 'Tony Cortez',
-                    dn: '107',
-                    unit: 'Navy SEALs',
-                    rank: 'Sergeant',
-                    inductions: {
-                        oral: { completed: true, date: '2026-01-16' },
-                        org: { completed: false }
-                    },
-                    oralData: {
-                        examiner: 'Nico Kickl',
-                        date: '2026-01-16',
-                        timeStart: '22:10',
-                        timeEnd: '23:05',
-                        person: 'Nico Kickl',
-                        notes: '',
-                        unit: 'Navy SEALs',
-                        rank: 'Sergeant'
-                    },
-                    orgData: {
-                        examiner: 'Nico Kickl',
-                        date: '2026-01-16',
-                        timeStart: '22:10',
-                        timeEnd: '23:05',
-                        person: 'Nico Kickl',
-                        notes: '',
-                        unit: 'Navy SEALs',
-                        rank: 'Sergeant'
-                    }
-                },
-                {
-                    id: 'emp3',
-                    name: 'Max Mustermann',
-                    dn: '99',
-                    unit: 'Military Police',
-                    rank: 'Lieutenant',
-                    inductions: {
-                        oral: { completed: true, date: '2026-01-20' },
-                        org: { completed: true, date: '2026-01-20' }
-                    },
-                    oralData: {
-                        examiner: 'HR Team',
-                        date: '2026-01-20',
-                        timeStart: '14:00',
-                        timeEnd: '15:30',
-                        person: 'HR Team',
-                        notes: 'Alles korrekt',
-                        unit: 'Military Police',
-                        rank: 'Lieutenant'
-                    },
-                    orgData: {
-                        examiner: 'HR Team',
-                        date: '2026-01-20',
-                        timeStart: '16:00',
-                        timeEnd: '17:30',
-                        person: 'HR Team',
-                        notes: 'Dokumente vollständig',
-                        unit: 'Military Police',
-                        rank: 'Lieutenant'
-                    }
-                },
-                {
-                    id: 'emp4',
-                    name: 'Anna Schmidt',
-                    dn: '25',
-                    unit: 'Infantry',
-                    rank: 'Corporal',
-                    inductions: {
-                        oral: { completed: false },
-                        org: { completed: true, date: '2026-01-18' }
-                    },
-                    oralData: {
-                        examiner: '',
-                        date: '',
-                        timeStart: '16:40',
-                        timeEnd: '18:00',
-                        person: '',
-                        notes: '',
-                        unit: 'Infantry',
-                        rank: 'Corporal'
-                    },
-                    orgData: {
-                        examiner: 'HR Team',
-                        date: '2026-01-18',
-                        timeStart: '10:00',
-                        timeEnd: '11:30',
-                        person: 'HR Team',
-                        notes: 'Dokumente in Ordnung',
-                        unit: 'Infantry',
-                        rank: 'Corporal'
                     }
                 }
             ];
