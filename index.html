@@ -45,10 +45,7 @@
       line-height:1.4;
     }
 
-    .bg-effects{
-      position:fixed; inset:0;
-      z-index:-1; overflow:hidden;
-    }
+    .bg-effects{position:fixed; inset:0; z-index:-1; overflow:hidden;}
     .bg-gradient{
       position:absolute; inset:0;
       background:
@@ -171,13 +168,7 @@
       color:var(--gray);font-size:13px;
     }
 
-    .employee-list-container{
-      flex:1;
-      display:flex;
-      flex-direction:column;
-      margin-bottom:16px;
-      min-height:0;
-    }
+    .employee-list-container{flex:1;display:flex;flex-direction:column;margin-bottom:16px;min-height:0;}
     .employee-list{
       display:flex;
       flex-direction:column;
@@ -204,7 +195,6 @@
       display:flex;
       flex-direction:column;
       gap:8px;
-
       min-height:110px;
       justify-content:flex-start;
     }
@@ -226,7 +216,6 @@
       opacity:0;transition:var(--transition);
     }
     .employee-card.active::before{opacity:1}
-
     .employee-top-row{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:2px}
     .employee-name{font-weight:800;font-size:15px;color:#fff;line-height:1.3;word-break:break-word}
     .employee-dn{
@@ -248,12 +237,7 @@
       display:flex;align-items:center;gap:4px;
     }
     .employee-meta i{font-size:10px;opacity:.6}
-
-    .induction-badges{
-      display:flex;gap:6px;flex-wrap:wrap;
-      margin-top:0;
-      padding-top:2px;
-    }
+    .induction-badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:0;padding-top:2px;}
     .induction-badge{
       font-size:10px;
       padding:3px 8px;
@@ -478,12 +462,8 @@
     }
     .template-actions{display:flex;gap:8px;flex-wrap:wrap}
 
-    /* WICHTIG: Vorlagen untereinander (immer) */
-    .template-cards{
-      display:grid;
-      grid-template-columns:1fr; /* <- war 1fr 1fr */
-      gap:16px;
-    }
+    /* WICHTIG: Vorlagen untereinander statt nebeneinander */
+    .template-cards{display:grid;grid-template-columns:1fr;gap:16px}
 
     .template-card{
       background:rgba(0,0,0,.20);
@@ -520,6 +500,98 @@
       overflow-y:auto;
     }
     .template-card.completed .template-content{border-left-color:var(--secondary)}
+
+    /* Beobachtungen */
+    .observations-section{
+      margin-top:16px;
+      background:rgba(255,255,255,.03);
+      border-radius:var(--radius-md);
+      padding:16px;
+      border:1px solid rgba(255,255,255,.08);
+    }
+    .obs-header{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+    .obs-title{
+      font-size:14px;font-weight:900;color:#fff;
+      display:flex;align-items:center;gap:8px;
+    }
+    .obs-actions{display:flex;gap:8px;flex-wrap:wrap}
+    .obs-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .obs-list{display:flex;flex-direction:column;gap:10px;min-height:120px}
+    .obs-item{
+      background:rgba(0,0,0,.20);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:var(--radius-md);
+      padding:12px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .obs-item-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+    .obs-item-name{font-weight:900;color:#fff;font-size:13px;line-height:1.25}
+    .obs-item-meta{font-size:11px;color:var(--gray);font-weight:700}
+    .obs-item-reason{
+      font-family:Consolas,Monaco,monospace;
+      background:rgba(0,0,0,.30);
+      padding:10px;
+      border-radius:var(--radius-sm);
+      border-left:2px solid var(--warning);
+      color:var(--gray-light);
+      font-size:11px;
+      line-height:1.4;
+      white-space:pre-wrap;
+      word-wrap:break-word;
+      max-height:140px;
+      overflow:auto;
+    }
+    .obs-item-buttons{display:flex;gap:8px;flex-wrap:wrap}
+    .obs-form{
+      background:rgba(0,0,0,.20);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:var(--radius-md);
+      padding:12px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .obs-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .obs-form textarea{min-height:140px;resize:vertical}
+
+    /* Empty / Loading */
+    .empty-state{text-align:center;padding:40px 20px;color:var(--gray);width:100%}
+    .empty-icon{font-size:36px;margin-bottom:12px;opacity:.3}
+    .empty-title{font-size:14px;font-weight:900;margin-bottom:6px;color:var(--gray-light)}
+    .empty-description{font-size:12px;color:var(--gray);max-width:250px;margin:0 auto 12px}
+
+    .loading{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;width:100%}
+    .loading-spinner{
+      width:32px;height:32px;
+      border:2px solid rgba(255,255,255,.10);
+      border-top-color:var(--primary);
+      border-radius:50%;
+      animation:spin 1s linear infinite;
+      margin-bottom:12px;
+    }
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* Notification */
+    .notification{
+      position:fixed;
+      bottom:16px;right:16px;
+      background:var(--secondary);
+      color:#fff;
+      padding:10px 14px;
+      border-radius:var(--radius-md);
+      box-shadow:var(--shadow-md);
+      display:flex;align-items:center;gap:8px;
+      z-index:1001;
+      transform:translateY(100px);
+      opacity:0;
+      transition:transform .2s ease, opacity .2s ease;
+      min-width:200px;
+    }
+    .notification.show{transform:translateY(0);opacity:1}
+    .notification-icon{font-size:14px}
+    .notification-message{font-weight:900;font-size:13px}
 
     /* Modals */
     .modal-overlay{
@@ -561,49 +633,12 @@
     }
     .modal-close:hover{color:#fff;background:rgba(255,255,255,.10)}
 
-    /* Empty / Loading */
-    .empty-state{text-align:center;padding:40px 20px;color:var(--gray);width:100%}
-    .empty-icon{font-size:36px;margin-bottom:12px;opacity:.3}
-    .empty-title{font-size:14px;font-weight:900;margin-bottom:6px;color:var(--gray-light)}
-    .empty-description{font-size:12px;color:var(--gray);max-width:250px;margin:0 auto 12px}
-
-    .loading{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;width:100%}
-    .loading-spinner{
-      width:32px;height:32px;
-      border:2px solid rgba(255,255,255,.10);
-      border-top-color:var(--primary);
-      border-radius:50%;
-      animation:spin 1s linear infinite;
-      margin-bottom:12px;
-    }
-    @keyframes spin{to{transform:rotate(360deg)}}
-
-    /* Notification */
-    .notification{
-      position:fixed;
-      bottom:16px;right:16px;
-      background:var(--secondary);
-      color:#fff;
-      padding:10px 14px;
-      border-radius:var(--radius-md);
-      box-shadow:var(--shadow-md);
-      display:flex;align-items:center;gap:8px;
-      z-index:1001;
-      transform:translateY(100px);
-      opacity:0;
-      transition:transform .2s ease, opacity .2s ease;
-      min-width:200px;
-    }
-    .notification.show{transform:translateY(0);opacity:1}
-    .notification-icon{font-size:14px}
-    .notification-message{font-weight:900;font-size:13px}
-
     /* Responsive */
     @media (max-width:1200px){
       .app-container{grid-template-columns:1fr;padding:16px;gap:16px}
       .sidebar{position:static;max-height:500px;height:auto}
       .induction-grid{grid-template-columns:1fr}
-      /* template-cards bleibt 1fr */
+      .obs-grid{grid-template-columns:1fr}
     }
     @media (max-width:768px){
       .app-header{padding:14px 16px}
@@ -617,6 +652,7 @@
       .employee-tags{flex-direction:column;gap:6px}
       .induction-content{padding:16px}
       .oral-form-grid,.org-form-grid{grid-template-columns:1fr}
+      .obs-form-grid{grid-template-columns:1fr}
     }
     @media (max-width:480px){
       .app-container{padding:12px}
@@ -710,6 +746,7 @@
 
       <div class="induction-content" id="inductionContent">
         <div class="induction-grid">
+          <!-- Oral -->
           <div class="induction-card" id="oralInductionCard">
             <div class="induction-card-header">
               <div class="induction-title">
@@ -790,6 +827,7 @@
             </div>
           </div>
 
+          <!-- Org -->
           <div class="induction-card" id="orgInductionCard">
             <div class="induction-card-header">
               <div class="induction-title">
@@ -871,6 +909,7 @@
           </div>
         </div>
 
+        <!-- Templates -->
         <div class="templates-section">
           <div class="section-header">
             <div class="section-title"><i class="fas fa-file-code"></i> Discord Vorlagen</div>
@@ -898,6 +937,56 @@
             </div>
           </div>
         </div>
+
+        <!-- Beobachtungen -->
+        <div class="observations-section" id="observationsSection">
+          <div class="obs-header">
+            <div class="obs-title"><i class="fas fa-eye"></i> Beobachtungen</div>
+            <div class="obs-actions">
+              <button class="btn btn-secondary" onclick="copySelectedObservationTemplate()"><i class="fas fa-copy"></i> Vorlage kopieren</button>
+              <button class="btn btn-secondary" onclick="clearObservationForm()"><i class="fas fa-eraser"></i> Leeren</button>
+              <button class="btn btn-primary" onclick="addObservation()"><i class="fas fa-plus"></i> Hinzufügen</button>
+            </div>
+          </div>
+
+          <div class="obs-grid">
+            <div>
+              <div class="form-label" style="margin-bottom:8px;">Vorhandene Beobachtungen (Mitarbeiter)</div>
+              <div class="obs-list" id="obsList">
+                <div class="empty-state" style="padding:18px;">
+                  <div class="empty-title">Keine Beobachtungen</div>
+                  <div class="empty-description">Wähle einen Mitarbeiter und füge eine Beobachtung hinzu.</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="obs-form">
+              <div class="form-label">Neue / Bearbeiten</div>
+
+              <div class="obs-form-grid">
+                <div class="form-group">
+                  <label class="form-label">Name</label>
+                  <input type="text" class="form-input" id="obsName" placeholder="Name">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">DN</label>
+                  <input type="text" class="form-input" id="obsDN" placeholder="DN">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Grund (unbegrenzt)</label>
+                <textarea class="form-textarea" id="obsReason" placeholder="Grund..."></textarea>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Discord Vorlage (Vorschau)</label>
+                <div class="template-content" id="obsTemplatePreview" style="max-height:220px;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </main>
   </div>
@@ -1018,15 +1107,21 @@
       </div>
 
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:16px;">
-        <button class="btn btn-danger" onclick="deleteCurrentEmployee()" style="margin-right:auto;"><i class="fas fa-trash"></i> Löschen</button>
+        <button class="btn btn-danger" onclick="deleteCurrentEmployee()" style="margin-right:auto;">
+          <i class="fas fa-trash"></i> Löschen
+        </button>
         <div style="display:flex;gap:8px;">
           <button class="btn btn-secondary" onclick="closeModal('editEmployeeModal')">Abbrechen</button>
-          <button class="btn btn-primary" onclick="saveEditedEmployee()"><i class="fas fa-save"></i> Änderungen speichern</button>
+          <button class="btn btn-primary" onclick="saveEditedEmployee()">
+            <i class="fas fa-save"></i> Änderungen speichern
+          </button>
         </div>
       </div>
     </div>
   </div>
-    <script>
+
+  <!-- Script kommt in Teil 2/2 -->
+  <script>
     // Firebase Configuration
     const firebaseConfig = {
       apiKey: "AIzaSyBTnsLNw68UuOd5Xa2ymMffWk4SYGDQjso",
@@ -1051,8 +1146,7 @@
       "Navy SEALs": "1125174901989445693"
     };
 
-    // Discord IDs for Ranks
-    // Wenn eine ID leer ist, wird der Rang normal als Text ausgegeben.
+    // Discord IDs for Ranks (unsichere/kaputte IDs bewusst leer)
     const rankDiscordIds = {
       "Private": "1097625924104626198",
       "Private First Class": "1098190829295771739",
@@ -1062,7 +1156,7 @@
       "Staff Sergeant": "1097625912163451112",
       "Sergeant First Class": "1348414845862674524",
       "Master Sergeant": "1348414845862674524",
-      "Sergeant Major": "",
+      "Sergeant Major": "",             // falls du die ID hast, hier eintragen
       "Lieutenant": "1097625900125782278",
       "Captain": "1097625898880077955",
       "Major": "1097625896560640024",
@@ -1076,14 +1170,18 @@
     // App State
     let currentEmployee = null;
     let employees = [];
-    let bothInductionsCompleted = false;
     let currentFilter = 'all';
+
+    // Beobachtungen
+    let selectedObservationIndex = null; // wenn du auf eine Beobachtung klickst -> editieren
 
     document.addEventListener('DOMContentLoaded', function () {
       initializeApp();
       setupEventListeners();
       updateStats();
       adjustSidebarHeight();
+      seedTemplateBoxes();
+      seedObservationBox();
     });
 
     function initializeApp() {
@@ -1098,7 +1196,6 @@
 
       loadEmployees();
       setupFormChangeListeners();
-      seedTemplateBoxes();
     }
 
     function setupEventListeners() {
@@ -1113,6 +1210,12 @@
       });
 
       window.addEventListener('resize', adjustSidebarHeight);
+
+      // Live Preview Beobachtung
+      ['obsName','obsDN','obsReason'].forEach(id=>{
+        document.getElementById(id).addEventListener('input', updateObservationPreview);
+        document.getElementById(id).addEventListener('change', updateObservationPreview);
+      });
     }
 
     function setupFormChangeListeners() {
@@ -1156,8 +1259,6 @@
         renderEmployeeList();
         updateStats();
         hideLoading();
-
-        setTimeout(updateInductionDisplay, 100);
       } catch (error) {
         console.error('Fehler beim Laden der Mitarbeiter:', error);
         showNotification('Fehler beim Laden der Daten', 'error');
@@ -1169,14 +1270,15 @@
     async function saveEmployeeToFirebase(employee) {
       try {
         const dataToSave = {
-          name: employee.name,
-          dn: employee.dn,
-          unit: employee.unit,
-          rank: employee.rank,
+          name: employee.name || '',
+          dn: employee.dn || '',
+          unit: employee.unit || '',
+          rank: employee.rank || '',
           lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
           inductions: employee.inductions || {},
           oralData: employee.oralData || {},
-          orgData: employee.orgData || {}
+          orgData: employee.orgData || {},
+          observations: employee.observations || [] // <---- NEU
         };
 
         await db.collection('hrEmployees').doc(employee.id).set(dataToSave, { merge: true });
@@ -1231,7 +1333,6 @@
         const card = document.createElement('div');
         card.className = `employee-card ${currentEmployee?.id === employee.id ? 'active' : ''}`;
         card.onclick = () => selectEmployee(employee);
-        card.oncontextmenu = (e) => { e.preventDefault(); showEmployeeContextMenu(e, employee); };
 
         const oralCompleted = employee.inductions?.oral?.completed || false;
         const orgCompleted = employee.inductions?.org?.completed || false;
@@ -1266,11 +1367,8 @@
     }
 
     function getFilteredEmployees() {
-      if (currentFilter === 'oral') {
-        return employees.filter(emp => !(emp.inductions?.oral?.completed));
-      } else if (currentFilter === 'org') {
-        return employees.filter(emp => !(emp.inductions?.org?.completed));
-      }
+      if (currentFilter === 'oral') return employees.filter(emp => !(emp.inductions?.oral?.completed));
+      if (currentFilter === 'org') return employees.filter(emp => !(emp.inductions?.org?.completed));
       return employees;
     }
 
@@ -1314,8 +1412,13 @@
 
       updateEmployeeHeader();
       loadEmployeeData();
-      updateInductionDisplay();
+      updateTemplates();
       renderEmployeeList();
+
+      // Beobachtungen laden + Formular vorbereiten
+      renderObservations();
+      prefillObservationFromEmployee();
+      updateObservationPreview();
     }
 
     function loadEmployeeData() {
@@ -1350,26 +1453,10 @@
 
       updateInductionUI('oral', oralCompleted);
       updateInductionUI('org', orgCompleted);
-
-      checkBothInductionsCompleted();
-      updateTemplates();
-    }
-
-    function updateInductionDisplay() {
-      if (!currentEmployee) return;
-
-      const oralCompleted = currentEmployee.inductions?.oral?.completed || false;
-      const orgCompleted = currentEmployee.inductions?.org?.completed || false;
-
-      updateInductionUI('oral', oralCompleted);
-      updateInductionUI('org', orgCompleted);
-
-      renderEmployeeList();
     }
 
     function updateEmployeeHeader() {
       if (!currentEmployee) return;
-
       document.getElementById('currentEmployeeName').textContent = currentEmployee.name || '';
       document.getElementById('currentEmployeeDN').textContent = currentEmployee.dn || '';
       document.getElementById('currentEmployeeUnit').textContent = currentEmployee.unit || 'Keine Unit';
@@ -1414,83 +1501,15 @@
         rank: document.getElementById('rankSelect2').value
       };
 
+      // Sync unit/rank
       const unitSelectValue = document.getElementById('unitSelect').value;
       const rankSelectValue = document.getElementById('rankSelect').value;
       if (unitSelectValue) currentEmployee.unit = unitSelectValue;
       if (rankSelectValue) currentEmployee.rank = rankSelectValue;
-
-      currentEmployee.lastUpdated = new Date().toISOString();
-    }
-
-    function openEditEmployeeModal() {
-      if (!currentEmployee) {
-        showNotification('Bitte wählen Sie zuerst einen Mitarbeiter aus', 'warning');
-        return;
-      }
-
-      document.getElementById('editEmployeeName').value = currentEmployee.name || '';
-      document.getElementById('editEmployeeDN').value = currentEmployee.dn || '';
-      document.getElementById('editEmployeeUnit').value = currentEmployee.unit || '';
-      document.getElementById('editEmployeeRank').value = currentEmployee.rank || '';
-
-      openModal('editEmployeeModal');
-    }
-
-    async function saveEditedEmployee() {
-      if (!currentEmployee) return;
-
-      const name = document.getElementById('editEmployeeName').value.trim();
-      const dn = document.getElementById('editEmployeeDN').value;
-
-      if (!name || !dn) {
-        showNotification('Name und Dienstnummer sind Pflichtfelder', 'warning');
-        return;
-      }
-
-      currentEmployee.name = name;
-      currentEmployee.dn = dn;
-      currentEmployee.unit = document.getElementById('editEmployeeUnit').value || '';
-      currentEmployee.rank = document.getElementById('editEmployeeRank').value || '';
-
-      const success = await saveEmployeeToFirebase(currentEmployee);
-      if (success) {
-        closeModal('editEmployeeModal');
-        updateEmployeeHeader();
-        renderEmployeeList();
-        updateTemplates();
-        showNotification('Mitarbeiterdaten erfolgreich aktualisiert', 'success');
-      }
-    }
-
-    async function deleteCurrentEmployee() {
-      if (!currentEmployee) {
-        showNotification('Bitte wählen Sie zuerst einen Mitarbeiter aus', 'warning');
-        return;
-      }
-
-      if (!confirm(`Mitarbeiter "${currentEmployee.name}" (DN ${currentEmployee.dn}) wirklich löschen?\n\nDiese Aktion kann nicht rückgängig gemacht werden!`)) {
-        return;
-      }
-
-      const success = await deleteEmployeeFromFirebase(currentEmployee.id);
-      if (success) {
-        employees = employees.filter(emp => emp.id !== currentEmployee.id);
-
-        closeModal('editEmployeeModal');
-
-        currentEmployee = null;
-        document.getElementById('employeeHeader').style.display = 'none';
-        document.getElementById('inductionContent').style.display = 'none';
-
-        renderEmployeeList();
-        updateStats();
-        showNotification('Mitarbeiter erfolgreich gelöscht', 'success');
-      }
     }
 
     function toggleInduction(type, completed) {
       if (!currentEmployee) return;
-
       if (!currentEmployee.inductions) currentEmployee.inductions = {};
 
       currentEmployee.inductions[type] = {
@@ -1501,9 +1520,7 @@
 
       updateInductionUI(type, completed);
       updateTemplates();
-
       saveEmployeeData(true);
-      checkBothInductionsCompleted();
       renderEmployeeList();
       updateStats();
 
@@ -1512,24 +1529,7 @@
       showNotification(`${typeName} Einweisung ${status}`, 'success');
     }
 
-    function checkBothInductionsCompleted() {
-      if (!currentEmployee) return false;
-
-      const oralCompleted = currentEmployee.inductions?.oral?.completed || false;
-      const orgCompleted = currentEmployee.inductions?.org?.completed || false;
-
-      const nowBothCompleted = oralCompleted && orgCompleted;
-
-      if (nowBothCompleted && !bothInductionsCompleted) {
-        bothInductionsCompleted = true;
-        // Copy-Settings-Modal wurde entfernt -> kein "beide kopieren" mehr
-      } else if (!nowBothCompleted) {
-        bothInductionsCompleted = false;
-      }
-
-      return nowBothCompleted;
-    }
-
+    // Templates
     function updateTemplates() {
       if (!currentEmployee) {
         seedTemplateBoxes();
@@ -1539,9 +1539,9 @@
       saveFormData();
 
       const oralTemplate = generateTemplate('oral');
-      document.getElementById('oralTemplateContent').textContent = oralTemplate;
-
       const orgTemplate = generateTemplate('org');
+
+      document.getElementById('oralTemplateContent').textContent = oralTemplate;
       document.getElementById('orgTemplateContent').textContent = orgTemplate;
 
       const oralCompleted = currentEmployee.inductions?.oral?.completed || false;
@@ -1554,13 +1554,10 @@
       document.getElementById('orgTemplateCard').classList.toggle('completed', orgCompleted);
     }
 
+    // WICHTIG: Status-Zeile im Template komplett entfernt (dein Wunsch)
     function generateTemplate(type) {
       const isOral = type === 'oral';
-      const completed = isOral
-        ? (currentEmployee.inductions?.oral?.completed || false)
-        : (currentEmployee.inductions?.org?.completed || false);
-
-      const data = isOral ? currentEmployee.oralData : currentEmployee.orgData;
+      const data = isOral ? (currentEmployee.oralData || {}) : (currentEmployee.orgData || {});
 
       const name = currentEmployee.name || '';
       const dn = currentEmployee.dn || '';
@@ -1591,8 +1588,6 @@
       return `╔══════════════════╗
 /////////////////////////////////////////////////////////////////////////
 ${isOral ? 'Mündliche Einweisung' : 'Organisatorische Einweisung'}
-Status: ${completed ? 'BESTANDEN' : 'AUSSTEHEND'}
-
 
 Prüfer : ${examiner}
 Name: ${name}
@@ -1609,148 +1604,433 @@ Sonstiges: ${notes}
 ╚══════════════════╝`;
     }
 
-    async function saveEmployeeData(isAutoSave = false) {
+    async function copyOralTemplate() {
+      const template = document.getElementById('oralTemplateContent').textContent;
+      const success = await copyToClipboard(template);
+      showNotification(success ? 'Mündliche Einweisung kopiert' : 'Fehler beim Kopieren', success ? 'success' : 'error');
+    }
+
+    async function copyOrgTemplate() {
+      const template = document.getElementById('orgTemplateContent').textContent;
+      const success = await copyToClipboard(template);
+      showNotification(success ? 'Organisatorische Einweisung kopiert' : 'Fehler beim Kopieren', success ? 'success' : 'error');
+    }
+
+    function seedTemplateBoxes() {
+      document.getElementById('oralTemplateContent').textContent = `╔══════════════════╗
+/////////////////////////////////////////////////////////////////////////
+Mündliche Einweisung / ausstehend
+
+Prüfer :
+Name:
+DN:
+Hauptunit:
+Rang:
+Datum:
+Uhrzeit:
+Beteiligte:
+Sonstiges:
+
+/////////////////////////////////////////////////////////////////////////
+<@&1097625910242447422>
+╚══════════════════╝`;
+
+      document.getElementById('orgTemplateContent').textContent = `╔══════════════════╗
+/////////////////////////////////////////////////////////////////////////
+Organisatorische Einweisung / ausstehend
+
+Prüfer :
+Name:
+DN:
+Hauptunit:
+Rang:
+Datum:
+Uhrzeit:
+Beteiligte:
+Sonstiges:
+
+/////////////////////////////////////////////////////////////////////////
+<@&1097625910242447422>
+╚══════════════════╝`;
+    }
+
+    // Beobachtungen (System)
+    function seedObservationBox(){
+      document.getElementById('obsTemplatePreview').textContent = `╔══════════════════╗
+/////////////////////////////////////////////////////////////////////////
+Beobachtung
+
+Name:
+DN:
+
+Grund:
+
+/////////////////////////////////////////////////////////////////////////
+<@&1097625910242447422>
+╚══════════════════╝`;
+    }
+
+    function prefillObservationFromEmployee(){
       if (!currentEmployee) return;
+      document.getElementById('obsName').value = currentEmployee.name || '';
+      document.getElementById('obsDN').value = currentEmployee.dn || '';
+      document.getElementById('obsReason').value = '';
+      selectedObservationIndex = null;
+    }
+
+    function updateObservationPreview(){
+      const name = document.getElementById('obsName').value || '';
+      const dn = document.getElementById('obsDN').value || '';
+      const reason = document.getElementById('obsReason').value || '';
+
+      document.getElementById('obsTemplatePreview').textContent = `╔══════════════════╗
+/////////////////////////////////////////////////////////////////////////
+Beobachtung
+
+Name: ${name}
+DN: ${dn}
+
+Grund:
+${reason}
+
+/////////////////////////////////////////////////////////////////////////
+<@&1097625910242447422>
+╚══════════════════╝`;
+    }
+
+    function clearObservationForm(){
+      if (!currentEmployee){
+        document.getElementById('obsName').value = '';
+        document.getElementById('obsDN').value = '';
+      } else {
+        document.getElementById('obsName').value = currentEmployee.name || '';
+        document.getElementById('obsDN').value = currentEmployee.dn || '';
+      }
+      document.getElementById('obsReason').value = '';
+      selectedObservationIndex = null;
+      updateObservationPreview();
+      showNotification('Beobachtung Formular geleert', 'success');
+    }
+
+    function renderObservations(){
+      const list = document.getElementById('obsList');
+
+      if (!currentEmployee){
+        list.innerHTML = `
+          <div class="empty-state" style="padding:18px;">
+            <div class="empty-title">Kein Mitarbeiter ausgewählt</div>
+            <div class="empty-description">Wähle zuerst einen Mitarbeiter.</div>
+          </div>
+        `;
+        return;
+      }
+
+      const obs = Array.isArray(currentEmployee.observations) ? currentEmployee.observations : [];
+      currentEmployee.observations = obs;
+
+      if (obs.length === 0){
+        list.innerHTML = `
+          <div class="empty-state" style="padding:18px;">
+            <div class="empty-title">Keine Beobachtungen</div>
+            <div class="empty-description">Füge eine Beobachtung hinzu.</div>
+          </div>
+        `;
+        return;
+      }
+
+      list.innerHTML = '';
+      obs
+        .slice()
+        .sort((a,b)=> (b.createdAt||0) - (a.createdAt||0))
+        .forEach((item, idxSorted) => {
+
+          // wir brauchen den echten Index im Array:
+          const realIndex = obs.findIndex(x => x.id === item.id);
+
+          const card = document.createElement('div');
+          card.className = 'obs-item';
+          card.innerHTML = `
+            <div class="obs-item-top">
+              <div>
+                <div class="obs-item-name">${escapeHtml(item.name || '')}</div>
+                <div class="obs-item-meta">DN: ${escapeHtml(item.dn || '')}${item.createdAt ? ' • ' + new Date(item.createdAt).toLocaleString('de-DE') : ''}</div>
+              </div>
+            </div>
+            <div class="obs-item-reason">${escapeHtml(item.reason || '')}</div>
+            <div class="obs-item-buttons">
+              <button class="btn btn-secondary" onclick="editObservation(${realIndex})"><i class="fas fa-pen"></i> Bearbeiten</button>
+              <button class="btn btn-secondary" onclick="copyObservationTemplate(${realIndex})"><i class="fas fa-copy"></i> Kopieren</button>
+              <button class="btn btn-danger" onclick="deleteObservation(${realIndex})"><i class="fas fa-trash"></i> Löschen</button>
+            </div>
+          `;
+          list.appendChild(card);
+        });
+    }
+
+    function getObservationTemplateString(name, dn, reason){
+      return `╔══════════════════╗
+/////////////////////////////////////////////////////////////////////////
+Beobachtung
+
+Name: ${name || ''}
+DN: ${dn || ''}
+
+Grund:
+${reason || ''}
+
+/////////////////////////////////////////////////////////////////////////
+<@&1097625910242447422>
+╚══════════════════╝`;
+    }
+
+    function editObservation(index){
+      if (!currentEmployee) return;
+      const obs = currentEmployee.observations || [];
+      const item = obs[index];
+      if (!item) return;
+
+      selectedObservationIndex = index;
+      document.getElementById('obsName').value = item.name || '';
+      document.getElementById('obsDN').value = item.dn || '';
+      document.getElementById('obsReason').value = item.reason || '';
+      updateObservationPreview();
+
+      showNotification('Beobachtung geladen (Bearbeiten)', 'success');
+    }
+
+    async function addObservation(){
+      if (!currentEmployee){
+        showNotification('Bitte zuerst einen Mitarbeiter auswählen', 'warning');
+        return;
+      }
+
+      const name = (document.getElementById('obsName').value || '').trim();
+      const dn = (document.getElementById('obsDN').value || '').trim();
+      const reason = document.getElementById('obsReason').value || '';
+
+      if (!name || !dn){
+        showNotification('Name und DN sind Pflichtfelder', 'warning');
+        return;
+      }
+
+      if (!Array.isArray(currentEmployee.observations)) currentEmployee.observations = [];
+
+      // wenn edit-mode -> update statt neu
+      if (selectedObservationIndex !== null){
+        const item = currentEmployee.observations[selectedObservationIndex];
+        if (!item){
+          selectedObservationIndex = null;
+        } else {
+          item.name = name;
+          item.dn = dn;
+          item.reason = reason;
+          item.updatedAt = Date.now();
+
+          const ok = await saveEmployeeData(true);
+          if (ok){
+            renderObservations();
+            updateObservationPreview();
+            showNotification('Beobachtung aktualisiert', 'success');
+          }
+          return;
+        }
+      }
+
+      // neu
+      const newObs = {
+        id: `OBS-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+        name,
+        dn,
+        reason,
+        createdAt: Date.now()
+      };
+
+      currentEmployee.observations.unshift(newObs);
+
+      const ok = await saveEmployeeData(true);
+      if (ok){
+        selectedObservationIndex = null;
+        renderObservations();
+        updateObservationPreview();
+        showNotification('Beobachtung hinzugefügt', 'success');
+      }
+    }
+
+    async function deleteObservation(index){
+      if (!currentEmployee) return;
+      const obs = currentEmployee.observations || [];
+      const item = obs[index];
+      if (!item) return;
+
+      if (!confirm('Beobachtung wirklich löschen?')) return;
+
+      obs.splice(index, 1);
+      currentEmployee.observations = obs;
+
+      const ok = await saveEmployeeData(true);
+      if (ok){
+        if (selectedObservationIndex === index) selectedObservationIndex = null;
+        renderObservations();
+        updateObservationPreview();
+        showNotification('Beobachtung gelöscht', 'success');
+      }
+    }
+
+    async function copyObservationTemplate(index){
+      if (!currentEmployee) return;
+      const obs = currentEmployee.observations || [];
+      const item = obs[index];
+      if (!item) return;
+
+      const text = getObservationTemplateString(item.name, item.dn, item.reason);
+      const success = await copyToClipboard(text);
+      showNotification(success ? 'Beobachtung kopiert' : 'Fehler beim Kopieren', success ? 'success' : 'error');
+    }
+
+    async function copySelectedObservationTemplate(){
+      const text = document.getElementById('obsTemplatePreview').textContent;
+      const success = await copyToClipboard(text);
+      showNotification(success ? 'Beobachtung Vorlage kopiert' : 'Fehler beim Kopieren', success ? 'success' : 'error');
+    }
+
+    // Save
+    async function saveEmployeeData(isAutoSave = false) {
+      if (!currentEmployee) return false;
 
       try {
         const success = await saveEmployeeToFirebase(currentEmployee);
         if (success) {
           if (!isAutoSave) showNotification('Änderungen gespeichert', 'success');
-          renderEmployeeList();
           updateStats();
+          return true;
         }
       } catch (error) {
         console.error('Fehler beim Speichern:', error);
         if (!isAutoSave) showNotification('Fehler beim Speichern', 'error');
       }
+      return false;
     }
 
     function updateStats() {
       document.getElementById('totalEmployees').textContent = employees.length;
     }
 
-    function showEmployeeContextMenu(e, employee) {
-      e.preventDefault();
+    // Modals
+    function openModal(modalId) { document.getElementById(modalId).classList.add('active'); }
+    function closeModal(modalId) { document.getElementById(modalId).classList.remove('active'); }
+    function openNewEmployeeModal() { openModal('newEmployeeModal'); }
 
-      const existingMenu = document.getElementById('contextMenu');
-      if (existingMenu) existingMenu.remove();
+    async function createNewEmployee() {
+      const name = document.getElementById('newEmployeeName').value.trim();
+      const dn = document.getElementById('newEmployeeDN').value;
+      const unit = document.getElementById('newEmployeeUnit').value;
+      const rank = document.getElementById('newEmployeeRank').value;
 
-      const menu = document.createElement('div');
-      menu.id = 'contextMenu';
-      menu.style.cssText = `
-        position: fixed;
-        background: rgba(31, 41, 55, 0.95);
-        backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 8px;
-        padding: 8px;
-        z-index: 1000;
-        min-width: 160px;
-        box-shadow: var(--shadow-md);
-      `;
-
-      menu.innerHTML = `
-        <div style="padding: 8px; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
-          <div style="font-weight: 900; color: white; margin-bottom: 2px; font-size: 13px;">${escapeHtml(employee.name || '')}</div>
-          <div style="font-size: 11px; color: var(--gray);">DN: ${escapeHtml(employee.dn || '')}</div>
-        </div>
-        <div style="padding: 4px 0;">
-          <button onclick="selectEmployee(employees.find(x => x.id === '${employee.id}')); openEditEmployeeModal(); document.getElementById('contextMenu')?.remove();"
-            style="width:100%;text-align:left;padding:8px 10px;background:none;border:none;color:var(--primary-light);font-weight:900;cursor:pointer;transition:all .2s;border-radius:4px;display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:2px;">
-            <i class="fas fa-edit"></i> Bearbeiten
-          </button>
-          <button onclick="deleteEmployee('${employee.id}')"
-            style="width:100%;text-align:left;padding:8px 10px;background:none;border:none;color:var(--danger);font-weight:900;cursor:pointer;transition:all .2s;border-radius:4px;display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:2px;">
-            <i class="fas fa-trash"></i> Löschen
-          </button>
-          <button onclick="duplicateEmployee('${employee.id}')"
-            style="width:100%;text-align:left;padding:8px 10px;background:none;border:none;color:var(--primary-light);font-weight:900;cursor:pointer;transition:all .2s;border-radius:4px;display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:2px;">
-            <i class="fas fa-copy"></i> Duplizieren
-          </button>
-          <button onclick="exportEmployee('${employee.id}')"
-            style="width:100%;text-align:left;padding:8px 10px;background:none;border:none;color:var(--secondary);font-weight:900;cursor:pointer;transition:all .2s;border-radius:4px;display:flex;align-items:center;gap:6px;font-size:12px;">
-            <i class="fas fa-download"></i> Exportieren
-          </button>
-        </div>
-      `;
-
-      menu.style.left = `${Math.min(e.pageX, window.innerWidth - 180)}px`;
-      menu.style.top = `${Math.min(e.pageY, window.innerHeight - 240)}px`;
-
-      document.body.appendChild(menu);
-
-      setTimeout(() => {
-        const closeMenu = (event) => {
-          if (!menu.contains(event.target)) {
-            menu.remove();
-            document.removeEventListener('click', closeMenu);
-          }
-        };
-        document.addEventListener('click', closeMenu);
-      }, 100);
-    }
-
-    async function deleteEmployee(employeeId) {
-      if (!confirm('Mitarbeiter wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.')) return;
-
-      const success = await deleteEmployeeFromFirebase(employeeId);
-      if (success) {
-        employees = employees.filter(emp => emp.id !== employeeId);
-
-        if (currentEmployee?.id === employeeId) {
-          currentEmployee = null;
-          document.getElementById('employeeHeader').style.display = 'none';
-          document.getElementById('inductionContent').style.display = 'none';
-        }
-
-        renderEmployeeList();
-        updateStats();
-        showNotification('Mitarbeiter gelöscht', 'success');
-        document.getElementById('contextMenu')?.remove();
+      if (!name || !dn) {
+        showNotification('Bitte füllen Sie alle Pflichtfelder aus (*)', 'warning');
+        return;
       }
-    }
 
-    async function duplicateEmployee(employeeId) {
-      const employee = employees.find(emp => emp.id === employeeId);
-      if (!employee) return;
+      const employeeId = `EMP-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 
       const newEmployee = {
-        ...JSON.parse(JSON.stringify(employee)),
-        id: `EMP-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
-        name: `${employee.name} (Kopie)`,
-        lastUpdated: new Date().toISOString()
+        id: employeeId,
+        name, dn,
+        unit: unit || '',
+        rank: rank || '',
+        inductions: { oral: { completed: false }, org: { completed: false } },
+        oralData: { examiner:'', date:'', timeStart:'16:40', timeEnd:'18:00', person:'', notes:'', unit: unit || '', rank: rank || '' },
+        orgData: { examiner:'', date:'', timeStart:'22:10', timeEnd:'23:05', person:'', notes:'', unit: unit || '', rank: rank || '' },
+        observations: []
       };
 
       const success = await saveEmployeeToFirebase(newEmployee);
       if (success) {
         employees.unshift(newEmployee);
+
+        closeModal('newEmployeeModal');
         renderEmployeeList();
+        selectEmployee(newEmployee);
         updateStats();
-        showNotification('Mitarbeiter dupliziert', 'success');
-        document.getElementById('contextMenu')?.remove();
+
+        document.getElementById('newEmployeeName').value = '';
+        document.getElementById('newEmployeeDN').value = '';
+        document.getElementById('newEmployeeUnit').value = '';
+        document.getElementById('newEmployeeRank').value = '';
+
+        showNotification(`Mitarbeiter "${name}" erstellt`, 'success');
       }
     }
 
-    function exportEmployee(employeeId) {
-      const employee = employees.find(emp => emp.id === employeeId);
-      if (!employee) return;
+    function openEditEmployeeModal() {
+      if (!currentEmployee) {
+        showNotification('Bitte wählen Sie zuerst einen Mitarbeiter aus', 'warning');
+        return;
+      }
 
-      const data = JSON.stringify(employee, null, 2);
-      const blob = new Blob([data], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `mitarbeiter-${(employee.name || 'unbekannt')}-${(employee.dn || '')}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-
-      showNotification('Mitarbeiter exportiert', 'success');
-      document.getElementById('contextMenu')?.remove();
+      document.getElementById('editEmployeeName').value = currentEmployee.name || '';
+      document.getElementById('editEmployeeDN').value = currentEmployee.dn || '';
+      document.getElementById('editEmployeeUnit').value = currentEmployee.unit || '';
+      document.getElementById('editEmployeeRank').value = currentEmployee.rank || '';
+      openModal('editEmployeeModal');
     }
 
+    async function saveEditedEmployee() {
+      if (!currentEmployee) return;
+
+      const name = document.getElementById('editEmployeeName').value.trim();
+      const dn = document.getElementById('editEmployeeDN').value;
+
+      if (!name || !dn) {
+        showNotification('Name und Dienstnummer sind Pflichtfelder', 'warning');
+        return;
+      }
+
+      currentEmployee.name = name;
+      currentEmployee.dn = dn;
+      currentEmployee.unit = document.getElementById('editEmployeeUnit').value || '';
+      currentEmployee.rank = document.getElementById('editEmployeeRank').value || '';
+
+      const success = await saveEmployeeToFirebase(currentEmployee);
+      if (success) {
+        closeModal('editEmployeeModal');
+        updateEmployeeHeader();
+        renderEmployeeList();
+        updateTemplates();
+        renderObservations();
+        showNotification('Mitarbeiterdaten erfolgreich aktualisiert', 'success');
+      }
+    }
+
+    async function deleteCurrentEmployee() {
+      if (!currentEmployee) {
+        showNotification('Bitte wählen Sie zuerst einen Mitarbeiter aus', 'warning');
+        return;
+      }
+
+      if (!confirm(`Mitarbeiter "${currentEmployee.name}" (DN ${currentEmployee.dn}) wirklich löschen?\n\nDiese Aktion kann nicht rückgängig gemacht werden!`)) {
+        return;
+      }
+
+      const success = await deleteEmployeeFromFirebase(currentEmployee.id);
+      if (success) {
+        employees = employees.filter(emp => emp.id !== currentEmployee.id);
+
+        closeModal('editEmployeeModal');
+
+        currentEmployee = null;
+        document.getElementById('employeeHeader').style.display = 'none';
+        document.getElementById('inductionContent').style.display = 'none';
+
+        renderEmployeeList();
+        updateStats();
+        seedTemplateBoxes();
+        seedObservationBox();
+        showNotification('Mitarbeiter erfolgreich gelöscht', 'success');
+      }
+    }
+
+    // Clipboard
     async function copyToClipboard(text) {
       try {
         await navigator.clipboard.writeText(text);
@@ -1770,72 +2050,7 @@ Sonstiges: ${notes}
       }
     }
 
-    async function copyOralTemplate() {
-      const template = document.getElementById('oralTemplateContent').textContent;
-      const success = await copyToClipboard(template);
-      showNotification(success ? 'Mündliche Einweisung kopiert' : 'Fehler beim Kopieren', success ? 'success' : 'error');
-    }
-
-    async function copyOrgTemplate() {
-      const template = document.getElementById('orgTemplateContent').textContent;
-      const success = await copyToClipboard(template);
-      showNotification(success ? 'Organisatorische Einweisung kopiert' : 'Fehler beim Kopieren', success ? 'success' : 'error');
-    }
-
-    function openModal(modalId) {
-      document.getElementById(modalId).classList.add('active');
-    }
-
-    function closeModal(modalId) {
-      document.getElementById(modalId).classList.remove('active');
-    }
-
-    function openNewEmployeeModal() {
-      openModal('newEmployeeModal');
-    }
-
-    async function createNewEmployee() {
-      const name = document.getElementById('newEmployeeName').value.trim();
-      const dn = document.getElementById('newEmployeeDN').value;
-      const unit = document.getElementById('newEmployeeUnit').value;
-      const rank = document.getElementById('newEmployeeRank').value;
-
-      if (!name || !dn) {
-        showNotification('Bitte füllen Sie alle Pflichtfelder aus (*)', 'warning');
-        return;
-      }
-
-      const employeeId = `EMP-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-
-      const newEmployee = {
-        id: employeeId,
-        name,
-        dn,
-        unit: unit || '',
-        rank: rank || '',
-        lastUpdated: new Date().toISOString(),
-        inductions: { oral: { completed: false }, org: { completed: false } },
-        oralData: { examiner: '', date: '', timeStart: '16:40', timeEnd: '18:00', person: '', notes: '', unit: unit || '', rank: rank || '' },
-        orgData: { examiner: '', date: '', timeStart: '22:10', timeEnd: '23:05', person: '', notes: '', unit: unit || '', rank: rank || '' }
-      };
-
-      const success = await saveEmployeeToFirebase(newEmployee);
-      if (success) {
-        employees.unshift(newEmployee);
-        closeModal('newEmployeeModal');
-        renderEmployeeList();
-        selectEmployee(newEmployee);
-        updateStats();
-
-        document.getElementById('newEmployeeName').value = '';
-        document.getElementById('newEmployeeDN').value = '';
-        document.getElementById('newEmployeeUnit').value = '';
-        document.getElementById('newEmployeeRank').value = '';
-
-        showNotification(`Mitarbeiter "${name}" erstellt`, 'success');
-      }
-    }
-
+    // Notification / Loading
     function showNotification(message, type = 'info') {
       const notification = document.getElementById('notification');
       const messageElement = document.getElementById('notificationMessage');
@@ -1859,64 +2074,25 @@ Sonstiges: ${notes}
         </div>
       `;
     }
-
-    function hideLoading() {
-      // renderEmployeeList() wird nach loadEmployees() sowieso aufgerufen
-    }
+    function hideLoading() {}
 
     function loadMockEmployees() {
       employees = [{
         id: 'emp1',
-        name: 'Chapo Anatolian',
-        dn: '43',
-        unit: 'Air Force',
-        rank: 'Captain',
+        name: 'Adam Reiter',
+        dn: '14',
+        unit: 'Infantry',
+        rank: 'Sergeant Major',
         inductions: { oral: { completed: false }, org: { completed: false } },
-        oralData: { examiner: 'HR Team', date: '2026-01-21', timeStart: '16:40', timeEnd: '18:00', person: 'HR Team', notes: '', unit: 'Air Force', rank: 'Captain' },
-        orgData: { examiner: 'HR Team', date: '2026-01-21', timeStart: '22:10', timeEnd: '23:05', person: 'HR Team', notes: '', unit: 'Air Force', rank: 'Captain' }
+        oralData: { examiner:'', date:'2026-01-25', timeStart:'16:40', timeEnd:'18:00', person:'', notes:'', unit:'Infantry', rank:'Sergeant Major' },
+        orgData: { examiner:'', date:'2026-01-25', timeStart:'22:10', timeEnd:'23:05', person:'', notes:'', unit:'Infantry', rank:'Sergeant Major' },
+        observations: []
       }];
 
       renderEmployeeList();
       updateStats();
       seedTemplateBoxes();
-    }
-
-    function seedTemplateBoxes() {
-      document.getElementById('oralTemplateContent').textContent = `╔══════════════════╗
-/////////////////////////////////////////////////////////////////////////
-Mündliche Einweisung
-
-Prüfer :
-Name:
-DN:
-Hauptunit:
-Rang:
-Datum:
-Uhrzeit:
-Beteiligte:
-Sonstiges:
-
-/////////////////////////////////////////////////////////////////////////
-<@&1097625910242447422>
-╚══════════════════╝`;
-
-      document.getElementById('orgTemplateContent').textContent = `╔══════════════════╗
-/////////////////////////////////////////////////////////////////////////
-Organisatorische Einweisung
-
-Prüfer :
-Name:
-DN:
-Hauptunit:
-Rang:
-Datum:
-Uhrzeit:
-Beteiligte:
-Sonstiges:
-
-/////////////////////////////////////////////////////////////////////////
-<@&1097625910242447422>
-╚══════════════════╝`;
+      seedObservationBox();
     }
 
     function escapeHtml(str) {
