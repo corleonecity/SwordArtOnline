@@ -562,6 +562,534 @@
       background: var(--warning-dark);
     }
 
+    .floating-button.ankundigung {
+      background: #8b5cf6;
+    }
+
+    .floating-button.ankundigung:hover {
+      background: #7c3aed;
+    }
+
+    /* Ankündigungen/Besprechungen/Aufstellungen Modal */
+    .ankundigung-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.85);
+      backdrop-filter: blur(4px);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      animation: fadeIn .2s ease;
+    }
+
+    .ankundigung-modal.active {
+      display: flex;
+    }
+
+    .ankundigung-content {
+      background: rgba(31,41,55,.95);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      width: 100%;
+      max-width: 900px;
+      max-height: 90vh;
+      border: 1px solid rgba(255,255,255,.15);
+      box-shadow: var(--shadow-lg);
+      animation: slideUp .2s ease;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .ankundigung-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(255,255,255,.1);
+      flex-shrink: 0;
+    }
+
+    .ankundigung-title {
+      font-size: 18px;
+      font-weight: 900;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .ankundigung-title i {
+      color: #8b5cf6;
+      font-size: 20px;
+    }
+
+    .ankundigung-close {
+      background: none;
+      border: none;
+      color: var(--gray);
+      font-size: 20px;
+      cursor: pointer;
+      transition: var(--transition);
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+    }
+
+    .ankundigung-close:hover {
+      color: #fff;
+      background: rgba(255,255,255,.1);
+    }
+
+    .ankundigung-body {
+      flex: 1;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .ankundigung-tabs {
+      display: flex;
+      gap: 2px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid rgba(255,255,255,.1);
+      flex-shrink: 0;
+    }
+
+    .ankundigung-tab {
+      padding: 12px 20px;
+      background: none;
+      border: none;
+      color: var(--gray);
+      font-weight: 900;
+      cursor: pointer;
+      transition: var(--transition);
+      font-size: 13px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .ankundigung-tab:hover {
+      color: #8b5cf6;
+    }
+
+    .ankundigung-tab.active {
+      color: #8b5cf6;
+    }
+
+    .ankundigung-tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: #8b5cf6;
+    }
+
+    .ankundigung-form-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .ankundigung-form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .ankundigung-label {
+      font-weight: 900;
+      color: var(--gray-light);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+
+    .ankundigung-input {
+      padding: 12px 16px;
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: var(--radius-md);
+      color: #fff;
+      font-size: 14px;
+      transition: var(--transition);
+      width: 100%;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .ankundigung-input:focus {
+      outline: none;
+      border-color: #8b5cf6;
+      background: rgba(255,255,255,.08);
+      box-shadow: 0 0 0 3px rgba(139,92,246,.15);
+    }
+
+    .ankundigung-textarea {
+      min-height: 120px;
+      resize: vertical;
+      line-height: 1.5;
+    }
+
+    .ankundigung-preview {
+      background: rgba(0,0,0,.3);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      border-left: 3px solid #8b5cf6;
+      margin-top: 10px;
+      margin-bottom: 20px;
+      flex-shrink: 0;
+    }
+
+    .ankundigung-preview-title {
+      font-weight: 900;
+      color: var(--gray-light);
+      margin-bottom: 12px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .ankundigung-preview-content {
+      font-family: 'Consolas', 'Monaco', monospace;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      font-size: 12px;
+      line-height: 1.4;
+      color: #fff;
+      background: rgba(0,0,0,.2);
+      padding: 16px;
+      border-radius: var(--radius-sm);
+      max-height: 200px;
+      overflow-y: auto;
+      min-height: 100px;
+    }
+
+    .ankundigung-preview-content::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .ankundigung-preview-content::-webkit-scrollbar-track {
+      background: rgba(255,255,255,.05);
+      border-radius: 3px;
+    }
+
+    .ankundigung-preview-content::-webkit-scrollbar-thumb {
+      background: #8b5cf6;
+      border-radius: 3px;
+    }
+
+    /* Container für den "Neue Ankündigung" Tab-Inhalt */
+    .ankundigung-tab-content {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    /* WICHTIG: Scrollbar für Ankündigungen-Liste */
+    .ankundigung-liste-container {
+      flex: 1;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .ankundigung-liste {
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-height: 0;
+    }
+
+    .ankundigung-liste::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .ankundigung-liste::-webkit-scrollbar-track {
+      background: rgba(255,255,255,.05);
+      border-radius: 4px;
+    }
+
+    .ankundigung-liste::-webkit-scrollbar-thumb {
+      background: #8b5cf6;
+      border-radius: 4px;
+    }
+
+    .ankundigung-liste::-webkit-scrollbar-thumb:hover {
+      background: #7c3aed;
+    }
+
+    .ankundigung-item {
+      background: rgba(255,255,255,.03);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      border: 1px solid rgba(255,255,255,.08);
+      transition: var(--transition);
+      flex-shrink: 0;
+    }
+
+    .ankundigung-item:hover {
+      background: rgba(255,255,255,.05);
+      border-color: #8b5cf6;
+    }
+
+    .ankundigung-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+
+    .ankundigung-item-title {
+      font-weight: 900;
+      color: #fff;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .ankundigung-item-type {
+      font-family: 'Inter', monospace;
+      background: rgba(139,92,246,.10);
+      color: #a78bfa;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 900;
+      border: 1px solid rgba(139,92,246,.20);
+    }
+
+    .ankundigung-item-date {
+      color: var(--gray);
+      font-size: 11px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .ankundigung-item-content {
+      color: var(--gray-light);
+      font-size: 13px;
+      line-height: 1.5;
+      margin-bottom: 12px;
+      padding: 12px;
+      background: rgba(0,0,0,.2);
+      border-radius: var(--radius-sm);
+      border-left: 2px solid #8b5cf6;
+      max-height: 100px;
+      overflow-y: auto;
+    }
+
+    .ankundigung-item-content::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .ankundigung-item-content::-webkit-scrollbar-track {
+      background: rgba(255,255,255,.03);
+      border-radius: 2px;
+    }
+
+    .ankundigung-item-content::-webkit-scrollbar-thumb {
+      background: rgba(139,92,246,.30);
+      border-radius: 2px;
+    }
+
+    .ankundigung-item-template {
+      font-family: 'Consolas', 'Monaco', monospace;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      font-size: 11px;
+      line-height: 1.4;
+      color: var(--gray-light);
+      background: rgba(0,0,0,.3);
+      padding: 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(255,255,255,.08);
+      max-height: 150px;
+      overflow-y: auto;
+      margin-bottom: 12px;
+    }
+
+    .ankundigung-item-template::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .ankundigung-item-template::-webkit-scrollbar-track {
+      background: rgba(255,255,255,.03);
+      border-radius: 2px;
+    }
+
+    .ankundigung-item-template::-webkit-scrollbar-thumb {
+      background: rgba(139,92,246,.30);
+      border-radius: 2px;
+    }
+
+    .ankundigung-item-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .ankundigung-item-btn {
+      padding: 6px 12px;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-weight: 900;
+      cursor: pointer;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-size: 11px;
+    }
+
+    .ankundigung-item-btn-copy {
+      background: rgba(139,92,246,.15);
+      color: #a78bfa;
+      border: 1px solid rgba(139,92,246,.25);
+    }
+
+    .ankundigung-item-btn-copy:hover {
+      background: rgba(139,92,246,.25);
+    }
+
+    .ankundigung-item-btn-delete {
+      background: rgba(239,68,68,.15);
+      color: #fca5a5;
+      border: 1px solid rgba(239,68,68,.25);
+    }
+
+    .ankundigung-item-btn-delete:hover {
+      background: rgba(239,68,68,.25);
+    }
+
+    .empty-ankundigung {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--gray);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .empty-ankundigung-icon {
+      font-size: 36px;
+      margin-bottom: 12px;
+      opacity: .3;
+    }
+
+    .empty-ankundigung-title {
+      font-size: 14px;
+      font-weight: 900;
+      margin-bottom: 6px;
+      color: var(--gray-light);
+    }
+
+    .ankundigung-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-top: 10px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255,255,255,.1);
+      flex-shrink: 0;
+    }
+
+    .ankundigung-btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: var(--radius-md);
+      font-weight: 900;
+      cursor: pointer;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 13px;
+    }
+
+    .ankundigung-btn-copy {
+      background: #8b5cf6;
+      color: #fff;
+    }
+
+    .ankundigung-btn-copy:hover {
+      background: #7c3aed;
+      transform: translateY(-1px);
+    }
+
+    .ankundigung-btn-save {
+      background: var(--secondary);
+      color: #fff;
+    }
+
+    .ankundigung-btn-save:hover {
+      background: var(--secondary-dark);
+      transform: translateY(-1px);
+    }
+
+    .ankundigung-search-container {
+      position: relative;
+      margin-bottom: 20px;
+      flex-shrink: 0;
+    }
+
+    .ankundigung-search-input {
+      width: 100%;
+      padding: 12px 16px 12px 44px;
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: var(--radius-md);
+      color: #fff;
+      font-size: 14px;
+      transition: var(--transition);
+    }
+
+    .ankundigung-search-input::placeholder {
+      color: rgba(255,255,255,.5);
+    }
+
+    .ankundigung-search-input:focus {
+      outline: none;
+      border-color: #8b5cf6;
+      background: rgba(255,255,255,.08);
+      box-shadow: 0 0 0 3px rgba(139,92,246,.15);
+    }
+
+    .ankundigung-search-icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--gray);
+      font-size: 16px;
+    }
+
     /* Soldatengespräch Modal */
     .soldaten-modal {
       display: none;
@@ -1654,21 +2182,27 @@
       .induction-content{padding:16px}
       .oral-form-grid,.org-form-grid{grid-template-columns:1fr}
       .soldaten-modal,
-      .beobachtung-akten-modal{padding:12px}
+      .beobachtung-akten-modal,
+      .ankundigung-modal{padding:12px}
       .soldaten-content,
-      .beobachtung-akten-content{padding:20px}
+      .beobachtung-akten-content,
+      .ankundigung-content{padding:20px}
       .soldaten-actions,
-      .beobachtung-actions{flex-direction:column;align-items:stretch}
+      .beobachtung-actions,
+      .ankundigung-actions{flex-direction:column;align-items:stretch}
       .floating-buttons-container{
         bottom: 16px;
         right: 16px;
       }
       .soldaten-tabs,
-      .beobachtung-tabs{flex-direction:column}
+      .beobachtung-tabs,
+      .ankundigung-tabs{flex-direction:column}
       .soldaten-tab,
-      .beobachtung-tab{text-align:left;padding:10px 16px}
+      .beobachtung-tab,
+      .ankundigung-tab{text-align:left;padding:10px 16px}
       .soldaten-form-grid,
-      .akte-form-grid{grid-template-columns:1fr}
+      .akte-form-grid,
+      .ankundigung-form-grid{grid-template-columns:1fr}
     }
     @media (max-width:480px){
       .app-container{padding:12px}
@@ -1679,9 +2213,11 @@
       .modal{padding:16px;margin:12px}
       .notification{left:12px;right:12px;bottom:12px;min-width:auto}
       .soldaten-content,
-      .beobachtung-akten-content{padding:16px}
+      .beobachtung-akten-content,
+      .ankundigung-content{padding:16px}
       .soldaten-item-actions,
-      .beobachtung-akte-actions{flex-direction:column}
+      .beobachtung-akte-actions,
+      .ankundigung-item-actions{flex-direction:column}
     }
   </style>
 </head>
@@ -1691,12 +2227,215 @@
 
   <!-- Floating Buttons -->
   <div class="floating-buttons-container">
+    <button class="floating-button ankundigung" onclick="openAnkundigungModal()" title="Ankündigungen">
+      🪧
+    </button>
     <button class="floating-button soldaten" onclick="openSoldatenModal()" title="Soldatengespräche">
       <i class="fas fa-comments"></i>
     </button>
     <button class="floating-button" onclick="openBeobachtungAktenModal()" title="Beobachtungs-Akten">
       <i class="fas fa-folder-open"></i>
     </button>
+  </div>
+
+  <!-- Ankündigungen/Besprechungen/Aufstellungen Modal -->
+  <div class="ankundigung-modal" id="ankundigungModal" onclick="if(event.target===this)closeModal('ankundigungModal')">
+    <div class="ankundigung-content">
+      <div class="ankundigung-header">
+        <div class="ankundigung-title">
+          <i class="fas fa-bullhorn"></i> Ankündigungen & Besprechungen
+        </div>
+        <button class="ankundigung-close" onclick="closeModal('ankundigungModal')">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <div class="ankundigung-body">
+        <div class="ankundigung-tabs">
+          <button class="ankundigung-tab active" onclick="switchAnkundigungTab('new')">
+            <span>🪧</span> Neue Ankündigung
+          </button>
+          <button class="ankundigung-tab" onclick="switchAnkundigungTab('besprechung')">
+            <span>🖊️</span> Neue Besprechung
+          </button>
+          <button class="ankundigung-tab" onclick="switchAnkundigungTab('aufstellung')">
+            <span>🕛</span> Neue Aufstellung
+          </button>
+          <button class="ankundigung-tab" onclick="switchAnkundigungTab('list')">
+            <i class="fas fa-list"></i> Liste
+          </button>
+        </div>
+        
+        <!-- Neue Ankündigung Tab -->
+        <div class="ankundigung-tab-content" id="ankundigungNewTab">
+          <div class="ankundigung-form-grid">
+            <div class="ankundigung-form-group">
+              <label class="ankundigung-label">Titel</label>
+              <input type="text" class="ankundigung-input" id="ankundigungTitle" placeholder="Titel der Ankündigung">
+            </div>
+            
+            <div class="ankundigung-form-group">
+              <label class="ankundigung-label">Inhalt *</label>
+              <textarea class="ankundigung-input ankundigung-textarea" id="ankundigungContent" placeholder="Inhalt der Ankündigung..."></textarea>
+            </div>
+          </div>
+          
+          <div class="ankundigung-preview">
+            <div class="ankundigung-preview-title">
+              <i class="fas fa-file-alt"></i> Vorschau
+            </div>
+            <div class="ankundigung-preview-content" id="ankundigungPreview">
+🪧 **Ankündigung**
+
+
+            </div>
+          </div>
+          
+          <div class="ankundigung-actions">
+            <button class="ankundigung-btn ankundigung-btn-copy" onclick="copyAnkundigungTemplate()">
+              <i class="fas fa-copy"></i> In Zwischenablage kopieren
+            </button>
+            <button class="ankundigung-btn ankundigung-btn-save" onclick="saveAnkundigung()">
+              <i class="fas fa-save"></i> Ankündigung speichern
+            </button>
+          </div>
+        </div>
+        
+        <!-- Neue Besprechung Tab -->
+        <div class="ankundigung-tab-content" id="ankundigungBesprechungTab" style="display:none;">
+          <div class="ankundigung-form-grid">
+            <div class="ankundigung-form-group">
+              <label class="ankundigung-label">Thema *</label>
+              <input type="text" class="ankundigung-input" id="besprechungThema" placeholder="Thema der Besprechung">
+            </div>
+            
+            <div class="ankundigung-form-group">
+              <label class="ankundigung-label">Datum *</label>
+              <input type="date" class="ankundigung-input" id="besprechungDate" value="">
+            </div>
+            
+            <div class="ankundigung-form-group">
+              <label class="ankundigung-label">Uhrzeit *</label>
+              <input type="time" class="ankundigung-input" id="besprechungTime" value="">
+            </div>
+            
+            <div class="ankundigung-form-group">
+              <label class="ankundigung-label">Ort</label>
+              <input type="text" class="ankundigung-input" id="besprechungOrt" placeholder="Ort der Besprechung">
+            </div>
+            
+            <div class="ankundigung-form-group">
+              <label class="ankundigung-label">Inhalt *</label>
+              <textarea class="ankundigung-input ankundigung-textarea" id="besprechungContent" placeholder="Inhalt der Besprechung..."></textarea>
+            </div>
+          </div>
+          
+          <div class="ankundigung-preview">
+            <div class="ankundigung-preview-title">
+              <i class="fas fa-file-alt"></i> Vorschau
+            </div>
+            <div class="ankundigung-preview-content" id="besprechungPreview">
+🖊️ **Besprechung**
+
+Thema: 
+Datum: 
+Uhrzeit: 
+Ort: 
+
+
+            </div>
+          </div>
+          
+          <div class="ankundigung-actions">
+            <button class="ankundigung-btn ankundigung-btn-copy" onclick="copyBesprechungTemplate()">
+              <i class="fas fa-copy"></i> In Zwischenablage kopieren
+            </button>
+            <button class="ankundigung-btn ankundigung-btn-save" onclick="saveBesprechung()">
+              <i class="fas fa-save"></i> Besprechung speichern
+            </button>
+          </div>
+        </div>
+        
+        <!-- Neue Aufstellung Tab -->
+        <div class="ankundigung-tab-content" id="ankundigungAufstellungTab" style="display:none;">
+          <div class="ankundigung-form-grid">
+            <div class="ankundigung-form-group">
+              <label class="ankundigung-label">Typ *</label>
+              <select class="ankundigung-input" id="aufstellungTyp">
+                <option value="">Typ auswählen</option>
+                <option value="Tagesaufstellung">Tagesaufstellung</option>
+                <option value="Wochenaufstellung">Wochenaufstellung</option>
+                <option value="Sonderaufstellung">Sonderaufstellung</option>
+              </select>
+            </div>
+            
+            <div class="ankundigung-form-group">
+              <label class="ankundigung-label">Datum *</label>
+              <input type="date" class="ankundigung-input" id="aufstellungDate" value="">
+            </div>
+            
+            <div class="ankundigung-form-group">
+              <label class="ankundigung-label">Uhrzeit *</label>
+              <input type="time" class="ankundigung-input" id="aufstellungTime" value="">
+            </div>
+            
+            <div class="ankundigung-form-group">
+              <label class="ankundigung-label">Ort *</label>
+              <input type="text" class="ankundigung-input" id="aufstellungOrt" placeholder="Ort der Aufstellung">
+            </div>
+            
+            <div class="ankundigung-form-group">
+              <label class="ankundigung-label">Bemerkungen</label>
+              <textarea class="ankundigung-input ankundigung-textarea" id="aufstellungBemerkungen" placeholder="Bemerkungen zur Aufstellung..."></textarea>
+            </div>
+          </div>
+          
+          <div class="ankundigung-preview">
+            <div class="ankundigung-preview-title">
+              <i class="fas fa-file-alt"></i> Vorschau
+            </div>
+            <div class="ankundigung-preview-content" id="aufstellungPreview">
+🕛 **Aufstellung**
+
+Typ: 
+Datum: 
+Uhrzeit: 
+Ort: 
+Bemerkungen:
+
+            </div>
+          </div>
+          
+          <div class="ankundigung-actions">
+            <button class="ankundigung-btn ankundigung-btn-copy" onclick="copyAufstellungTemplate()">
+              <i class="fas fa-copy"></i> In Zwischenablage kopieren
+            </button>
+            <button class="ankundigung-btn ankundigung-btn-save" onclick="saveAufstellung()">
+              <i class="fas fa-save"></i> Aufstellung speichern
+            </button>
+          </div>
+        </div>
+        
+        <!-- Liste Tab -->
+        <div class="ankundigung-tab-content" id="ankundigungListTab" style="display:none;">
+          <div class="ankundigung-search-container">
+            <i class="fas fa-search ankundigung-search-icon"></i>
+            <input type="text" class="ankundigung-search-input" id="ankundigungSearch" placeholder="Nach Titel oder Inhalt suchen..." oninput="searchAnkundigungen(this.value)">
+          </div>
+          
+          <!-- Scrollbar-Container für die Liste -->
+          <div class="ankundigung-liste-container">
+            <div class="ankundigung-liste" id="ankundigungListe">
+              <div class="empty-ankundigung">
+                <div class="empty-ankundigung-icon"><i class="fas fa-bullhorn"></i></div>
+                <div class="empty-ankundigung-title">Keine Einträge gefunden</div>
+                <div class="empty-description">Erstellen Sie Ihren ersten Eintrag</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Soldatengespräch Modal -->
@@ -2227,6 +2966,34 @@ Grund:
             </div>
           </div>
         </div>
+
+        <div class="templates-section">
+          <div class="section-header">
+            <div class="section-title"><i class="fas fa-file-code"></i> Discord Vorlagen</div>
+            <div class="template-actions">
+              <button class="btn btn-secondary" onclick="copyOralTemplate()"><i class="fas fa-comments"></i> Mündlich</button>
+              <button class="btn btn-secondary" onclick="copyOrgTemplate()"><i class="fas fa-clipboard-list"></i> Organisatorisch</button>
+            </div>
+          </div>
+
+          <div class="template-cards">
+            <div class="template-card" id="oralTemplateCard">
+              <div class="template-card-header">
+                <div class="template-card-title"><i class="fas fa-comments"></i> Mündliche Einweisung</div>
+                <div class="template-badge" id="oralTemplateBadge">AUSSTEHEND</div>
+              </div>
+              <div class="template-content" id="oralTemplateContent"></div>
+            </div>
+
+            <div class="template-card" id="orgTemplateCard">
+              <div class="template-card-header">
+                <div class="template-card-title"><i class="fas fa-clipboard-list"></i> Organisatorische Einweisung</div>
+                <div class="template-badge" id="orgTemplateBadge">AUSSTEHEND</div>
+              </div>
+              <div class="template-content" id="orgTemplateContent"></div>
+            </div>
+          </div>
+        </div>
       </div>
     </main>
   </div>
@@ -2409,8 +3176,10 @@ Grund:
     let currentFilter = 'all';
     let akten = [];
     let soldatenGespräche = [];
+    let ankundigungen = [];
     let currentBeobachtungTab = 'new';
     let currentSoldatenTab = 'new';
+    let currentAnkundigungTab = 'new';
 
     document.addEventListener('DOMContentLoaded', function () {
       initializeApp();
@@ -2419,6 +3188,7 @@ Grund:
       adjustSidebarHeight();
       loadAkten();
       loadSoldatenGespräche();
+      loadAnkundigungen();
     });
 
     function initializeApp() {
@@ -2426,11 +3196,15 @@ Grund:
       document.getElementById('oralDate').value = today;
       document.getElementById('orgDate').value = today;
       document.getElementById('soldatenDate').value = today;
+      document.getElementById('besprechungDate').value = today;
+      document.getElementById('aufstellungDate').value = today;
 
       const now = new Date();
       const hours = now.getHours().toString().padStart(2, '0');
       const minutes = now.getMinutes().toString().padStart(2, '0');
       document.getElementById('soldatenTime').value = `${hours}:${minutes}`;
+      document.getElementById('besprechungTime').value = `${hours}:${minutes}`;
+      document.getElementById('aufstellungTime').value = `${hours}:${minutes}`;
 
       document.getElementById('oralTimeStart').value = '16:40';
       document.getElementById('oralTimeEnd').value = '18:00';
@@ -2439,8 +3213,10 @@ Grund:
 
       loadEmployees();
       setupFormChangeListeners();
+      seedTemplateBoxes();
       setupBeobachtungEventListeners();
       setupSoldatenEventListeners();
+      setupAnkundigungEventListeners();
     }
 
     function setupEventListeners() {
@@ -2454,6 +3230,7 @@ Grund:
         if (e.ctrlKey && e.key === 'e' && currentEmployee) { e.preventDefault(); openEditEmployeeModal(); }
         if (e.ctrlKey && e.key === 'b') { e.preventDefault(); openBeobachtungAktenModal(); }
         if (e.ctrlKey && e.key === 's') { e.preventDefault(); openSoldatenModal(); }
+        if (e.ctrlKey && e.key === 'a') { e.preventDefault(); openAnkundigungModal(); }
       });
 
       window.addEventListener('resize', adjustSidebarHeight);
@@ -2481,9 +3258,27 @@ Grund:
       });
     }
 
+    function setupAnkundigungEventListeners() {
+      const ankundigungInputs = document.querySelectorAll('#ankundigungTitle, #ankundigungContent');
+      ankundigungInputs.forEach(input => {
+        input.addEventListener('input', updateAnkundigungPreview);
+      });
+      
+      const besprechungInputs = document.querySelectorAll('#besprechungThema, #besprechungDate, #besprechungTime, #besprechungOrt, #besprechungContent');
+      besprechungInputs.forEach(input => {
+        input.addEventListener('input', updateBesprechungPreview);
+      });
+      
+      const aufstellungInputs = document.querySelectorAll('#aufstellungTyp, #aufstellungDate, #aufstellungTime, #aufstellungOrt, #aufstellungBemerkungen');
+      aufstellungInputs.forEach(input => {
+        input.addEventListener('input', updateAufstellungPreview);
+      });
+    }
+
     function handleFormChange() {
       if (currentEmployee) {
         saveFormData();
+        updateTemplates();
         saveEmployeeData(true);
       }
     }
@@ -2497,6 +3292,402 @@ Grund:
       const availableHeight = windowHeight - headerHeight - 40;
       const newHeight = Math.max(availableHeight, 500);
       sidebar.style.height = `${newHeight}px`;
+    }
+
+    // Ankündigungen/Besprechungen/Aufstellungen Functions
+    function openAnkundigungModal() {
+      openModal('ankundigungModal');
+      updateAnkundigungPreview();
+    }
+
+    function closeAnkundigungModal() {
+      closeModal('ankundigungModal');
+    }
+
+    function switchAnkundigungTab(tabName) {
+      currentAnkundigungTab = tabName;
+      
+      // Update tab buttons
+      document.querySelectorAll('.ankundigung-tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      let tabIndex = 0;
+      if (tabName === 'new') tabIndex = 0;
+      else if (tabName === 'besprechung') tabIndex = 1;
+      else if (tabName === 'aufstellung') tabIndex = 2;
+      else if (tabName === 'list') tabIndex = 3;
+      
+      document.querySelectorAll('.ankundigung-tab')[tabIndex].classList.add('active');
+      
+      // Update tab content
+      document.querySelectorAll('.ankundigung-tab-content').forEach(content => {
+        content.style.display = 'none';
+      });
+      let tabId = '';
+      if (tabName === 'new') tabId = 'ankundigungNewTab';
+      else if (tabName === 'besprechung') tabId = 'ankundigungBesprechungTab';
+      else if (tabName === 'aufstellung') tabId = 'ankundigungAufstellungTab';
+      else tabId = 'ankundigungListTab';
+      
+      document.getElementById(tabId).style.display = 'block';
+      
+      // Load data for the tab
+      if (tabName === 'list') {
+        renderAnkundigungListe();
+      }
+    }
+
+    function updateAnkundigungPreview() {
+      const title = document.getElementById('ankundigungTitle').value;
+      const content = document.getElementById('ankundigungContent').value;
+
+      const template = `🪧 **Ankündigung**${title ? '\n\n**' + title + '**' : ''}
+
+${content || ''}`;
+
+      document.getElementById('ankundigungPreview').textContent = template;
+    }
+
+    function updateBesprechungPreview() {
+      const thema = document.getElementById('besprechungThema').value;
+      const date = document.getElementById('besprechungDate').value;
+      const time = document.getElementById('besprechungTime').value;
+      const ort = document.getElementById('besprechungOrt').value;
+      const content = document.getElementById('besprechungContent').value;
+
+      const formattedDate = date ? new Date(date).toLocaleDateString('de-DE') : '';
+      
+      const template = `🖊️ **Besprechung**
+
+Thema: ${thema || ''}
+Datum: ${formattedDate}
+Uhrzeit: ${time || ''}
+Ort: ${ort || ''}
+
+${content || ''}`;
+
+      document.getElementById('besprechungPreview').textContent = template;
+    }
+
+    function updateAufstellungPreview() {
+      const typ = document.getElementById('aufstellungTyp').value;
+      const date = document.getElementById('aufstellungDate').value;
+      const time = document.getElementById('aufstellungTime').value;
+      const ort = document.getElementById('aufstellungOrt').value;
+      const bemerkungen = document.getElementById('aufstellungBemerkungen').value;
+
+      const formattedDate = date ? new Date(date).toLocaleDateString('de-DE') : '';
+      
+      const template = `🕛 **Aufstellung**
+
+Typ: ${typ || ''}
+Datum: ${formattedDate}
+Uhrzeit: ${time || ''}
+Ort: ${ort || ''}
+Bemerkungen: ${bemerkungen || ''}`;
+
+      document.getElementById('aufstellungPreview').textContent = template;
+    }
+
+    async function copyAnkundigungTemplate() {
+      const template = document.getElementById('ankundigungPreview').textContent;
+      const success = await copyToClipboard(template);
+      showNotification(success ? 'Ankündigung kopiert' : 'Fehler beim Kopieren', success ? 'success' : 'error');
+    }
+
+    async function copyBesprechungTemplate() {
+      const template = document.getElementById('besprechungPreview').textContent;
+      const success = await copyToClipboard(template);
+      showNotification(success ? 'Besprechung kopiert' : 'Fehler beim Kopieren', success ? 'success' : 'error');
+    }
+
+    async function copyAufstellungTemplate() {
+      const template = document.getElementById('aufstellungPreview').textContent;
+      const success = await copyToClipboard(template);
+      showNotification(success ? 'Aufstellung kopiert' : 'Fehler beim Kopieren', success ? 'success' : 'error');
+    }
+
+    async function saveAnkundigung() {
+      const title = document.getElementById('ankundigungTitle').value.trim();
+      const content = document.getElementById('ankundigungContent').value.trim();
+
+      if (!content) {
+        showNotification('Bitte geben Sie den Inhalt der Ankündigung ein', 'warning');
+        return;
+      }
+
+      const ankundigung = {
+        id: `ANK-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+        type: 'ankundigung',
+        title: title || 'Ohne Titel',
+        content,
+        date: new Date().toISOString(),
+        dateFormatted: new Date().toLocaleDateString('de-DE'),
+        template: document.getElementById('ankundigungPreview').textContent,
+        icon: '🪧'
+      };
+
+      try {
+        await db.collection('hrAnkundigungen').doc(ankundigung.id).set(ankundigung);
+        ankundigungen.unshift(ankundigung);
+        
+        showNotification('Ankündigung erfolgreich gespeichert', 'success');
+        
+        // Felder leeren
+        document.getElementById('ankundigungTitle').value = '';
+        document.getElementById('ankundigungContent').value = '';
+        
+        updateAnkundigungPreview();
+        renderAnkundigungListe();
+        
+        // Switch to list tab to show the new entry
+        switchAnkundigungTab('list');
+      } catch (error) {
+        console.error('Fehler beim Speichern der Ankündigung:', error);
+        showNotification('Fehler beim Speichern: ' + error.message, 'error');
+      }
+    }
+
+    async function saveBesprechung() {
+      const thema = document.getElementById('besprechungThema').value.trim();
+      const date = document.getElementById('besprechungDate').value;
+      const time = document.getElementById('besprechungTime').value;
+      const ort = document.getElementById('besprechungOrt').value.trim();
+      const content = document.getElementById('besprechungContent').value.trim();
+
+      if (!thema || !date || !time || !content) {
+        showNotification('Bitte füllen Sie alle Pflichtfelder aus (*)', 'warning');
+        return;
+      }
+
+      const besprechung = {
+        id: `BES-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+        type: 'besprechung',
+        thema,
+        date,
+        time,
+        ort: ort || '',
+        content,
+        created: new Date().toISOString(),
+        createdFormatted: new Date().toLocaleDateString('de-DE'),
+        dateFormatted: new Date(date).toLocaleDateString('de-DE'),
+        template: document.getElementById('besprechungPreview').textContent,
+        icon: '🖊️'
+      };
+
+      try {
+        await db.collection('hrAnkundigungen').doc(besprechung.id).set(besprechung);
+        ankundigungen.unshift(besprechung);
+        
+        showNotification('Besprechung erfolgreich gespeichert', 'success');
+        
+        // Felder leeren
+        document.getElementById('besprechungThema').value = '';
+        document.getElementById('besprechungDate').value = new Date().toISOString().split('T')[0];
+        document.getElementById('besprechungTime').value = '';
+        document.getElementById('besprechungOrt').value = '';
+        document.getElementById('besprechungContent').value = '';
+        
+        updateBesprechungPreview();
+        renderAnkundigungListe();
+        
+        // Switch to list tab to show the new entry
+        switchAnkundigungTab('list');
+      } catch (error) {
+        console.error('Fehler beim Speichern der Besprechung:', error);
+        showNotification('Fehler beim Speichern: ' + error.message, 'error');
+      }
+    }
+
+    async function saveAufstellung() {
+      const typ = document.getElementById('aufstellungTyp').value;
+      const date = document.getElementById('aufstellungDate').value;
+      const time = document.getElementById('aufstellungTime').value;
+      const ort = document.getElementById('aufstellungOrt').value.trim();
+      const bemerkungen = document.getElementById('aufstellungBemerkungen').value.trim();
+
+      if (!typ || !date || !time || !ort) {
+        showNotification('Bitte füllen Sie alle Pflichtfelder aus (*)', 'warning');
+        return;
+      }
+
+      const aufstellung = {
+        id: `AUF-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+        type: 'aufstellung',
+        typ,
+        date,
+        time,
+        ort,
+        bemerkungen: bemerkungen || '',
+        created: new Date().toISOString(),
+        createdFormatted: new Date().toLocaleDateString('de-DE'),
+        dateFormatted: new Date(date).toLocaleDateString('de-DE'),
+        template: document.getElementById('aufstellungPreview').textContent,
+        icon: '🕛'
+      };
+
+      try {
+        await db.collection('hrAnkundigungen').doc(aufstellung.id).set(aufstellung);
+        ankundigungen.unshift(aufstellung);
+        
+        showNotification('Aufstellung erfolgreich gespeichert', 'success');
+        
+        // Felder leeren
+        document.getElementById('aufstellungTyp').value = '';
+        document.getElementById('aufstellungDate').value = new Date().toISOString().split('T')[0];
+        document.getElementById('aufstellungTime').value = '';
+        document.getElementById('aufstellungOrt').value = '';
+        document.getElementById('aufstellungBemerkungen').value = '';
+        
+        updateAufstellungPreview();
+        renderAnkundigungListe();
+        
+        // Switch to list tab to show the new entry
+        switchAnkundigungTab('list');
+      } catch (error) {
+        console.error('Fehler beim Speichern der Aufstellung:', error);
+        showNotification('Fehler beim Speichern: ' + error.message, 'error');
+      }
+    }
+
+    async function loadAnkundigungen() {
+      try {
+        const snapshot = await db.collection('hrAnkundigungen').orderBy('created', 'desc').limit(100).get();
+        ankundigungen = [];
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          ankundigungen.push({ 
+            id: doc.id, 
+            ...data,
+            createdFormatted: data.createdFormatted || new Date(data.created).toLocaleDateString('de-DE'),
+            dateFormatted: data.dateFormatted || (data.date ? new Date(data.date).toLocaleDateString('de-DE') : '')
+          });
+        });
+        renderAnkundigungListe();
+      } catch (error) {
+        console.error('Fehler beim Laden der Ankündigungen:', error);
+      }
+    }
+
+    function renderAnkundigungListe() {
+      const container = document.getElementById('ankundigungListe');
+      const searchTerm = document.getElementById('ankundigungSearch')?.value.toLowerCase() || '';
+      
+      // Filter ankundigungen based on search term
+      let filteredAnkundigungen = ankundigungen;
+      if (searchTerm) {
+        filteredAnkundigungen = ankundigungen.filter(item => 
+          (item.title && item.title.toLowerCase().includes(searchTerm)) || 
+          (item.thema && item.thema.toLowerCase().includes(searchTerm)) ||
+          (item.content && item.content.toLowerCase().includes(searchTerm)) ||
+          (item.bemerkungen && item.bemerkungen.toLowerCase().includes(searchTerm))
+        );
+      }
+      
+      if (filteredAnkundigungen.length === 0) {
+        container.innerHTML = `
+          <div class="empty-ankundigung">
+            <div class="empty-ankundigung-icon"><i class="fas fa-bullhorn"></i></div>
+            <div class="empty-ankundigung-title">${searchTerm ? 'Keine passenden Einträge gefunden' : 'Keine Einträge gefunden'}</div>
+            <div class="empty-description">${searchTerm ? 'Versuchen Sie einen anderen Suchbegriff' : 'Erstellen Sie Ihren ersten Eintrag'}</div>
+          </div>
+        `;
+        return;
+      }
+
+      let html = '';
+      filteredAnkundigungen.forEach(item => {
+        const typeLabel = item.type === 'ankundigung' ? 'Ankündigung' : 
+                         item.type === 'besprechung' ? 'Besprechung' : 'Aufstellung';
+        
+        const title = item.type === 'ankundigung' ? (item.title || 'Ohne Titel') :
+                     item.type === 'besprechung' ? item.thema : `${item.typ} - ${item.ort}`;
+        
+        const date = item.type === 'ankundigung' ? item.createdFormatted : 
+                    item.dateFormatted || item.createdFormatted;
+        
+        const content = item.type === 'ankundigung' ? item.content :
+                       item.type === 'besprechung' ? item.content : item.bemerkungen;
+        
+        html += `
+          <div class="ankundigung-item">
+            <div class="ankundigung-item-header">
+              <div class="ankundigung-item-title">
+                <span>${item.icon || '📄'}</span> ${escapeHtml(title)}
+              </div>
+              <div class="ankundigung-item-type">
+                ${typeLabel}
+              </div>
+            </div>
+            <div class="ankundigung-item-date">
+              <i class="fas fa-calendar"></i> Erstellt: ${date}
+            </div>
+            <div class="ankundigung-item-content">
+              ${escapeHtml(content.length > 200 ? content.substring(0, 200) + '...' : content)}
+            </div>
+            ${item.type === 'besprechung' ? `
+            <div style="display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap;">
+              ${item.time ? `<div style="background: rgba(139,92,246,.10); color: #a78bfa; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 900; border: 1px solid rgba(139,92,246,.20);">
+                <i class="fas fa-clock"></i> ${item.time}
+              </div>` : ''}
+              ${item.ort ? `<div style="background: rgba(139,92,246,.10); color: #a78bfa; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 900; border: 1px solid rgba(139,92,246,.20);">
+                <i class="fas fa-map-marker-alt"></i> ${item.ort}
+              </div>` : ''}
+            </div>
+            ` : ''}
+            ${item.type === 'aufstellung' ? `
+            <div style="display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap;">
+              <div style="background: rgba(139,92,246,.10); color: #a78bfa; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 900; border: 1px solid rgba(139,92,246,.20);">
+                ${item.typ}
+              </div>
+              ${item.time ? `<div style="background: rgba(139,92,246,.10); color: #a78bfa; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 900; border: 1px solid rgba(139,92,246,.20);">
+                <i class="fas fa-clock"></i> ${item.time}
+              </div>` : ''}
+              <div style="background: rgba(139,92,246,.10); color: #a78bfa; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 900; border: 1px solid rgba(139,92,246,.20);">
+                <i class="fas fa-map-marker-alt"></i> ${item.ort}
+              </div>
+            </div>
+            ` : ''}
+            <div class="ankundigung-item-actions">
+              <button class="ankundigung-item-btn ankundigung-item-btn-copy" onclick="copyAnkundigungFromList('${item.id}')">
+                <i class="fas fa-copy"></i> Kopieren
+              </button>
+              <button class="ankundigung-item-btn ankundigung-item-btn-delete" onclick="deleteAnkundigung('${item.id}')">
+                <i class="fas fa-trash"></i> Löschen
+              </button>
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    function searchAnkundigungen(searchTerm) {
+      renderAnkundigungListe();
+    }
+
+    async function copyAnkundigungFromList(itemId) {
+      const item = ankundigungen.find(i => i.id === itemId);
+      if (!item) return;
+
+      const success = await copyToClipboard(item.template);
+      showNotification(success ? `${item.type === 'ankundigung' ? 'Ankündigung' : item.type === 'besprechung' ? 'Besprechung' : 'Aufstellung'} kopiert` : 'Fehler beim Kopieren', success ? 'success' : 'error');
+    }
+
+    async function deleteAnkundigung(itemId) {
+      if (!confirm('Eintrag wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.')) return;
+
+      try {
+        await db.collection('hrAnkundigungen').doc(itemId).delete();
+        ankundigungen = ankundigungen.filter(i => i.id !== itemId);
+        
+        renderAnkundigungListe();
+        showNotification('Eintrag gelöscht', 'success');
+      } catch (error) {
+        console.error('Fehler beim Löschen des Eintrags:', error);
+        showNotification('Fehler beim Löschen: ' + error.message, 'error');
+      }
     }
 
     // Soldatengespräch Functions
@@ -3410,6 +4601,7 @@ Grund: ${grund || ''}
       updateInductionUI('org', orgCompleted);
 
       checkBothInductionsCompleted();
+      updateTemplates();
     }
 
     function updateInductionDisplay() {
@@ -3514,6 +4706,7 @@ Grund: ${grund || ''}
         closeModal('editEmployeeModal');
         updateEmployeeHeader();
         renderEmployeeList();
+        updateTemplates();
         showNotification('Mitarbeiterdaten erfolgreich aktualisiert', 'success');
       }
     }
@@ -3556,6 +4749,7 @@ Grund: ${grund || ''}
       };
 
       updateInductionUI(type, completed);
+      updateTemplates();
 
       saveEmployeeData(true);
       checkBothInductionsCompleted();
@@ -3582,6 +4776,83 @@ Grund: ${grund || ''}
       }
 
       return nowBothCompleted;
+    }
+
+    function updateTemplates() {
+      if (!currentEmployee) {
+        seedTemplateBoxes();
+        return;
+      }
+
+      saveFormData();
+
+      const oralTemplate = generateTemplate('oral');
+      document.getElementById('oralTemplateContent').textContent = oralTemplate;
+
+      const orgTemplate = generateTemplate('org');
+      document.getElementById('orgTemplateContent').textContent = orgTemplate;
+
+      const oralCompleted = currentEmployee.inductions?.oral?.completed || false;
+      const orgCompleted = currentEmployee.inductions?.org?.completed || false;
+
+      document.getElementById('oralTemplateBadge').textContent = oralCompleted ? 'BESTANDEN' : 'AUSSTEHEND';
+      document.getElementById('orgTemplateBadge').textContent = orgCompleted ? 'BESTANDEN' : 'AUSSTEHEND';
+
+      document.getElementById('oralTemplateCard').classList.toggle('completed', oralCompleted);
+      document.getElementById('orgTemplateCard').classList.toggle('completed', orgCompleted);
+    }
+
+    function generateTemplate(type) {
+      const isOral = type === 'oral';
+      const completed = isOral
+        ? (currentEmployee.inductions?.oral?.completed || false)
+        : (currentEmployee.inductions?.org?.completed || false);
+
+      const data = isOral ? currentEmployee.oralData : currentEmployee.orgData;
+
+      const name = currentEmployee.name || '';
+      const dn = currentEmployee.dn || '';
+
+      const unit = isOral
+        ? (document.getElementById('unitSelect').value || currentEmployee.unit || '')
+        : (document.getElementById('unitSelect2').value || currentEmployee.unit || '');
+
+      const rank = isOral
+        ? (document.getElementById('rankSelect').value || currentEmployee.rank || '')
+        : (document.getElementById('rankSelect2').value || currentEmployee.rank || '');
+
+      const date = data?.date ? new Date(data.date).toLocaleDateString('de-DE') : '';
+      const timeStart = data?.timeStart || '';
+      const timeEnd = data?.timeEnd || '';
+      const person = data?.person || '';
+      const notes = data?.notes || '';
+      const examiner = data?.examiner || '';
+
+      const timeSeparator = isOral ? 'bis' : '-';
+
+      const unitDiscordId = unitDiscordIds[unit] || '';
+      const rankDiscordId = rankDiscordIds[rank] || '';
+
+      const unitDisplay = unitDiscordId ? `<@&${unitDiscordId}>` : unit;
+      const rankDisplay = rankDiscordId ? `<@&${rankDiscordId}>` : rank;
+
+      return `╔══════════════════╗
+/////////////////////////////////////////////////////////////////////////
+${isOral ? 'Mündliche Einweisung' : 'Organisatorische Einweisung'}
+
+Prüfer : ${examiner}
+Name: ${name}
+DN: ${dn}
+Hauptunit: ${unitDisplay}
+Rang: ${rankDisplay}
+Datum: ${date}
+Uhrzeit: ${timeStart} ${timeSeparator} ${timeEnd}
+Beteiligte: ${person}
+Sonstiges: ${notes}
+
+/////////////////////////////////////////////////////////////////////////
+<@&1097625910242447422>
+╚══════════════════╝`;
     }
 
     async function saveEmployeeData(isAutoSave = false) {
@@ -3746,6 +5017,18 @@ Grund: ${grund || ''}
       }
     }
 
+    async function copyOralTemplate() {
+      const template = document.getElementById('oralTemplateContent').textContent;
+      const success = await copyToClipboard(template);
+      showNotification(success ? 'Mündliche Einweisung kopiert' : 'Fehler beim Kopieren', success ? 'success' : 'error');
+    }
+
+    async function copyOrgTemplate() {
+      const template = document.getElementById('orgTemplateContent').textContent;
+      const success = await copyToClipboard(template);
+      showNotification(success ? 'Organisatorische Einweisung kopiert' : 'Fehler beim Kopieren', success ? 'success' : 'error');
+    }
+
     function openModal(modalId) {
       document.getElementById(modalId).classList.add('active');
     }
@@ -3848,6 +5131,45 @@ Grund: ${grund || ''}
 
       renderEmployeeList();
       updateStats();
+      seedTemplateBoxes();
+    }
+
+    function seedTemplateBoxes() {
+      document.getElementById('oralTemplateContent').textContent = `╔══════════════════╗
+/////////////////////////////////////////////////////////////////////////
+Mündliche Einweisung
+
+Prüfer :
+Name:
+DN:
+Hauptunit:
+Rang:
+Datum:
+Uhrzeit:
+Beteiligte:
+Sonstiges:
+
+/////////////////////////////////////////////////////////////////////////
+<@&1097625910242447422>
+╚══════════════════╝`;
+
+      document.getElementById('orgTemplateContent').textContent = `╔══════════════════╗
+/////////////////////////////////////////////////////////////////////////
+Organisatorische Einweisung
+
+Prüfer :
+Name:
+DN:
+Hauptunit:
+Rang:
+Datum:
+Uhrzeit:
+Beteiligte:
+Sonstiges:
+
+/////////////////////////////////////////////////////////////////////////
+<@&1097625910242447422>
+╚══════════════════╝`;
     }
 
     function escapeHtml(str) {
