@@ -901,6 +901,53 @@
       border-radius: 2px;
     }
 
+    /* Soldatengespräch Sonstiges Styling */
+    .soldaten-item-sonstiges {
+      margin-bottom: 12px;
+      border: 1px solid rgba(245,158,11,.15);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      background: rgba(245,158,11,.03);
+    }
+
+    .soldaten-item-sonstiges-title {
+      background: rgba(245,158,11,.10);
+      padding: 8px 12px;
+      font-size: 11px;
+      font-weight: 900;
+      color: #fcd34d;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border-bottom: 1px solid rgba(245,158,11,.15);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+
+    .soldaten-item-sonstiges-content {
+      padding: 12px;
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--gray-light);
+      max-height: 80px;
+      overflow-y: auto;
+      background: rgba(0,0,0,.15);
+    }
+
+    .soldaten-item-sonstiges-content::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .soldaten-item-sonstiges-content::-webkit-scrollbar-track {
+      background: rgba(255,255,255,.03);
+      border-radius: 2px;
+    }
+
+    .soldaten-item-sonstiges-content::-webkit-scrollbar-thumb {
+      background: rgba(245,158,11,.30);
+      border-radius: 2px;
+    }
+
     .soldaten-item-template {
       font-family: 'Consolas', 'Monaco', monospace;
       white-space: pre-wrap;
@@ -2697,8 +2744,13 @@ Sonstiges: ${sonstiges || ''}
               ${escapeHtml(gespräch.notizen.length > 200 ? gespräch.notizen.substring(0, 200) + '...' : gespräch.notizen)}
             </div>
             ${gespräch.sonstiges ? `
-            <div style="color: var(--gray); font-size: 12px; margin-bottom: 12px; padding: 8px; background: rgba(0,0,0,.1); border-radius: var(--radius-sm);">
-              <strong>Sonstiges:</strong> ${escapeHtml(gespräch.sonstiges.length > 100 ? gespräch.sonstiges.substring(0, 100) + '...' : gespräch.sonstiges)}
+            <div class="soldaten-item-sonstiges">
+              <div class="soldaten-item-sonstiges-title">
+                <i class="fas fa-ellipsis-h"></i> Sonstiges
+              </div>
+              <div class="soldaten-item-sonstiges-content">
+                ${escapeHtml(gespräch.sonstiges.length > 200 ? gespräch.sonstiges.substring(0, 200) + '...' : gespräch.sonstiges)}
+              </div>
             </div>
             ` : ''}
             <div class="soldaten-item-actions">
