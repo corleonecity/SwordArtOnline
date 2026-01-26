@@ -521,7 +521,1120 @@
     }
     .template-card.completed .template-content{border-left-color:var(--secondary)}
 
-    /* Beobachtungs Akten Modal */
+    /* Floating Buttons Container */
+    .floating-buttons-container {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      z-index: 1000;
+    }
+
+    .floating-button {
+      width: 56px;
+      height: 56px;
+      background: var(--primary);
+      border: none;
+      border-radius: 50%;
+      color: #fff;
+      font-size: 20px;
+      cursor: pointer;
+      box-shadow: var(--shadow-lg);
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .floating-button:hover {
+      background: var(--primary-dark);
+      transform: scale(1.1);
+      box-shadow: 0 10px 25px rgba(79,70,229,.3);
+    }
+
+    .floating-button.soldaten {
+      background: var(--warning);
+    }
+
+    .floating-button.soldaten:hover {
+      background: var(--warning-dark);
+    }
+
+    .floating-button.ankundigung {
+      background: #8b5cf6;
+    }
+
+    .floating-button.ankundigung:hover {
+      background: #7c3aed;
+    }
+
+    /* Ankündigungen/Besprechungen/Aufstellungen Modal */
+    .ankundigung-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.85);
+      backdrop-filter: blur(4px);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      animation: fadeIn .2s ease;
+    }
+
+    .ankundigung-modal.active {
+      display: flex;
+    }
+
+    .ankundigung-content {
+      background: rgba(31,41,55,.95);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      width: 100%;
+      max-width: 900px;
+      max-height: 90vh;
+      border: 1px solid rgba(255,255,255,.15);
+      box-shadow: var(--shadow-lg);
+      animation: slideUp .2s ease;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .ankundigung-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(255,255,255,.1);
+      flex-shrink: 0;
+    }
+
+    .ankundigung-title {
+      font-size: 18px;
+      font-weight: 900;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .ankundigung-title i {
+      color: #8b5cf6;
+      font-size: 20px;
+    }
+
+    .ankundigung-close {
+      background: none;
+      border: none;
+      color: var(--gray);
+      font-size: 20px;
+      cursor: pointer;
+      transition: var(--transition);
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+    }
+
+    .ankundigung-close:hover {
+      color: #fff;
+      background: rgba(255,255,255,.1);
+    }
+
+    .ankundigung-body {
+      flex: 1;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .ankundigung-tabs {
+      display: flex;
+      gap: 2px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid rgba(255,255,255,.1);
+      flex-shrink: 0;
+    }
+
+    .ankundigung-tab {
+      padding: 12px 20px;
+      background: none;
+      border: none;
+      color: var(--gray);
+      font-weight: 900;
+      cursor: pointer;
+      transition: var(--transition);
+      font-size: 13px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .ankundigung-tab:hover {
+      color: #8b5cf6;
+    }
+
+    .ankundigung-tab.active {
+      color: #8b5cf6;
+    }
+
+    .ankundigung-tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: #8b5cf6;
+    }
+
+    .ankundigung-form-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .ankundigung-form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .ankundigung-label {
+      font-weight: 900;
+      color: var(--gray-light);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+
+    .ankundigung-input {
+      padding: 12px 16px;
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: var(--radius-md);
+      color: #fff;
+      font-size: 14px;
+      transition: var(--transition);
+      width: 100%;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .ankundigung-input:focus {
+      outline: none;
+      border-color: #8b5cf6;
+      background: rgba(255,255,255,.08);
+      box-shadow: 0 0 0 3px rgba(139,92,246,.15);
+    }
+
+    .ankundigung-textarea {
+      min-height: 120px;
+      resize: vertical;
+      line-height: 1.5;
+    }
+
+    .ankundigung-preview {
+      background: rgba(0,0,0,.3);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      border-left: 3px solid #8b5cf6;
+      margin-top: 10px;
+      margin-bottom: 20px;
+      flex-shrink: 0;
+    }
+
+    .ankundigung-preview-title {
+      font-weight: 900;
+      color: var(--gray-light);
+      margin-bottom: 12px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .ankundigung-preview-content {
+      font-family: 'Consolas', 'Monaco', monospace;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      font-size: 12px;
+      line-height: 1.4;
+      color: #fff;
+      background: rgba(0,0,0,.2);
+      padding: 16px;
+      border-radius: var(--radius-sm);
+      max-height: 200px;
+      overflow-y: auto;
+      min-height: 100px;
+    }
+
+    .ankundigung-preview-content::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .ankundigung-preview-content::-webkit-scrollbar-track {
+      background: rgba(255,255,255,.05);
+      border-radius: 3px;
+    }
+
+    .ankundigung-preview-content::-webkit-scrollbar-thumb {
+      background: #8b5cf6;
+      border-radius: 3px;
+    }
+
+    /* Container für den "Neue Ankündigung" Tab-Inhalt */
+    .ankundigung-tab-content {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    /* WICHTIG: Scrollbar für Ankündigungen-Liste */
+    .ankundigung-liste-container {
+      flex: 1;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .ankundigung-liste {
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-height: 0;
+    }
+
+    .ankundigung-liste::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .ankundigung-liste::-webkit-scrollbar-track {
+      background: rgba(255,255,255,.05);
+      border-radius: 4px;
+    }
+
+    .ankundigung-liste::-webkit-scrollbar-thumb {
+      background: #8b5cf6;
+      border-radius: 4px;
+    }
+
+    .ankundigung-liste::-webkit-scrollbar-thumb:hover {
+      background: #7c3aed;
+    }
+
+    .ankundigung-item {
+      background: rgba(255,255,255,.03);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      border: 1px solid rgba(255,255,255,.08);
+      transition: var(--transition);
+      flex-shrink: 0;
+    }
+
+    .ankundigung-item:hover {
+      background: rgba(255,255,255,.05);
+      border-color: #8b5cf6;
+    }
+
+    .ankundigung-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+
+    .ankundigung-item-title {
+      font-weight: 900;
+      color: #fff;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .ankundigung-item-type {
+      font-family: 'Inter', monospace;
+      background: rgba(139,92,246,.10);
+      color: #a78bfa;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 900;
+      border: 1px solid rgba(139,92,246,.20);
+    }
+
+    .ankundigung-item-date {
+      color: var(--gray);
+      font-size: 11px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .ankundigung-item-content {
+      color: var(--gray-light);
+      font-size: 13px;
+      line-height: 1.5;
+      margin-bottom: 12px;
+      padding: 12px;
+      background: rgba(0,0,0,.2);
+      border-radius: var(--radius-sm);
+      border-left: 2px solid #8b5cf6;
+      max-height: 100px;
+      overflow-y: auto;
+    }
+
+    .ankundigung-item-content::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .ankundigung-item-content::-webkit-scrollbar-track {
+      background: rgba(255,255,255,.03);
+      border-radius: 2px;
+    }
+
+    .ankundigung-item-content::-webkit-scrollbar-thumb {
+      background: rgba(139,92,246,.30);
+      border-radius: 2px;
+    }
+
+    .ankundigung-item-template {
+      font-family: 'Consolas', 'Monaco', monospace;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      font-size: 11px;
+      line-height: 1.4;
+      color: var(--gray-light);
+      background: rgba(0,0,0,.3);
+      padding: 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(255,255,255,.08);
+      max-height: 150px;
+      overflow-y: auto;
+      margin-bottom: 12px;
+    }
+
+    .ankundigung-item-template::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .ankundigung-item-template::-webkit-scrollbar-track {
+      background: rgba(255,255,255,.03);
+      border-radius: 2px;
+    }
+
+    .ankundigung-item-template::-webkit-scrollbar-thumb {
+      background: rgba(139,92,246,.30);
+      border-radius: 2px;
+    }
+
+    .ankundigung-item-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .ankundigung-item-btn {
+      padding: 6px 12px;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-weight: 900;
+      cursor: pointer;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-size: 11px;
+    }
+
+    .ankundigung-item-btn-copy {
+      background: rgba(139,92,246,.15);
+      color: #a78bfa;
+      border: 1px solid rgba(139,92,246,.25);
+    }
+
+    .ankundigung-item-btn-copy:hover {
+      background: rgba(139,92,246,.25);
+    }
+
+    .ankundigung-item-btn-delete {
+      background: rgba(239,68,68,.15);
+      color: #fca5a5;
+      border: 1px solid rgba(239,68,68,.25);
+    }
+
+    .ankundigung-item-btn-delete:hover {
+      background: rgba(239,68,68,.25);
+    }
+
+    .empty-ankundigung {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--gray);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .empty-ankundigung-icon {
+      font-size: 36px;
+      margin-bottom: 12px;
+      opacity: .3;
+    }
+
+    .empty-ankundigung-title {
+      font-size: 14px;
+      font-weight: 900;
+      margin-bottom: 6px;
+      color: var(--gray-light);
+    }
+
+    .ankundigung-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-top: 10px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255,255,255,.1);
+      flex-shrink: 0;
+    }
+
+    .ankundigung-btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: var(--radius-md);
+      font-weight: 900;
+      cursor: pointer;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 13px;
+    }
+
+    .ankundigung-btn-copy {
+      background: #8b5cf6;
+      color: #fff;
+    }
+
+    .ankundigung-btn-copy:hover {
+      background: #7c3aed;
+      transform: translateY(-1px);
+    }
+
+    .ankundigung-btn-save {
+      background: var(--secondary);
+      color: #fff;
+    }
+
+    .ankundigung-btn-save:hover {
+      background: var(--secondary-dark);
+      transform: translateY(-1px);
+    }
+
+    .ankundigung-search-container {
+      position: relative;
+      margin-bottom: 20px;
+      flex-shrink: 0;
+    }
+
+    .ankundigung-search-input {
+      width: 100%;
+      padding: 12px 16px 12px 44px;
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: var(--radius-md);
+      color: #fff;
+      font-size: 14px;
+      transition: var(--transition);
+    }
+
+    .ankundigung-search-input::placeholder {
+      color: rgba(255,255,255,.5);
+    }
+
+    .ankundigung-search-input:focus {
+      outline: none;
+      border-color: #8b5cf6;
+      background: rgba(255,255,255,.08);
+      box-shadow: 0 0 0 3px rgba(139,92,246,.15);
+    }
+
+    .ankundigung-search-icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--gray);
+      font-size: 16px;
+    }
+
+    /* Soldatengespräch Modal */
+    .soldaten-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.85);
+      backdrop-filter: blur(4px);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      animation: fadeIn .2s ease;
+    }
+
+    .soldaten-modal.active {
+      display: flex;
+    }
+
+    .soldaten-content {
+      background: rgba(31,41,55,.95);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      width: 100%;
+      max-width: 900px;
+      max-height: 90vh;
+      border: 1px solid rgba(255,255,255,.15);
+      box-shadow: var(--shadow-lg);
+      animation: slideUp .2s ease;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .soldaten-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(255,255,255,.1);
+      flex-shrink: 0;
+    }
+
+    .soldaten-title {
+      font-size: 18px;
+      font-weight: 900;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .soldaten-title i {
+      color: var(--warning);
+      font-size: 20px;
+    }
+
+    .soldaten-close {
+      background: none;
+      border: none;
+      color: var(--gray);
+      font-size: 20px;
+      cursor: pointer;
+      transition: var(--transition);
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+    }
+
+    .soldaten-close:hover {
+      color: #fff;
+      background: rgba(255,255,255,.1);
+    }
+
+    .soldaten-body {
+      flex: 1;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .soldaten-tabs {
+      display: flex;
+      gap: 2px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid rgba(255,255,255,.1);
+      flex-shrink: 0;
+    }
+
+    .soldaten-tab {
+      padding: 12px 20px;
+      background: none;
+      border: none;
+      color: var(--gray);
+      font-weight: 900;
+      cursor: pointer;
+      transition: var(--transition);
+      font-size: 13px;
+      position: relative;
+    }
+
+    .soldaten-tab:hover {
+      color: var(--warning);
+    }
+
+    .soldaten-tab.active {
+      color: var(--warning);
+    }
+
+    .soldaten-tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--warning);
+    }
+
+    .soldaten-form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .soldaten-form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .soldaten-label {
+      font-weight: 900;
+      color: var(--gray-light);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+
+    .soldaten-input {
+      padding: 12px 16px;
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: var(--radius-md);
+      color: #fff;
+      font-size: 14px;
+      transition: var(--transition);
+      width: 100%;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .soldaten-input:focus {
+      outline: none;
+      border-color: var(--warning);
+      background: rgba(255,255,255,.08);
+      box-shadow: 0 0 0 3px rgba(245,158,11,.15);
+    }
+
+    .soldaten-textarea {
+      min-height: 120px;
+      resize: vertical;
+      line-height: 1.5;
+    }
+
+    .soldaten-preview {
+      background: rgba(0,0,0,.3);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      border-left: 3px solid var(--warning);
+      margin-top: 10px;
+      margin-bottom: 20px;
+      flex-shrink: 0;
+    }
+
+    .soldaten-preview-title {
+      font-weight: 900;
+      color: var(--gray-light);
+      margin-bottom: 12px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* WICHTIG: Scrollbar für die Vorschau im "Neues Gespräch" Tab */
+    .soldaten-preview-content {
+      font-family: 'Consolas', 'Monaco', monospace;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      font-size: 12px;
+      line-height: 1.4;
+      color: #fff;
+      background: rgba(0,0,0,.2);
+      padding: 16px;
+      border-radius: var(--radius-sm);
+      max-height: 200px;
+      overflow-y: auto;
+      min-height: 100px;
+    }
+
+    .soldaten-preview-content::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .soldaten-preview-content::-webkit-scrollbar-track {
+      background: rgba(255,255,255,.05);
+      border-radius: 3px;
+    }
+
+    .soldaten-preview-content::-webkit-scrollbar-thumb {
+      background: var(--warning);
+      border-radius: 3px;
+    }
+
+    /* Container für den "Neues Gespräch" Tab-Inhalt */
+    .soldaten-tab-content {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    /* WICHTIG: Scrollbar für Soldatengespräch-Liste */
+    .soldaten-liste-container {
+      flex: 1;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .soldaten-liste {
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-height: 0;
+    }
+
+    .soldaten-liste::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .soldaten-liste::-webkit-scrollbar-track {
+      background: rgba(255,255,255,.05);
+      border-radius: 4px;
+    }
+
+    .soldaten-liste::-webkit-scrollbar-thumb {
+      background: var(--warning);
+      border-radius: 4px;
+    }
+
+    .soldaten-liste::-webkit-scrollbar-thumb:hover {
+      background: var(--warning-dark);
+    }
+
+    .soldaten-item {
+      background: rgba(255,255,255,.03);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      border: 1px solid rgba(255,255,255,.08);
+      transition: var(--transition);
+      flex-shrink: 0;
+    }
+
+    .soldaten-item:hover {
+      background: rgba(255,255,255,.05);
+      border-color: var(--warning);
+    }
+
+    .soldaten-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+
+    .soldaten-item-name {
+      font-weight: 900;
+      color: #fff;
+      font-size: 15px;
+    }
+
+    .soldaten-item-dn {
+      font-family: 'Inter', monospace;
+      background: rgba(245,158,11,.10);
+      color: #fcd34d;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 900;
+      border: 1px solid rgba(245,158,11,.20);
+    }
+
+    .soldaten-item-date {
+      color: var(--gray);
+      font-size: 11px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* GEÄNDERT: Sonstiges mit gleichem Styling wie Notizen */
+    .soldaten-item-notizen {
+      color: var(--gray-light);
+      font-size: 13px;
+      line-height: 1.5;
+      margin-bottom: 12px;
+      padding: 12px;
+      background: rgba(0,0,0,.2);
+      border-radius: var(--radius-sm);
+      border-left: 2px solid var(--warning);
+      max-height: 100px;
+      overflow-y: auto;
+    }
+
+    .soldaten-item-notizen::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .soldaten-item-notizen::-webkit-scrollbar-track {
+      background: rgba(255,255,255,.03);
+      border-radius: 2px;
+    }
+
+    .soldaten-item-notizen::-webkit-scrollbar-thumb {
+      background: rgba(245,158,11,.30);
+      border-radius: 2px;
+    }
+
+    /* Soldatengespräch Sonstiges Styling (jetzt wie Notizen) */
+    .soldaten-item-sonstiges {
+      color: var(--gray-light);
+      font-size: 13px;
+      line-height: 1.5;
+      margin-bottom: 12px;
+      padding: 12px;
+      background: rgba(0,0,0,.2);
+      border-radius: var(--radius-sm);
+      border-left: 2px solid var(--warning);
+      max-height: 100px;
+      overflow-y: auto;
+    }
+
+    .soldaten-item-sonstiges::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .soldaten-item-sonstiges::-webkit-scrollbar-track {
+      background: rgba(255,255,255,.03);
+      border-radius: 2px;
+    }
+
+    .soldaten-item-sonstiges::-webkit-scrollbar-thumb {
+      background: rgba(245,158,11,.30);
+      border-radius: 2px;
+    }
+
+    .soldaten-item-template {
+      font-family: 'Consolas', 'Monaco', monospace;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      font-size: 11px;
+      line-height: 1.4;
+      color: var(--gray-light);
+      background: rgba(0,0,0,.3);
+      padding: 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(255,255,255,.08);
+      max-height: 150px;
+      overflow-y: auto;
+      margin-bottom: 12px;
+    }
+
+    .soldaten-item-template::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .soldaten-item-template::-webkit-scrollbar-track {
+      background: rgba(255,255,255,.03);
+      border-radius: 2px;
+    }
+
+    .soldaten-item-template::-webkit-scrollbar-thumb {
+      background: rgba(245,158,11,.30);
+      border-radius: 2px;
+    }
+
+    .soldaten-item-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .soldaten-item-btn {
+      padding: 6px 12px;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-weight: 900;
+      cursor: pointer;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-size: 11px;
+    }
+
+    .soldaten-item-btn-copy {
+      background: rgba(245,158,11,.15);
+      color: #fcd34d;
+      border: 1px solid rgba(245,158,11,.25);
+    }
+
+    .soldaten-item-btn-copy:hover {
+      background: rgba(245,158,11,.25);
+    }
+
+    .soldaten-item-btn-delete {
+      background: rgba(239,68,68,.15);
+      color: #fca5a5;
+      border: 1px solid rgba(239,68,68,.25);
+    }
+
+    .soldaten-item-btn-delete:hover {
+      background: rgba(239,68,68,.25);
+    }
+
+    .empty-soldaten {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--gray);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .empty-soldaten-icon {
+      font-size: 36px;
+      margin-bottom: 12px;
+      opacity: .3;
+    }
+
+    .empty-soldaten-title {
+      font-size: 14px;
+      font-weight: 900;
+      margin-bottom: 6px;
+      color: var(--gray-light);
+    }
+
+    .soldaten-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-top: 10px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255,255,255,.1);
+      flex-shrink: 0;
+    }
+
+    .soldaten-btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: var(--radius-md);
+      font-weight: 900;
+      cursor: pointer;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 13px;
+    }
+
+    .soldaten-btn-copy {
+      background: var(--warning);
+      color: #fff;
+    }
+
+    .soldaten-btn-copy:hover {
+      background: var(--warning-dark);
+      transform: translateY(-1px);
+    }
+
+    .soldaten-btn-save {
+      background: var(--secondary);
+      color: #fff;
+    }
+
+    .soldaten-btn-save:hover {
+      background: var(--secondary-dark);
+      transform: translateY(-1px);
+    }
+
+    .soldaten-search-container {
+      position: relative;
+      margin-bottom: 20px;
+      flex-shrink: 0;
+    }
+
+    .soldaten-search-input {
+      width: 100%;
+      padding: 12px 16px 12px 44px;
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: var(--radius-md);
+      color: #fff;
+      font-size: 14px;
+      transition: var(--transition);
+    }
+
+    .soldaten-search-input::placeholder {
+      color: rgba(255,255,255,.5);
+    }
+
+    .soldaten-search-input:focus {
+      outline: none;
+      border-color: var(--warning);
+      background: rgba(255,255,255,.08);
+      box-shadow: 0 0 0 3px rgba(245,158,11,.15);
+    }
+
+    .soldaten-search-icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--gray);
+      font-size: 16px;
+    }
+
+    /* Beobachtungs Akten Modal (behalten für Akten) */
     .beobachtung-akten-modal{
       display:none;
       position:fixed;
@@ -548,6 +1661,7 @@
       animation:slideUp .2s ease;
       display:flex;
       flex-direction:column;
+      overflow:hidden;
     }
     
     .beobachtung-akten-header{
@@ -599,6 +1713,7 @@
       overflow:hidden;
       display:flex;
       flex-direction:column;
+      min-height:0;
     }
     
     .beobachtung-tabs{
@@ -692,6 +1807,7 @@
       border-left:3px solid var(--primary);
       margin-top:10px;
       margin-bottom:20px;
+      flex-shrink:0;
     }
     
     .beobachtung-preview-title{
@@ -716,26 +1832,42 @@
       border-radius:var(--radius-sm);
       max-height:200px;
       overflow-y:auto;
+      min-height:100px;
+    }
+    
+    .beobachtung-preview-content::-webkit-scrollbar{
+      width:6px;
+    }
+    
+    .beobachtung-preview-content::-webkit-scrollbar-track{
+      background:rgba(255,255,255,.05);
+      border-radius:3px;
+    }
+    
+    .beobachtung-preview-content::-webkit-scrollbar-thumb{
+      background:var(--primary);
+      border-radius:3px;
     }
     
     .beobachtung-akten-liste{
       flex:1;
       overflow-y:auto;
-      padding-right:4px;
+      padding-right:8px;
+      min-height:0;
     }
     
     .beobachtung-akten-liste::-webkit-scrollbar{
-      width:6px;
+      width:8px;
     }
     
     .beobachtung-akten-liste::-webkit-scrollbar-track{
       background:rgba(255,255,255,.05);
-      border-radius:3px;
+      border-radius:4px;
     }
     
     .beobachtung-akten-liste::-webkit-scrollbar-thumb{
       background:var(--primary);
-      border-radius:3px;
+      border-radius:4px;
     }
     
     .beobachtung-akte-item{
@@ -915,32 +2047,6 @@
       background:var(--secondary-dark);
       transform:translateY(-1px);
     }
-    
-    .beobachtung-floating-btn{
-      position:fixed;
-      bottom:20px;
-      right:20px;
-      width:56px;
-      height:56px;
-      background:var(--primary);
-      border:none;
-      border-radius:50%;
-      color:#fff;
-      font-size:20px;
-      cursor:pointer;
-      box-shadow:var(--shadow-lg);
-      z-index:1000;
-      transition:var(--transition);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-    }
-    
-    .beobachtung-floating-btn:hover{
-      background:var(--primary-dark);
-      transform:scale(1.1);
-      box-shadow:0 10px 25px rgba(79,70,229,.3);
-    }
 
     /* Akten Suche */
     .akten-search-container{
@@ -1075,13 +2181,28 @@
       .employee-tags{flex-direction:column;gap:6px}
       .induction-content{padding:16px}
       .oral-form-grid,.org-form-grid{grid-template-columns:1fr}
-      .beobachtung-akten-modal{padding:12px}
-      .beobachtung-akten-content{padding:20px}
-      .beobachtung-actions{flex-direction:column;align-items:stretch}
-      .beobachtung-floating-btn{bottom:16px;right:16px}
-      .beobachtung-tabs{flex-direction:column}
-      .beobachtung-tab{text-align:left;padding:10px 16px}
-      .akte-form-grid{grid-template-columns:1fr}
+      .soldaten-modal,
+      .beobachtung-akten-modal,
+      .ankundigung-modal{padding:12px}
+      .soldaten-content,
+      .beobachtung-akten-content,
+      .ankundigung-content{padding:20px}
+      .soldaten-actions,
+      .beobachtung-actions,
+      .ankundigung-actions{flex-direction:column;align-items:stretch}
+      .floating-buttons-container{
+        bottom: 16px;
+        right: 16px;
+      }
+      .soldaten-tabs,
+      .beobachtung-tabs,
+      .ankundigung-tabs{flex-direction:column}
+      .soldaten-tab,
+      .beobachtung-tab,
+      .ankundigung-tab{text-align:left;padding:10px 16px}
+      .soldaten-form-grid,
+      .akte-form-grid,
+      .ankundigung-form-grid{grid-template-columns:1fr}
     }
     @media (max-width:480px){
       .app-container{padding:12px}
@@ -1091,8 +2212,12 @@
       .sidebar{padding:14px}
       .modal{padding:16px;margin:12px}
       .notification{left:12px;right:12px;bottom:12px;min-width:auto}
-      .beobachtung-akten-content{padding:16px}
-      .beobachtung-akte-actions{flex-direction:column}
+      .soldaten-content,
+      .beobachtung-akten-content,
+      .ankundigung-content{padding:16px}
+      .soldaten-item-actions,
+      .beobachtung-akte-actions,
+      .ankundigung-item-actions{flex-direction:column}
     }
   </style>
 </head>
@@ -1100,19 +2225,372 @@
 <body>
   <div class="bg-effects"><div class="bg-gradient"></div></div>
 
-  <!-- Floating Button für Beobachtung -->
-  <button class="beobachtung-floating-btn" onclick="openBeobachtungAktenModal()">
-    <i class="fas fa-folder-open"></i>
-  </button>
+  <!-- Floating Buttons -->
+  <div class="floating-buttons-container">
+    <button class="floating-button ankundigung" onclick="openAnkundigungModal()" title="Ankündigungen">
+      🪧
+    </button>
+    <button class="floating-button soldaten" onclick="openSoldatenModal()" title="Soldatengespräche">
+      <i class="fas fa-comments"></i>
+    </button>
+    <button class="floating-button" onclick="openBeobachtungAktenModal()" title="Beobachtungs-Akten">
+      <i class="fas fa-folder-open"></i>
+    </button>
+  </div>
+
+  <!-- Ankündigungen/Besprechungen/Aufstellungen Modal -->
+  <div class="ankundigung-modal" id="ankundigungModal" onclick="if(event.target===this)closeModal('ankundigungModal')">
+    <div class="ankundigung-content">
+      <div class="ankundigung-header">
+        <div class="ankundigung-title">
+          <i class="fas fa-bullhorn"></i> Ankündigungen & Besprechungen
+        </div>
+        <button class="ankundigung-close" onclick="closeModal('ankundigungModal')">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <div class="ankundigung-body">
+        <div class="ankundigung-tabs">
+          <button class="ankundigung-tab active" onclick="switchAnkundigungTab('new')">
+            <span>🪧</span> Neue Ankündigung
+          </button>
+          <button class="ankundigung-tab" onclick="switchAnkundigungTab('besprechung')">
+            <span>🖊️</span> Neue Besprechung
+          </button>
+          <button class="ankundigung-tab" onclick="switchAnkundigungTab('aufstellung')">
+            <span>🕛</span> Neue Aufstellung
+          </button>
+          <button class="ankundigung-tab" onclick="switchAnkundigungTab('list')">
+            <i class="fas fa-list"></i> Liste
+          </button>
+        </div>
+        
+        <!-- Neue Ankündigung Tab -->
+        <div class="ankundigung-tab-content" id="ankundigungNewTab">
+          <div class="ankundigung-form-grid">
+            <div class="ankundigung-form-group">
+              <label class="ankundigung-label">Titel</label>
+              <input type="text" class="ankundigung-input" id="ankundigungTitle" placeholder="Titel der Ankündigung">
+            </div>
+            
+            <div class="ankundigung-form-group">
+              <label class="ankundigung-label">Inhalt *</label>
+              <textarea class="ankundigung-input ankundigung-textarea" id="ankundigungContent" placeholder="Inhalt der Ankündigung..."></textarea>
+            </div>
+          </div>
+          
+          <div class="ankundigung-preview">
+            <div class="ankundigung-preview-title">
+              <i class="fas fa-file-alt"></i> Vorschau
+            </div>
+            <div class="ankundigung-preview-content" id="ankundigungPreview">
+🪧 **Ankündigung**
+
+
+            </div>
+          </div>
+          
+          <div class="ankundigung-actions">
+            <button class="ankundigung-btn ankundigung-btn-copy" onclick="copyAnkundigungTemplate()">
+              <i class="fas fa-copy"></i> In Zwischenablage kopieren
+            </button>
+            <button class="ankundigung-btn ankundigung-btn-save" onclick="saveAnkundigung()">
+              <i class="fas fa-save"></i> Ankündigung speichern
+            </button>
+          </div>
+        </div>
+        
+        <!-- Neue Besprechung Tab -->
+        <div class="ankundigung-tab-content" id="ankundigungBesprechungTab" style="display:none;">
+          <div class="ankundigung-form-grid">
+            <div class="ankundigung-form-group">
+              <label class="ankundigung-label">Thema *</label>
+              <input type="text" class="ankundigung-input" id="besprechungThema" placeholder="Thema der Besprechung">
+            </div>
+            
+            <div class="ankundigung-form-group">
+              <label class="ankundigung-label">Datum *</label>
+              <input type="date" class="ankundigung-input" id="besprechungDate" value="">
+            </div>
+            
+            <div class="ankundigung-form-group">
+              <label class="ankundigung-label">Uhrzeit *</label>
+              <input type="time" class="ankundigung-input" id="besprechungTime" value="">
+            </div>
+            
+            <div class="ankundigung-form-group">
+              <label class="ankundigung-label">Ort</label>
+              <input type="text" class="ankundigung-input" id="besprechungOrt" placeholder="Ort der Besprechung">
+            </div>
+            
+            <div class="ankundigung-form-group">
+              <label class="ankundigung-label">Inhalt *</label>
+              <textarea class="ankundigung-input ankundigung-textarea" id="besprechungContent" placeholder="Inhalt der Besprechung..."></textarea>
+            </div>
+          </div>
+          
+          <div class="ankundigung-preview">
+            <div class="ankundigung-preview-title">
+              <i class="fas fa-file-alt"></i> Vorschau
+            </div>
+            <div class="ankundigung-preview-content" id="besprechungPreview">
+🖊️ **Besprechung**
+
+Thema: 
+Datum: 
+Uhrzeit: 
+Ort: 
+
+
+            </div>
+          </div>
+          
+          <div class="ankundigung-actions">
+            <button class="ankundigung-btn ankundigung-btn-copy" onclick="copyBesprechungTemplate()">
+              <i class="fas fa-copy"></i> In Zwischenablage kopieren
+            </button>
+            <button class="ankundigung-btn ankundigung-btn-save" onclick="saveBesprechung()">
+              <i class="fas fa-save"></i> Besprechung speichern
+            </button>
+          </div>
+        </div>
+        
+        <!-- Neue Aufstellung Tab -->
+        <div class="ankundigung-tab-content" id="ankundigungAufstellungTab" style="display:none;">
+          <div class="ankundigung-form-grid">
+            <div class="ankundigung-form-group">
+              <label class="ankundigung-label">Typ *</label>
+              <select class="ankundigung-input" id="aufstellungTyp">
+                <option value="">Typ auswählen</option>
+                <option value="Tagesaufstellung">Tagesaufstellung</option>
+                <option value="Wochenaufstellung">Wochenaufstellung</option>
+                <option value="Sonderaufstellung">Sonderaufstellung</option>
+              </select>
+            </div>
+            
+            <div class="ankundigung-form-group">
+              <label class="ankundigung-label">Datum *</label>
+              <input type="date" class="ankundigung-input" id="aufstellungDate" value="">
+            </div>
+            
+            <div class="ankundigung-form-group">
+              <label class="ankundigung-label">Uhrzeit *</label>
+              <input type="time" class="ankundigung-input" id="aufstellungTime" value="">
+            </div>
+            
+            <div class="ankundigung-form-group">
+              <label class="ankundigung-label">Ort *</label>
+              <input type="text" class="ankundigung-input" id="aufstellungOrt" placeholder="Ort der Aufstellung">
+            </div>
+            
+            <div class="ankundigung-form-group">
+              <label class="ankundigung-label">Bemerkungen</label>
+              <textarea class="ankundigung-input ankundigung-textarea" id="aufstellungBemerkungen" placeholder="Bemerkungen zur Aufstellung..."></textarea>
+            </div>
+          </div>
+          
+          <div class="ankundigung-preview">
+            <div class="ankundigung-preview-title">
+              <i class="fas fa-file-alt"></i> Vorschau
+            </div>
+            <div class="ankundigung-preview-content" id="aufstellungPreview">
+🕛 **Aufstellung**
+
+Typ: 
+Datum: 
+Uhrzeit: 
+Ort: 
+Bemerkungen:
+
+            </div>
+          </div>
+          
+          <div class="ankundigung-actions">
+            <button class="ankundigung-btn ankundigung-btn-copy" onclick="copyAufstellungTemplate()">
+              <i class="fas fa-copy"></i> In Zwischenablage kopieren
+            </button>
+            <button class="ankundigung-btn ankundigung-btn-save" onclick="saveAufstellung()">
+              <i class="fas fa-save"></i> Aufstellung speichern
+            </button>
+          </div>
+        </div>
+        
+        <!-- Liste Tab -->
+        <div class="ankundigung-tab-content" id="ankundigungListTab" style="display:none;">
+          <div class="ankundigung-search-container">
+            <i class="fas fa-search ankundigung-search-icon"></i>
+            <input type="text" class="ankundigung-search-input" id="ankundigungSearch" placeholder="Nach Titel oder Inhalt suchen..." oninput="searchAnkundigungen(this.value)">
+          </div>
+          
+          <!-- Scrollbar-Container für die Liste -->
+          <div class="ankundigung-liste-container">
+            <div class="ankundigung-liste" id="ankundigungListe">
+              <div class="empty-ankundigung">
+                <div class="empty-ankundigung-icon"><i class="fas fa-bullhorn"></i></div>
+                <div class="empty-ankundigung-title">Keine Einträge gefunden</div>
+                <div class="empty-description">Erstellen Sie Ihren ersten Eintrag</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Soldatengespräch Modal -->
+  <div class="soldaten-modal" id="soldatenModal" onclick="if(event.target===this)closeModal('soldatenModal')">
+    <div class="soldaten-content">
+      <div class="soldaten-header">
+        <div class="soldaten-title">
+          <i class="fas fa-comments"></i> Soldatengespräche
+        </div>
+        <button class="soldaten-close" onclick="closeModal('soldatenModal')">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <div class="soldaten-body">
+        <div class="soldaten-tabs">
+          <button class="soldaten-tab active" onclick="switchSoldatenTab('new')">Neues Gespräch</button>
+          <button class="soldaten-tab" onclick="switchSoldatenTab('list')">Gesprächsliste</button>
+        </div>
+        
+        <!-- Neues Gespräch Tab -->
+        <div class="soldaten-tab-content" id="soldatenNewTab">
+          <div class="soldaten-form-grid">
+            <div class="soldaten-form-group">
+              <label class="soldaten-label">Name *</label>
+              <input type="text" class="soldaten-input" id="soldatenName" placeholder="Vollständiger Name">
+            </div>
+            
+            <div class="soldaten-form-group">
+              <label class="soldaten-label">Dienstnummer (DN) *</label>
+              <input type="number" class="soldaten-input" id="soldatenDN" placeholder="z.B. 43">
+            </div>
+            
+            <div class="soldaten-form-group">
+              <label class="soldaten-label">Hauptunit</label>
+              <select class="soldaten-input" id="soldatenUnit">
+                <option value="">Unit auswählen</option>
+                <option value="Air Force">Air Force</option>
+                <option value="S.O.C">S.O.C</option>
+                <option value="Infantry">Infantry</option>
+                <option value="Military Police">Military Police</option>
+                <option value="Navy Marine">Navy Marine</option>
+                <option value="Navy SEALs">Navy SEALs</option>
+              </select>
+            </div>
+            
+            <div class="soldaten-form-group">
+              <label class="soldaten-label">Rang</label>
+              <select class="soldaten-input" id="soldatenRank">
+                <option value="">Rang auswählen</option>
+                <option value="Private">Private</option>
+                <option value="Private First Class">Private First Class</option>
+                <option value="Specialist">Specialist</option>
+                <option value="Corporal">Corporal</option>
+                <option value="Sergeant">Sergeant</option>
+                <option value="Staff Sergeant">Staff Sergeant</option>
+                <option value="Sergeant First Class">Sergeant First Class</option>
+                <option value="Master Sergeant">Master Sergeant</option>
+                <option value="Sergeant Major">Sergeant Major</option>
+                <option value="Lieutenant">Lieutenant</option>
+                <option value="Captain">Captain</option>
+                <option value="Major">Major</option>
+                <option value="Colonel">Colonel</option>
+                <option value="Major General">Major General</option>
+                <option value="Lieutenant General">Lieutenant General</option>
+                <option value="Vice General of Army">Vice General of Army</option>
+                <option value="General of Army">General of Army</option>
+              </select>
+            </div>
+            
+            <div class="soldaten-form-group">
+              <label class="soldaten-label">Datum *</label>
+              <input type="date" class="soldaten-input" id="soldatenDate" value="">
+            </div>
+            
+            <div class="soldaten-form-group">
+              <label class="soldaten-label">Uhrzeit *</label>
+              <input type="time" class="soldaten-input" id="soldatenTime" value="">
+            </div>
+            
+            <div class="soldaten-form-group" style="grid-column: span 2;">
+              <label class="soldaten-label">Notizen *</label>
+              <textarea class="soldaten-input soldaten-textarea" id="soldatenNotizen" placeholder="Notizen zum Gespräch..."></textarea>
+            </div>
+            
+            <div class="soldaten-form-group" style="grid-column: span 2;">
+              <label class="soldaten-label">Sonstiges</label>
+              <textarea class="soldaten-input soldaten-textarea" id="soldatenSonstiges" placeholder="Weitere Informationen..."></textarea>
+            </div>
+          </div>
+          
+          <div class="soldaten-preview">
+            <div class="soldaten-preview-title">
+              <i class="fas fa-file-alt"></i> Vorschau
+            </div>
+            <div class="soldaten-preview-content" id="soldatenPreview">
+╔══════════════════╗
+/////////////////////////////////////////////////////////////////////////
+Soldatengespräch
+
+Name: 
+DN: 
+Hauptunit: 
+Rang: 
+Datum:
+Uhrzeit: 
+Notizen:
+Sonstiges:
+
+/////////////////////////////////////////////////////////////////////////
+<@&1097625910242447422>
+╚══════════════════
+            </div>
+          </div>
+          
+          <div class="soldaten-actions">
+            <button class="soldaten-btn soldaten-btn-copy" onclick="copySoldatenTemplate()">
+              <i class="fas fa-copy"></i> In Zwischenablage kopieren
+            </button>
+            <button class="soldaten-btn soldaten-btn-save" onclick="saveSoldatenGespräch()">
+              <i class="fas fa-save"></i> Gespräch speichern
+            </button>
+          </div>
+        </div>
+        
+        <!-- Gesprächsliste Tab -->
+        <div class="soldaten-tab-content" id="soldatenListTab" style="display:none;">
+          <div class="soldaten-search-container">
+            <i class="fas fa-search soldaten-search-icon"></i>
+            <input type="text" class="soldaten-search-input" id="soldatenSearch" placeholder="Nach Name oder DN suchen..." oninput="searchSoldaten(this.value)">
+          </div>
+          
+          <!-- Scrollbar-Container für die Liste -->
+          <div class="soldaten-liste-container">
+            <div class="soldaten-liste" id="soldatenListe">
+              <div class="empty-soldaten">
+                <div class="empty-soldaten-icon"><i class="fas fa-comments"></i></div>
+                <div class="empty-soldaten-title">Keine Gespräche gefunden</div>
+                <div class="empty-description">Erstellen Sie Ihr erstes Soldatengespräch</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- Beobachtungs Akten Modal -->
-  <div class="beobachtung-akten-modal" id="beobachtungAktenModal" onclick="if(event.target===this)closeBeobachtungAktenModal()">
+  <div class="beobachtung-akten-modal" id="beobachtungAktenModal" onclick="if(event.target===this)closeModal('beobachtungAktenModal')">
     <div class="beobachtung-akten-content">
       <div class="beobachtung-akten-header">
         <div class="beobachtung-akten-title">
           <i class="fas fa-folder-open"></i> Beobachtungs-Akten
         </div>
-        <button class="beobachtung-akten-close" onclick="closeBeobachtungAktenModal()">
+        <button class="beobachtung-akten-close" onclick="closeModal('beobachtungAktenModal')">
           <i class="fas fa-times"></i>
         </button>
       </div>
@@ -1697,7 +3175,11 @@ Grund:
     let bothInductionsCompleted = false;
     let currentFilter = 'all';
     let akten = [];
+    let soldatenGespräche = [];
+    let ankundigungen = [];
     let currentBeobachtungTab = 'new';
+    let currentSoldatenTab = 'new';
+    let currentAnkundigungTab = 'new';
 
     document.addEventListener('DOMContentLoaded', function () {
       initializeApp();
@@ -1705,12 +3187,24 @@ Grund:
       updateStats();
       adjustSidebarHeight();
       loadAkten();
+      loadSoldatenGespräche();
+      loadAnkundigungen();
     });
 
     function initializeApp() {
       const today = new Date().toISOString().split('T')[0];
       document.getElementById('oralDate').value = today;
       document.getElementById('orgDate').value = today;
+      document.getElementById('soldatenDate').value = today;
+      document.getElementById('besprechungDate').value = today;
+      document.getElementById('aufstellungDate').value = today;
+
+      const now = new Date();
+      const hours = now.getHours().toString().padStart(2, '0');
+      const minutes = now.getMinutes().toString().padStart(2, '0');
+      document.getElementById('soldatenTime').value = `${hours}:${minutes}`;
+      document.getElementById('besprechungTime').value = `${hours}:${minutes}`;
+      document.getElementById('aufstellungTime').value = `${hours}:${minutes}`;
 
       document.getElementById('oralTimeStart').value = '16:40';
       document.getElementById('oralTimeEnd').value = '18:00';
@@ -1721,6 +3215,8 @@ Grund:
       setupFormChangeListeners();
       seedTemplateBoxes();
       setupBeobachtungEventListeners();
+      setupSoldatenEventListeners();
+      setupAnkundigungEventListeners();
     }
 
     function setupEventListeners() {
@@ -1733,6 +3229,8 @@ Grund:
         if (e.ctrlKey && e.key === 'f') { e.preventDefault(); document.getElementById('searchEmployees').focus(); }
         if (e.ctrlKey && e.key === 'e' && currentEmployee) { e.preventDefault(); openEditEmployeeModal(); }
         if (e.ctrlKey && e.key === 'b') { e.preventDefault(); openBeobachtungAktenModal(); }
+        if (e.ctrlKey && e.key === 's') { e.preventDefault(); openSoldatenModal(); }
+        if (e.ctrlKey && e.key === 'a') { e.preventDefault(); openAnkundigungModal(); }
       });
 
       window.addEventListener('resize', adjustSidebarHeight);
@@ -1750,6 +3248,30 @@ Grund:
       const beobachtungInputs = document.querySelectorAll('#beobachtungName, #beobachtungDN, #beobachtungGrund');
       beobachtungInputs.forEach(input => {
         input.addEventListener('input', updateBeobachtungPreview);
+      });
+    }
+
+    function setupSoldatenEventListeners() {
+      const soldatenInputs = document.querySelectorAll('#soldatenName, #soldatenDN, #soldatenUnit, #soldatenRank, #soldatenDate, #soldatenTime, #soldatenNotizen, #soldatenSonstiges');
+      soldatenInputs.forEach(input => {
+        input.addEventListener('input', updateSoldatenPreview);
+      });
+    }
+
+    function setupAnkundigungEventListeners() {
+      const ankundigungInputs = document.querySelectorAll('#ankundigungTitle, #ankundigungContent');
+      ankundigungInputs.forEach(input => {
+        input.addEventListener('input', updateAnkundigungPreview);
+      });
+      
+      const besprechungInputs = document.querySelectorAll('#besprechungThema, #besprechungDate, #besprechungTime, #besprechungOrt, #besprechungContent');
+      besprechungInputs.forEach(input => {
+        input.addEventListener('input', updateBesprechungPreview);
+      });
+      
+      const aufstellungInputs = document.querySelectorAll('#aufstellungTyp, #aufstellungDate, #aufstellungTime, #aufstellungOrt, #aufstellungBemerkungen');
+      aufstellungInputs.forEach(input => {
+        input.addEventListener('input', updateAufstellungPreview);
       });
     }
 
@@ -1772,7 +3294,646 @@ Grund:
       sidebar.style.height = `${newHeight}px`;
     }
 
-    // Akten Functions
+    // Ankündigungen/Besprechungen/Aufstellungen Functions
+    function openAnkundigungModal() {
+      openModal('ankundigungModal');
+      updateAnkundigungPreview();
+    }
+
+    function closeAnkundigungModal() {
+      closeModal('ankundigungModal');
+    }
+
+    function switchAnkundigungTab(tabName) {
+      currentAnkundigungTab = tabName;
+      
+      // Update tab buttons
+      document.querySelectorAll('.ankundigung-tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      let tabIndex = 0;
+      if (tabName === 'new') tabIndex = 0;
+      else if (tabName === 'besprechung') tabIndex = 1;
+      else if (tabName === 'aufstellung') tabIndex = 2;
+      else if (tabName === 'list') tabIndex = 3;
+      
+      document.querySelectorAll('.ankundigung-tab')[tabIndex].classList.add('active');
+      
+      // Update tab content
+      document.querySelectorAll('.ankundigung-tab-content').forEach(content => {
+        content.style.display = 'none';
+      });
+      let tabId = '';
+      if (tabName === 'new') tabId = 'ankundigungNewTab';
+      else if (tabName === 'besprechung') tabId = 'ankundigungBesprechungTab';
+      else if (tabName === 'aufstellung') tabId = 'ankundigungAufstellungTab';
+      else tabId = 'ankundigungListTab';
+      
+      document.getElementById(tabId).style.display = 'block';
+      
+      // Load data for the tab
+      if (tabName === 'list') {
+        renderAnkundigungListe();
+      }
+    }
+
+    function updateAnkundigungPreview() {
+      const title = document.getElementById('ankundigungTitle').value;
+      const content = document.getElementById('ankundigungContent').value;
+
+      const template = `🪧 **Ankündigung**${title ? '\n\n**' + title + '**' : ''}
+
+${content || ''}`;
+
+      document.getElementById('ankundigungPreview').textContent = template;
+    }
+
+    function updateBesprechungPreview() {
+      const thema = document.getElementById('besprechungThema').value;
+      const date = document.getElementById('besprechungDate').value;
+      const time = document.getElementById('besprechungTime').value;
+      const ort = document.getElementById('besprechungOrt').value;
+      const content = document.getElementById('besprechungContent').value;
+
+      const formattedDate = date ? new Date(date).toLocaleDateString('de-DE') : '';
+      
+      const template = `🖊️ **Besprechung**
+
+Thema: ${thema || ''}
+Datum: ${formattedDate}
+Uhrzeit: ${time || ''}
+Ort: ${ort || ''}
+
+${content || ''}`;
+
+      document.getElementById('besprechungPreview').textContent = template;
+    }
+
+    function updateAufstellungPreview() {
+      const typ = document.getElementById('aufstellungTyp').value;
+      const date = document.getElementById('aufstellungDate').value;
+      const time = document.getElementById('aufstellungTime').value;
+      const ort = document.getElementById('aufstellungOrt').value;
+      const bemerkungen = document.getElementById('aufstellungBemerkungen').value;
+
+      const formattedDate = date ? new Date(date).toLocaleDateString('de-DE') : '';
+      
+      const template = `🕛 **Aufstellung**
+
+Typ: ${typ || ''}
+Datum: ${formattedDate}
+Uhrzeit: ${time || ''}
+Ort: ${ort || ''}
+Bemerkungen: ${bemerkungen || ''}`;
+
+      document.getElementById('aufstellungPreview').textContent = template;
+    }
+
+    async function copyAnkundigungTemplate() {
+      const template = document.getElementById('ankundigungPreview').textContent;
+      const success = await copyToClipboard(template);
+      showNotification(success ? 'Ankündigung kopiert' : 'Fehler beim Kopieren', success ? 'success' : 'error');
+    }
+
+    async function copyBesprechungTemplate() {
+      const template = document.getElementById('besprechungPreview').textContent;
+      const success = await copyToClipboard(template);
+      showNotification(success ? 'Besprechung kopiert' : 'Fehler beim Kopieren', success ? 'success' : 'error');
+    }
+
+    async function copyAufstellungTemplate() {
+      const template = document.getElementById('aufstellungPreview').textContent;
+      const success = await copyToClipboard(template);
+      showNotification(success ? 'Aufstellung kopiert' : 'Fehler beim Kopieren', success ? 'success' : 'error');
+    }
+
+    async function saveAnkundigung() {
+      const title = document.getElementById('ankundigungTitle').value.trim();
+      const content = document.getElementById('ankundigungContent').value.trim();
+
+      if (!content) {
+        showNotification('Bitte geben Sie den Inhalt der Ankündigung ein', 'warning');
+        return;
+      }
+
+      const ankundigung = {
+        id: `ANK-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+        type: 'ankundigung',
+        title: title || 'Ohne Titel',
+        content,
+        date: new Date().toISOString(),
+        dateFormatted: new Date().toLocaleDateString('de-DE'),
+        template: document.getElementById('ankundigungPreview').textContent,
+        icon: '🪧'
+      };
+
+      try {
+        await db.collection('hrAnkundigungen').doc(ankundigung.id).set(ankundigung);
+        ankundigungen.unshift(ankundigung);
+        
+        showNotification('Ankündigung erfolgreich gespeichert', 'success');
+        
+        // Felder leeren
+        document.getElementById('ankundigungTitle').value = '';
+        document.getElementById('ankundigungContent').value = '';
+        
+        updateAnkundigungPreview();
+        renderAnkundigungListe();
+        
+        // Switch to list tab to show the new entry
+        switchAnkundigungTab('list');
+      } catch (error) {
+        console.error('Fehler beim Speichern der Ankündigung:', error);
+        showNotification('Fehler beim Speichern: ' + error.message, 'error');
+      }
+    }
+
+    async function saveBesprechung() {
+      const thema = document.getElementById('besprechungThema').value.trim();
+      const date = document.getElementById('besprechungDate').value;
+      const time = document.getElementById('besprechungTime').value;
+      const ort = document.getElementById('besprechungOrt').value.trim();
+      const content = document.getElementById('besprechungContent').value.trim();
+
+      if (!thema || !date || !time || !content) {
+        showNotification('Bitte füllen Sie alle Pflichtfelder aus (*)', 'warning');
+        return;
+      }
+
+      const besprechung = {
+        id: `BES-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+        type: 'besprechung',
+        thema,
+        date,
+        time,
+        ort: ort || '',
+        content,
+        created: new Date().toISOString(),
+        createdFormatted: new Date().toLocaleDateString('de-DE'),
+        dateFormatted: new Date(date).toLocaleDateString('de-DE'),
+        template: document.getElementById('besprechungPreview').textContent,
+        icon: '🖊️'
+      };
+
+      try {
+        await db.collection('hrAnkundigungen').doc(besprechung.id).set(besprechung);
+        ankundigungen.unshift(besprechung);
+        
+        showNotification('Besprechung erfolgreich gespeichert', 'success');
+        
+        // Felder leeren
+        document.getElementById('besprechungThema').value = '';
+        document.getElementById('besprechungDate').value = new Date().toISOString().split('T')[0];
+        document.getElementById('besprechungTime').value = '';
+        document.getElementById('besprechungOrt').value = '';
+        document.getElementById('besprechungContent').value = '';
+        
+        updateBesprechungPreview();
+        renderAnkundigungListe();
+        
+        // Switch to list tab to show the new entry
+        switchAnkundigungTab('list');
+      } catch (error) {
+        console.error('Fehler beim Speichern der Besprechung:', error);
+        showNotification('Fehler beim Speichern: ' + error.message, 'error');
+      }
+    }
+
+    async function saveAufstellung() {
+      const typ = document.getElementById('aufstellungTyp').value;
+      const date = document.getElementById('aufstellungDate').value;
+      const time = document.getElementById('aufstellungTime').value;
+      const ort = document.getElementById('aufstellungOrt').value.trim();
+      const bemerkungen = document.getElementById('aufstellungBemerkungen').value.trim();
+
+      if (!typ || !date || !time || !ort) {
+        showNotification('Bitte füllen Sie alle Pflichtfelder aus (*)', 'warning');
+        return;
+      }
+
+      const aufstellung = {
+        id: `AUF-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+        type: 'aufstellung',
+        typ,
+        date,
+        time,
+        ort,
+        bemerkungen: bemerkungen || '',
+        created: new Date().toISOString(),
+        createdFormatted: new Date().toLocaleDateString('de-DE'),
+        dateFormatted: new Date(date).toLocaleDateString('de-DE'),
+        template: document.getElementById('aufstellungPreview').textContent,
+        icon: '🕛'
+      };
+
+      try {
+        await db.collection('hrAnkundigungen').doc(aufstellung.id).set(aufstellung);
+        ankundigungen.unshift(aufstellung);
+        
+        showNotification('Aufstellung erfolgreich gespeichert', 'success');
+        
+        // Felder leeren
+        document.getElementById('aufstellungTyp').value = '';
+        document.getElementById('aufstellungDate').value = new Date().toISOString().split('T')[0];
+        document.getElementById('aufstellungTime').value = '';
+        document.getElementById('aufstellungOrt').value = '';
+        document.getElementById('aufstellungBemerkungen').value = '';
+        
+        updateAufstellungPreview();
+        renderAnkundigungListe();
+        
+        // Switch to list tab to show the new entry
+        switchAnkundigungTab('list');
+      } catch (error) {
+        console.error('Fehler beim Speichern der Aufstellung:', error);
+        showNotification('Fehler beim Speichern: ' + error.message, 'error');
+      }
+    }
+
+    async function loadAnkundigungen() {
+      try {
+        const snapshot = await db.collection('hrAnkundigungen').orderBy('created', 'desc').limit(100).get();
+        ankundigungen = [];
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          ankundigungen.push({ 
+            id: doc.id, 
+            ...data,
+            createdFormatted: data.createdFormatted || new Date(data.created).toLocaleDateString('de-DE'),
+            dateFormatted: data.dateFormatted || (data.date ? new Date(data.date).toLocaleDateString('de-DE') : '')
+          });
+        });
+        renderAnkundigungListe();
+      } catch (error) {
+        console.error('Fehler beim Laden der Ankündigungen:', error);
+      }
+    }
+
+    function renderAnkundigungListe() {
+      const container = document.getElementById('ankundigungListe');
+      const searchTerm = document.getElementById('ankundigungSearch')?.value.toLowerCase() || '';
+      
+      // Filter ankundigungen based on search term
+      let filteredAnkundigungen = ankundigungen;
+      if (searchTerm) {
+        filteredAnkundigungen = ankundigungen.filter(item => 
+          (item.title && item.title.toLowerCase().includes(searchTerm)) || 
+          (item.thema && item.thema.toLowerCase().includes(searchTerm)) ||
+          (item.content && item.content.toLowerCase().includes(searchTerm)) ||
+          (item.bemerkungen && item.bemerkungen.toLowerCase().includes(searchTerm))
+        );
+      }
+      
+      if (filteredAnkundigungen.length === 0) {
+        container.innerHTML = `
+          <div class="empty-ankundigung">
+            <div class="empty-ankundigung-icon"><i class="fas fa-bullhorn"></i></div>
+            <div class="empty-ankundigung-title">${searchTerm ? 'Keine passenden Einträge gefunden' : 'Keine Einträge gefunden'}</div>
+            <div class="empty-description">${searchTerm ? 'Versuchen Sie einen anderen Suchbegriff' : 'Erstellen Sie Ihren ersten Eintrag'}</div>
+          </div>
+        `;
+        return;
+      }
+
+      let html = '';
+      filteredAnkundigungen.forEach(item => {
+        const typeLabel = item.type === 'ankundigung' ? 'Ankündigung' : 
+                         item.type === 'besprechung' ? 'Besprechung' : 'Aufstellung';
+        
+        const title = item.type === 'ankundigung' ? (item.title || 'Ohne Titel') :
+                     item.type === 'besprechung' ? item.thema : `${item.typ} - ${item.ort}`;
+        
+        const date = item.type === 'ankundigung' ? item.createdFormatted : 
+                    item.dateFormatted || item.createdFormatted;
+        
+        const content = item.type === 'ankundigung' ? item.content :
+                       item.type === 'besprechung' ? item.content : item.bemerkungen;
+        
+        html += `
+          <div class="ankundigung-item">
+            <div class="ankundigung-item-header">
+              <div class="ankundigung-item-title">
+                <span>${item.icon || '📄'}</span> ${escapeHtml(title)}
+              </div>
+              <div class="ankundigung-item-type">
+                ${typeLabel}
+              </div>
+            </div>
+            <div class="ankundigung-item-date">
+              <i class="fas fa-calendar"></i> Erstellt: ${date}
+            </div>
+            <div class="ankundigung-item-content">
+              ${escapeHtml(content.length > 200 ? content.substring(0, 200) + '...' : content)}
+            </div>
+            ${item.type === 'besprechung' ? `
+            <div style="display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap;">
+              ${item.time ? `<div style="background: rgba(139,92,246,.10); color: #a78bfa; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 900; border: 1px solid rgba(139,92,246,.20);">
+                <i class="fas fa-clock"></i> ${item.time}
+              </div>` : ''}
+              ${item.ort ? `<div style="background: rgba(139,92,246,.10); color: #a78bfa; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 900; border: 1px solid rgba(139,92,246,.20);">
+                <i class="fas fa-map-marker-alt"></i> ${item.ort}
+              </div>` : ''}
+            </div>
+            ` : ''}
+            ${item.type === 'aufstellung' ? `
+            <div style="display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap;">
+              <div style="background: rgba(139,92,246,.10); color: #a78bfa; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 900; border: 1px solid rgba(139,92,246,.20);">
+                ${item.typ}
+              </div>
+              ${item.time ? `<div style="background: rgba(139,92,246,.10); color: #a78bfa; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 900; border: 1px solid rgba(139,92,246,.20);">
+                <i class="fas fa-clock"></i> ${item.time}
+              </div>` : ''}
+              <div style="background: rgba(139,92,246,.10); color: #a78bfa; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 900; border: 1px solid rgba(139,92,246,.20);">
+                <i class="fas fa-map-marker-alt"></i> ${item.ort}
+              </div>
+            </div>
+            ` : ''}
+            <div class="ankundigung-item-actions">
+              <button class="ankundigung-item-btn ankundigung-item-btn-copy" onclick="copyAnkundigungFromList('${item.id}')">
+                <i class="fas fa-copy"></i> Kopieren
+              </button>
+              <button class="ankundigung-item-btn ankundigung-item-btn-delete" onclick="deleteAnkundigung('${item.id}')">
+                <i class="fas fa-trash"></i> Löschen
+              </button>
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    function searchAnkundigungen(searchTerm) {
+      renderAnkundigungListe();
+    }
+
+    async function copyAnkundigungFromList(itemId) {
+      const item = ankundigungen.find(i => i.id === itemId);
+      if (!item) return;
+
+      const success = await copyToClipboard(item.template);
+      showNotification(success ? `${item.type === 'ankundigung' ? 'Ankündigung' : item.type === 'besprechung' ? 'Besprechung' : 'Aufstellung'} kopiert` : 'Fehler beim Kopieren', success ? 'success' : 'error');
+    }
+
+    async function deleteAnkundigung(itemId) {
+      if (!confirm('Eintrag wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.')) return;
+
+      try {
+        await db.collection('hrAnkundigungen').doc(itemId).delete();
+        ankundigungen = ankundigungen.filter(i => i.id !== itemId);
+        
+        renderAnkundigungListe();
+        showNotification('Eintrag gelöscht', 'success');
+      } catch (error) {
+        console.error('Fehler beim Löschen des Eintrags:', error);
+        showNotification('Fehler beim Löschen: ' + error.message, 'error');
+      }
+    }
+
+    // Soldatengespräch Functions
+    function openSoldatenModal() {
+      openModal('soldatenModal');
+      updateSoldatenPreview();
+    }
+
+    function closeSoldatenModal() {
+      closeModal('soldatenModal');
+    }
+
+    function switchSoldatenTab(tabName) {
+      currentSoldatenTab = tabName;
+      
+      // Update tab buttons
+      document.querySelectorAll('.soldaten-tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      document.querySelectorAll('.soldaten-tab')[tabName === 'new' ? 0 : 1].classList.add('active');
+      
+      // Update tab content
+      document.querySelectorAll('.soldaten-tab-content').forEach(content => {
+        content.style.display = 'none';
+      });
+      let tabId = '';
+      if (tabName === 'new') tabId = 'soldatenNewTab';
+      else tabId = 'soldatenListTab';
+      
+      document.getElementById(tabId).style.display = 'block';
+      
+      // Load data for the tab
+      if (tabName === 'list') {
+        renderSoldatenListe();
+      }
+    }
+
+    function updateSoldatenPreview() {
+      const name = document.getElementById('soldatenName').value;
+      const dn = document.getElementById('soldatenDN').value;
+      const unit = document.getElementById('soldatenUnit').value;
+      const rank = document.getElementById('soldatenRank').value;
+      const date = document.getElementById('soldatenDate').value;
+      const time = document.getElementById('soldatenTime').value;
+      const notizen = document.getElementById('soldatenNotizen').value;
+      const sonstiges = document.getElementById('soldatenSonstiges').value;
+
+      const formattedDate = date ? new Date(date).toLocaleDateString('de-DE') : '';
+      
+      const template = `╔══════════════════╗
+/////////////////////////////////////////////////////////////////////////
+Soldatengespräch
+
+Name: ${name || ''}
+DN: ${dn || ''}
+Hauptunit: ${unit || ''}
+Rang: ${rank || ''}
+Datum: ${formattedDate}
+Uhrzeit: ${time || ''}
+Notizen: ${notizen || ''}
+Sonstiges: ${sonstiges || ''}
+
+/////////////////////////////////////////////////////////////////////////
+<@&1097625910242447422>
+╚══════════════════`;
+
+      document.getElementById('soldatenPreview').textContent = template;
+    }
+
+    async function copySoldatenTemplate() {
+      const template = document.getElementById('soldatenPreview').textContent;
+      const success = await copyToClipboard(template);
+      showNotification(success ? 'Soldatengespräch kopiert' : 'Fehler beim Kopieren', success ? 'success' : 'error');
+    }
+
+    async function saveSoldatenGespräch() {
+      const name = document.getElementById('soldatenName').value.trim();
+      const dn = document.getElementById('soldatenDN').value;
+      const unit = document.getElementById('soldatenUnit').value;
+      const rank = document.getElementById('soldatenRank').value;
+      const date = document.getElementById('soldatenDate').value;
+      const time = document.getElementById('soldatenTime').value;
+      const notizen = document.getElementById('soldatenNotizen').value.trim();
+      const sonstiges = document.getElementById('soldatenSonstiges').value.trim();
+
+      if (!name || !dn || !date || !time || !notizen) {
+        showNotification('Bitte füllen Sie alle Pflichtfelder aus (*)', 'warning');
+        return;
+      }
+
+      const gespräch = {
+        id: `SOLDATEN-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+        name,
+        dn,
+        unit: unit || '',
+        rank: rank || '',
+        date,
+        time,
+        notizen,
+        sonstiges: sonstiges || '',
+        created: new Date().toISOString(),
+        createdFormatted: new Date().toLocaleDateString('de-DE'),
+        dateFormatted: new Date(date).toLocaleDateString('de-DE'),
+        template: document.getElementById('soldatenPreview').textContent
+      };
+
+      try {
+        await db.collection('hrSoldatenGespräche').doc(gespräch.id).set(gespräch);
+        soldatenGespräche.unshift(gespräch);
+        
+        showNotification('Soldatengespräch erfolgreich gespeichert', 'success');
+        
+        // Felder leeren
+        document.getElementById('soldatenName').value = '';
+        document.getElementById('soldatenDN').value = '';
+        document.getElementById('soldatenUnit').value = '';
+        document.getElementById('soldatenRank').value = '';
+        document.getElementById('soldatenDate').value = new Date().toISOString().split('T')[0];
+        document.getElementById('soldatenTime').value = '';
+        document.getElementById('soldatenNotizen').value = '';
+        document.getElementById('soldatenSonstiges').value = '';
+        
+        updateSoldatenPreview();
+        renderSoldatenListe();
+        
+        // Switch to list tab to show the new entry
+        switchSoldatenTab('list');
+      } catch (error) {
+        console.error('Fehler beim Speichern des Soldatengesprächs:', error);
+        showNotification('Fehler beim Speichern: ' + error.message, 'error');
+      }
+    }
+
+    async function loadSoldatenGespräche() {
+      try {
+        const snapshot = await db.collection('hrSoldatenGespräche').orderBy('created', 'desc').limit(100).get();
+        soldatenGespräche = [];
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          soldatenGespräche.push({ 
+            id: doc.id, 
+            ...data,
+            createdFormatted: data.createdFormatted || new Date(data.created).toLocaleDateString('de-DE'),
+            dateFormatted: data.dateFormatted || (data.date ? new Date(data.date).toLocaleDateString('de-DE') : '')
+          });
+        });
+        renderSoldatenListe();
+      } catch (error) {
+        console.error('Fehler beim Laden der Soldatengespräche:', error);
+      }
+    }
+
+    function renderSoldatenListe() {
+      const container = document.getElementById('soldatenListe');
+      const searchTerm = document.getElementById('soldatenSearch')?.value.toLowerCase() || '';
+      
+      // Filter gespräche based on search term
+      let filteredGespräche = soldatenGespräche;
+      if (searchTerm) {
+        filteredGespräche = soldatenGespräche.filter(gespräch => 
+          gespräch.name.toLowerCase().includes(searchTerm) || 
+          gespräch.dn.toString().includes(searchTerm)
+        );
+      }
+      
+      if (filteredGespräche.length === 0) {
+        container.innerHTML = `
+          <div class="empty-soldaten">
+            <div class="empty-soldaten-icon"><i class="fas fa-comments"></i></div>
+            <div class="empty-soldaten-title">${searchTerm ? 'Keine passenden Gespräche gefunden' : 'Keine Gespräche gefunden'}</div>
+            <div class="empty-description">${searchTerm ? 'Versuchen Sie einen anderen Suchbegriff' : 'Erstellen Sie Ihr erstes Soldatengespräch'}</div>
+          </div>
+        `;
+        return;
+      }
+
+      let html = '';
+      filteredGespräche.forEach(gespräch => {
+        html += `
+          <div class="soldaten-item">
+            <div class="soldaten-item-header">
+              <div class="soldaten-item-name">${escapeHtml(gespräch.name)}</div>
+              <div class="soldaten-item-dn">DN ${escapeHtml(gespräch.dn)}</div>
+            </div>
+            <div class="soldaten-item-date">
+              <i class="fas fa-calendar"></i> Gespräch am: ${gespräch.dateFormatted} um ${gespräch.time || ''}
+            </div>
+            <div style="display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap;">
+              <div style="background: rgba(245,158,11,.10); color: #fcd34d; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 900; border: 1px solid rgba(245,158,11,.20);">
+                ${gespräch.unit || 'Keine Unit'}
+              </div>
+              <div style="background: rgba(245,158,11,.10); color: #fcd34d; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 900; border: 1px solid rgba(245,158,11,.20);">
+                ${gespräch.rank || 'Kein Rang'}
+              </div>
+            </div>
+            <div class="soldaten-item-notizen">
+              ${escapeHtml(gespräch.notizen.length > 200 ? gespräch.notizen.substring(0, 200) + '...' : gespräch.notizen)}
+            </div>
+            ${gespräch.sonstiges ? `
+            <div class="soldaten-item-sonstiges">
+              ${escapeHtml(gespräch.sonstiges.length > 200 ? gespräch.sonstiges.substring(0, 200) + '...' : gespräch.sonstiges)}
+            </div>
+            ` : ''}
+            <div class="soldaten-item-actions">
+              <button class="soldaten-item-btn soldaten-item-btn-copy" onclick="copySoldatenFromList('${gespräch.id}')">
+                <i class="fas fa-copy"></i> Kopieren
+              </button>
+              <button class="soldaten-item-btn soldaten-item-btn-delete" onclick="deleteSoldatenGespräch('${gespräch.id}')">
+                <i class="fas fa-trash"></i> Löschen
+              </button>
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    function searchSoldaten(searchTerm) {
+      renderSoldatenListe();
+    }
+
+    async function copySoldatenFromList(gesprächId) {
+      const gespräch = soldatenGespräche.find(g => g.id === gesprächId);
+      if (!gespräch) return;
+
+      const success = await copyToClipboard(gespräch.template);
+      showNotification(success ? 'Soldatengespräch kopiert' : 'Fehler beim Kopieren', success ? 'success' : 'error');
+    }
+
+    async function deleteSoldatenGespräch(gesprächId) {
+      if (!confirm('Soldatengespräch wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.')) return;
+
+      try {
+        await db.collection('hrSoldatenGespräche').doc(gesprächId).delete();
+        soldatenGespräche = soldatenGespräche.filter(g => g.id !== gesprächId);
+        
+        renderSoldatenListe();
+        showNotification('Soldatengespräch gelöscht', 'success');
+      } catch (error) {
+        console.error('Fehler beim Löschen des Soldatengesprächs:', error);
+        showNotification('Fehler beim Löschen: ' + error.message, 'error');
+      }
+    }
+
+    // Beobachtungs Akten Functions (behalten)
     function openBeobachtungAktenModal() {
       openModal('beobachtungAktenModal');
       updateBeobachtungPreview();
@@ -2230,7 +4391,7 @@ Grund: ${grund || ''}
       updateBeobachtungPreview();
     }
 
-    // Firebase Functions
+    // Firebase Functions for Employees (unchanged)
     async function loadEmployees() {
       try {
         showLoading();
@@ -2287,7 +4448,7 @@ Grund: ${grund || ''}
       }
     }
 
-    // Employee List
+    // Employee List (unchanged)
     function renderEmployeeList() {
       const container = document.getElementById('employeeList');
       const countElement = document.getElementById('employeeCount');
@@ -2678,8 +4839,6 @@ Grund: ${grund || ''}
       return `╔══════════════════╗
 /////////////////////////////////////////////////////////////////////////
 ${isOral ? 'Mündliche Einweisung' : 'Organisatorische Einweisung'}
-Status: ${completed ? 'BESTANDEN' : 'AUSSTEHEND'}
-
 
 Prüfer : ${examiner}
 Name: ${name}
