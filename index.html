@@ -521,7 +521,563 @@
     }
     .template-card.completed .template-content{border-left-color:var(--secondary)}
 
-    /* Beobachtungs Akten Modal */
+    /* Floating Buttons Container */
+    .floating-buttons-container {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      z-index: 1000;
+    }
+
+    .floating-button {
+      width: 56px;
+      height: 56px;
+      background: var(--primary);
+      border: none;
+      border-radius: 50%;
+      color: #fff;
+      font-size: 20px;
+      cursor: pointer;
+      box-shadow: var(--shadow-lg);
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .floating-button:hover {
+      background: var(--primary-dark);
+      transform: scale(1.1);
+      box-shadow: 0 10px 25px rgba(79,70,229,.3);
+    }
+
+    .floating-button.soldaten {
+      background: var(--warning);
+    }
+
+    .floating-button.soldaten:hover {
+      background: var(--warning-dark);
+    }
+
+    /* Soldatengespräch Modal */
+    .soldaten-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.85);
+      backdrop-filter: blur(4px);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      animation: fadeIn .2s ease;
+    }
+
+    .soldaten-modal.active {
+      display: flex;
+    }
+
+    .soldaten-content {
+      background: rgba(31,41,55,.95);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      width: 100%;
+      max-width: 900px;
+      max-height: 90vh;
+      border: 1px solid rgba(255,255,255,.15);
+      box-shadow: var(--shadow-lg);
+      animation: slideUp .2s ease;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .soldaten-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(255,255,255,.1);
+      flex-shrink: 0;
+    }
+
+    .soldaten-title {
+      font-size: 18px;
+      font-weight: 900;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .soldaten-title i {
+      color: var(--warning);
+      font-size: 20px;
+    }
+
+    .soldaten-close {
+      background: none;
+      border: none;
+      color: var(--gray);
+      font-size: 20px;
+      cursor: pointer;
+      transition: var(--transition);
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+    }
+
+    .soldaten-close:hover {
+      color: #fff;
+      background: rgba(255,255,255,.1);
+    }
+
+    .soldaten-body {
+      flex: 1;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .soldaten-tabs {
+      display: flex;
+      gap: 2px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid rgba(255,255,255,.1);
+      flex-shrink: 0;
+    }
+
+    .soldaten-tab {
+      padding: 12px 20px;
+      background: none;
+      border: none;
+      color: var(--gray);
+      font-weight: 900;
+      cursor: pointer;
+      transition: var(--transition);
+      font-size: 13px;
+      position: relative;
+    }
+
+    .soldaten-tab:hover {
+      color: var(--warning);
+    }
+
+    .soldaten-tab.active {
+      color: var(--warning);
+    }
+
+    .soldaten-tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--warning);
+    }
+
+    .soldaten-form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .soldaten-form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .soldaten-label {
+      font-weight: 900;
+      color: var(--gray-light);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+
+    .soldaten-input {
+      padding: 12px 16px;
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: var(--radius-md);
+      color: #fff;
+      font-size: 14px;
+      transition: var(--transition);
+      width: 100%;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .soldaten-input:focus {
+      outline: none;
+      border-color: var(--warning);
+      background: rgba(255,255,255,.08);
+      box-shadow: 0 0 0 3px rgba(245,158,11,.15);
+    }
+
+    .soldaten-textarea {
+      min-height: 120px;
+      resize: vertical;
+      line-height: 1.5;
+    }
+
+    .soldaten-preview {
+      background: rgba(0,0,0,.3);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      border-left: 3px solid var(--warning);
+      margin-top: 10px;
+      margin-bottom: 20px;
+      flex-shrink: 0;
+    }
+
+    .soldaten-preview-title {
+      font-weight: 900;
+      color: var(--gray-light);
+      margin-bottom: 12px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* WICHTIG: Scrollbar für die Vorschau im "Neues Gespräch" Tab */
+    .soldaten-preview-content {
+      font-family: 'Consolas', 'Monaco', monospace;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      font-size: 12px;
+      line-height: 1.4;
+      color: #fff;
+      background: rgba(0,0,0,.2);
+      padding: 16px;
+      border-radius: var(--radius-sm);
+      max-height: 200px;
+      overflow-y: auto;
+      min-height: 100px;
+    }
+
+    .soldaten-preview-content::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .soldaten-preview-content::-webkit-scrollbar-track {
+      background: rgba(255,255,255,.05);
+      border-radius: 3px;
+    }
+
+    .soldaten-preview-content::-webkit-scrollbar-thumb {
+      background: var(--warning);
+      border-radius: 3px;
+    }
+
+    /* Container für den "Neues Gespräch" Tab-Inhalt */
+    .soldaten-tab-content {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    /* WICHTIG: Scrollbar für Soldatengespräch-Liste */
+    .soldaten-liste-container {
+      flex: 1;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .soldaten-liste {
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-height: 0;
+    }
+
+    .soldaten-liste::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .soldaten-liste::-webkit-scrollbar-track {
+      background: rgba(255,255,255,.05);
+      border-radius: 4px;
+    }
+
+    .soldaten-liste::-webkit-scrollbar-thumb {
+      background: var(--warning);
+      border-radius: 4px;
+    }
+
+    .soldaten-liste::-webkit-scrollbar-thumb:hover {
+      background: var(--warning-dark);
+    }
+
+    .soldaten-item {
+      background: rgba(255,255,255,.03);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      border: 1px solid rgba(255,255,255,.08);
+      transition: var(--transition);
+      flex-shrink: 0;
+    }
+
+    .soldaten-item:hover {
+      background: rgba(255,255,255,.05);
+      border-color: var(--warning);
+    }
+
+    .soldaten-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+
+    .soldaten-item-name {
+      font-weight: 900;
+      color: #fff;
+      font-size: 15px;
+    }
+
+    .soldaten-item-dn {
+      font-family: 'Inter', monospace;
+      background: rgba(245,158,11,.10);
+      color: #fcd34d;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 900;
+      border: 1px solid rgba(245,158,11,.20);
+    }
+
+    .soldaten-item-date {
+      color: var(--gray);
+      font-size: 11px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .soldaten-item-notizen {
+      color: var(--gray-light);
+      font-size: 13px;
+      line-height: 1.5;
+      margin-bottom: 12px;
+      padding: 12px;
+      background: rgba(0,0,0,.2);
+      border-radius: var(--radius-sm);
+      border-left: 2px solid var(--warning);
+      max-height: 100px;
+      overflow-y: auto;
+    }
+
+    .soldaten-item-notizen::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .soldaten-item-notizen::-webkit-scrollbar-track {
+      background: rgba(255,255,255,.03);
+      border-radius: 2px;
+    }
+
+    .soldaten-item-notizen::-webkit-scrollbar-thumb {
+      background: rgba(245,158,11,.30);
+      border-radius: 2px;
+    }
+
+    .soldaten-item-template {
+      font-family: 'Consolas', 'Monaco', monospace;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      font-size: 11px;
+      line-height: 1.4;
+      color: var(--gray-light);
+      background: rgba(0,0,0,.3);
+      padding: 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(255,255,255,.08);
+      max-height: 150px;
+      overflow-y: auto;
+      margin-bottom: 12px;
+    }
+
+    .soldaten-item-template::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .soldaten-item-template::-webkit-scrollbar-track {
+      background: rgba(255,255,255,.03);
+      border-radius: 2px;
+    }
+
+    .soldaten-item-template::-webkit-scrollbar-thumb {
+      background: rgba(245,158,11,.30);
+      border-radius: 2px;
+    }
+
+    .soldaten-item-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .soldaten-item-btn {
+      padding: 6px 12px;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-weight: 900;
+      cursor: pointer;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-size: 11px;
+    }
+
+    .soldaten-item-btn-copy {
+      background: rgba(245,158,11,.15);
+      color: #fcd34d;
+      border: 1px solid rgba(245,158,11,.25);
+    }
+
+    .soldaten-item-btn-copy:hover {
+      background: rgba(245,158,11,.25);
+    }
+
+    .soldaten-item-btn-delete {
+      background: rgba(239,68,68,.15);
+      color: #fca5a5;
+      border: 1px solid rgba(239,68,68,.25);
+    }
+
+    .soldaten-item-btn-delete:hover {
+      background: rgba(239,68,68,.25);
+    }
+
+    .empty-soldaten {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--gray);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .empty-soldaten-icon {
+      font-size: 36px;
+      margin-bottom: 12px;
+      opacity: .3;
+    }
+
+    .empty-soldaten-title {
+      font-size: 14px;
+      font-weight: 900;
+      margin-bottom: 6px;
+      color: var(--gray-light);
+    }
+
+    .soldaten-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-top: 10px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255,255,255,.1);
+      flex-shrink: 0;
+    }
+
+    .soldaten-btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: var(--radius-md);
+      font-weight: 900;
+      cursor: pointer;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 13px;
+    }
+
+    .soldaten-btn-copy {
+      background: var(--warning);
+      color: #fff;
+    }
+
+    .soldaten-btn-copy:hover {
+      background: var(--warning-dark);
+      transform: translateY(-1px);
+    }
+
+    .soldaten-btn-save {
+      background: var(--secondary);
+      color: #fff;
+    }
+
+    .soldaten-btn-save:hover {
+      background: var(--secondary-dark);
+      transform: translateY(-1px);
+    }
+
+    .soldaten-search-container {
+      position: relative;
+      margin-bottom: 20px;
+      flex-shrink: 0;
+    }
+
+    .soldaten-search-input {
+      width: 100%;
+      padding: 12px 16px 12px 44px;
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: var(--radius-md);
+      color: #fff;
+      font-size: 14px;
+      transition: var(--transition);
+    }
+
+    .soldaten-search-input::placeholder {
+      color: rgba(255,255,255,.5);
+    }
+
+    .soldaten-search-input:focus {
+      outline: none;
+      border-color: var(--warning);
+      background: rgba(255,255,255,.08);
+      box-shadow: 0 0 0 3px rgba(245,158,11,.15);
+    }
+
+    .soldaten-search-icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--gray);
+      font-size: 16px;
+    }
+
+    /* Beobachtungs Akten Modal (behalten für Akten) */
     .beobachtung-akten-modal{
       display:none;
       position:fixed;
@@ -548,6 +1104,7 @@
       animation:slideUp .2s ease;
       display:flex;
       flex-direction:column;
+      overflow:hidden;
     }
     
     .beobachtung-akten-header{
@@ -599,6 +1156,7 @@
       overflow:hidden;
       display:flex;
       flex-direction:column;
+      min-height:0;
     }
     
     .beobachtung-tabs{
@@ -692,6 +1250,7 @@
       border-left:3px solid var(--primary);
       margin-top:10px;
       margin-bottom:20px;
+      flex-shrink:0;
     }
     
     .beobachtung-preview-title{
@@ -716,26 +1275,42 @@
       border-radius:var(--radius-sm);
       max-height:200px;
       overflow-y:auto;
+      min-height:100px;
+    }
+    
+    .beobachtung-preview-content::-webkit-scrollbar{
+      width:6px;
+    }
+    
+    .beobachtung-preview-content::-webkit-scrollbar-track{
+      background:rgba(255,255,255,.05);
+      border-radius:3px;
+    }
+    
+    .beobachtung-preview-content::-webkit-scrollbar-thumb{
+      background:var(--primary);
+      border-radius:3px;
     }
     
     .beobachtung-akten-liste{
       flex:1;
       overflow-y:auto;
-      padding-right:4px;
+      padding-right:8px;
+      min-height:0;
     }
     
     .beobachtung-akten-liste::-webkit-scrollbar{
-      width:6px;
+      width:8px;
     }
     
     .beobachtung-akten-liste::-webkit-scrollbar-track{
       background:rgba(255,255,255,.05);
-      border-radius:3px;
+      border-radius:4px;
     }
     
     .beobachtung-akten-liste::-webkit-scrollbar-thumb{
       background:var(--primary);
-      border-radius:3px;
+      border-radius:4px;
     }
     
     .beobachtung-akte-item{
@@ -915,32 +1490,6 @@
       background:var(--secondary-dark);
       transform:translateY(-1px);
     }
-    
-    .beobachtung-floating-btn{
-      position:fixed;
-      bottom:20px;
-      right:20px;
-      width:56px;
-      height:56px;
-      background:var(--primary);
-      border:none;
-      border-radius:50%;
-      color:#fff;
-      font-size:20px;
-      cursor:pointer;
-      box-shadow:var(--shadow-lg);
-      z-index:1000;
-      transition:var(--transition);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-    }
-    
-    .beobachtung-floating-btn:hover{
-      background:var(--primary-dark);
-      transform:scale(1.1);
-      box-shadow:0 10px 25px rgba(79,70,229,.3);
-    }
 
     /* Akten Suche */
     .akten-search-container{
@@ -1075,12 +1624,21 @@
       .employee-tags{flex-direction:column;gap:6px}
       .induction-content{padding:16px}
       .oral-form-grid,.org-form-grid{grid-template-columns:1fr}
+      .soldaten-modal,
       .beobachtung-akten-modal{padding:12px}
+      .soldaten-content,
       .beobachtung-akten-content{padding:20px}
+      .soldaten-actions,
       .beobachtung-actions{flex-direction:column;align-items:stretch}
-      .beobachtung-floating-btn{bottom:16px;right:16px}
+      .floating-buttons-container{
+        bottom: 16px;
+        right: 16px;
+      }
+      .soldaten-tabs,
       .beobachtung-tabs{flex-direction:column}
+      .soldaten-tab,
       .beobachtung-tab{text-align:left;padding:10px 16px}
+      .soldaten-form-grid,
       .akte-form-grid{grid-template-columns:1fr}
     }
     @media (max-width:480px){
@@ -1091,7 +1649,9 @@
       .sidebar{padding:14px}
       .modal{padding:16px;margin:12px}
       .notification{left:12px;right:12px;bottom:12px;min-width:auto}
+      .soldaten-content,
       .beobachtung-akten-content{padding:16px}
+      .soldaten-item-actions,
       .beobachtung-akte-actions{flex-direction:column}
     }
   </style>
@@ -1100,19 +1660,169 @@
 <body>
   <div class="bg-effects"><div class="bg-gradient"></div></div>
 
-  <!-- Floating Button für Beobachtung -->
-  <button class="beobachtung-floating-btn" onclick="openBeobachtungAktenModal()">
-    <i class="fas fa-folder-open"></i>
-  </button>
+  <!-- Floating Buttons -->
+  <div class="floating-buttons-container">
+    <button class="floating-button soldaten" onclick="openSoldatenModal()" title="Soldatengespräche">
+      <i class="fas fa-comments"></i>
+    </button>
+    <button class="floating-button" onclick="openBeobachtungAktenModal()" title="Beobachtungs-Akten">
+      <i class="fas fa-folder-open"></i>
+    </button>
+  </div>
+
+  <!-- Soldatengespräch Modal -->
+  <div class="soldaten-modal" id="soldatenModal" onclick="if(event.target===this)closeModal('soldatenModal')">
+    <div class="soldaten-content">
+      <div class="soldaten-header">
+        <div class="soldaten-title">
+          <i class="fas fa-comments"></i> Soldatengespräche
+        </div>
+        <button class="soldaten-close" onclick="closeModal('soldatenModal')">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <div class="soldaten-body">
+        <div class="soldaten-tabs">
+          <button class="soldaten-tab active" onclick="switchSoldatenTab('new')">Neues Gespräch</button>
+          <button class="soldaten-tab" onclick="switchSoldatenTab('list')">Gesprächsliste</button>
+        </div>
+        
+        <!-- Neues Gespräch Tab -->
+        <div class="soldaten-tab-content" id="soldatenNewTab">
+          <div class="soldaten-form-grid">
+            <div class="soldaten-form-group">
+              <label class="soldaten-label">Name *</label>
+              <input type="text" class="soldaten-input" id="soldatenName" placeholder="Vollständiger Name">
+            </div>
+            
+            <div class="soldaten-form-group">
+              <label class="soldaten-label">Dienstnummer (DN) *</label>
+              <input type="number" class="soldaten-input" id="soldatenDN" placeholder="z.B. 43">
+            </div>
+            
+            <div class="soldaten-form-group">
+              <label class="soldaten-label">Hauptunit</label>
+              <select class="soldaten-input" id="soldatenUnit">
+                <option value="">Unit auswählen</option>
+                <option value="Air Force">Air Force</option>
+                <option value="S.O.C">S.O.C</option>
+                <option value="Infantry">Infantry</option>
+                <option value="Military Police">Military Police</option>
+                <option value="Navy Marine">Navy Marine</option>
+                <option value="Navy SEALs">Navy SEALs</option>
+              </select>
+            </div>
+            
+            <div class="soldaten-form-group">
+              <label class="soldaten-label">Rang</label>
+              <select class="soldaten-input" id="soldatenRank">
+                <option value="">Rang auswählen</option>
+                <option value="Private">Private</option>
+                <option value="Private First Class">Private First Class</option>
+                <option value="Specialist">Specialist</option>
+                <option value="Corporal">Corporal</option>
+                <option value="Sergeant">Sergeant</option>
+                <option value="Staff Sergeant">Staff Sergeant</option>
+                <option value="Sergeant First Class">Sergeant First Class</option>
+                <option value="Master Sergeant">Master Sergeant</option>
+                <option value="Sergeant Major">Sergeant Major</option>
+                <option value="Lieutenant">Lieutenant</option>
+                <option value="Captain">Captain</option>
+                <option value="Major">Major</option>
+                <option value="Colonel">Colonel</option>
+                <option value="Major General">Major General</option>
+                <option value="Lieutenant General">Lieutenant General</option>
+                <option value="Vice General of Army">Vice General of Army</option>
+                <option value="General of Army">General of Army</option>
+              </select>
+            </div>
+            
+            <div class="soldaten-form-group">
+              <label class="soldaten-label">Datum *</label>
+              <input type="date" class="soldaten-input" id="soldatenDate" value="">
+            </div>
+            
+            <div class="soldaten-form-group">
+              <label class="soldaten-label">Uhrzeit *</label>
+              <input type="time" class="soldaten-input" id="soldatenTime" value="">
+            </div>
+            
+            <div class="soldaten-form-group" style="grid-column: span 2;">
+              <label class="soldaten-label">Notizen *</label>
+              <textarea class="soldaten-input soldaten-textarea" id="soldatenNotizen" placeholder="Notizen zum Gespräch..."></textarea>
+            </div>
+            
+            <div class="soldaten-form-group" style="grid-column: span 2;">
+              <label class="soldaten-label">Sonstiges</label>
+              <textarea class="soldaten-input soldaten-textarea" id="soldatenSonstiges" placeholder="Weitere Informationen..."></textarea>
+            </div>
+          </div>
+          
+          <div class="soldaten-preview">
+            <div class="soldaten-preview-title">
+              <i class="fas fa-file-alt"></i> Vorschau
+            </div>
+            <div class="soldaten-preview-content" id="soldatenPreview">
+╔══════════════════╗
+/////////////////////////////////////////////////////////////////////////
+Soldatengespräch
+
+Name: 
+DN: 
+Hauptunit: 
+Rang: 
+Datum:
+Uhrzeit: 
+Notizen:
+Sonstiges:
+
+/////////////////////////////////////////////////////////////////////////
+<@&1097625910242447422>
+╚══════════════════
+            </div>
+          </div>
+          
+          <div class="soldaten-actions">
+            <button class="soldaten-btn soldaten-btn-copy" onclick="copySoldatenTemplate()">
+              <i class="fas fa-copy"></i> In Zwischenablage kopieren
+            </button>
+            <button class="soldaten-btn soldaten-btn-save" onclick="saveSoldatenGespräch()">
+              <i class="fas fa-save"></i> Gespräch speichern
+            </button>
+          </div>
+        </div>
+        
+        <!-- Gesprächsliste Tab -->
+        <div class="soldaten-tab-content" id="soldatenListTab" style="display:none;">
+          <div class="soldaten-search-container">
+            <i class="fas fa-search soldaten-search-icon"></i>
+            <input type="text" class="soldaten-search-input" id="soldatenSearch" placeholder="Nach Name oder DN suchen..." oninput="searchSoldaten(this.value)">
+          </div>
+          
+          <!-- Scrollbar-Container für die Liste -->
+          <div class="soldaten-liste-container">
+            <div class="soldaten-liste" id="soldatenListe">
+              <div class="empty-soldaten">
+                <div class="empty-soldaten-icon"><i class="fas fa-comments"></i></div>
+                <div class="empty-soldaten-title">Keine Gespräche gefunden</div>
+                <div class="empty-description">Erstellen Sie Ihr erstes Soldatengespräch</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- Beobachtungs Akten Modal -->
-  <div class="beobachtung-akten-modal" id="beobachtungAktenModal" onclick="if(event.target===this)closeBeobachtungAktenModal()">
+  <div class="beobachtung-akten-modal" id="beobachtungAktenModal" onclick="if(event.target===this)closeModal('beobachtungAktenModal')">
     <div class="beobachtung-akten-content">
       <div class="beobachtung-akten-header">
         <div class="beobachtung-akten-title">
           <i class="fas fa-folder-open"></i> Beobachtungs-Akten
         </div>
-        <button class="beobachtung-akten-close" onclick="closeBeobachtungAktenModal()">
+        <button class="beobachtung-akten-close" onclick="closeModal('beobachtungAktenModal')">
           <i class="fas fa-times"></i>
         </button>
       </div>
@@ -1570,7 +2280,7 @@ Grund:
             <option value="Lieutenant General">Lieutenant General</option>
             <option value="Vice General of Army">Vice General of Army</option>
             <option value="General of Army">General of Army</option>
-          </select>
+          </select;
         </div>
       </div>
 
@@ -1631,7 +2341,7 @@ Grund:
             <option value="Lieutenant General">Lieutenant General</option>
             <option value="Vice General of Army">Vice General of Army</option>
             <option value="General of Army">General of Army</option>
-          </select>
+          </select;
         </div>
       </div>
 
@@ -1697,7 +2407,9 @@ Grund:
     let bothInductionsCompleted = false;
     let currentFilter = 'all';
     let akten = [];
+    let soldatenGespräche = [];
     let currentBeobachtungTab = 'new';
+    let currentSoldatenTab = 'new';
 
     document.addEventListener('DOMContentLoaded', function () {
       initializeApp();
@@ -1705,12 +2417,19 @@ Grund:
       updateStats();
       adjustSidebarHeight();
       loadAkten();
+      loadSoldatenGespräche();
     });
 
     function initializeApp() {
       const today = new Date().toISOString().split('T')[0];
       document.getElementById('oralDate').value = today;
       document.getElementById('orgDate').value = today;
+      document.getElementById('soldatenDate').value = today;
+
+      const now = new Date();
+      const hours = now.getHours().toString().padStart(2, '0');
+      const minutes = now.getMinutes().toString().padStart(2, '0');
+      document.getElementById('soldatenTime').value = `${hours}:${minutes}`;
 
       document.getElementById('oralTimeStart').value = '16:40';
       document.getElementById('oralTimeEnd').value = '18:00';
@@ -1721,6 +2440,7 @@ Grund:
       setupFormChangeListeners();
       seedTemplateBoxes();
       setupBeobachtungEventListeners();
+      setupSoldatenEventListeners();
     }
 
     function setupEventListeners() {
@@ -1733,6 +2453,7 @@ Grund:
         if (e.ctrlKey && e.key === 'f') { e.preventDefault(); document.getElementById('searchEmployees').focus(); }
         if (e.ctrlKey && e.key === 'e' && currentEmployee) { e.preventDefault(); openEditEmployeeModal(); }
         if (e.ctrlKey && e.key === 'b') { e.preventDefault(); openBeobachtungAktenModal(); }
+        if (e.ctrlKey && e.key === 's') { e.preventDefault(); openSoldatenModal(); }
       });
 
       window.addEventListener('resize', adjustSidebarHeight);
@@ -1750,6 +2471,13 @@ Grund:
       const beobachtungInputs = document.querySelectorAll('#beobachtungName, #beobachtungDN, #beobachtungGrund');
       beobachtungInputs.forEach(input => {
         input.addEventListener('input', updateBeobachtungPreview);
+      });
+    }
+
+    function setupSoldatenEventListeners() {
+      const soldatenInputs = document.querySelectorAll('#soldatenName, #soldatenDN, #soldatenUnit, #soldatenRank, #soldatenDate, #soldatenTime, #soldatenNotizen, #soldatenSonstiges');
+      soldatenInputs.forEach(input => {
+        input.addEventListener('input', updateSoldatenPreview);
       });
     }
 
@@ -1772,7 +2500,250 @@ Grund:
       sidebar.style.height = `${newHeight}px`;
     }
 
-    // Akten Functions
+    // Soldatengespräch Functions
+    function openSoldatenModal() {
+      openModal('soldatenModal');
+      updateSoldatenPreview();
+    }
+
+    function closeSoldatenModal() {
+      closeModal('soldatenModal');
+    }
+
+    function switchSoldatenTab(tabName) {
+      currentSoldatenTab = tabName;
+      
+      // Update tab buttons
+      document.querySelectorAll('.soldaten-tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      document.querySelectorAll('.soldaten-tab')[tabName === 'new' ? 0 : 1].classList.add('active');
+      
+      // Update tab content
+      document.querySelectorAll('.soldaten-tab-content').forEach(content => {
+        content.style.display = 'none';
+      });
+      let tabId = '';
+      if (tabName === 'new') tabId = 'soldatenNewTab';
+      else tabId = 'soldatenListTab';
+      
+      document.getElementById(tabId).style.display = 'block';
+      
+      // Load data for the tab
+      if (tabName === 'list') {
+        renderSoldatenListe();
+      }
+    }
+
+    function updateSoldatenPreview() {
+      const name = document.getElementById('soldatenName').value;
+      const dn = document.getElementById('soldatenDN').value;
+      const unit = document.getElementById('soldatenUnit').value;
+      const rank = document.getElementById('soldatenRank').value;
+      const date = document.getElementById('soldatenDate').value;
+      const time = document.getElementById('soldatenTime').value;
+      const notizen = document.getElementById('soldatenNotizen').value;
+      const sonstiges = document.getElementById('soldatenSonstiges').value;
+
+      const formattedDate = date ? new Date(date).toLocaleDateString('de-DE') : '';
+      
+      const template = `╔══════════════════╗
+/////////////////////////////////////////////////////////////////////////
+Soldatengespräch
+
+Name: ${name || ''}
+DN: ${dn || ''}
+Hauptunit: ${unit || ''}
+Rang: ${rank || ''}
+Datum: ${formattedDate}
+Uhrzeit: ${time || ''}
+Notizen: ${notizen || ''}
+Sonstiges: ${sonstiges || ''}
+
+/////////////////////////////////////////////////////////////////////////
+<@&1097625910242447422>
+╚══════════════════`;
+
+      document.getElementById('soldatenPreview').textContent = template;
+    }
+
+    async function copySoldatenTemplate() {
+      const template = document.getElementById('soldatenPreview').textContent;
+      const success = await copyToClipboard(template);
+      showNotification(success ? 'Soldatengespräch kopiert' : 'Fehler beim Kopieren', success ? 'success' : 'error');
+    }
+
+    async function saveSoldatenGespräch() {
+      const name = document.getElementById('soldatenName').value.trim();
+      const dn = document.getElementById('soldatenDN').value;
+      const unit = document.getElementById('soldatenUnit').value;
+      const rank = document.getElementById('soldatenRank').value;
+      const date = document.getElementById('soldatenDate').value;
+      const time = document.getElementById('soldatenTime').value;
+      const notizen = document.getElementById('soldatenNotizen').value.trim();
+      const sonstiges = document.getElementById('soldatenSonstiges').value.trim();
+
+      if (!name || !dn || !date || !time || !notizen) {
+        showNotification('Bitte füllen Sie alle Pflichtfelder aus (*)', 'warning');
+        return;
+      }
+
+      const gespräch = {
+        id: `SOLDATEN-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+        name,
+        dn,
+        unit: unit || '',
+        rank: rank || '',
+        date,
+        time,
+        notizen,
+        sonstiges: sonstiges || '',
+        created: new Date().toISOString(),
+        createdFormatted: new Date().toLocaleDateString('de-DE'),
+        dateFormatted: new Date(date).toLocaleDateString('de-DE'),
+        template: document.getElementById('soldatenPreview').textContent
+      };
+
+      try {
+        await db.collection('hrSoldatenGespräche').doc(gespräch.id).set(gespräch);
+        soldatenGespräche.unshift(gespräch);
+        
+        showNotification('Soldatengespräch erfolgreich gespeichert', 'success');
+        
+        // Felder leeren
+        document.getElementById('soldatenName').value = '';
+        document.getElementById('soldatenDN').value = '';
+        document.getElementById('soldatenUnit').value = '';
+        document.getElementById('soldatenRank').value = '';
+        document.getElementById('soldatenDate').value = new Date().toISOString().split('T')[0];
+        document.getElementById('soldatenTime').value = '';
+        document.getElementById('soldatenNotizen').value = '';
+        document.getElementById('soldatenSonstiges').value = '';
+        
+        updateSoldatenPreview();
+        renderSoldatenListe();
+        
+        // Switch to list tab to show the new entry
+        switchSoldatenTab('list');
+      } catch (error) {
+        console.error('Fehler beim Speichern des Soldatengesprächs:', error);
+        showNotification('Fehler beim Speichern: ' + error.message, 'error');
+      }
+    }
+
+    async function loadSoldatenGespräche() {
+      try {
+        const snapshot = await db.collection('hrSoldatenGespräche').orderBy('created', 'desc').limit(100).get();
+        soldatenGespräche = [];
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          soldatenGespräche.push({ 
+            id: doc.id, 
+            ...data,
+            createdFormatted: data.createdFormatted || new Date(data.created).toLocaleDateString('de-DE'),
+            dateFormatted: data.dateFormatted || (data.date ? new Date(data.date).toLocaleDateString('de-DE') : '')
+          });
+        });
+        renderSoldatenListe();
+      } catch (error) {
+        console.error('Fehler beim Laden der Soldatengespräche:', error);
+      }
+    }
+
+    function renderSoldatenListe() {
+      const container = document.getElementById('soldatenListe');
+      const searchTerm = document.getElementById('soldatenSearch')?.value.toLowerCase() || '';
+      
+      // Filter gespräche based on search term
+      let filteredGespräche = soldatenGespräche;
+      if (searchTerm) {
+        filteredGespräche = soldatenGespräche.filter(gespräch => 
+          gespräch.name.toLowerCase().includes(searchTerm) || 
+          gespräch.dn.toString().includes(searchTerm)
+        );
+      }
+      
+      if (filteredGespräche.length === 0) {
+        container.innerHTML = `
+          <div class="empty-soldaten">
+            <div class="empty-soldaten-icon"><i class="fas fa-comments"></i></div>
+            <div class="empty-soldaten-title">${searchTerm ? 'Keine passenden Gespräche gefunden' : 'Keine Gespräche gefunden'}</div>
+            <div class="empty-description">${searchTerm ? 'Versuchen Sie einen anderen Suchbegriff' : 'Erstellen Sie Ihr erstes Soldatengespräch'}</div>
+          </div>
+        `;
+        return;
+      }
+
+      let html = '';
+      filteredGespräche.forEach(gespräch => {
+        html += `
+          <div class="soldaten-item">
+            <div class="soldaten-item-header">
+              <div class="soldaten-item-name">${escapeHtml(gespräch.name)}</div>
+              <div class="soldaten-item-dn">DN ${escapeHtml(gespräch.dn)}</div>
+            </div>
+            <div class="soldaten-item-date">
+              <i class="fas fa-calendar"></i> Gespräch am: ${gespräch.dateFormatted} um ${gespräch.time || ''}
+            </div>
+            <div style="display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap;">
+              <div style="background: rgba(245,158,11,.10); color: #fcd34d; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 900; border: 1px solid rgba(245,158,11,.20);">
+                ${gespräch.unit || 'Keine Unit'}
+              </div>
+              <div style="background: rgba(245,158,11,.10); color: #fcd34d; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 900; border: 1px solid rgba(245,158,11,.20);">
+                ${gespräch.rank || 'Kein Rang'}
+              </div>
+            </div>
+            <div class="soldaten-item-notizen">
+              ${escapeHtml(gespräch.notizen.length > 200 ? gespräch.notizen.substring(0, 200) + '...' : gespräch.notizen)}
+            </div>
+            ${gespräch.sonstiges ? `
+            <div style="color: var(--gray); font-size: 12px; margin-bottom: 12px; padding: 8px; background: rgba(0,0,0,.1); border-radius: var(--radius-sm);">
+              <strong>Sonstiges:</strong> ${escapeHtml(gespräch.sonstiges.length > 100 ? gespräch.sonstiges.substring(0, 100) + '...' : gespräch.sonstiges)}
+            </div>
+            ` : ''}
+            <div class="soldaten-item-actions">
+              <button class="soldaten-item-btn soldaten-item-btn-copy" onclick="copySoldatenFromList('${gespräch.id}')">
+                <i class="fas fa-copy"></i> Kopieren
+              </button>
+              <button class="soldaten-item-btn soldaten-item-btn-delete" onclick="deleteSoldatenGespräch('${gespräch.id}')">
+                <i class="fas fa-trash"></i> Löschen
+              </button>
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    function searchSoldaten(searchTerm) {
+      renderSoldatenListe();
+    }
+
+    async function copySoldatenFromList(gesprächId) {
+      const gespräch = soldatenGespräche.find(g => g.id === gesprächId);
+      if (!gespräch) return;
+
+      const success = await copyToClipboard(gespräch.template);
+      showNotification(success ? 'Soldatengespräch kopiert' : 'Fehler beim Kopieren', success ? 'success' : 'error');
+    }
+
+    async function deleteSoldatenGespräch(gesprächId) {
+      if (!confirm('Soldatengespräch wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.')) return;
+
+      try {
+        await db.collection('hrSoldatenGespräche').doc(gesprächId).delete();
+        soldatenGespräche = soldatenGespräche.filter(g => g.id !== gesprächId);
+        
+        renderSoldatenListe();
+        showNotification('Soldatengespräch gelöscht', 'success');
+      } catch (error) {
+        console.error('Fehler beim Löschen des Soldatengesprächs:', error);
+        showNotification('Fehler beim Löschen: ' + error.message, 'error');
+      }
+    }
+
+    // Beobachtungs Akten Functions (behalten)
     function openBeobachtungAktenModal() {
       openModal('beobachtungAktenModal');
       updateBeobachtungPreview();
@@ -2230,7 +3201,7 @@ Grund: ${grund || ''}
       updateBeobachtungPreview();
     }
 
-    // Firebase Functions
+    // Firebase Functions for Employees (unchanged)
     async function loadEmployees() {
       try {
         showLoading();
@@ -2287,7 +3258,7 @@ Grund: ${grund || ''}
       }
     }
 
-    // Employee List
+    // Employee List (unchanged)
     function renderEmployeeList() {
       const container = document.getElementById('employeeList');
       const countElement = document.getElementById('employeeCount');
