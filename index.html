@@ -14,6 +14,7 @@
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
   <style>
     :root{
@@ -79,15 +80,61 @@
     }
     .header-content{display:flex;justify-content:space-between;align-items:center}
     .brand{display:flex;align-items:center;gap:12px}
-    .logo{
-      width:40px;height:40px;
-      background:var(--primary);
-      border-radius:var(--radius-md);
-      display:flex;align-items:center;justify-content:center;
-      font-size:18px;color:#fff;
-      transition:var(--transition);
+    /* Logo */
+    .logo {
+      width: 40px;
+      height: 40px;
+      background: var(--primary);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      color: #fff;
+      transition: var(--transition);
+      cursor: pointer;
+      overflow: hidden;
+      position: relative;
+      flex-shrink: 0;
     }
-    .logo:hover{transform:scale(1.05);background:var(--primary-dark)}
+    .logo:hover {
+      transform: scale(1.05);
+      background: var(--primary-dark);
+    }
+    .logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* Optional: Tooltip für Logo */
+    .logo[title] {
+      position: relative;
+    }
+    .logo[title]:hover::after {
+      content: attr(title);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.9);
+      color: white;
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 11px;
+      white-space: pre-line;
+      z-index: 1000;
+      margin-bottom: 8px;
+      min-width: 140px;
+      text-align: center;
+      border: 1px solid rgba(255,255,255,.1);
+      box-shadow: var(--shadow-md);
+      backdrop-filter: blur(10px);
+    }
+
+    #logoUpload {
+      display: none;
+    }
     .brand-text h1{font-size:18px;font-weight:800;color:#fff;margin-bottom:2px}
     .brand-text .subtitle{font-size:11px;color:var(--gray);font-weight:600}
     .header-stats{display:flex;gap:12px}
@@ -2734,7 +2781,11 @@ Grund:
     <header class="app-header">
       <div class="header-content">
         <div class="brand">
-          <div class="logo"><i class="fas fa-user-check"></i></div>
+          <!-- Geändert: Logo mit Linksklick-Funktionalität -->
+          <div class="logo" id="logoContainer" onclick="document.getElementById('logoUpload').click()">
+            <i class="fas fa-user-check" id="defaultLogoIcon" style="display: block;"></i>
+            <img id="logoImage" style="display: none; width: 100%; height: 100%; object-fit: cover; border-radius: var(--radius-md);">
+          </div>
           <div class="brand-text">
             <h1>Human Resources</h1>
             <div class="subtitle">•</div>
@@ -2749,9 +2800,13 @@ Grund:
             <div class="stat-value" id="totalAkten">0</div>
             <div class="stat-label">Beobachtung</div>
           </div>
+          <!-- Entfernt: Getrennter Logo-Ändern-Button, da jetzt das Logo selbst klickbar ist -->
         </div>
       </div>
     </header>
+
+    <!-- Hidden file input für Logo-Upload -->
+    <input type="file" id="logoUpload" accept="image/*" style="display: none;" onchange="uploadLogo(event)">
 
     <aside class="sidebar">
       <div class="sidebar-header">
@@ -3129,6 +3184,7 @@ Grund:
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
+    const storage = firebase.storage();
 
     // Discord IDs for Units
     const unitDiscordIds = {
@@ -3172,8 +3228,23 @@ Grund:
     let currentBeobachtungTab = 'new';
     let currentSoldatenTab = 'new';
     let currentAnkundigungTab = 'new';
+    const LOGO_STORAGE_KEY = 'hr_logo_url';
 
     document.addEventListener('DOMContentLoaded', function () {
+      // Logo-Funktionalität initialisieren
+      const logoContainer = document.getElementById('logoContainer');
+      if (logoContainer) {
+        logoContainer.addEventListener('contextmenu', function(e) {
+          e.preventDefault();
+          resetLogo();
+          return false;
+        });
+      }
+      
+      // Logo beim Start laden
+      loadLogo();
+      
+      // Dann den Rest initialisieren
       initializeApp();
       setupEventListeners();
       updateStats();
@@ -3183,6 +3254,151 @@ Grund:
       loadAnkundigungen();
     });
 
+    // ==================== LOGO FUNKTIONEN ====================
+    async function loadLogo() {
+      try {
+        const cachedLogo = localStorage.getItem(LOGO_STORAGE_KEY);
+        if (cachedLogo) {
+          setLogoImage(cachedLogo);
+        }
+        
+        const doc = await db.collection('hrSettings').doc('logo').get();
+        if (doc.exists && doc.data().url) {
+          const logoUrl = doc.data().url;
+          localStorage.setItem(LOGO_STORAGE_KEY, logoUrl);
+          setLogoImage(logoUrl);
+        }
+      } catch (error) {
+        console.error('Fehler beim Laden des Logos:', error);
+      }
+    }
+
+    function setLogoImage(url) {
+      const logoImage = document.getElementById('logoImage');
+      const defaultIcon = document.getElementById('defaultLogoIcon');
+      
+      if (url) {
+        logoImage.onload = function() {
+          logoImage.style.display = 'block';
+          defaultIcon.style.display = 'none';
+          // Tooltip setzen
+          const logoContainer = document.getElementById('logoContainer');
+          if (logoContainer) {
+            logoContainer.title = "Linksklick: Logo ändern\nRechtsklick: Zurücksetzen";
+          }
+        };
+        logoImage.onerror = function() {
+          // Falls Fehler beim Laden: Standard-Icon anzeigen
+          logoImage.style.display = 'none';
+          defaultIcon.style.display = 'block';
+          localStorage.removeItem(LOGO_STORAGE_KEY);
+          // Tooltip zurücksetzen
+          const logoContainer = document.getElementById('logoContainer');
+          if (logoContainer) {
+            logoContainer.title = "Linksklick: Logo ändern\nRechtsklick: Zurücksetzen";
+          }
+        };
+        logoImage.src = url;
+      } else {
+        // Kein Logo: Standard-Icon anzeigen
+        logoImage.style.display = 'none';
+        logoImage.src = '';
+        defaultIcon.style.display = 'block';
+        
+        // Tooltip setzen
+        const logoContainer = document.getElementById('logoContainer');
+        if (logoContainer) {
+          logoContainer.title = "Linksklick: Logo ändern\nRechtsklick: Zurücksetzen";
+        }
+      }
+    }
+
+    async function uploadLogo(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      if (!file.type.startsWith('image/')) {
+        showNotification('❌ Bitte nur Bilddateien hochladen (JPG, PNG, etc.)', 'error');
+        return;
+      }
+      
+      if (file.size > 5 * 1024 * 1024) {
+        showNotification('❌ Bild zu groß (max. 5MB)', 'error');
+        return;
+      }
+      
+      try {
+        showNotification('📤 Bild wird hochgeladen...', 'info');
+        
+        const timestamp = Date.now();
+        const randomId = Math.random().toString(36).substring(2, 9);
+        const fileName = `hr_logo_${timestamp}_${randomId}.${file.name.split('.').pop()}`;
+        const storageRef = storage.ref(`hr_logos/${fileName}`);
+        
+        const uploadTask = storageRef.put(file);
+        
+        uploadTask.on('state_changed',
+          (snapshot) => {
+            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            console.log(`Upload: ${progress.toFixed(1)}%`);
+          },
+          (error) => {
+            console.error('Upload-Fehler:', error);
+            showNotification('❌ Upload fehlgeschlagen: ' + error.message, 'error');
+          },
+          async () => {
+            const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
+            
+            await db.collection('hrSettings').doc('logo').set({
+              url: downloadURL,
+              fileName: fileName,
+              uploadedAt: new Date().toISOString(),
+              fileSize: file.size,
+              fileType: file.type,
+              dimensions: '40x40px (wird automatisch angepasst)'
+            }, { merge: true });
+            
+            localStorage.setItem(LOGO_STORAGE_KEY, downloadURL);
+            setLogoImage(downloadURL);
+            showNotification('✅ Logo erfolgreich aktualisiert!', 'success');
+            event.target.value = '';
+          }
+        );
+        
+      } catch (error) {
+        console.error('Fehler beim Hochladen:', error);
+        showNotification('❌ Fehler: ' + error.message, 'error');
+      }
+    }
+
+    async function resetLogo() {
+      if (confirm('Möchten Sie das Logo wirklich auf das Standard-Icon zurücksetzen?\n\nDas hochgeladene Bild wird aus Firebase Storage gelöscht.')) {
+        try {
+          showNotification('🔄 Logo wird zurückgesetzt...', 'info');
+          
+          const doc = await db.collection('hrSettings').doc('logo').get();
+          
+          if (doc.exists && doc.data().fileName) {
+            try {
+              const oldFileRef = storage.ref(`hr_logos/${doc.data().fileName}`);
+              await oldFileRef.delete();
+            } catch (deleteError) {
+              console.warn('Altes Bild konnte nicht gelöscht werden:', deleteError);
+            }
+          }
+          
+          await db.collection('hrSettings').doc('logo').delete();
+          localStorage.removeItem(LOGO_STORAGE_KEY);
+          setLogoImage(null);
+          showNotification('✅ Logo erfolgreich zurückgesetzt', 'success');
+        } catch (error) {
+          console.error('Fehler beim Zurücksetzen:', error);
+          showNotification('❌ Fehler beim Zurücksetzen', 'error');
+        }
+      }
+    }
+
+    // ==================== HAUPTFUNKTIONEN ====================
     function initializeApp() {
       const today = new Date().toISOString().split('T')[0];
       document.getElementById('oralDate').value = today;
@@ -3286,7 +3502,7 @@ Grund:
       sidebar.style.height = `${newHeight}px`;
     }
 
-    // Ankündigungen/Besprechungen/Aufstellungen Functions
+    // ==================== ANKÜNDIGUNGEN FUNKTIONEN ====================
     function openAnkundigungModal() {
       openModal('ankundigungModal');
       updateAnkundigungPreview();
@@ -3299,7 +3515,6 @@ Grund:
     function switchAnkundigungTab(tabName) {
       currentAnkundigungTab = tabName;
       
-      // Update tab buttons
       document.querySelectorAll('.ankundigung-tab').forEach(tab => {
         tab.classList.remove('active');
       });
@@ -3311,7 +3526,6 @@ Grund:
       
       document.querySelectorAll('.ankundigung-tab')[tabIndex].classList.add('active');
       
-      // Update tab content
       document.querySelectorAll('.ankundigung-tab-content').forEach(content => {
         content.style.display = 'none';
       });
@@ -3323,7 +3537,6 @@ Grund:
       
       document.getElementById(tabId).style.display = 'block';
       
-      // Load data for the tab
       if (tabName === 'list') {
         renderAnkundigungListe();
       }
@@ -3424,15 +3637,10 @@ Bemerkungen: ${bemerkungen || ''}`;
         ankundigungen.unshift(ankundigung);
         
         showNotification('Ankündigung erfolgreich gespeichert', 'success');
-        
-        // Felder leeren
         document.getElementById('ankundigungTitle').value = '';
         document.getElementById('ankundigungContent').value = '';
-        
         updateAnkundigungPreview();
         renderAnkundigungListe();
-        
-        // Switch to list tab to show the new entry
         switchAnkundigungTab('list');
       } catch (error) {
         console.error('Fehler beim Speichern der Ankündigung:', error);
@@ -3472,18 +3680,13 @@ Bemerkungen: ${bemerkungen || ''}`;
         ankundigungen.unshift(besprechung);
         
         showNotification('Besprechung erfolgreich gespeichert', 'success');
-        
-        // Felder leeren
         document.getElementById('besprechungThema').value = '';
         document.getElementById('besprechungDate').value = new Date().toISOString().split('T')[0];
         document.getElementById('besprechungTime').value = '';
         document.getElementById('besprechungOrt').value = '';
         document.getElementById('besprechungContent').value = '';
-        
         updateBesprechungPreview();
         renderAnkundigungListe();
-        
-        // Switch to list tab to show the new entry
         switchAnkundigungTab('list');
       } catch (error) {
         console.error('Fehler beim Speichern der Besprechung:', error);
@@ -3523,18 +3726,13 @@ Bemerkungen: ${bemerkungen || ''}`;
         ankundigungen.unshift(aufstellung);
         
         showNotification('Aufstellung erfolgreich gespeichert', 'success');
-        
-        // Felder leeren
         document.getElementById('aufstellungTyp').value = '';
         document.getElementById('aufstellungDate').value = new Date().toISOString().split('T')[0];
         document.getElementById('aufstellungTime').value = '';
         document.getElementById('aufstellungOrt').value = '';
         document.getElementById('aufstellungBemerkungen').value = '';
-        
         updateAufstellungPreview();
         renderAnkundigungListe();
-        
-        // Switch to list tab to show the new entry
         switchAnkundigungTab('list');
       } catch (error) {
         console.error('Fehler beim Speichern der Aufstellung:', error);
@@ -3565,7 +3763,6 @@ Bemerkungen: ${bemerkungen || ''}`;
       const container = document.getElementById('ankundigungListe');
       const searchTerm = document.getElementById('ankundigungSearch')?.value.toLowerCase() || '';
       
-      // Filter ankundigungen based on search term
       let filteredAnkundigungen = ankundigungen;
       if (searchTerm) {
         filteredAnkundigungen = ankundigungen.filter(item => 
@@ -3673,7 +3870,6 @@ Bemerkungen: ${bemerkungen || ''}`;
       try {
         await db.collection('hrAnkundigungen').doc(itemId).delete();
         ankundigungen = ankundigungen.filter(i => i.id !== itemId);
-        
         renderAnkundigungListe();
         showNotification('Eintrag gelöscht', 'success');
       } catch (error) {
@@ -3682,7 +3878,7 @@ Bemerkungen: ${bemerkungen || ''}`;
       }
     }
 
-    // Soldatengespräch Functions
+    // ==================== SOLDATENGESPRÄCH FUNKTIONEN ====================
     function openSoldatenModal() {
       openModal('soldatenModal');
       updateSoldatenPreview();
@@ -3695,13 +3891,11 @@ Bemerkungen: ${bemerkungen || ''}`;
     function switchSoldatenTab(tabName) {
       currentSoldatenTab = tabName;
       
-      // Update tab buttons
       document.querySelectorAll('.soldaten-tab').forEach(tab => {
         tab.classList.remove('active');
       });
       document.querySelectorAll('.soldaten-tab')[tabName === 'new' ? 0 : 1].classList.add('active');
       
-      // Update tab content
       document.querySelectorAll('.soldaten-tab-content').forEach(content => {
         content.style.display = 'none';
       });
@@ -3711,7 +3905,6 @@ Bemerkungen: ${bemerkungen || ''}`;
       
       document.getElementById(tabId).style.display = 'block';
       
-      // Load data for the tab
       if (tabName === 'list') {
         renderSoldatenListe();
       }
@@ -3791,8 +3984,6 @@ Sonstiges: ${sonstiges || ''}
         soldatenGespräche.unshift(gespräch);
         
         showNotification('Soldatengespräch erfolgreich gespeichert', 'success');
-        
-        // Felder leeren
         document.getElementById('soldatenName').value = '';
         document.getElementById('soldatenDN').value = '';
         document.getElementById('soldatenUnit').value = '';
@@ -3801,11 +3992,8 @@ Sonstiges: ${sonstiges || ''}
         document.getElementById('soldatenTime').value = '';
         document.getElementById('soldatenNotizen').value = '';
         document.getElementById('soldatenSonstiges').value = '';
-        
         updateSoldatenPreview();
         renderSoldatenListe();
-        
-        // Switch to list tab to show the new entry
         switchSoldatenTab('list');
       } catch (error) {
         console.error('Fehler beim Speichern des Soldatengesprächs:', error);
@@ -3833,83 +4021,80 @@ Sonstiges: ${sonstiges || ''}
     }
 
     function renderSoldatenListe() {
-  const container = document.getElementById('soldatenListe');
-  const searchTerm = document.getElementById('soldatenSearch')?.value.toLowerCase() || '';
-  
-  // Filter gespräche based on search term
-  let filteredGespräche = soldatenGespräche;
-  if (searchTerm) {
-    filteredGespräche = soldatenGespräche.filter(gespräch => 
-      gespräch.name.toLowerCase().includes(searchTerm) || 
-      gespräch.dn.toString().includes(searchTerm)
-    );
-  }
-  
-  if (filteredGespräche.length === 0) {
-    container.innerHTML = `
-      <div class="empty-soldaten">
-        <div class="empty-soldaten-icon"><i class="fas fa-comments"></i></div>
-        <div class="empty-soldaten-title">${searchTerm ? 'Keine passenden Gespräche gefunden' : 'Keine Gespräche gefunden'}</div>
-        <div class="empty-description">${searchTerm ? 'Versuchen Sie einen anderen Suchbegriff' : 'Erstellen Sie Ihr erstes Soldatengespräch'}</div>
-      </div>
-    `;
-    return;
-  }
+      const container = document.getElementById('soldatenListe');
+      const searchTerm = document.getElementById('soldatenSearch')?.value.toLowerCase() || '';
+      
+      let filteredGespräche = soldatenGespräche;
+      if (searchTerm) {
+        filteredGespräche = soldatenGespräche.filter(gespräch => 
+          gespräch.name.toLowerCase().includes(searchTerm) || 
+          gespräch.dn.toString().includes(searchTerm)
+        );
+      }
+      
+      if (filteredGespräche.length === 0) {
+        container.innerHTML = `
+          <div class="empty-soldaten">
+            <div class="empty-soldaten-icon"><i class="fas fa-comments"></i></div>
+            <div class="empty-soldaten-title">${searchTerm ? 'Keine passenden Gespräche gefunden' : 'Keine Gespräche gefunden'}</div>
+            <div class="empty-description">${searchTerm ? 'Versuchen Sie einen anderen Suchbegriff' : 'Erstellen Sie Ihr erstes Soldatengespräch'}</div>
+          </div>
+        `;
+        return;
+      }
 
-  let html = '';
-  filteredGespräche.forEach(gespräch => {
-    html += `
-      <div class="soldaten-item">
-        <div class="soldaten-item-header">
-          <div class="soldaten-item-name">${escapeHtml(gespräch.name)}</div>
-          <div class="soldaten-item-dn">DN ${escapeHtml(gespräch.dn)}</div>
-        </div>
-        <div class="soldaten-item-date">
-          <i class="fas fa-calendar"></i> Gespräch am: ${gespräch.dateFormatted} um ${gespräch.time || ''}
-        </div>
-        <div style="display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap;">
-          <div style="background: rgba(245,158,11,.10); color: #fcd34d; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 900; border: 1px solid rgba(245,158,11,.20);">
-            ${gespräch.unit || 'Keine Unit'}
+      let html = '';
+      filteredGespräche.forEach(gespräch => {
+        html += `
+          <div class="soldaten-item">
+            <div class="soldaten-item-header">
+              <div class="soldaten-item-name">${escapeHtml(gespräch.name)}</div>
+              <div class="soldaten-item-dn">DN ${escapeHtml(gespräch.dn)}</div>
+            </div>
+            <div class="soldaten-item-date">
+              <i class="fas fa-calendar"></i> Gespräch am: ${gespräch.dateFormatted} um ${gespräch.time || ''}
+            </div>
+            <div style="display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap;">
+              <div style="background: rgba(245,158,11,.10); color: #fcd34d; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 900; border: 1px solid rgba(245,158,11,.20);">
+                ${gespräch.unit || 'Keine Unit'}
+              </div>
+              <div style="background: rgba(245,158,11,.10); color: #fcd34d; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 900; border: 1px solid rgba(245,158,11,.20);">
+                ${gespräch.rank || 'Kein Rang'}
+              </div>
+            </div>
+            
+            <div class="soldaten-item-notizen">
+              <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
+                <i class="fas fa-sticky-note" style="color: var(--warning); font-size: 12px;"></i>
+                <span style="font-weight: 900; color: var(--warning); font-size: 12px;">Notizen:</span>
+              </div>
+              ${escapeHtml(gespräch.notizen.length > 200 ? gespräch.notizen.substring(0, 200) + '...' : gespräch.notizen)}
+            </div>
+            
+            ${gespräch.sonstiges ? `
+            <div class="soldaten-item-sonstiges">
+              <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
+                <i class="fas fa-ellipsis-h" style="color: var(--warning); font-size: 12px;"></i>
+                <span style="font-weight: 900; color: var(--warning); font-size: 12px;">Sonstiges:</span>
+              </div>
+              ${escapeHtml(gespräch.sonstiges.length > 200 ? gespräch.sonstiges.substring(0, 200) + '...' : gespräch.sonstiges)}
+            </div>
+            ` : ''}
+            
+            <div class="soldaten-item-actions">
+              <button class="soldaten-item-btn soldaten-item-btn-copy" onclick="copySoldatenFromList('${gespräch.id}')">
+                <i class="fas fa-copy"></i> Kopieren
+              </button>
+              <button class="soldaten-item-btn soldaten-item-btn-delete" onclick="deleteSoldatenGespräch('${gespräch.id}')">
+                <i class="fas fa-trash"></i> Löschen
+              </button>
+            </div>
           </div>
-          <div style="background: rgba(245,158,11,.10); color: #fcd34d; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 900; border: 1px solid rgba(245,158,11,.20);">
-            ${gespräch.rank || 'Kein Rang'}
-          </div>
-        </div>
-        
-        <!-- Notizen mit Überschrift -->
-        <div class="soldaten-item-notizen">
-          <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
-            <i class="fas fa-sticky-note" style="color: var(--warning); font-size: 12px;"></i>
-            <span style="font-weight: 900; color: var(--warning); font-size: 12px;">Notizen:</span>
-          </div>
-          ${escapeHtml(gespräch.notizen.length > 200 ? gespräch.notizen.substring(0, 200) + '...' : gespräch.notizen)}
-        </div>
-        
-        <!-- Sonstiges mit Überschrift (falls vorhanden) -->
-        ${gespräch.sonstiges ? `
-        <div class="soldaten-item-sonstiges">
-          <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
-            <i class="fas fa-ellipsis-h" style="color: var(--warning); font-size: 12px;"></i>
-            <span style="font-weight: 900; color: var(--warning); font-size: 12px;">Sonstiges:</span>
-          </div>
-          ${escapeHtml(gespräch.sonstiges.length > 200 ? gespräch.sonstiges.substring(0, 200) + '...' : gespräch.sonstiges)}
-        </div>
-        ` : ''}
-        
-        <div class="soldaten-item-actions">
-          <button class="soldaten-item-btn soldaten-item-btn-copy" onclick="copySoldatenFromList('${gespräch.id}')">
-            <i class="fas fa-copy"></i> Kopieren
-          </button>
-          <button class="soldaten-item-btn soldaten-item-btn-delete" onclick="deleteSoldatenGespräch('${gespräch.id}')">
-            <i class="fas fa-trash"></i> Löschen
-          </button>
-        </div>
-      </div>
-    `;
-  });
+        `;
+      });
 
-  container.innerHTML = html;
-}  
+      container.innerHTML = html;
+    }  
 
     function searchSoldaten(searchTerm) {
       renderSoldatenListe();
@@ -3929,7 +4114,6 @@ Sonstiges: ${sonstiges || ''}
       try {
         await db.collection('hrSoldatenGespräche').doc(gesprächId).delete();
         soldatenGespräche = soldatenGespräche.filter(g => g.id !== gesprächId);
-        
         renderSoldatenListe();
         showNotification('Soldatengespräch gelöscht', 'success');
       } catch (error) {
@@ -3938,7 +4122,7 @@ Sonstiges: ${sonstiges || ''}
       }
     }
 
-    // Beobachtungs Akten Functions (behalten)
+    // ==================== BEOBACHTUNGS AKTEN FUNKTIONEN ====================
     function openBeobachtungAktenModal() {
       openModal('beobachtungAktenModal');
       updateBeobachtungPreview();
@@ -3951,13 +4135,11 @@ Sonstiges: ${sonstiges || ''}
     function switchBeobachtungTab(tabName) {
       currentBeobachtungTab = tabName;
       
-      // Update tab buttons
       document.querySelectorAll('.beobachtung-tab').forEach(tab => {
         tab.classList.remove('active');
       });
       document.querySelectorAll('.beobachtung-tab')[tabName === 'new' ? 0 : tabName === 'list' ? 1 : 2].classList.add('active');
       
-      // Update tab content
       document.querySelectorAll('.beobachtung-tab-content').forEach(content => {
         content.style.display = 'none';
       });
@@ -3968,7 +4150,6 @@ Sonstiges: ${sonstiges || ''}
       
       document.getElementById(tabId).style.display = 'block';
       
-      // Load data for the tab
       if (tabName === 'list') {
         renderAktenListe();
       }
@@ -4009,7 +4190,6 @@ Grund: ${grund || ''}
         return;
       }
 
-      // Check if akte already exists
       const existingAkte = akten.find(a => a.dn == dn && a.name.toLowerCase() === name.toLowerCase());
       if (existingAkte) {
         showNotification('Eine Akte für diese Person existiert bereits', 'warning');
@@ -4031,20 +4211,13 @@ Grund: ${grund || ''}
       try {
         await db.collection('hrAkten').doc(akte.id).set(akte);
         akten.unshift(akte);
-        
         showNotification('Akte erfolgreich erstellt', 'success');
-        
-        // Felder leeren
         document.getElementById('akteName').value = '';
         document.getElementById('akteDN').value = '';
         document.getElementById('akteUnit').value = '';
         document.getElementById('akteRank').value = '';
-        
-        // Update stats and lists
         updateStats();
         renderAktenListe();
-        
-        // Switch to list tab to show the new entry
         switchBeobachtungTab('list');
       } catch (error) {
         console.error('Fehler beim Erstellen der Akte:', error);
@@ -4067,11 +4240,9 @@ Grund: ${grund || ''}
         return;
       }
 
-      // Find or create akte
       let akte = akten.find(a => a.dn == dn && a.name.toLowerCase() === name.toLowerCase());
       
       if (!akte) {
-        // Create new akte if it doesn't exist
         const newAkte = {
           id: `AKTE-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
           name,
@@ -4095,7 +4266,6 @@ Grund: ${grund || ''}
         }
       }
 
-      // Create beobachtung
       const beobachtung = {
         id: `BEO-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
         name,
@@ -4107,26 +4277,20 @@ Grund: ${grund || ''}
       };
 
       try {
-        // Add beobachtung to akte
         if (!akte.beobachtungen) akte.beobachtungen = [];
         akte.beobachtungen.unshift(beobachtung);
         akte.lastUpdated = new Date().toISOString();
         
-        // Update in Firebase
         await db.collection('hrAkten').doc(akte.id).update({
           beobachtungen: akte.beobachtungen,
           lastUpdated: akte.lastUpdated
         });
         
         showNotification('Beobachtung zur Akte hinzugefügt', 'success');
-        
-        // Felder leeren
         document.getElementById('beobachtungName').value = '';
         document.getElementById('beobachtungDN').value = '';
         document.getElementById('beobachtungGrund').value = '';
         updateBeobachtungPreview();
-        
-        // Update stats and lists
         updateStats();
         renderAktenListe();
       } catch (error) {
@@ -4158,7 +4322,6 @@ Grund: ${grund || ''}
       const container = document.getElementById('aktenListe');
       const searchTerm = document.getElementById('aktenSearch')?.value.toLowerCase() || '';
       
-      // Filter akten based on search term
       let filteredAkten = akten;
       if (searchTerm) {
         filteredAkten = akten.filter(akte => 
@@ -4204,7 +4367,6 @@ Grund: ${grund || ''}
             </div>
         `;
 
-        // Show latest beobachtung if exists
         if (beobachtungenCount > 0) {
           const latestBeobachtung = akte.beobachtungen[0];
           html += `
@@ -4276,7 +4438,6 @@ Grund: ${grund || ''}
         `;
       }
 
-      // Show in a modal
       const modalHtml = `
         <div class="beobachtung-akten-modal active" onclick="if(event.target===this)closeModal('akteDetailModal')">
           <div class="beobachtung-akten-content">
@@ -4339,23 +4500,17 @@ Grund: ${grund || ''}
       if (!akte || !akte.beobachtungen) return;
 
       try {
-        // Remove beobachtung from array
         akte.beobachtungen = akte.beobachtungen.filter(b => b.id !== beobachtungId);
         akte.lastUpdated = new Date().toISOString();
         
-        // Update in Firebase
         await db.collection('hrAkten').doc(akteId).update({
           beobachtungen: akte.beobachtungen,
           lastUpdated: akte.lastUpdated
         });
         
         showNotification('Beobachtung gelöscht', 'success');
-        
-        // Re-open akte detail to refresh view
         closeModal('akteDetailModal');
         setTimeout(() => openAkteDetail(akteId), 100);
-        
-        // Update main list
         renderAktenListe();
       } catch (error) {
         console.error('Fehler beim Löschen der Beobachtung:', error);
@@ -4369,7 +4524,6 @@ Grund: ${grund || ''}
       try {
         await db.collection('hrAkten').doc(akteId).delete();
         akten = akten.filter(a => a.id !== akteId);
-        
         updateStats();
         renderAktenListe();
         showNotification('Akte gelöscht', 'success');
@@ -4383,20 +4537,15 @@ Grund: ${grund || ''}
       const akte = akten.find(a => a.id === akteId);
       if (!akte) return;
 
-      // Close detail modal
       closeModal('akteDetailModal');
-      
-      // Open main modal with beobachtung tab
       openBeobachtungAktenModal();
       switchBeobachtungTab('beobachtung');
-      
-      // Pre-fill name and DN
       document.getElementById('beobachtungName').value = akte.name;
       document.getElementById('beobachtungDN').value = akte.dn;
       updateBeobachtungPreview();
     }
 
-    // Firebase Functions for Employees (unchanged)
+    // ==================== MITARBEITER FUNKTIONEN ====================
     async function loadEmployees() {
       try {
         showLoading();
@@ -4410,7 +4559,6 @@ Grund: ${grund || ''}
         renderEmployeeList();
         updateStats();
         hideLoading();
-
         setTimeout(updateInductionDisplay, 100);
       } catch (error) {
         console.error('Fehler beim Laden der Mitarbeiter:', error);
@@ -4453,7 +4601,6 @@ Grund: ${grund || ''}
       }
     }
 
-    // Employee List (unchanged)
     function renderEmployeeList() {
       const container = document.getElementById('employeeList');
       const countElement = document.getElementById('employeeCount');
@@ -4725,13 +4872,10 @@ Grund: ${grund || ''}
       const success = await deleteEmployeeFromFirebase(currentEmployee.id);
       if (success) {
         employees = employees.filter(emp => emp.id !== currentEmployee.id);
-
         closeModal('editEmployeeModal');
-
         currentEmployee = null;
         document.getElementById('employeeHeader').style.display = 'none';
         document.getElementById('inductionContent').style.display = 'none';
-
         renderEmployeeList();
         updateStats();
         showNotification('Mitarbeiter erfolgreich gelöscht', 'success');
@@ -4751,7 +4895,6 @@ Grund: ${grund || ''}
 
       updateInductionUI(type, completed);
       updateTemplates();
-
       saveEmployeeData(true);
       checkBothInductionsCompleted();
       renderEmployeeList();
@@ -5113,7 +5256,7 @@ Sonstiges: ${notes}
     }
 
     function hideLoading() {
-      // renderEmployeeList() wird nach loadEmployees() sowieso aufgerufen
+      // Wird automatisch durch renderEmployeeList() erledigt
     }
 
     function loadMockEmployees() {
@@ -5155,6 +5298,7 @@ Sonstiges:
 /////////////////////////////////////////////////////////////////////////
 Organisatorische Einweisung
 
+Prüfer :
 Name:
 DN:
 Hauptunit:
