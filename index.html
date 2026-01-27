@@ -3,18 +3,24 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>📋 HR - Einweisungsmanagement</title>
+  
+  <!-- CACHE-CONTROL META TAGS -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  
+  <title>📋 HR - Einweisungsmanagement v1.0</title>
 
-  <!-- Font Awesome -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Font Awesome mit Cache-Busting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css?v=20240128">
 
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
   <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js?v=20240128"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js?v=20240128"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js?v=20240128"></script>
 
   <style>
     :root{
@@ -101,40 +107,7 @@
       transform: scale(1.05);
       background: var(--primary-dark);
     }
-    .logo img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
 
-    /* Optional: Tooltip für Logo */
-    .logo[title] {
-      position: relative;
-    }
-    .logo[title]:hover::after {
-      content: attr(title);
-      position: absolute;
-      bottom: 100%;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.9);
-      color: white;
-      padding: 8px 12px;
-      border-radius: var(--radius-sm);
-      font-size: 11px;
-      white-space: pre-line;
-      z-index: 1000;
-      margin-bottom: 8px;
-      min-width: 140px;
-      text-align: center;
-      border: 1px solid rgba(255,255,255,.1);
-      box-shadow: var(--shadow-md);
-      backdrop-filter: blur(10px);
-    }
-
-    #logoUpload {
-      display: none;
-    }
     .brand-text h1{font-size:18px;font-weight:800;color:#fff;margin-bottom:2px}
     .brand-text .subtitle{font-size:11px;color:var(--gray);font-weight:600}
     .header-stats{display:flex;gap:12px}
@@ -2781,10 +2754,9 @@ Grund:
     <header class="app-header">
       <div class="header-content">
         <div class="brand">
-          <!-- Geändert: Logo mit Linksklick-Funktionalität -->
-          <div class="logo" id="logoContainer" onclick="document.getElementById('logoUpload').click()">
-            <i class="fas fa-user-check" id="defaultLogoIcon" style="display: block;"></i>
-            <img id="logoImage" style="display: none; width: 100%; height: 100%; object-fit: cover; border-radius: var(--radius-md);">
+          <!-- Vereinfachtes Logo ohne Upload-Funktionalität -->
+          <div class="logo">
+            <i class="fas fa-user-check"></i>
           </div>
           <div class="brand-text">
             <h1>Human Resources</h1>
@@ -2800,13 +2772,9 @@ Grund:
             <div class="stat-value" id="totalAkten">0</div>
             <div class="stat-label">Beobachtung</div>
           </div>
-          <!-- Entfernt: Getrennter Logo-Ändern-Button, da jetzt das Logo selbst klickbar ist -->
         </div>
       </div>
     </header>
-
-    <!-- Hidden file input für Logo-Upload -->
-    <input type="file" id="logoUpload" accept="image/*" style="display: none;" onchange="uploadLogo(event)">
 
     <aside class="sidebar">
       <div class="sidebar-header">
@@ -3171,6 +3139,58 @@ Grund:
   </div>
 
   <script>
+    // ==================== CACHE-BUSTING CODE ====================
+    // Erzwingt Neuladen bei Version-Änderung
+    const APP_VERSION = '1.0.20240128';
+    const LAST_VERSION_KEY = 'hr_app_last_version';
+    
+    // Prüfe ob neue Version geladen werden muss
+    const lastVersion = localStorage.getItem(LAST_VERSION_KEY);
+    if (lastVersion !== APP_VERSION) {
+      console.log(`Neue Version erkannt: ${lastVersion} -> ${APP_VERSION}`);
+      
+      // Lösche alle Caches
+      if ('caches' in window) {
+        caches.keys().then(function(names) {
+          for (let name of names) {
+            caches.delete(name);
+          }
+          console.log('Service Worker Caches gelöscht');
+        });
+      }
+      
+      // Speichere neue Version
+      localStorage.setItem(LAST_VERSION_KEY, APP_VERSION);
+      
+      // Erzwinge Hard Refresh
+      if (performance.navigation.type === 0 || performance.navigation.type === 1) {
+        // NavigationType: 0 = fresh load, 1 = reload
+        console.log('Erzwinge Hard Refresh für neue Version');
+        setTimeout(() => {
+          window.location.reload(true);
+        }, 100);
+      }
+    }
+    
+    // Füge Version zu allen dynamischen Elementen hinzu
+    document.addEventListener('DOMContentLoaded', function() {
+      // Setze Version in Footer/Title
+      document.title = document.title.replace('v1.0', `v${APP_VERSION}`);
+      
+      // Cache-Busting für dynamische Inhalte
+      const now = Date.now();
+      const cacheBuster = `?v=${APP_VERSION}&t=${now}`;
+      
+      // Füge Cache-Buster zu allen Skripten hinzu
+      const scripts = document.querySelectorAll('script[src]');
+      scripts.forEach(script => {
+        if (!script.src.includes('?v=')) {
+          script.src = script.src + cacheBuster;
+        }
+      });
+    });
+    // ==================== ENDE CACHE-BUSTING ====================
+
     // Firebase Configuration
     const firebaseConfig = {
       apiKey: "AIzaSyBTnsLNw68UuOd5Xa2ymMffWk4SYGDQjso",
@@ -3228,175 +3248,129 @@ Grund:
     let currentBeobachtungTab = 'new';
     let currentSoldatenTab = 'new';
     let currentAnkundigungTab = 'new';
-    const LOGO_STORAGE_KEY = 'hr_logo_url';
+
+    // Unsubscribe-Funktionen für Listener
+    let unsubscribeFunctions = [];
 
     document.addEventListener('DOMContentLoaded', function () {
-      // Logo-Funktionalität initialisieren
-      const logoContainer = document.getElementById('logoContainer');
-      if (logoContainer) {
-        logoContainer.addEventListener('contextmenu', function(e) {
-          e.preventDefault();
-          resetLogo();
-          return false;
-        });
-      }
-      
-      // Logo beim Start laden
-      loadLogo();
-      
-      // Dann den Rest initialisieren
+      console.log(`HR App Version ${APP_VERSION} geladen`);
       initializeApp();
       setupEventListeners();
       updateStats();
       adjustSidebarHeight();
-      loadAkten();
-      loadSoldatenGespräche();
-      loadAnkundigungen();
+      setupRealtimeListeners();
     });
 
-    // ==================== LOGO FUNKTIONEN ====================
-    async function loadLogo() {
-      try {
-        const cachedLogo = localStorage.getItem(LOGO_STORAGE_KEY);
-        if (cachedLogo) {
-          setLogoImage(cachedLogo);
-        }
-        
-        const doc = await db.collection('hrSettings').doc('logo').get();
-        if (doc.exists && doc.data().url) {
-          const logoUrl = doc.data().url;
-          localStorage.setItem(LOGO_STORAGE_KEY, logoUrl);
-          setLogoImage(logoUrl);
-        }
-      } catch (error) {
-        console.error('Fehler beim Laden des Logos:', error);
-      }
-    }
-
-    function setLogoImage(url) {
-      const logoImage = document.getElementById('logoImage');
-      const defaultIcon = document.getElementById('defaultLogoIcon');
-      
-      if (url) {
-        logoImage.onload = function() {
-          logoImage.style.display = 'block';
-          defaultIcon.style.display = 'none';
-          // Tooltip setzen
-          const logoContainer = document.getElementById('logoContainer');
-          if (logoContainer) {
-            logoContainer.title = "Linksklick: Logo ändern\nRechtsklick: Zurücksetzen";
-          }
-        };
-        logoImage.onerror = function() {
-          // Falls Fehler beim Laden: Standard-Icon anzeigen
-          logoImage.style.display = 'none';
-          defaultIcon.style.display = 'block';
-          localStorage.removeItem(LOGO_STORAGE_KEY);
-          // Tooltip zurücksetzen
-          const logoContainer = document.getElementById('logoContainer');
-          if (logoContainer) {
-            logoContainer.title = "Linksklick: Logo ändern\nRechtsklick: Zurücksetzen";
-          }
-        };
-        logoImage.src = url;
-      } else {
-        // Kein Logo: Standard-Icon anzeigen
-        logoImage.style.display = 'none';
-        logoImage.src = '';
-        defaultIcon.style.display = 'block';
-        
-        // Tooltip setzen
-        const logoContainer = document.getElementById('logoContainer');
-        if (logoContainer) {
-          logoContainer.title = "Linksklick: Logo ändern\nRechtsklick: Zurücksetzen";
-        }
-      }
-    }
-
-    async function uploadLogo(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      
-      if (!file.type.startsWith('image/')) {
-        showNotification('❌ Bitte nur Bilddateien hochladen (JPG, PNG, etc.)', 'error');
-        return;
-      }
-      
-      if (file.size > 5 * 1024 * 1024) {
-        showNotification('❌ Bild zu groß (max. 5MB)', 'error');
-        return;
-      }
-      
-      try {
-        showNotification('📤 Bild wird hochgeladen...', 'info');
-        
-        const timestamp = Date.now();
-        const randomId = Math.random().toString(36).substring(2, 9);
-        const fileName = `hr_logo_${timestamp}_${randomId}.${file.name.split('.').pop()}`;
-        const storageRef = storage.ref(`hr_logos/${fileName}`);
-        
-        const uploadTask = storageRef.put(file);
-        
-        uploadTask.on('state_changed',
-          (snapshot) => {
-            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-            console.log(`Upload: ${progress.toFixed(1)}%`);
-          },
-          (error) => {
-            console.error('Upload-Fehler:', error);
-            showNotification('❌ Upload fehlgeschlagen: ' + error.message, 'error');
-          },
-          async () => {
-            const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
-            
-            await db.collection('hrSettings').doc('logo').set({
-              url: downloadURL,
-              fileName: fileName,
-              uploadedAt: new Date().toISOString(),
-              fileSize: file.size,
-              fileType: file.type,
-              dimensions: '40x40px (wird automatisch angepasst)'
-            }, { merge: true });
-            
-            localStorage.setItem(LOGO_STORAGE_KEY, downloadURL);
-            setLogoImage(downloadURL);
-            showNotification('✅ Logo erfolgreich aktualisiert!', 'success');
-            event.target.value = '';
-          }
-        );
-        
-      } catch (error) {
-        console.error('Fehler beim Hochladen:', error);
-        showNotification('❌ Fehler: ' + error.message, 'error');
-      }
-    }
-
-    async function resetLogo() {
-      if (confirm('Möchten Sie das Logo wirklich auf das Standard-Icon zurücksetzen?\n\nDas hochgeladene Bild wird aus Firebase Storage gelöscht.')) {
-        try {
-          showNotification('🔄 Logo wird zurückgesetzt...', 'info');
+    // ==================== REALTIME LISTENER SETUP ====================
+    function setupRealtimeListeners() {
+      // Listener für Mitarbeiter
+      const unsubscribeEmployees = db.collection('hrEmployees')
+        .orderBy('lastUpdated', 'desc')
+        .onSnapshot((snapshot) => {
+          employees = [];
           
-          const doc = await db.collection('hrSettings').doc('logo').get();
+          snapshot.forEach(doc => {
+            employees.push({ id: doc.id, ...doc.data() });
+          });
+
+          renderEmployeeList();
+          updateStats();
           
-          if (doc.exists && doc.data().fileName) {
-            try {
-              const oldFileRef = storage.ref(`hr_logos/${doc.data().fileName}`);
-              await oldFileRef.delete();
-            } catch (deleteError) {
-              console.warn('Altes Bild konnte nicht gelöscht werden:', deleteError);
+          // Wenn ein Mitarbeiter ausgewählt ist, aktualisiere die Daten
+          if (currentEmployee) {
+            const updatedEmployee = employees.find(emp => emp.id === currentEmployee.id);
+            if (updatedEmployee) {
+              selectEmployee(updatedEmployee);
             }
           }
           
-          await db.collection('hrSettings').doc('logo').delete();
-          localStorage.removeItem(LOGO_STORAGE_KEY);
-          setLogoImage(null);
-          showNotification('✅ Logo erfolgreich zurückgesetzt', 'success');
-        } catch (error) {
-          console.error('Fehler beim Zurücksetzen:', error);
-          showNotification('❌ Fehler beim Zurücksetzen', 'error');
-        }
-      }
+          setTimeout(updateInductionDisplay, 100);
+        }, (error) => {
+          console.error('Fehler beim Lauschen auf Mitarbeiter-Änderungen:', error);
+          showNotification('Fehler bei Live-Updates', 'error');
+        });
+
+      // Listener für Akten
+      const unsubscribeAkten = db.collection('hrAkten')
+        .orderBy('lastUpdated', 'desc')
+        .limit(100)
+        .onSnapshot((snapshot) => {
+          akten = [];
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            akten.push({ 
+              id: doc.id, 
+              ...data,
+              createdFormatted: data.createdFormatted || new Date(data.created).toLocaleDateString('de-DE')
+            });
+          });
+          updateStats();
+          renderAktenListe();
+        }, (error) => {
+          console.error('Fehler beim Lauschen auf Akten-Änderungen:', error);
+        });
+
+      // Listener für Soldatengespräche
+      const unsubscribeSoldaten = db.collection('hrSoldatenGespräche')
+        .orderBy('created', 'desc')
+        .limit(100)
+        .onSnapshot((snapshot) => {
+          soldatenGespräche = [];
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            soldatenGespräche.push({ 
+              id: doc.id, 
+              ...data,
+              createdFormatted: data.createdFormatted || new Date(data.created).toLocaleDateString('de-DE'),
+              dateFormatted: data.dateFormatted || (data.date ? new Date(data.date).toLocaleDateString('de-DE') : '')
+            });
+          });
+          renderSoldatenListe();
+        }, (error) => {
+          console.error('Fehler beim Lauschen auf Soldatengespräche:', error);
+        });
+
+      // Listener für Ankündigungen
+      const unsubscribeAnkundigungen = db.collection('hrAnkundigungen')
+        .orderBy('created', 'desc')
+        .limit(100)
+        .onSnapshot((snapshot) => {
+          ankundigungen = [];
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            ankundigungen.push({ 
+              id: doc.id, 
+              ...data,
+              createdFormatted: data.createdFormatted || new Date(data.created).toLocaleDateString('de-DE'),
+              dateFormatted: data.dateFormatted || (data.date ? new Date(data.date).toLocaleDateString('de-DE') : '')
+            });
+          });
+          renderAnkundigungListe();
+        }, (error) => {
+          console.error('Fehler beim Lauschen auf Ankündigungen:', error);
+        });
+
+      // Speichere Unsubscribe-Funktionen
+      unsubscribeFunctions = [
+        unsubscribeEmployees,
+        unsubscribeAkten,
+        unsubscribeSoldaten,
+        unsubscribeAnkundigungen
+      ];
     }
+
+    function cleanupRealtimeListeners() {
+      // Entferne alle Listener bei Seitenverlassen
+      unsubscribeFunctions.forEach(unsubscribe => {
+        if (typeof unsubscribe === 'function') {
+          unsubscribe();
+        }
+      });
+      unsubscribeFunctions = [];
+    }
+
+    // Füge Event Listener für Seitenverlassen hinzu
+    window.addEventListener('beforeunload', cleanupRealtimeListeners);
 
     // ==================== HAUPTFUNKTIONEN ====================
     function initializeApp() {
@@ -3419,7 +3393,6 @@ Grund:
       document.getElementById('orgTimeStart').value = '22:10';
       document.getElementById('orgTimeEnd').value = '23:05';
 
-      loadEmployees();
       setupFormChangeListeners();
       seedTemplateBoxes();
       setupBeobachtungEventListeners();
@@ -3634,7 +3607,6 @@ Bemerkungen: ${bemerkungen || ''}`;
 
       try {
         await db.collection('hrAnkundigungen').doc(ankundigung.id).set(ankundigung);
-        ankundigungen.unshift(ankundigung);
         
         showNotification('Ankündigung erfolgreich gespeichert', 'success');
         document.getElementById('ankundigungTitle').value = '';
@@ -3677,7 +3649,6 @@ Bemerkungen: ${bemerkungen || ''}`;
 
       try {
         await db.collection('hrAnkundigungen').doc(besprechung.id).set(besprechung);
-        ankundigungen.unshift(besprechung);
         
         showNotification('Besprechung erfolgreich gespeichert', 'success');
         document.getElementById('besprechungThema').value = '';
@@ -3723,7 +3694,6 @@ Bemerkungen: ${bemerkungen || ''}`;
 
       try {
         await db.collection('hrAnkundigungen').doc(aufstellung.id).set(aufstellung);
-        ankundigungen.unshift(aufstellung);
         
         showNotification('Aufstellung erfolgreich gespeichert', 'success');
         document.getElementById('aufstellungTyp').value = '';
@@ -3737,25 +3707,6 @@ Bemerkungen: ${bemerkungen || ''}`;
       } catch (error) {
         console.error('Fehler beim Speichern der Aufstellung:', error);
         showNotification('Fehler beim Speichern: ' + error.message, 'error');
-      }
-    }
-
-    async function loadAnkundigungen() {
-      try {
-        const snapshot = await db.collection('hrAnkundigungen').orderBy('created', 'desc').limit(100).get();
-        ankundigungen = [];
-        snapshot.forEach(doc => {
-          const data = doc.data();
-          ankundigungen.push({ 
-            id: doc.id, 
-            ...data,
-            createdFormatted: data.createdFormatted || new Date(data.created).toLocaleDateString('de-DE'),
-            dateFormatted: data.dateFormatted || (data.date ? new Date(data.date).toLocaleDateString('de-DE') : '')
-          });
-        });
-        renderAnkundigungListe();
-      } catch (error) {
-        console.error('Fehler beim Laden der Ankündigungen:', error);
       }
     }
 
@@ -3869,8 +3820,6 @@ Bemerkungen: ${bemerkungen || ''}`;
 
       try {
         await db.collection('hrAnkundigungen').doc(itemId).delete();
-        ankundigungen = ankundigungen.filter(i => i.id !== itemId);
-        renderAnkundigungListe();
         showNotification('Eintrag gelöscht', 'success');
       } catch (error) {
         console.error('Fehler beim Löschen des Eintrags:', error);
@@ -3981,7 +3930,6 @@ Sonstiges: ${sonstiges || ''}
 
       try {
         await db.collection('hrSoldatenGespräche').doc(gespräch.id).set(gespräch);
-        soldatenGespräche.unshift(gespräch);
         
         showNotification('Soldatengespräch erfolgreich gespeichert', 'success');
         document.getElementById('soldatenName').value = '';
@@ -3998,25 +3946,6 @@ Sonstiges: ${sonstiges || ''}
       } catch (error) {
         console.error('Fehler beim Speichern des Soldatengesprächs:', error);
         showNotification('Fehler beim Speichern: ' + error.message, 'error');
-      }
-    }
-
-    async function loadSoldatenGespräche() {
-      try {
-        const snapshot = await db.collection('hrSoldatenGespräche').orderBy('created', 'desc').limit(100).get();
-        soldatenGespräche = [];
-        snapshot.forEach(doc => {
-          const data = doc.data();
-          soldatenGespräche.push({ 
-            id: doc.id, 
-            ...data,
-            createdFormatted: data.createdFormatted || new Date(data.created).toLocaleDateString('de-DE'),
-            dateFormatted: data.dateFormatted || (data.date ? new Date(data.date).toLocaleDateString('de-DE') : '')
-          });
-        });
-        renderSoldatenListe();
-      } catch (error) {
-        console.error('Fehler beim Laden der Soldatengespräche:', error);
       }
     }
 
@@ -4113,8 +4042,6 @@ Sonstiges: ${sonstiges || ''}
 
       try {
         await db.collection('hrSoldatenGespräche').doc(gesprächId).delete();
-        soldatenGespräche = soldatenGespräche.filter(g => g.id !== gesprächId);
-        renderSoldatenListe();
         showNotification('Soldatengespräch gelöscht', 'success');
       } catch (error) {
         console.error('Fehler beim Löschen des Soldatengesprächs:', error);
@@ -4210,7 +4137,6 @@ Grund: ${grund || ''}
 
       try {
         await db.collection('hrAkten').doc(akte.id).set(akte);
-        akten.unshift(akte);
         showNotification('Akte erfolgreich erstellt', 'success');
         document.getElementById('akteName').value = '';
         document.getElementById('akteDN').value = '';
@@ -4258,7 +4184,6 @@ Grund: ${grund || ''}
         try {
           await db.collection('hrAkten').doc(newAkte.id).set(newAkte);
           akte = newAkte;
-          akten.unshift(akte);
         } catch (error) {
           console.error('Fehler beim Erstellen der Akte:', error);
           showNotification('Fehler beim Erstellen der Akte: ' + error.message, 'error');
@@ -4296,25 +4221,6 @@ Grund: ${grund || ''}
       } catch (error) {
         console.error('Fehler beim Speichern der Beobachtung:', error);
         showNotification('Fehler beim Speichern: ' + error.message, 'error');
-      }
-    }
-
-    async function loadAkten() {
-      try {
-        const snapshot = await db.collection('hrAkten').orderBy('lastUpdated', 'desc').limit(100).get();
-        akten = [];
-        snapshot.forEach(doc => {
-          const data = doc.data();
-          akten.push({ 
-            id: doc.id, 
-            ...data,
-            createdFormatted: data.createdFormatted || new Date(data.created).toLocaleDateString('de-DE')
-          });
-        });
-        updateStats();
-        renderAktenListe();
-      } catch (error) {
-        console.error('Fehler beim Laden der Akten:', error);
       }
     }
 
@@ -4523,9 +4429,6 @@ Grund: ${grund || ''}
 
       try {
         await db.collection('hrAkten').doc(akteId).delete();
-        akten = akten.filter(a => a.id !== akteId);
-        updateStats();
-        renderAktenListe();
         showNotification('Akte gelöscht', 'success');
       } catch (error) {
         console.error('Fehler beim Löschen der Akte:', error);
@@ -4546,61 +4449,6 @@ Grund: ${grund || ''}
     }
 
     // ==================== MITARBEITER FUNKTIONEN ====================
-    async function loadEmployees() {
-      try {
-        showLoading();
-        const snapshot = await db.collection('hrEmployees').orderBy('lastUpdated', 'desc').get();
-        employees = [];
-
-        snapshot.forEach(doc => {
-          employees.push({ id: doc.id, ...doc.data() });
-        });
-
-        renderEmployeeList();
-        updateStats();
-        hideLoading();
-        setTimeout(updateInductionDisplay, 100);
-      } catch (error) {
-        console.error('Fehler beim Laden der Mitarbeiter:', error);
-        showNotification('Fehler beim Laden der Daten', 'error');
-        loadMockEmployees();
-        hideLoading();
-      }
-    }
-
-    async function saveEmployeeToFirebase(employee) {
-      try {
-        const dataToSave = {
-          name: employee.name,
-          dn: employee.dn,
-          unit: employee.unit,
-          rank: employee.rank,
-          lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
-          inductions: employee.inductions || {},
-          oralData: employee.oralData || {},
-          orgData: employee.orgData || {}
-        };
-
-        await db.collection('hrEmployees').doc(employee.id).set(dataToSave, { merge: true });
-        return true;
-      } catch (error) {
-        console.error('Fehler beim Speichern:', error);
-        showNotification('Fehler beim Speichern: ' + error.message, 'error');
-        return false;
-      }
-    }
-
-    async function deleteEmployeeFromFirebase(employeeId) {
-      try {
-        await db.collection('hrEmployees').doc(employeeId).delete();
-        return true;
-      } catch (error) {
-        console.error('Fehler beim Löschen:', error);
-        showNotification('Fehler beim Löschen: ' + error.message, 'error');
-        return false;
-      }
-    }
-
     function renderEmployeeList() {
       const container = document.getElementById('employeeList');
       const countElement = document.getElementById('employeeCount');
@@ -4871,7 +4719,6 @@ Grund: ${grund || ''}
 
       const success = await deleteEmployeeFromFirebase(currentEmployee.id);
       if (success) {
-        employees = employees.filter(emp => emp.id !== currentEmployee.id);
         closeModal('editEmployeeModal');
         currentEmployee = null;
         document.getElementById('employeeHeader').style.display = 'none';
@@ -4997,19 +4844,36 @@ Sonstiges: ${notes}
 ╚══════════════════╝`;
     }
 
-    async function saveEmployeeData(isAutoSave = false) {
-      if (!currentEmployee) return;
-
+    async function saveEmployeeToFirebase(employee) {
       try {
-        const success = await saveEmployeeToFirebase(currentEmployee);
-        if (success) {
-          if (!isAutoSave) showNotification('Änderungen gespeichert', 'success');
-          renderEmployeeList();
-          updateStats();
-        }
+        const dataToSave = {
+          name: employee.name,
+          dn: employee.dn,
+          unit: employee.unit,
+          rank: employee.rank,
+          lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
+          inductions: employee.inductions || {},
+          oralData: employee.oralData || {},
+          orgData: employee.orgData || {}
+        };
+
+        await db.collection('hrEmployees').doc(employee.id).set(dataToSave, { merge: true });
+        return true;
       } catch (error) {
         console.error('Fehler beim Speichern:', error);
-        if (!isAutoSave) showNotification('Fehler beim Speichern', 'error');
+        showNotification('Fehler beim Speichern: ' + error.message, 'error');
+        return false;
+      }
+    }
+
+    async function deleteEmployeeFromFirebase(employeeId) {
+      try {
+        await db.collection('hrEmployees').doc(employeeId).delete();
+        return true;
+      } catch (error) {
+        console.error('Fehler beim Löschen:', error);
+        showNotification('Fehler beim Löschen: ' + error.message, 'error');
+        return false;
       }
     }
 
@@ -5084,16 +4948,12 @@ Sonstiges: ${notes}
 
       const success = await deleteEmployeeFromFirebase(employeeId);
       if (success) {
-        employees = employees.filter(emp => emp.id !== employeeId);
-
         if (currentEmployee?.id === employeeId) {
           currentEmployee = null;
           document.getElementById('employeeHeader').style.display = 'none';
           document.getElementById('inductionContent').style.display = 'none';
         }
 
-        renderEmployeeList();
-        updateStats();
         showNotification('Mitarbeiter gelöscht', 'success');
         document.getElementById('contextMenu')?.remove();
       }
@@ -5112,9 +4972,6 @@ Sonstiges: ${notes}
 
       const success = await saveEmployeeToFirebase(newEmployee);
       if (success) {
-        employees.unshift(newEmployee);
-        renderEmployeeList();
-        updateStats();
         showNotification('Mitarbeiter dupliziert', 'success');
         document.getElementById('contextMenu')?.remove();
       }
@@ -5216,9 +5073,7 @@ Sonstiges: ${notes}
 
       const success = await saveEmployeeToFirebase(newEmployee);
       if (success) {
-        employees.unshift(newEmployee);
         closeModal('newEmployeeModal');
-        renderEmployeeList();
         selectEmployee(newEmployee);
         updateStats();
 
@@ -5243,37 +5098,6 @@ Sonstiges: ${notes}
 
       notification.classList.add('show');
       setTimeout(() => notification.classList.remove('show'), 3000);
-    }
-
-    function showLoading() {
-      const content = document.getElementById('employeeList');
-      content.innerHTML = `
-        <div class="loading">
-          <div class="loading-spinner"></div>
-          <div style="color: var(--gray); font-weight: 900; font-size: 13px;">Lade Mitarbeiter...</div>
-        </div>
-      `;
-    }
-
-    function hideLoading() {
-      // Wird automatisch durch renderEmployeeList() erledigt
-    }
-
-    function loadMockEmployees() {
-      employees = [{
-        id: 'emp1',
-        name: 'Chapo Anatolian',
-        dn: '43',
-        unit: 'Air Force',
-        rank: 'Captain',
-        inductions: { oral: { completed: false }, org: { completed: false } },
-        oralData: { date: '2026-01-21', timeStart: '16:40', timeEnd: '18:00', person: 'HR Team', notes: '', unit: 'Air Force', rank: 'Captain' },
-        orgData: { date: '2026-01-21', timeStart: '22:10', timeEnd: '23:05', person: 'HR Team', notes: '', unit: 'Air Force', rank: 'Captain' }
-      }];
-
-      renderEmployeeList();
-      updateStats();
-      seedTemplateBoxes();
     }
 
     function seedTemplateBoxes() {
