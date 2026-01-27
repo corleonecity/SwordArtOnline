@@ -2737,7 +2737,7 @@ Grund:
           <div class="logo"><i class="fas fa-user-check"></i></div>
           <div class="brand-text">
             <h1>Human Resources</h1>
-            <div class="subtitle">Mündliche & Organisatorische Einweisungen • HR</div>
+            <div class="subtitle">•</div>
           </div>
         </div>
         <div class="header-stats">
@@ -2825,10 +2825,6 @@ Grund:
 
             <div class="oral-form-grid">
               <div class="form-group">
-                <label class="form-label">Prüfer</label>
-                <input type="text" class="form-input" id="oralExaminer" placeholder="Name des Prüfers">
-              </div>
-              <div class="form-group">
                 <label class="form-label">Datum</label>
                 <input type="date" class="form-input" id="oralDate">
               </div>
@@ -2904,10 +2900,6 @@ Grund:
             </div>
 
             <div class="org-form-grid">
-              <div class="form-group">
-                <label class="form-label">Prüfer</label>
-                <input type="text" class="form-input" id="orgExaminer" placeholder="Name des Prüfers">
-              </div>
               <div class="form-group">
                 <label class="form-label">Datum</label>
                 <input type="date" class="form-input" id="orgDate">
@@ -3841,70 +3833,83 @@ Sonstiges: ${sonstiges || ''}
     }
 
     function renderSoldatenListe() {
-      const container = document.getElementById('soldatenListe');
-      const searchTerm = document.getElementById('soldatenSearch')?.value.toLowerCase() || '';
-      
-      // Filter gespräche based on search term
-      let filteredGespräche = soldatenGespräche;
-      if (searchTerm) {
-        filteredGespräche = soldatenGespräche.filter(gespräch => 
-          gespräch.name.toLowerCase().includes(searchTerm) || 
-          gespräch.dn.toString().includes(searchTerm)
-        );
-      }
-      
-      if (filteredGespräche.length === 0) {
-        container.innerHTML = `
-          <div class="empty-soldaten">
-            <div class="empty-soldaten-icon"><i class="fas fa-comments"></i></div>
-            <div class="empty-soldaten-title">${searchTerm ? 'Keine passenden Gespräche gefunden' : 'Keine Gespräche gefunden'}</div>
-            <div class="empty-description">${searchTerm ? 'Versuchen Sie einen anderen Suchbegriff' : 'Erstellen Sie Ihr erstes Soldatengespräch'}</div>
-          </div>
-        `;
-        return;
-      }
+  const container = document.getElementById('soldatenListe');
+  const searchTerm = document.getElementById('soldatenSearch')?.value.toLowerCase() || '';
+  
+  // Filter gespräche based on search term
+  let filteredGespräche = soldatenGespräche;
+  if (searchTerm) {
+    filteredGespräche = soldatenGespräche.filter(gespräch => 
+      gespräch.name.toLowerCase().includes(searchTerm) || 
+      gespräch.dn.toString().includes(searchTerm)
+    );
+  }
+  
+  if (filteredGespräche.length === 0) {
+    container.innerHTML = `
+      <div class="empty-soldaten">
+        <div class="empty-soldaten-icon"><i class="fas fa-comments"></i></div>
+        <div class="empty-soldaten-title">${searchTerm ? 'Keine passenden Gespräche gefunden' : 'Keine Gespräche gefunden'}</div>
+        <div class="empty-description">${searchTerm ? 'Versuchen Sie einen anderen Suchbegriff' : 'Erstellen Sie Ihr erstes Soldatengespräch'}</div>
+      </div>
+    `;
+    return;
+  }
 
-      let html = '';
-      filteredGespräche.forEach(gespräch => {
-        html += `
-          <div class="soldaten-item">
-            <div class="soldaten-item-header">
-              <div class="soldaten-item-name">${escapeHtml(gespräch.name)}</div>
-              <div class="soldaten-item-dn">DN ${escapeHtml(gespräch.dn)}</div>
-            </div>
-            <div class="soldaten-item-date">
-              <i class="fas fa-calendar"></i> Gespräch am: ${gespräch.dateFormatted} um ${gespräch.time || ''}
-            </div>
-            <div style="display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap;">
-              <div style="background: rgba(245,158,11,.10); color: #fcd34d; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 900; border: 1px solid rgba(245,158,11,.20);">
-                ${gespräch.unit || 'Keine Unit'}
-              </div>
-              <div style="background: rgba(245,158,11,.10); color: #fcd34d; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 900; border: 1px solid rgba(245,158,11,.20);">
-                ${gespräch.rank || 'Kein Rang'}
-              </div>
-            </div>
-            <div class="soldaten-item-notizen">
-              ${escapeHtml(gespräch.notizen.length > 200 ? gespräch.notizen.substring(0, 200) + '...' : gespräch.notizen)}
-            </div>
-            ${gespräch.sonstiges ? `
-            <div class="soldaten-item-sonstiges">
-              ${escapeHtml(gespräch.sonstiges.length > 200 ? gespräch.sonstiges.substring(0, 200) + '...' : gespräch.sonstiges)}
-            </div>
-            ` : ''}
-            <div class="soldaten-item-actions">
-              <button class="soldaten-item-btn soldaten-item-btn-copy" onclick="copySoldatenFromList('${gespräch.id}')">
-                <i class="fas fa-copy"></i> Kopieren
-              </button>
-              <button class="soldaten-item-btn soldaten-item-btn-delete" onclick="deleteSoldatenGespräch('${gespräch.id}')">
-                <i class="fas fa-trash"></i> Löschen
-              </button>
-            </div>
+  let html = '';
+  filteredGespräche.forEach(gespräch => {
+    html += `
+      <div class="soldaten-item">
+        <div class="soldaten-item-header">
+          <div class="soldaten-item-name">${escapeHtml(gespräch.name)}</div>
+          <div class="soldaten-item-dn">DN ${escapeHtml(gespräch.dn)}</div>
+        </div>
+        <div class="soldaten-item-date">
+          <i class="fas fa-calendar"></i> Gespräch am: ${gespräch.dateFormatted} um ${gespräch.time || ''}
+        </div>
+        <div style="display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap;">
+          <div style="background: rgba(245,158,11,.10); color: #fcd34d; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 900; border: 1px solid rgba(245,158,11,.20);">
+            ${gespräch.unit || 'Keine Unit'}
           </div>
-        `;
-      });
+          <div style="background: rgba(245,158,11,.10); color: #fcd34d; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 900; border: 1px solid rgba(245,158,11,.20);">
+            ${gespräch.rank || 'Kein Rang'}
+          </div>
+        </div>
+        
+        <!-- Notizen mit Überschrift -->
+        <div class="soldaten-item-notizen">
+          <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
+            <i class="fas fa-sticky-note" style="color: var(--warning); font-size: 12px;"></i>
+            <span style="font-weight: 900; color: var(--warning); font-size: 12px;">Notizen:</span>
+          </div>
+          ${escapeHtml(gespräch.notizen.length > 200 ? gespräch.notizen.substring(0, 200) + '...' : gespräch.notizen)}
+        </div>
+        
+        <!-- Sonstiges mit Überschrift (falls vorhanden) -->
+        ${gespräch.sonstiges ? `
+        <div class="soldaten-item-sonstiges">
+          <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
+            <i class="fas fa-ellipsis-h" style="color: var(--warning); font-size: 12px;"></i>
+            <span style="font-weight: 900; color: var(--warning); font-size: 12px;">Sonstiges:</span>
+          </div>
+          ${escapeHtml(gespräch.sonstiges.length > 200 ? gespräch.sonstiges.substring(0, 200) + '...' : gespräch.sonstiges)}
+        </div>
+        ` : ''}
+        
+        <div class="soldaten-item-actions">
+          <button class="soldaten-item-btn soldaten-item-btn-copy" onclick="copySoldatenFromList('${gespräch.id}')">
+            <i class="fas fa-copy"></i> Kopieren
+          </button>
+          <button class="soldaten-item-btn soldaten-item-btn-delete" onclick="deleteSoldatenGespräch('${gespräch.id}')">
+            <i class="fas fa-trash"></i> Löschen
+          </button>
+        </div>
+      </div>
+    `;
+  });
 
-      container.innerHTML = html;
-    }
+  container.innerHTML = html;
+}  
 
     function searchSoldaten(searchTerm) {
       renderSoldatenListe();
@@ -4573,7 +4578,6 @@ Grund: ${grund || ''}
       const oralData = currentEmployee.oralData || {};
       const orgData = currentEmployee.orgData || {};
 
-      document.getElementById('oralExaminer').value = oralData.examiner || '';
       document.getElementById('oralDate').value = oralData.date || (new Date().toISOString().split('T')[0]);
       document.getElementById('oralTimeStart').value = oralData.timeStart || '16:40';
       document.getElementById('oralTimeEnd').value = oralData.timeEnd || '18:00';
@@ -4582,7 +4586,6 @@ Grund: ${grund || ''}
       document.getElementById('unitSelect').value = oralData.unit || currentEmployee.unit || '';
       document.getElementById('rankSelect').value = oralData.rank || currentEmployee.rank || '';
 
-      document.getElementById('orgExaminer').value = orgData.examiner || '';
       document.getElementById('orgDate').value = orgData.date || (new Date().toISOString().split('T')[0]);
       document.getElementById('orgTimeStart').value = orgData.timeStart || '22:10';
       document.getElementById('orgTimeEnd').value = orgData.timeEnd || '23:05';
@@ -4642,7 +4645,6 @@ Grund: ${grund || ''}
       if (!currentEmployee) return;
 
       currentEmployee.oralData = {
-        examiner: document.getElementById('oralExaminer').value,
         date: document.getElementById('oralDate').value,
         timeStart: document.getElementById('oralTimeStart').value,
         timeEnd: document.getElementById('oralTimeEnd').value,
@@ -4653,7 +4655,6 @@ Grund: ${grund || ''}
       };
 
       currentEmployee.orgData = {
-        examiner: document.getElementById('orgExaminer').value,
         date: document.getElementById('orgDate').value,
         timeStart: document.getElementById('orgTimeStart').value,
         timeEnd: document.getElementById('orgTimeEnd').value,
@@ -4826,7 +4827,6 @@ Grund: ${grund || ''}
       const timeEnd = data?.timeEnd || '';
       const person = data?.person || '';
       const notes = data?.notes || '';
-      const examiner = data?.examiner || '';
 
       const timeSeparator = isOral ? 'bis' : '-';
 
@@ -4840,7 +4840,6 @@ Grund: ${grund || ''}
 /////////////////////////////////////////////////////////////////////////
 ${isOral ? 'Mündliche Einweisung' : 'Organisatorische Einweisung'}
 
-Prüfer : ${examiner}
 Name: ${name}
 DN: ${dn}
 Hauptunit: ${unitDisplay}
@@ -5068,8 +5067,8 @@ Sonstiges: ${notes}
         rank: rank || '',
         lastUpdated: new Date().toISOString(),
         inductions: { oral: { completed: false }, org: { completed: false } },
-        oralData: { examiner: '', date: '', timeStart: '16:40', timeEnd: '18:00', person: '', notes: '', unit: unit || '', rank: rank || '' },
-        orgData: { examiner: '', date: '', timeStart: '22:10', timeEnd: '23:05', person: '', notes: '', unit: unit || '', rank: rank || '' }
+        oralData: { date: '', timeStart: '16:40', timeEnd: '18:00', person: '', notes: '', unit: unit || '', rank: rank || '' },
+        orgData: { date: '', timeStart: '22:10', timeEnd: '23:05', person: '', notes: '', unit: unit || '', rank: rank || '' }
       };
 
       const success = await saveEmployeeToFirebase(newEmployee);
@@ -5125,8 +5124,8 @@ Sonstiges: ${notes}
         unit: 'Air Force',
         rank: 'Captain',
         inductions: { oral: { completed: false }, org: { completed: false } },
-        oralData: { examiner: 'HR Team', date: '2026-01-21', timeStart: '16:40', timeEnd: '18:00', person: 'HR Team', notes: '', unit: 'Air Force', rank: 'Captain' },
-        orgData: { examiner: 'HR Team', date: '2026-01-21', timeStart: '22:10', timeEnd: '23:05', person: 'HR Team', notes: '', unit: 'Air Force', rank: 'Captain' }
+        oralData: { date: '2026-01-21', timeStart: '16:40', timeEnd: '18:00', person: 'HR Team', notes: '', unit: 'Air Force', rank: 'Captain' },
+        orgData: { date: '2026-01-21', timeStart: '22:10', timeEnd: '23:05', person: 'HR Team', notes: '', unit: 'Air Force', rank: 'Captain' }
       }];
 
       renderEmployeeList();
@@ -5139,7 +5138,6 @@ Sonstiges: ${notes}
 /////////////////////////////////////////////////////////////////////////
 Mündliche Einweisung
 
-Prüfer :
 Name:
 DN:
 Hauptunit:
@@ -5157,7 +5155,6 @@ Sonstiges:
 /////////////////////////////////////////////////////////////////////////
 Organisatorische Einweisung
 
-Prüfer :
 Name:
 DN:
 Hauptunit:
