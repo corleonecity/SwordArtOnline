@@ -246,6 +246,15 @@
       opacity:0;transition:var(--transition);
     }
     .employee-card.active::before{opacity:1}
+    .employee-card.archived{
+      opacity:0.7;
+      border-color:var(--warning);
+    }
+    .employee-card.archived .employee-name:after{
+      content:' [ARCHIV]';
+      color:var(--warning);
+      font-size:10px;
+    }
 
     .employee-top-row{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:2px}
     .employee-name{font-weight:800;font-size:15px;color:#fff;line-height:1.3;word-break:break-word}
@@ -590,7 +599,255 @@
       background: #7c3aed;
     }
 
-    /* Ankündigungen/Besprechungen/Aufstellungen Modal */
+    /* Settings Modal */
+    .settings-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.85);
+      backdrop-filter: blur(4px);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      animation: fadeIn .2s ease;
+    }
+
+    .settings-modal.active {
+      display: flex;
+    }
+
+    .settings-content {
+      background: rgba(31,41,55,.95);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      width: 100%;
+      max-width: 800px;
+      max-height: 90vh;
+      border: 1px solid rgba(255,255,255,.15);
+      box-shadow: var(--shadow-lg);
+      animation: slideUp .2s ease;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .settings-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(255,255,255,.1);
+      flex-shrink: 0;
+    }
+
+    .settings-title {
+      font-size: 18px;
+      font-weight: 900;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .settings-title i {
+      color: var(--primary);
+      font-size: 20px;
+    }
+
+    .settings-close {
+      background: none;
+      border: none;
+      color: var(--gray);
+      font-size: 20px;
+      cursor: pointer;
+      transition: var(--transition);
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+    }
+
+    .settings-close:hover {
+      color: #fff;
+      background: rgba(255,255,255,.1);
+    }
+
+    .settings-body {
+      flex: 1;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .settings-tabs {
+      display: flex;
+      gap: 2px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid rgba(255,255,255,.1);
+      flex-shrink: 0;
+    }
+
+    .settings-tab {
+      padding: 12px 20px;
+      background: none;
+      border: none;
+      color: var(--gray);
+      font-weight: 900;
+      cursor: pointer;
+      transition: var(--transition);
+      font-size: 13px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .settings-tab:hover {
+      color: var(--primary-light);
+    }
+
+    .settings-tab.active {
+      color: var(--primary);
+    }
+
+    .settings-tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--primary);
+    }
+
+    .settings-section {
+      background: rgba(0,0,0,.2);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+    .section-title-settings {
+      font-size: 16px;
+      font-weight: 900;
+      color: #fff;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .settings-form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .settings-label {
+      font-weight: 900;
+      color: var(--gray-light);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+
+    .settings-input {
+      padding: 12px 16px;
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: var(--radius-md);
+      color: #fff;
+      font-size: 14px;
+      transition: var(--transition);
+      width: 100%;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .settings-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      background: rgba(255,255,255,.08);
+      box-shadow: 0 0 0 3px rgba(79,70,229,.15);
+    }
+
+    .unit-list, .rank-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .unit-item, .rank-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: rgba(255,255,255,.03);
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(255,255,255,.08);
+    }
+
+    .unit-name, .rank-name {
+      flex: 1;
+      font-weight: 900;
+      color: #fff;
+      font-size: 13px;
+    }
+
+    .discord-id {
+      background: rgba(79,70,229,.10);
+      color: var(--primary-light);
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-family: 'Consolas', monospace;
+      border: 1px solid rgba(79,70,229,.20);
+      min-width: 200px;
+    }
+
+    .discord-id::placeholder {
+      color: rgba(255,255,255,.4);
+    }
+
+    .add-btn {
+      padding: 10px 20px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-md);
+      font-weight: 900;
+      cursor: pointer;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 13px;
+      margin-top: 12px;
+    }
+
+    .add-btn:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+    }
+
+    .settings-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255,255,255,.1);
+      flex-shrink: 0;
+    }
+
+    /* Ankündigungen Modal (vollständig) */
     .ankundigung-modal {
       display: none;
       position: fixed;
@@ -811,7 +1068,6 @@
       border-radius: 3px;
     }
 
-    /* Container für den "Neue Ankündigung" Tab-Inhalt */
     .ankundigung-tab-content {
       flex: 1;
       overflow-y: auto;
@@ -820,7 +1076,6 @@
       min-height: 0;
     }
 
-    /* WICHTIG: Scrollbar für Ankündigungen-Liste */
     .ankundigung-liste-container {
       flex: 1;
       overflow: hidden;
@@ -1110,7 +1365,7 @@
       font-size: 16px;
     }
 
-    /* Soldatengespräch Modal */
+    /* Soldatengespräch Modal (vollständig) */
     .soldaten-modal {
       display: none;
       position: fixed;
@@ -1299,7 +1554,6 @@
       gap: 6px;
     }
 
-    /* WICHTIG: Scrollbar für die Vorschau im "Neues Gespräch" Tab */
     .soldaten-preview-content {
       font-family: 'Consolas', 'Monaco', monospace;
       white-space: pre-wrap;
@@ -1329,7 +1583,6 @@
       border-radius: 3px;
     }
 
-    /* Container für den "Neues Gespräch" Tab-Inhalt */
     .soldaten-tab-content {
       flex: 1;
       overflow-y: auto;
@@ -1338,7 +1591,6 @@
       min-height: 0;
     }
 
-    /* WICHTIG: Scrollbar für Soldatengespräch-Liste */
     .soldaten-liste-container {
       flex: 1;
       overflow: hidden;
@@ -1422,7 +1674,6 @@
       gap: 4px;
     }
 
-    /* GEÄNDERT: Sonstiges mit gleichem Styling wie Notizen */
     .soldaten-item-notizen {
       color: var(--gray-light);
       font-size: 13px;
@@ -1450,7 +1701,6 @@
       border-radius: 2px;
     }
 
-    /* Soldatengespräch Sonstiges Styling (jetzt wie Notizen) */
     .soldaten-item-sonstiges {
       color: var(--gray-light);
       font-size: 13px;
@@ -1654,7 +1904,7 @@
       font-size: 16px;
     }
 
-    /* Beobachtungs Akten Modal (behalten für Akten) */
+    /* Beobachtungs Akten Modal (vollständig) */
     .beobachtung-akten-modal{
       display:none;
       position:fixed;
@@ -2201,12 +2451,15 @@
       .employee-tags{flex-direction:column;gap:6px}
       .induction-content{padding:16px}
       .oral-form-grid,.org-form-grid{grid-template-columns:1fr}
+      .settings-modal,
       .soldaten-modal,
       .beobachtung-akten-modal,
       .ankundigung-modal{padding:12px}
+      .settings-content,
       .soldaten-content,
       .beobachtung-akten-content,
       .ankundigung-content{padding:20px}
+      .settings-actions,
       .soldaten-actions,
       .beobachtung-actions,
       .ankundigung-actions{flex-direction:column;align-items:stretch}
@@ -2214,9 +2467,11 @@
         bottom: 16px;
         right: 16px;
       }
+      .settings-tabs,
       .soldaten-tabs,
       .beobachtung-tabs,
       .ankundigung-tabs{flex-direction:column}
+      .settings-tab,
       .soldaten-tab,
       .beobachtung-tab,
       .ankundigung-tab{text-align:left;padding:10px 16px}
@@ -2232,6 +2487,7 @@
       .sidebar{padding:14px}
       .modal{padding:16px;margin:12px}
       .notification{left:12px;right:12px;bottom:12px;min-width:auto}
+      .settings-content,
       .soldaten-content,
       .beobachtung-akten-content,
       .ankundigung-content{padding:16px}
@@ -2256,6 +2512,87 @@
     <button class="floating-button" onclick="openBeobachtungAktenModal()" title="Beobachtungs-Akten">
       <i class="fas fa-folder-open"></i>
     </button>
+    <button class="floating-button" onclick="openSettingsModal()" title="Settings">
+      <i class="fas fa-cog"></i>
+    </button>
+  </div>
+
+  <!-- Settings Modal -->
+  <div class="settings-modal" id="settingsModal" onclick="if(event.target===this)closeModal('settingsModal')">
+    <div class="settings-content">
+      <div class="settings-header">
+        <div class="settings-title">
+          <i class="fas fa-cog"></i> Settings
+        </div>
+        <button class="settings-close" onclick="closeModal('settingsModal')">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <div class="settings-body">
+        <div class="settings-tabs">
+          <button class="settings-tab active" onclick="switchSettingsTab('units')">
+            <i class="fas fa-building"></i> Units
+          </button>
+          <button class="settings-tab" onclick="switchSettingsTab('ranks')">
+            <i class="fas fa-user-tie"></i> Ränge
+          </button>
+          <button class="settings-tab" onclick="switchSettingsTab('discord')">
+            <i class="fab fa-discord"></i> Discord IDs
+          </button>
+        </div>
+        
+        <!-- Units Tab -->
+        <div class="settings-tab-content" id="unitsTab">
+          <div class="settings-section">
+            <h3 class="section-title-settings"><i class="fas fa-building"></i> Unit-Liste bearbeiten</h3>
+            <div class="unit-list" id="unitList">
+              <!-- Units werden hier dynamisch geladen -->
+            </div>
+            <button class="add-btn" onclick="addNewUnit()">
+              <i class="fas fa-plus"></i> Neue Unit hinzufügen
+            </button>
+          </div>
+        </div>
+        
+        <!-- Ränge Tab -->
+        <div class="settings-tab-content" id="ranksTab" style="display:none;">
+          <div class="settings-section">
+            <h3 class="section-title-settings"><i class="fas fa-user-tie"></i> Rang-Liste bearbeiten</h3>
+            <div class="rank-list" id="rankList">
+              <!-- Ränge werden hier dynamisch geladen -->
+            </div>
+            <button class="add-btn" onclick="addNewRank()">
+              <i class="fas fa-plus"></i> Neuen Rang hinzufügen
+            </button>
+          </div>
+        </div>
+        
+        <!-- Discord IDs Tab -->
+        <div class="settings-tab-content" id="discordTab" style="display:none;">
+          <div class="settings-section">
+            <h3 class="section-title-settings"><i class="fab fa-discord"></i> Discord Einstellungen</h3>
+            <div class="settings-form-group">
+              <label class="settings-label">Discord Webhook URL</label>
+              <input type="text" class="settings-input" id="discordWebhook" placeholder="https://discord.com/api/webhooks/...">
+            </div>
+            <div class="settings-form-group">
+              <label class="settings-label">HR Rolle ID</label>
+              <input type="text" class="settings-input" id="hrRoleId" placeholder="1097625910242447422">
+            </div>
+          </div>
+        </div>
+        
+        <div class="settings-actions">
+          <button class="btn btn-secondary" onclick="closeModal('settingsModal')">
+            <i class="fas fa-times"></i> Abbrechen
+          </button>
+          <button class="btn btn-primary" onclick="saveSettings()">
+            <i class="fas fa-save"></i> Einstellungen speichern
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Ankündigungen/Besprechungen/Aufstellungen Modal -->
@@ -2493,12 +2830,6 @@ Bemerkungen:
               <label class="soldaten-label">Hauptunit</label>
               <select class="soldaten-input" id="soldatenUnit">
                 <option value="">Unit auswählen</option>
-                <option value="Air Force">Air Force</option>
-                <option value="S.O.C">S.O.C</option>
-                <option value="Infantry">Infantry</option>
-                <option value="Military Police">Military Police</option>
-                <option value="Navy Marine">Navy Marine</option>
-                <option value="Navy SEALs">Navy SEALs</option>
               </select>
             </div>
             
@@ -2506,23 +2837,6 @@ Bemerkungen:
               <label class="soldaten-label">Rang</label>
               <select class="soldaten-input" id="soldatenRank">
                 <option value="">Rang auswählen</option>
-                <option value="Private">Private</option>
-                <option value="Private First Class">Private First Class</option>
-                <option value="Specialist">Specialist</option>
-                <option value="Corporal">Corporal</option>
-                <option value="Sergeant">Sergeant</option>
-                <option value="Staff Sergeant">Staff Sergeant</option>
-                <option value="Sergeant First Class">Sergeant First Class</option>
-                <option value="Master Sergeant">Master Sergeant</option>
-                <option value="Sergeant Major">Sergeant Major</option>
-                <option value="Lieutenant">Lieutenant</option>
-                <option value="Captain">Captain</option>
-                <option value="Major">Major</option>
-                <option value="Colonel">Colonel</option>
-                <option value="Major General">Major General</option>
-                <option value="Lieutenant General">Lieutenant General</option>
-                <option value="Vice General of Army">Vice General of Army</option>
-                <option value="General of Army">General of Army</option>
               </select>
             </div>
             
@@ -2639,12 +2953,6 @@ Sonstiges:
               <label class="akte-label">Unit</label>
               <select class="akte-input" id="akteUnit">
                 <option value="">Unit auswählen</option>
-                <option value="Air Force">Air Force</option>
-                <option value="S.O.C">S.O.C</option>
-                <option value="Infantry">Infantry</option>
-                <option value="Military Police">Military Police</option>
-                <option value="Navy Marine">Navy Marine</option>
-                <option value="Navy SEALs">Navy SEALs</option>
               </select>
             </div>
             
@@ -2652,23 +2960,6 @@ Sonstiges:
               <label class="akte-label">Rang</label>
               <select class="akte-input" id="akteRank">
                 <option value="">Rang auswählen</option>
-                <option value="Private">Private</option>
-                <option value="Private First Class">Private First Class</option>
-                <option value="Specialist">Specialist</option>
-                <option value="Corporal">Corporal</option>
-                <option value="Sergeant">Sergeant</option>
-                <option value="Staff Sergeant">Staff Sergeant</option>
-                <option value="Sergeant First Class">Sergeant First Class</option>
-                <option value="Master Sergeant">Master Sergeant</option>
-                <option value="Sergeant Major">Sergeant Major</option>
-                <option value="Lieutenant">Lieutenant</option>
-                <option value="Captain">Captain</option>
-                <option value="Major">Major</option>
-                <option value="Colonel">Colonel</option>
-                <option value="Major General">Major General</option>
-                <option value="Lieutenant General">Lieutenant General</option>
-                <option value="Vice General of Army">Vice General of Army</option>
-                <option value="General of Army">General of Army</option>
               </select>
             </div>
           </div>
@@ -2772,6 +3063,10 @@ Grund:
             <div class="stat-value" id="totalAkten">0</div>
             <div class="stat-label">Beobachtung</div>
           </div>
+          <div class="stat-card">
+            <div class="stat-value" id="totalArchived">0</div>
+            <div class="stat-label">Archiviert</div>
+          </div>
         </div>
       </div>
     </header>
@@ -2809,6 +3104,9 @@ Grund:
         <button class="quick-action-btn" onclick="openNewEmployeeModal()">
           <i class="fas fa-user-plus"></i> Neuer Mitarbeiter
         </button>
+        <button class="quick-action-btn" onclick="toggleArchiveView()">
+          <i class="fas fa-archive"></i> <span id="archiveToggleText">Archiv anzeigen</span>
+        </button>
       </div>
     </aside>
 
@@ -2820,10 +3118,16 @@ Grund:
             <div class="employee-tag"><i class="fas fa-hashtag"></i> <span class="tag-value" id="currentEmployeeDN">DN-</span></div>
             <div class="employee-tag"><i class="fas fa-building"></i> <span class="tag-value" id="currentEmployeeUnit">Unit</span></div>
             <div class="employee-tag"><i class="fas fa-user-tie"></i> <span class="tag-value" id="currentEmployeeRank">Rang</span></div>
+            <div class="employee-tag" id="archiveStatusTag" style="display:none;">
+              <i class="fas fa-archive"></i> <span class="tag-value" style="background:var(--warning);">Archiviert</span>
+            </div>
           </div>
         </div>
         <div class="action-buttons">
           <button class="btn btn-secondary" onclick="openEditEmployeeModal()"><i class="fas fa-edit"></i> Bearbeiten</button>
+          <button class="btn btn-secondary" id="archiveButton" onclick="toggleArchiveEmployee()" style="display:none;">
+            <i class="fas fa-archive"></i> <span id="archiveButtonText">Archivieren</span>
+          </button>
         </div>
       </div>
 
@@ -2867,35 +3171,12 @@ Grund:
                 <label class="form-label">Unit</label>
                 <select class="form-select" id="unitSelect">
                   <option value="">Unit auswählen</option>
-                  <option value="Air Force">Air Force</option>
-                  <option value="S.O.C">S.O.C</option>
-                  <option value="Infantry">Infantry</option>
-                  <option value="Military Police">Military Police</option>
-                  <option value="Navy Marine">Navy Marine</option>
-                  <option value="Navy SEALs">Navy SEALs</option>
                 </select>
               </div>
               <div class="form-group">
                 <label class="form-label">Rang</label>
                 <select class="form-select" id="rankSelect">
                   <option value="">Rang auswählen</option>
-                  <option value="Private">Private</option>
-                  <option value="Private First Class">Private First Class</option>
-                  <option value="Specialist">Specialist</option>
-                  <option value="Corporal">Corporal</option>
-                  <option value="Sergeant">Sergeant</option>
-                  <option value="Staff Sergeant">Staff Sergeant</option>
-                  <option value="Sergeant First Class">Sergeant First Class</option>
-                  <option value="Master Sergeant">Master Sergeant</option>
-                  <option value="Sergeant Major">Sergeant Major</option>
-                  <option value="Lieutenant">Lieutenant</option>
-                  <option value="Captain">Captain</option>
-                  <option value="Major">Major</option>
-                  <option value="Colonel">Colonel</option>
-                  <option value="Major General">Major General</option>
-                  <option value="Lieutenant General">Lieutenant General</option>
-                  <option value="Vice General of Army">Vice General of Army</option>
-                  <option value="General of Army">General of Army</option>
                 </select>
               </div>
               <div class="form-group">
@@ -2943,35 +3224,12 @@ Grund:
                 <label class="form-label">Unit</label>
                 <select class="form-select" id="unitSelect2">
                   <option value="">Unit auswählen</option>
-                  <option value="Air Force">Air Force</option>
-                  <option value="S.O.C">S.O.C</option>
-                  <option value="Infantry">Infantry</option>
-                  <option value="Military Police">Military Police</option>
-                  <option value="Navy Marine">Navy Marine</option>
-                  <option value="Navy SEALs">Navy SEALs</option>
                 </select>
               </div>
               <div class="form-group">
                 <label class="form-label">Rang</label>
                 <select class="form-select" id="rankSelect2">
                   <option value="">Rang auswählen</option>
-                  <option value="Private">Private</option>
-                  <option value="Private First Class">Private First Class</option>
-                  <option value="Specialist">Specialist</option>
-                  <option value="Corporal">Corporal</option>
-                  <option value="Sergeant">Sergeant</option>
-                  <option value="Staff Sergeant">Staff Sergeant</option>
-                  <option value="Sergeant First Class">Sergeant First Class</option>
-                  <option value="Master Sergeant">Master Sergeant</option>
-                  <option value="Sergeant Major">Sergeant Major</option>
-                  <option value="Lieutenant">Lieutenant</option>
-                  <option value="Captain">Captain</option>
-                  <option value="Major">Major</option>
-                  <option value="Colonel">Colonel</option>
-                  <option value="Major General">Major General</option>
-                  <option value="Lieutenant General">Lieutenant General</option>
-                  <option value="Vice General of Army">Vice General of Army</option>
-                  <option value="General of Army">General of Army</option>
                 </select>
               </div>
               <div class="form-group">
@@ -3034,35 +3292,12 @@ Grund:
           <label class="form-label">Unit</label>
           <select class="form-select" id="newEmployeeUnit">
             <option value="">Unit auswählen</option>
-            <option value="Air Force">Air Force</option>
-            <option value="S.O.C">S.O.C</option>
-            <option value="Infantry">Infantry</option>
-            <option value="Military Police">Military Police</option>
-            <option value="Navy Marine">Navy Marine</option>
-            <option value="Navy SEALs">Navy SEALs</option>
           </select>
         </div>
         <div class="form-group">
           <label class="form-label">Rang</label>
           <select class="form-select" id="newEmployeeRank">
             <option value="">Rang auswählen</option>
-            <option value="Private">Private</option>
-            <option value="Private First Class">Private First Class</option>
-            <option value="Specialist">Specialist</option>
-            <option value="Corporal">Corporal</option>
-            <option value="Sergeant">Sergeant</option>
-            <option value="Staff Sergeant">Staff Sergeant</option>
-            <option value="Sergeant First Class">Sergeant First Class</option>
-            <option value="Master Sergeant">Master Sergeant</option>
-            <option value="Sergeant Major">Sergeant Major</option>
-            <option value="Lieutenant">Lieutenant</option>
-            <option value="Captain">Captain</option>
-            <option value="Major">Major</option>
-            <option value="Colonel">Colonel</option>
-            <option value="Major General">Major General</option>
-            <option value="Lieutenant General">Lieutenant General</option>
-            <option value="Vice General of Army">Vice General of Army</option>
-            <option value="General of Army">General of Army</option>
           </select>
         </div>
       </div>
@@ -3095,35 +3330,12 @@ Grund:
           <label class="form-label">Unit</label>
           <select class="form-select" id="editEmployeeUnit">
             <option value="">Unit auswählen</option>
-            <option value="Air Force">Air Force</option>
-            <option value="S.O.C">S.O.C</option>
-            <option value="Infantry">Infantry</option>
-            <option value="Military Police">Military Police</option>
-            <option value="Navy Marine">Navy Marine</option>
-            <option value="Navy SEALs">Navy SEALs</option>
           </select>
         </div>
         <div class="form-group">
           <label class="form-label">Rang</label>
           <select class="form-select" id="editEmployeeRank">
             <option value="">Rang auswählen</option>
-            <option value="Private">Private</option>
-            <option value="Private First Class">Private First Class</option>
-            <option value="Specialist">Specialist</option>
-            <option value="Corporal">Corporal</option>
-            <option value="Sergeant">Sergeant</option>
-            <option value="Staff Sergeant">Staff Sergeant</option>
-            <option value="Sergeant First Class">Sergeant First Class</option>
-            <option value="Master Sergeant">Master Sergeant</option>
-            <option value="Sergeant Major">Sergeant Major</option>
-            <option value="Lieutenant">Lieutenant</option>
-            <option value="Captain">Captain</option>
-            <option value="Major">Major</option>
-            <option value="Colonel">Colonel</option>
-            <option value="Major General">Major General</option>
-            <option value="Lieutenant General">Lieutenant General</option>
-            <option value="Vice General of Army">Vice General of Army</option>
-            <option value="General of Army">General of Army</option>
           </select>
         </div>
       </div>
@@ -3140,16 +3352,13 @@ Grund:
 
   <script>
     // ==================== CACHE-BUSTING CODE ====================
-    // Erzwingt Neuladen bei Version-Änderung
     const APP_VERSION = '1.0.20240128';
     const LAST_VERSION_KEY = 'hr_app_last_version';
     
-    // Prüfe ob neue Version geladen werden muss
     const lastVersion = localStorage.getItem(LAST_VERSION_KEY);
     if (lastVersion !== APP_VERSION) {
       console.log(`Neue Version erkannt: ${lastVersion} -> ${APP_VERSION}`);
       
-      // Lösche alle Caches
       if ('caches' in window) {
         caches.keys().then(function(names) {
           for (let name of names) {
@@ -3159,12 +3368,9 @@ Grund:
         });
       }
       
-      // Speichere neue Version
       localStorage.setItem(LAST_VERSION_KEY, APP_VERSION);
       
-      // Erzwinge Hard Refresh
       if (performance.navigation.type === 0 || performance.navigation.type === 1) {
-        // NavigationType: 0 = fresh load, 1 = reload
         console.log('Erzwinge Hard Refresh für neue Version');
         setTimeout(() => {
           window.location.reload(true);
@@ -3172,16 +3378,12 @@ Grund:
       }
     }
     
-    // Füge Version zu allen dynamischen Elementen hinzu
     document.addEventListener('DOMContentLoaded', function() {
-      // Setze Version in Footer/Title
       document.title = document.title.replace('v1.0', `v${APP_VERSION}`);
       
-      // Cache-Busting für dynamische Inhalte
       const now = Date.now();
       const cacheBuster = `?v=${APP_VERSION}&t=${now}`;
       
-      // Füge Cache-Buster zu allen Skripten hinzu
       const scripts = document.querySelectorAll('script[src]');
       scripts.forEach(script => {
         if (!script.src.includes('?v=')) {
@@ -3204,51 +3406,30 @@ Grund:
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
-    const storage = firebase.storage();
 
-    // Discord IDs for Units
-    const unitDiscordIds = {
-      "Air Force": "1269229762400878675",
-      "S.O.C": "1339523576159666218",
-      "Infantry": "1187756956425920645",
-      "Military Police": "1289716541658497055",
-      "Navy Marine": "1097653037968920776",
-      "Navy SEALs": "1125174901989445693"
-    };
-
-    // Discord IDs for Ranks
-    const rankDiscordIds = {
-      "Private": "1097625924104626198",
-      "Private First Class": "1098190829295771739",
-      "Specialist": "1097625921516748830",
-      "Corporal": "1097625914763919532",
-      "Sergeant": "1097625913274933298",
-      "Staff Sergeant": "1097625912163451112",
-      "Sergeant First Class": "1348414845862674524",
-      "Master Sergeant": "1348414845862674524",
-      "Sergeant Major": "",
-      "Lieutenant": "1097625900125782278",
-      "Captain": "1097625898880077955",
-      "Major": "1097625896560640024",
-      "Colonel": "1097625895541428275",
-      "Major General": "1097625893880479777",
-      "Lieutenant General": "",
-      "Vice General of Army": "",
-      "General of Army": "1097625891632316436"
-    };
-
+    // Discord Webhook URL
+    const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1465894064980365363/Tls9jtrEkn8oK3jpIqImiNWI1ljF5EVnSQaswJZ8WpQ9HVwCgpbajxzgEu19jPzRUYuK";
+    
     // App State
     let currentEmployee = null;
     let employees = [];
     let bothInductionsCompleted = false;
     let currentFilter = 'all';
+    let settings = {
+      units: [],
+      ranks: [],
+      discordWebhook: DISCORD_WEBHOOK_URL,
+      hrRoleId: "1097625910242447422"
+    };
+    let showArchived = false;
+    let realtimeInterval;
     let akten = [];
     let soldatenGespräche = [];
     let ankundigungen = [];
     let currentBeobachtungTab = 'new';
     let currentSoldatenTab = 'new';
     let currentAnkundigungTab = 'new';
-
+    
     // Unsubscribe-Funktionen für Listener
     let unsubscribeFunctions = [];
 
@@ -3256,10 +3437,26 @@ Grund:
       console.log(`HR App Version ${APP_VERSION} geladen`);
       initializeApp();
       setupEventListeners();
-      updateStats();
-      adjustSidebarHeight();
+      loadSettings();
       setupRealtimeListeners();
+      startRealtimeUpdates();
+      adjustSidebarHeight();
     });
+
+    // ==================== ECHTZEIT-AKTUALISIERUNG ====================
+    function startRealtimeUpdates() {
+      // Alle 2 Sekunden aktualisieren
+      if (realtimeInterval) clearInterval(realtimeInterval);
+      
+      realtimeInterval = setInterval(() => {
+        console.log("Echtzeit-Update ausgeführt");
+        updateStats();
+        if (currentEmployee) {
+          updateEmployeeHeader();
+          updateInductionDisplay();
+        }
+      }, 2000);
+    }
 
     // ==================== REALTIME LISTENER SETUP ====================
     function setupRealtimeListeners() {
@@ -3268,15 +3465,21 @@ Grund:
         .orderBy('lastUpdated', 'desc')
         .onSnapshot((snapshot) => {
           employees = [];
+          let archivedCount = 0;
           
           snapshot.forEach(doc => {
-            employees.push({ id: doc.id, ...doc.data() });
+            const employee = { id: doc.id, ...doc.data() };
+            employees.push(employee);
+            
+            if (employee.status === 'archived') {
+              archivedCount++;
+            }
           });
 
           renderEmployeeList();
           updateStats();
+          document.getElementById('totalArchived').textContent = archivedCount;
           
-          // Wenn ein Mitarbeiter ausgewählt ist, aktualisiere die Daten
           if (currentEmployee) {
             const updatedEmployee = employees.find(emp => emp.id === currentEmployee.id);
             if (updatedEmployee) {
@@ -3288,6 +3491,30 @@ Grund:
         }, (error) => {
           console.error('Fehler beim Lauschen auf Mitarbeiter-Änderungen:', error);
           showNotification('Fehler bei Live-Updates', 'error');
+        });
+
+      // Listener für Audit Log
+      const unsubscribeAuditLog = db.collection('hrAuditLog')
+        .orderBy('timestamp', 'desc')
+        .limit(50)
+        .onSnapshot((snapshot) => {
+          sendAuditLogsToDiscord(snapshot);
+        }, (error) => {
+          console.error('Fehler beim Lauschen auf Audit-Log:', error);
+        });
+
+      // Listener für Settings
+      const unsubscribeSettings = db.collection('hrSettings')
+        .doc('settings')
+        .onSnapshot((doc) => {
+          if (doc.exists) {
+            const newSettings = doc.data();
+            settings = { ...settings, ...newSettings };
+            populateSettingsUI();
+            updateUnitAndRankSelects();
+          }
+        }, (error) => {
+          console.error('Fehler beim Lauschen auf Settings:', error);
         });
 
       // Listener für Akten
@@ -3305,7 +3532,6 @@ Grund:
             });
           });
           updateStats();
-          renderAktenListe();
         }, (error) => {
           console.error('Fehler beim Lauschen auf Akten-Änderungen:', error);
         });
@@ -3325,7 +3551,6 @@ Grund:
               dateFormatted: data.dateFormatted || (data.date ? new Date(data.date).toLocaleDateString('de-DE') : '')
             });
           });
-          renderSoldatenListe();
         }, (error) => {
           console.error('Fehler beim Lauschen auf Soldatengespräche:', error);
         });
@@ -3345,144 +3570,390 @@ Grund:
               dateFormatted: data.dateFormatted || (data.date ? new Date(data.date).toLocaleDateString('de-DE') : '')
             });
           });
-          renderAnkundigungListe();
         }, (error) => {
           console.error('Fehler beim Lauschen auf Ankündigungen:', error);
         });
 
-      // Speichere Unsubscribe-Funktionen
       unsubscribeFunctions = [
         unsubscribeEmployees,
+        unsubscribeAuditLog,
+        unsubscribeSettings,
         unsubscribeAkten,
         unsubscribeSoldaten,
         unsubscribeAnkundigungen
       ];
     }
 
-    function cleanupRealtimeListeners() {
-      // Entferne alle Listener bei Seitenverlassen
-      unsubscribeFunctions.forEach(unsubscribe => {
-        if (typeof unsubscribe === 'function') {
-          unsubscribe();
-        }
-      });
-      unsubscribeFunctions = [];
-    }
+    // ==================== AUDIT LOG FUNKTIONEN ====================
+    async function logAuditEvent(action, entityType, entityId, details = {}) {
+      try {
+        const auditLog = {
+          action,
+          entityType,
+          entityId,
+          user: 'System',
+          timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+          details,
+          ip: '127.0.0.1'
+        };
 
-    // Füge Event Listener für Seitenverlassen hinzu
-    window.addEventListener('beforeunload', cleanupRealtimeListeners);
-
-    // ==================== HAUPTFUNKTIONEN ====================
-    function initializeApp() {
-      const today = new Date().toISOString().split('T')[0];
-      document.getElementById('oralDate').value = today;
-      document.getElementById('orgDate').value = today;
-      document.getElementById('soldatenDate').value = today;
-      document.getElementById('besprechungDate').value = today;
-      document.getElementById('aufstellungDate').value = today;
-
-      const now = new Date();
-      const hours = now.getHours().toString().padStart(2, '0');
-      const minutes = now.getMinutes().toString().padStart(2, '0');
-      document.getElementById('soldatenTime').value = `${hours}:${minutes}`;
-      document.getElementById('besprechungTime').value = `${hours}:${minutes}`;
-      document.getElementById('aufstellungTime').value = `${hours}:${minutes}`;
-
-      document.getElementById('oralTimeStart').value = '16:40';
-      document.getElementById('oralTimeEnd').value = '18:00';
-      document.getElementById('orgTimeStart').value = '22:10';
-      document.getElementById('orgTimeEnd').value = '23:05';
-
-      setupFormChangeListeners();
-      seedTemplateBoxes();
-      setupBeobachtungEventListeners();
-      setupSoldatenEventListeners();
-      setupAnkundigungEventListeners();
-    }
-
-    function setupEventListeners() {
-      document.getElementById('searchEmployees').addEventListener('input', function (e) {
-        filterEmployees(e.target.value);
-      });
-
-      document.addEventListener('keydown', function (e) {
-        if (e.ctrlKey && e.key === 'n') { e.preventDefault(); openNewEmployeeModal(); }
-        if (e.ctrlKey && e.key === 'f') { e.preventDefault(); document.getElementById('searchEmployees').focus(); }
-        if (e.ctrlKey && e.key === 'e' && currentEmployee) { e.preventDefault(); openEditEmployeeModal(); }
-        if (e.ctrlKey && e.key === 'b') { e.preventDefault(); openBeobachtungAktenModal(); }
-        if (e.ctrlKey && e.key === 's') { e.preventDefault(); openSoldatenModal(); }
-        if (e.ctrlKey && e.key === 'a') { e.preventDefault(); openAnkundigungModal(); }
-      });
-
-      window.addEventListener('resize', adjustSidebarHeight);
-    }
-
-    function setupFormChangeListeners() {
-      const formInputs = document.querySelectorAll('.form-input, .form-select, .form-textarea, .toggle-switch input');
-      formInputs.forEach(input => {
-        input.addEventListener('input', handleFormChange);
-        input.addEventListener('change', handleFormChange);
-      });
-    }
-
-    function setupBeobachtungEventListeners() {
-      const beobachtungInputs = document.querySelectorAll('#beobachtungName, #beobachtungDN, #beobachtungGrund');
-      beobachtungInputs.forEach(input => {
-        input.addEventListener('input', updateBeobachtungPreview);
-      });
-    }
-
-    function setupSoldatenEventListeners() {
-      const soldatenInputs = document.querySelectorAll('#soldatenName, #soldatenDN, #soldatenUnit, #soldatenRank, #soldatenDate, #soldatenTime, #soldatenNotizen, #soldatenSonstiges');
-      soldatenInputs.forEach(input => {
-        input.addEventListener('input', updateSoldatenPreview);
-      });
-    }
-
-    function setupAnkundigungEventListeners() {
-      const ankundigungInputs = document.querySelectorAll('#ankundigungTitle, #ankundigungContent');
-      ankundigungInputs.forEach(input => {
-        input.addEventListener('input', updateAnkundigungPreview);
-      });
-      
-      const besprechungInputs = document.querySelectorAll('#besprechungThema, #besprechungDate, #besprechungTime, #besprechungOrt, #besprechungContent');
-      besprechungInputs.forEach(input => {
-        input.addEventListener('input', updateBesprechungPreview);
-      });
-      
-      const aufstellungInputs = document.querySelectorAll('#aufstellungTyp, #aufstellungDate, #aufstellungTime, #aufstellungOrt, #aufstellungBemerkungen');
-      aufstellungInputs.forEach(input => {
-        input.addEventListener('input', updateAufstellungPreview);
-      });
-    }
-
-    function handleFormChange() {
-      if (currentEmployee) {
-        saveFormData();
-        updateTemplates();
-        saveEmployeeData(true);
+        await db.collection('hrAuditLog').add(auditLog);
+        console.log('Audit-Log erstellt:', auditLog);
+      } catch (error) {
+        console.error('Fehler beim Erstellen des Audit-Logs:', error);
       }
     }
 
-    function adjustSidebarHeight() {
-      const sidebar = document.querySelector('.sidebar');
-      const header = document.querySelector('.app-header');
-      const windowHeight = window.innerHeight;
-      const headerHeight = header.offsetHeight;
+    async function sendAuditLogsToDiscord(snapshot) {
+      const changes = snapshot.docChanges();
+      
+      for (const change of changes) {
+        if (change.type === 'added') {
+          const logData = change.doc.data();
+          
+          const discordMessage = {
+            content: null,
+            embeds: [
+              {
+                title: "📋 HR Audit Log",
+                color: 0x4f46e5,
+                fields: [
+                  {
+                    name: "🔧 Aktion",
+                    value: logData.action,
+                    inline: true
+                  },
+                  {
+                    name: "📄 Typ",
+                    value: logData.entityType,
+                    inline: true
+                  },
+                  {
+                    name: "👤 Benutzer",
+                    value: logData.user,
+                    inline: true
+                  },
+                  {
+                    name: "🆔 ID",
+                    value: logData.entityId,
+                    inline: false
+                  },
+                  {
+                    name: "📅 Zeitpunkt",
+                    value: new Date(logData.timestamp?.toDate() || new Date()).toLocaleString('de-DE'),
+                    inline: false
+                  }
+                ],
+                timestamp: new Date().toISOString()
+              }
+            ]
+          };
 
-      const availableHeight = windowHeight - headerHeight - 40;
-      const newHeight = Math.max(availableHeight, 500);
-      sidebar.style.height = `${newHeight}px`;
+          try {
+            await fetch(settings.discordWebhook || DISCORD_WEBHOOK_URL, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(discordMessage)
+            });
+          } catch (error) {
+            console.error('Fehler beim Senden an Discord:', error);
+          }
+        }
+      }
+    }
+
+    // ==================== SOFT DELETE + ARCHIVIERUNG ====================
+    async function toggleArchiveEmployee() {
+      if (!currentEmployee) return;
+
+      const newStatus = currentEmployee.status === 'archived' ? 'active' : 'archived';
+      const action = newStatus === 'archived' ? 'archive' : 'restore';
+
+      try {
+        await db.collection('hrEmployees').doc(currentEmployee.id).update({
+          status: newStatus,
+          lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // Audit Log
+        await logAuditEvent(
+          action,
+          'employee',
+          currentEmployee.id,
+          {
+            employeeName: currentEmployee.name,
+            employeeDN: currentEmployee.dn,
+            previousStatus: currentEmployee.status,
+            newStatus: newStatus
+          }
+        );
+
+        const message = newStatus === 'archived' ? 'Mitarbeiter archiviert' : 'Mitarbeiter wiederhergestellt';
+        showNotification(message, 'success');
+      } catch (error) {
+        console.error('Fehler beim Archivieren/Wiederherstellen:', error);
+        showNotification('Fehler: ' + error.message, 'error');
+      }
+    }
+
+    function toggleArchiveView() {
+      showArchived = !showArchived;
+      const buttonText = document.getElementById('archiveToggleText');
+      buttonText.textContent = showArchived ? 'Aktive anzeigen' : 'Archiv anzeigen';
+      renderEmployeeList();
+    }
+
+    // ==================== SETTINGS FUNKTIONEN ====================
+    function openSettingsModal() {
+      openModal('settingsModal');
+      populateSettingsUI();
+    }
+
+    function switchSettingsTab(tabName) {
+      document.querySelectorAll('.settings-tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      
+      document.querySelectorAll('.settings-tab-content').forEach(content => {
+        content.style.display = 'none';
+      });
+      
+      let activeTab;
+      if (tabName === 'units') {
+        activeTab = document.querySelector('.settings-tab:nth-child(1)');
+        document.getElementById('unitsTab').style.display = 'block';
+      } else if (tabName === 'ranks') {
+        activeTab = document.querySelector('.settings-tab:nth-child(2)');
+        document.getElementById('ranksTab').style.display = 'block';
+      } else {
+        activeTab = document.querySelector('.settings-tab:nth-child(3)');
+        document.getElementById('discordTab').style.display = 'block';
+      }
+      
+      activeTab.classList.add('active');
+    }
+
+    function populateSettingsUI() {
+      // Units
+      const unitList = document.getElementById('unitList');
+      unitList.innerHTML = '';
+      
+      settings.units.forEach((unit, index) => {
+        const unitItem = document.createElement('div');
+        unitItem.className = 'unit-item';
+        unitItem.innerHTML = `
+          <div class="unit-name">${escapeHtml(unit.name)}</div>
+          <input type="text" class="discord-id" value="${escapeHtml(unit.discordId || '')}" 
+                 placeholder="Discord Rollen-ID" onchange="updateUnitDiscordId(${index}, this.value)">
+          <button class="btn btn-danger" onclick="removeUnit(${index})">
+            <i class="fas fa-trash"></i>
+          </button>
+        `;
+        unitList.appendChild(unitItem);
+      });
+
+      // Ränge
+      const rankList = document.getElementById('rankList');
+      rankList.innerHTML = '';
+      
+      settings.ranks.forEach((rank, index) => {
+        const rankItem = document.createElement('div');
+        rankItem.className = 'rank-item';
+        rankItem.innerHTML = `
+          <div class="rank-name">${escapeHtml(rank.name)}</div>
+          <input type="text" class="discord-id" value="${escapeHtml(rank.discordId || '')}" 
+                 placeholder="Discord Rollen-ID" onchange="updateRankDiscordId(${index}, this.value)">
+          <button class="btn btn-danger" onclick="removeRank(${index})">
+            <i class="fas fa-trash"></i>
+          </button>
+        `;
+        rankList.appendChild(rankItem);
+      });
+
+      // Discord Settings
+      document.getElementById('discordWebhook').value = settings.discordWebhook || '';
+      document.getElementById('hrRoleId').value = settings.hrRoleId || '';
+    }
+
+    function addNewUnit() {
+      const name = prompt('Name der neuen Unit:');
+      if (name && name.trim()) {
+        settings.units.push({
+          name: name.trim(),
+          discordId: ''
+        });
+        populateSettingsUI();
+        showNotification('Unit hinzugefügt', 'success');
+      }
+    }
+
+    function addNewRank() {
+      const name = prompt('Name des neuen Rangs:');
+      if (name && name.trim()) {
+        settings.ranks.push({
+          name: name.trim(),
+          discordId: ''
+        });
+        populateSettingsUI();
+        showNotification('Rang hinzugefügt', 'success');
+      }
+    }
+
+    function updateUnitDiscordId(index, discordId) {
+      if (index >= 0 && index < settings.units.length) {
+        settings.units[index].discordId = discordId;
+      }
+    }
+
+    function updateRankDiscordId(index, discordId) {
+      if (index >= 0 && index < settings.ranks.length) {
+        settings.ranks[index].discordId = discordId;
+      }
+    }
+
+    function removeUnit(index) {
+      if (confirm('Unit wirklich löschen?')) {
+        settings.units.splice(index, 1);
+        populateSettingsUI();
+        showNotification('Unit gelöscht', 'success');
+      }
+    }
+
+    function removeRank(index) {
+      if (confirm('Rang wirklich löschen?')) {
+        settings.ranks.splice(index, 1);
+        populateSettingsUI();
+        showNotification('Rang gelöscht', 'success');
+      }
+    }
+
+    async function saveSettings() {
+      try {
+        settings.discordWebhook = document.getElementById('discordWebhook').value;
+        settings.hrRoleId = document.getElementById('hrRoleId').value;
+        
+        await db.collection('hrSettings').doc('settings').set(settings, { merge: true });
+        
+        // Audit Log
+        await logAuditEvent('settings_update', 'settings', 'global', {
+          unitsCount: settings.units.length,
+          ranksCount: settings.ranks.length
+        });
+
+        updateUnitAndRankSelects();
+        closeModal('settingsModal');
+        showNotification('Einstellungen gespeichert', 'success');
+      } catch (error) {
+        console.error('Fehler beim Speichern der Einstellungen:', error);
+        showNotification('Fehler: ' + error.message, 'error');
+      }
+    }
+
+    async function loadSettings() {
+      try {
+        const doc = await db.collection('hrSettings').doc('settings').get();
+        if (doc.exists) {
+          const loadedSettings = doc.data();
+          settings = { ...settings, ...loadedSettings };
+        }
+        
+        // Standard-Units und Ränge, falls keine vorhanden
+        if (!settings.units || settings.units.length === 0) {
+          settings.units = [
+            { name: "Air Force", discordId: "1269229762400878675" },
+            { name: "S.O.C", discordId: "1339523576159666218" },
+            { name: "Infantry", discordId: "1187756956425920645" },
+            { name: "Military Police", discordId: "1289716541658497055" },
+            { name: "Navy Marine", discordId: "1097653037968920776" },
+            { name: "Navy SEALs", discordId: "1125174901989445693" }
+          ];
+        }
+
+        if (!settings.ranks || settings.ranks.length === 0) {
+          settings.ranks = [
+            { name: "Private", discordId: "1097625924104626198" },
+            { name: "Private First Class", discordId: "1098190829295771739" },
+            { name: "Specialist", discordId: "1097625921516748830" },
+            { name: "Corporal", discordId: "1097625914763919532" },
+            { name: "Sergeant", discordId: "1097625913274933298" },
+            { name: "Staff Sergeant", discordId: "1097625912163451112" },
+            { name: "Sergeant First Class", discordId: "1348414845862674524" },
+            { name: "Master Sergeant", discordId: "1348414845862674524" },
+            { name: "Lieutenant", discordId: "1097625900125782278" },
+            { name: "Captain", discordId: "1097625898880077955" },
+            { name: "Major", discordId: "1097625896560640024" },
+            { name: "Colonel", discordId: "1097625895541428275" },
+            { name: "Major General", discordId: "1097625893880479777" },
+            { name: "General of Army", discordId: "1097625891632316436" }
+          ];
+        }
+
+        updateUnitAndRankSelects();
+      } catch (error) {
+        console.error('Fehler beim Laden der Einstellungen:', error);
+      }
+    }
+
+    function updateUnitAndRankSelects() {
+      // Update alle Unit Selects
+      const unitSelects = [
+        document.getElementById('unitSelect'),
+        document.getElementById('unitSelect2'),
+        document.getElementById('newEmployeeUnit'),
+        document.getElementById('editEmployeeUnit'),
+        document.getElementById('soldatenUnit'),
+        document.getElementById('akteUnit')
+      ];
+
+      unitSelects.forEach(select => {
+        if (select) {
+          const currentValue = select.value;
+          select.innerHTML = '<option value="">Unit auswählen</option>';
+          
+          settings.units.forEach(unit => {
+            const option = document.createElement('option');
+            option.value = unit.name;
+            option.textContent = unit.name;
+            select.appendChild(option);
+          });
+          
+          select.value = currentValue;
+        }
+      });
+
+      // Update alle Rank Selects
+      const rankSelects = [
+        document.getElementById('rankSelect'),
+        document.getElementById('rankSelect2'),
+        document.getElementById('newEmployeeRank'),
+        document.getElementById('editEmployeeRank'),
+        document.getElementById('soldatenRank'),
+        document.getElementById('akteRank')
+      ];
+
+      rankSelects.forEach(select => {
+        if (select) {
+          const currentValue = select.value;
+          select.innerHTML = '<option value="">Rang auswählen</option>';
+          
+          settings.ranks.forEach(rank => {
+            const option = document.createElement('option');
+            option.value = rank.name;
+            option.textContent = rank.name;
+            select.appendChild(option);
+          });
+          
+          select.value = currentValue;
+        }
+      });
     }
 
     // ==================== ANKÜNDIGUNGEN FUNKTIONEN ====================
     function openAnkundigungModal() {
       openModal('ankundigungModal');
       updateAnkundigungPreview();
-    }
-
-    function closeAnkundigungModal() {
-      closeModal('ankundigungModal');
     }
 
     function switchAnkundigungTab(tabName) {
@@ -3608,6 +4079,12 @@ Bemerkungen: ${bemerkungen || ''}`;
       try {
         await db.collection('hrAnkundigungen').doc(ankundigung.id).set(ankundigung);
         
+        // Audit Log
+        await logAuditEvent('create', 'ankundigung', ankundigung.id, {
+          title: ankundigung.title,
+          type: 'ankundigung'
+        });
+
         showNotification('Ankündigung erfolgreich gespeichert', 'success');
         document.getElementById('ankundigungTitle').value = '';
         document.getElementById('ankundigungContent').value = '';
@@ -3650,6 +4127,12 @@ Bemerkungen: ${bemerkungen || ''}`;
       try {
         await db.collection('hrAnkundigungen').doc(besprechung.id).set(besprechung);
         
+        // Audit Log
+        await logAuditEvent('create', 'besprechung', besprechung.id, {
+          thema: besprechung.thema,
+          date: besprechung.dateFormatted
+        });
+
         showNotification('Besprechung erfolgreich gespeichert', 'success');
         document.getElementById('besprechungThema').value = '';
         document.getElementById('besprechungDate').value = new Date().toISOString().split('T')[0];
@@ -3695,6 +4178,13 @@ Bemerkungen: ${bemerkungen || ''}`;
       try {
         await db.collection('hrAnkundigungen').doc(aufstellung.id).set(aufstellung);
         
+        // Audit Log
+        await logAuditEvent('create', 'aufstellung', aufstellung.id, {
+          typ: aufstellung.typ,
+          date: aufstellung.dateFormatted,
+          ort: aufstellung.ort
+        });
+
         showNotification('Aufstellung erfolgreich gespeichert', 'success');
         document.getElementById('aufstellungTyp').value = '';
         document.getElementById('aufstellungDate').value = new Date().toISOString().split('T')[0];
@@ -3820,6 +4310,10 @@ Bemerkungen: ${bemerkungen || ''}`;
 
       try {
         await db.collection('hrAnkundigungen').doc(itemId).delete();
+        
+        // Audit Log
+        await logAuditEvent('delete', 'ankundigung', itemId);
+        
         showNotification('Eintrag gelöscht', 'success');
       } catch (error) {
         console.error('Fehler beim Löschen des Eintrags:', error);
@@ -3831,10 +4325,6 @@ Bemerkungen: ${bemerkungen || ''}`;
     function openSoldatenModal() {
       openModal('soldatenModal');
       updateSoldatenPreview();
-    }
-
-    function closeSoldatenModal() {
-      closeModal('soldatenModal');
     }
 
     function switchSoldatenTab(tabName) {
@@ -3885,7 +4375,7 @@ Notizen: ${notizen || ''}
 Sonstiges: ${sonstiges || ''}
 
 /////////////////////////////////////////////////////////////////////////
-<@&1097625910242447422>
+<@&${settings.hrRoleId || '1097625910242447422'}>
 ╚══════════════════`;
 
       document.getElementById('soldatenPreview').textContent = template;
@@ -3931,6 +4421,12 @@ Sonstiges: ${sonstiges || ''}
       try {
         await db.collection('hrSoldatenGespräche').doc(gespräch.id).set(gespräch);
         
+        // Audit Log
+        await logAuditEvent('create', 'soldaten_gespräch', gespräch.id, {
+          name: gespräch.name,
+          dn: gespräch.dn
+        });
+
         showNotification('Soldatengespräch erfolgreich gespeichert', 'success');
         document.getElementById('soldatenName').value = '';
         document.getElementById('soldatenDN').value = '';
@@ -4042,6 +4538,10 @@ Sonstiges: ${sonstiges || ''}
 
       try {
         await db.collection('hrSoldatenGespräche').doc(gesprächId).delete();
+        
+        // Audit Log
+        await logAuditEvent('delete', 'soldaten_gespräch', gesprächId);
+        
         showNotification('Soldatengespräch gelöscht', 'success');
       } catch (error) {
         console.error('Fehler beim Löschen des Soldatengesprächs:', error);
@@ -4053,10 +4553,6 @@ Sonstiges: ${sonstiges || ''}
     function openBeobachtungAktenModal() {
       openModal('beobachtungAktenModal');
       updateBeobachtungPreview();
-    }
-
-    function closeBeobachtungAktenModal() {
-      closeModal('beobachtungAktenModal');
     }
 
     function switchBeobachtungTab(tabName) {
@@ -4094,7 +4590,7 @@ Name: ${name || ''}
 DN: ${dn || ''}
 Grund: ${grund || ''}
 /////////////////////////////////////////////////////////////////////////
-<@&1097625910242447422>
+<@&${settings.hrRoleId || '1097625910242447422'}>
 ╚══════════════════╝`;
 
       document.getElementById('beobachtungPreview').textContent = template;
@@ -4137,6 +4633,13 @@ Grund: ${grund || ''}
 
       try {
         await db.collection('hrAkten').doc(akte.id).set(akte);
+        
+        // Audit Log
+        await logAuditEvent('create', 'akte', akte.id, {
+          name: akte.name,
+          dn: akte.dn
+        });
+
         showNotification('Akte erfolgreich erstellt', 'success');
         document.getElementById('akteName').value = '';
         document.getElementById('akteDN').value = '';
@@ -4184,6 +4687,13 @@ Grund: ${grund || ''}
         try {
           await db.collection('hrAkten').doc(newAkte.id).set(newAkte);
           akte = newAkte;
+          
+          // Audit Log
+          await logAuditEvent('create', 'akte', newAkte.id, {
+            name: newAkte.name,
+            dn: newAkte.dn,
+            reason: 'autocreate_from_beobachtung'
+          });
         } catch (error) {
           console.error('Fehler beim Erstellen der Akte:', error);
           showNotification('Fehler beim Erstellen der Akte: ' + error.message, 'error');
@@ -4211,6 +4721,13 @@ Grund: ${grund || ''}
           lastUpdated: akte.lastUpdated
         });
         
+        // Audit Log
+        await logAuditEvent('add_beobachtung', 'akte', akte.id, {
+          name: akte.name,
+          dn: akte.dn,
+          beobachtungId: beobachtung.id
+        });
+
         showNotification('Beobachtung zur Akte hinzugefügt', 'success');
         document.getElementById('beobachtungName').value = '';
         document.getElementById('beobachtungDN').value = '';
@@ -4414,6 +4931,13 @@ Grund: ${grund || ''}
           lastUpdated: akte.lastUpdated
         });
         
+        // Audit Log
+        await logAuditEvent('delete_beobachtung', 'akte', akteId, {
+          name: akte.name,
+          dn: akte.dn,
+          beobachtungId: beobachtungId
+        });
+
         showNotification('Beobachtung gelöscht', 'success');
         closeModal('akteDetailModal');
         setTimeout(() => openAkteDetail(akteId), 100);
@@ -4429,6 +4953,10 @@ Grund: ${grund || ''}
 
       try {
         await db.collection('hrAkten').doc(akteId).delete();
+        
+        // Audit Log
+        await logAuditEvent('delete', 'akte', akteId);
+
         showNotification('Akte gelöscht', 'success');
       } catch (error) {
         console.error('Fehler beim Löschen der Akte:', error);
@@ -4446,6 +4974,110 @@ Grund: ${grund || ''}
       document.getElementById('beobachtungName').value = akte.name;
       document.getElementById('beobachtungDN').value = akte.dn;
       updateBeobachtungPreview();
+    }
+
+    // ==================== HAUPTFUNKTIONEN ====================
+    function initializeApp() {
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('oralDate').value = today;
+      document.getElementById('orgDate').value = today;
+      document.getElementById('soldatenDate').value = today;
+      document.getElementById('besprechungDate').value = today;
+      document.getElementById('aufstellungDate').value = today;
+
+      const now = new Date();
+      const hours = now.getHours().toString().padStart(2, '0');
+      const minutes = now.getMinutes().toString().padStart(2, '0');
+      document.getElementById('soldatenTime').value = `${hours}:${minutes}`;
+      document.getElementById('besprechungTime').value = `${hours}:${minutes}`;
+      document.getElementById('aufstellungTime').value = `${hours}:${minutes}`;
+
+      document.getElementById('oralTimeStart').value = '16:40';
+      document.getElementById('oralTimeEnd').value = '18:00';
+      document.getElementById('orgTimeStart').value = '22:10';
+      document.getElementById('orgTimeEnd').value = '23:05';
+
+      setupFormChangeListeners();
+      seedTemplateBoxes();
+      setupBeobachtungEventListeners();
+      setupSoldatenEventListeners();
+      setupAnkundigungEventListeners();
+    }
+
+    function setupEventListeners() {
+      document.getElementById('searchEmployees').addEventListener('input', function (e) {
+        filterEmployees(e.target.value);
+      });
+
+      document.addEventListener('keydown', function (e) {
+        if (e.ctrlKey && e.key === 'n') { e.preventDefault(); openNewEmployeeModal(); }
+        if (e.ctrlKey && e.key === 'f') { e.preventDefault(); document.getElementById('searchEmployees').focus(); }
+        if (e.ctrlKey && e.key === 'e' && currentEmployee) { e.preventDefault(); openEditEmployeeModal(); }
+        if (e.ctrlKey && e.key === 'b') { e.preventDefault(); openBeobachtungAktenModal(); }
+        if (e.ctrlKey && e.key === 's') { e.preventDefault(); openSoldatenModal(); }
+        if (e.ctrlKey && e.key === 'a') { e.preventDefault(); openAnkundigungModal(); }
+        if (e.ctrlKey && e.key === ',') { e.preventDefault(); openSettingsModal(); }
+      });
+
+      window.addEventListener('resize', adjustSidebarHeight);
+    }
+
+    function setupFormChangeListeners() {
+      const formInputs = document.querySelectorAll('.form-input, .form-select, .form-textarea, .toggle-switch input');
+      formInputs.forEach(input => {
+        input.addEventListener('input', handleFormChange);
+        input.addEventListener('change', handleFormChange);
+      });
+    }
+
+    function setupBeobachtungEventListeners() {
+      const beobachtungInputs = document.querySelectorAll('#beobachtungName, #beobachtungDN, #beobachtungGrund');
+      beobachtungInputs.forEach(input => {
+        input.addEventListener('input', updateBeobachtungPreview);
+      });
+    }
+
+    function setupSoldatenEventListeners() {
+      const soldatenInputs = document.querySelectorAll('#soldatenName, #soldatenDN, #soldatenUnit, #soldatenRank, #soldatenDate, #soldatenTime, #soldatenNotizen, #soldatenSonstiges');
+      soldatenInputs.forEach(input => {
+        input.addEventListener('input', updateSoldatenPreview);
+      });
+    }
+
+    function setupAnkundigungEventListeners() {
+      const ankundigungInputs = document.querySelectorAll('#ankundigungTitle, #ankundigungContent');
+      ankundigungInputs.forEach(input => {
+        input.addEventListener('input', updateAnkundigungPreview);
+      });
+      
+      const besprechungInputs = document.querySelectorAll('#besprechungThema, #besprechungDate, #besprechungTime, #besprechungOrt, #besprechungContent');
+      besprechungInputs.forEach(input => {
+        input.addEventListener('input', updateBesprechungPreview);
+      });
+      
+      const aufstellungInputs = document.querySelectorAll('#aufstellungTyp, #aufstellungDate, #aufstellungTime, #aufstellungOrt, #aufstellungBemerkungen');
+      aufstellungInputs.forEach(input => {
+        input.addEventListener('input', updateAufstellungPreview);
+      });
+    }
+
+    function handleFormChange() {
+      if (currentEmployee) {
+        saveFormData();
+        updateTemplates();
+        saveEmployeeData(true);
+      }
+    }
+
+    function adjustSidebarHeight() {
+      const sidebar = document.querySelector('.sidebar');
+      const header = document.querySelector('.app-header');
+      const windowHeight = window.innerHeight;
+      const headerHeight = header.offsetHeight;
+
+      const availableHeight = windowHeight - headerHeight - 40;
+      const newHeight = Math.max(availableHeight, 500);
+      sidebar.style.height = `${newHeight}px`;
     }
 
     // ==================== MITARBEITER FUNKTIONEN ====================
@@ -4477,8 +5109,11 @@ Grund: ${grund || ''}
       countElement.textContent = filteredEmployees.length;
 
       filteredEmployees.forEach(employee => {
+        const isArchived = employee.status === 'archived';
+        const isActive = currentEmployee?.id === employee.id;
+        
         const card = document.createElement('div');
-        card.className = `employee-card ${currentEmployee?.id === employee.id ? 'active' : ''}`;
+        card.className = `employee-card ${isActive ? 'active' : ''} ${isArchived ? 'archived' : ''}`;
         card.onclick = () => selectEmployee(employee);
         card.oncontextmenu = (e) => { e.preventDefault(); showEmployeeContextMenu(e, employee); };
 
@@ -4511,19 +5146,35 @@ Grund: ${grund || ''}
     }
 
     function getEmptyStateTitle() {
-      return 'Keine Mitarbeiter';
+      if (showArchived) return 'Keine archivierten Mitarbeiter';
+      return 'Keine aktiven Mitarbeiter';
     }
 
     function getFilteredEmployees() {
+      let filtered = employees.filter(emp => {
+        if (showArchived) {
+          return emp.status === 'archived';
+        } else {
+          return !emp.status || emp.status === 'active';
+        }
+      });
+
       if (currentFilter === 'oral') {
-        return employees.filter(emp => !(emp.inductions?.oral?.completed));
+        filtered = filtered.filter(emp => !(emp.inductions?.oral?.completed));
       } else if (currentFilter === 'org') {
-        return employees.filter(emp => !(emp.inductions?.org?.completed));
+        filtered = filtered.filter(emp => !(emp.inductions?.org?.completed));
       }
-      return employees;
+      
+      return filtered;
     }
 
     function getEmptyStateDescription() {
+      if (showArchived) {
+        if (currentFilter === 'oral') return 'Keine archivierten Mitarbeiter mit ausstehender mündlicher Einweisung';
+        if (currentFilter === 'org') return 'Keine archivierten Mitarbeiter mit ausstehender organisatorischer Einweisung';
+        return 'Keine archivierten Mitarbeiter gefunden';
+      }
+      
       if (currentFilter === 'oral') return 'Keine Mitarbeiter mit ausstehender mündlicher Einweisung';
       if (currentFilter === 'org') return 'Keine Mitarbeiter mit ausstehender organisatorischer Einweisung';
       return 'Fügen Sie Ihren ersten Mitarbeiter hinzu';
@@ -4572,6 +5223,7 @@ Grund: ${grund || ''}
 
       const oralData = currentEmployee.oralData || {};
       const orgData = currentEmployee.orgData || {};
+      const isArchived = currentEmployee.status === 'archived';
 
       document.getElementById('oralDate').value = oralData.date || (new Date().toISOString().split('T')[0]);
       document.getElementById('oralTimeStart').value = oralData.timeStart || '16:40';
@@ -4597,6 +5249,25 @@ Grund: ${grund || ''}
 
       updateInductionUI('oral', oralCompleted);
       updateInductionUI('org', orgCompleted);
+
+      // Archive Status anzeigen
+      const archiveTag = document.getElementById('archiveStatusTag');
+      const archiveButton = document.getElementById('archiveButton');
+      const archiveButtonText = document.getElementById('archiveButtonText');
+      
+      if (isArchived) {
+        archiveTag.style.display = 'flex';
+        archiveButton.style.display = 'inline-flex';
+        archiveButtonText.textContent = 'Wiederherstellen';
+        document.getElementById('oralInductionToggle').disabled = true;
+        document.getElementById('orgInductionToggle').disabled = true;
+      } else {
+        archiveTag.style.display = 'none';
+        archiveButton.style.display = 'inline-flex';
+        archiveButtonText.textContent = 'Archivieren';
+        document.getElementById('oralInductionToggle').disabled = false;
+        document.getElementById('orgInductionToggle').disabled = false;
+      }
 
       checkBothInductionsCompleted();
       updateTemplates();
@@ -4663,8 +5334,59 @@ Grund: ${grund || ''}
       const rankSelectValue = document.getElementById('rankSelect').value;
       if (unitSelectValue) currentEmployee.unit = unitSelectValue;
       if (rankSelectValue) currentEmployee.rank = rankSelectValue;
+    }
 
-      currentEmployee.lastUpdated = new Date().toISOString();
+    async function saveEmployeeData(autoSave = false) {
+      if (!currentEmployee) return;
+
+      try {
+        const dataToSave = {
+          name: currentEmployee.name,
+          dn: currentEmployee.dn,
+          unit: currentEmployee.unit,
+          rank: currentEmployee.rank,
+          lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
+          inductions: currentEmployee.inductions || {},
+          oralData: currentEmployee.oralData || {},
+          orgData: currentEmployee.orgData || {},
+          status: currentEmployee.status || 'active'
+        };
+
+        await db.collection('hrEmployees').doc(currentEmployee.id).set(dataToSave, { merge: true });
+
+        // Audit Log
+        if (!autoSave) {
+          await logAuditEvent(
+            'manual_update',
+            'employee',
+            currentEmployee.id,
+            {
+              employeeName: currentEmployee.name,
+              employeeDN: currentEmployee.dn
+            }
+          );
+          showNotification('Daten gespeichert', 'success');
+        } else {
+          await logAuditEvent(
+            'auto_update',
+            'employee',
+            currentEmployee.id,
+            {
+              employeeName: currentEmployee.name,
+              employeeDN: currentEmployee.dn,
+              autoSave: true
+            }
+          );
+        }
+        
+        return true;
+      } catch (error) {
+        console.error('Fehler beim Speichern:', error);
+        if (!autoSave) {
+          showNotification('Fehler beim Speichern: ' + error.message, 'error');
+        }
+        return false;
+      }
     }
 
     function openEditEmployeeModal() {
@@ -4692,13 +5414,34 @@ Grund: ${grund || ''}
         return;
       }
 
+      const oldData = { ...currentEmployee };
+      
       currentEmployee.name = name;
       currentEmployee.dn = dn;
       currentEmployee.unit = document.getElementById('editEmployeeUnit').value || '';
       currentEmployee.rank = document.getElementById('editEmployeeRank').value || '';
 
-      const success = await saveEmployeeToFirebase(currentEmployee);
+      const success = await saveEmployeeData(false);
       if (success) {
+        // Audit Log für Änderungen
+        const changes = [];
+        if (oldData.name !== currentEmployee.name) changes.push(`Name: ${oldData.name} → ${currentEmployee.name}`);
+        if (oldData.dn !== currentEmployee.dn) changes.push(`DN: ${oldData.dn} → ${currentEmployee.dn}`);
+        if (oldData.unit !== currentEmployee.unit) changes.push(`Unit: ${oldData.unit} → ${currentEmployee.unit}`);
+        if (oldData.rank !== currentEmployee.rank) changes.push(`Rang: ${oldData.rank} → ${currentEmployee.rank}`);
+
+        if (changes.length > 0) {
+          await logAuditEvent(
+            'employee_edit',
+            'employee',
+            currentEmployee.id,
+            {
+              employeeName: currentEmployee.name,
+              changes: changes
+            }
+          );
+        }
+
         closeModal('editEmployeeModal');
         updateEmployeeHeader();
         renderEmployeeList();
@@ -4717,15 +5460,35 @@ Grund: ${grund || ''}
         return;
       }
 
-      const success = await deleteEmployeeFromFirebase(currentEmployee.id);
-      if (success) {
+      try {
+        // Soft Delete: Nur als archiviert markieren
+        await db.collection('hrEmployees').doc(currentEmployee.id).update({
+          status: 'archived',
+          lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // Audit Log
+        await logAuditEvent(
+          'soft_delete',
+          'employee',
+          currentEmployee.id,
+          {
+            employeeName: currentEmployee.name,
+            employeeDN: currentEmployee.dn,
+            method: 'soft_delete_to_archive'
+          }
+        );
+
         closeModal('editEmployeeModal');
         currentEmployee = null;
         document.getElementById('employeeHeader').style.display = 'none';
         document.getElementById('inductionContent').style.display = 'none';
         renderEmployeeList();
         updateStats();
-        showNotification('Mitarbeiter erfolgreich gelöscht', 'success');
+        showNotification('Mitarbeiter archiviert (Soft Delete)', 'success');
+      } catch (error) {
+        console.error('Fehler beim Löschen:', error);
+        showNotification('Fehler beim Löschen: ' + error.message, 'error');
       }
     }
 
@@ -4746,6 +5509,18 @@ Grund: ${grund || ''}
       checkBothInductionsCompleted();
       renderEmployeeList();
       updateStats();
+
+      // Audit Log
+      logAuditEvent(
+        'induction_update',
+        'employee',
+        currentEmployee.id,
+        {
+          employeeName: currentEmployee.name,
+          inductionType: type,
+          status: completed ? 'completed' : 'pending'
+        }
+      );
 
       const typeName = type === 'oral' ? 'Mündliche' : 'Organisatorische';
       const status = completed ? 'bestanden' : 'als ausstehend markiert';
@@ -4820,8 +5595,12 @@ Grund: ${grund || ''}
 
       const timeSeparator = isOral ? 'bis' : '-';
 
-      const unitDiscordId = unitDiscordIds[unit] || '';
-      const rankDiscordId = rankDiscordIds[rank] || '';
+      // Finde Discord IDs aus den Settings
+      const unitSetting = settings.units.find(u => u.name === unit);
+      const rankSetting = settings.ranks.find(r => r.name === rank);
+      
+      const unitDiscordId = unitSetting?.discordId || '';
+      const rankDiscordId = rankSetting?.discordId || '';
 
       const unitDisplay = unitDiscordId ? `<@&${unitDiscordId}>` : unit;
       const rankDisplay = rankDiscordId ? `<@&${rankDiscordId}>` : rank;
@@ -4840,46 +5619,25 @@ Beteiligte: ${person}
 Sonstiges: ${notes}
 
 /////////////////////////////////////////////////////////////////////////
-<@&1097625910242447422>
+<@&${settings.hrRoleId || '1097625910242447422'}>
 ╚══════════════════╝`;
     }
 
-    async function saveEmployeeToFirebase(employee) {
-      try {
-        const dataToSave = {
-          name: employee.name,
-          dn: employee.dn,
-          unit: employee.unit,
-          rank: employee.rank,
-          lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
-          inductions: employee.inductions || {},
-          oralData: employee.oralData || {},
-          orgData: employee.orgData || {}
-        };
-
-        await db.collection('hrEmployees').doc(employee.id).set(dataToSave, { merge: true });
-        return true;
-      } catch (error) {
-        console.error('Fehler beim Speichern:', error);
-        showNotification('Fehler beim Speichern: ' + error.message, 'error');
-        return false;
-      }
-    }
-
-    async function deleteEmployeeFromFirebase(employeeId) {
-      try {
-        await db.collection('hrEmployees').doc(employeeId).delete();
-        return true;
-      } catch (error) {
-        console.error('Fehler beim Löschen:', error);
-        showNotification('Fehler beim Löschen: ' + error.message, 'error');
-        return false;
-      }
-    }
-
     function updateStats() {
-      document.getElementById('totalEmployees').textContent = employees.length;
-      document.getElementById('totalAkten').textContent = akten.length;
+      const totalEmployees = employees.filter(emp => !emp.status || emp.status === 'active').length;
+      const totalArchived = employees.filter(emp => emp.status === 'archived').length;
+      
+      document.getElementById('totalEmployees').textContent = totalEmployees;
+      document.getElementById('totalArchived').textContent = totalArchived;
+      
+      // Akten zählen (Beobachtungen)
+      let aktenCount = 0;
+      employees.forEach(emp => {
+        if (emp.beobachtungen && emp.beobachtungen.length > 0) {
+          aktenCount += emp.beobachtungen.length;
+        }
+      });
+      document.getElementById('totalAkten').textContent = aktenCount + akten.length;
     }
 
     function showEmployeeContextMenu(e, employee) {
@@ -4902,27 +5660,22 @@ Sonstiges: ${notes}
         box-shadow: var(--shadow-md);
       `;
 
+      const isArchived = employee.status === 'archived';
+      
       menu.innerHTML = `
         <div style="padding: 8px; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
           <div style="font-weight: 900; color: white; margin-bottom: 2px; font-size: 13px;">${escapeHtml(employee.name || '')}</div>
           <div style="font-size: 11px; color: var(--gray);">DN: ${escapeHtml(employee.dn || '')}</div>
+          ${isArchived ? '<div style="font-size: 10px; color: var(--warning); margin-top: 4px;"><i class="fas fa-archive"></i> Archiviert</div>' : ''}
         </div>
         <div style="padding: 4px 0;">
           <button onclick="selectEmployee(employees.find(x => x.id === '${employee.id}')); openEditEmployeeModal(); document.getElementById('contextMenu')?.remove();"
             style="width:100%;text-align:left;padding:8px 10px;background:none;border:none;color:var(--primary-light);font-weight:900;cursor:pointer;transition:all .2s;border-radius:4px;display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:2px;">
             <i class="fas fa-edit"></i> Bearbeiten
           </button>
-          <button onclick="deleteEmployee('${employee.id}')"
-            style="width:100%;text-align:left;padding:8px 10px;background:none;border:none;color:var(--danger);font-weight:900;cursor:pointer;transition:all .2s;border-radius:4px;display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:2px;">
-            <i class="fas fa-trash"></i> Löschen
-          </button>
-          <button onclick="duplicateEmployee('${employee.id}')"
-            style="width:100%;text-align:left;padding:8px 10px;background:none;border:none;color:var(--primary-light);font-weight:900;cursor:pointer;transition:all .2s;border-radius:4px;display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:2px;">
-            <i class="fas fa-copy"></i> Duplizieren
-          </button>
-          <button onclick="exportEmployee('${employee.id}')"
-            style="width:100%;text-align:left;padding:8px 10px;background:none;border:none;color:var(--secondary);font-weight:900;cursor:pointer;transition:all .2s;border-radius:4px;display:flex;align-items:center;gap:6px;font-size:12px;">
-            <i class="fas fa-download"></i> Exportieren
+          <button onclick="toggleArchiveEmployeeContext('${employee.id}')"
+            style="width:100%;text-align:left;padding:8px 10px;background:none;border:none;color:${isArchived ? 'var(--secondary)' : 'var(--warning)'};font-weight:900;cursor:pointer;transition:all .2s;border-radius:4px;display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:2px;">
+            <i class="fas ${isArchived ? 'fa-undo' : 'fa-archive'}"></i> ${isArchived ? 'Wiederherstellen' : 'Archivieren'}
           </button>
         </div>
       `;
@@ -4943,58 +5696,40 @@ Sonstiges: ${notes}
       }, 100);
     }
 
-    async function deleteEmployee(employeeId) {
-      if (!confirm('Mitarbeiter wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.')) return;
-
-      const success = await deleteEmployeeFromFirebase(employeeId);
-      if (success) {
-        if (currentEmployee?.id === employeeId) {
-          currentEmployee = null;
-          document.getElementById('employeeHeader').style.display = 'none';
-          document.getElementById('inductionContent').style.display = 'none';
-        }
-
-        showNotification('Mitarbeiter gelöscht', 'success');
-        document.getElementById('contextMenu')?.remove();
-      }
-    }
-
-    async function duplicateEmployee(employeeId) {
+    async function toggleArchiveEmployeeContext(employeeId) {
       const employee = employees.find(emp => emp.id === employeeId);
       if (!employee) return;
 
-      const newEmployee = {
-        ...JSON.parse(JSON.stringify(employee)),
-        id: `EMP-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
-        name: `${employee.name} (Kopie)`,
-        lastUpdated: new Date().toISOString()
-      };
+      const newStatus = employee.status === 'archived' ? 'active' : 'archived';
+      const action = newStatus === 'archived' ? 'archive' : 'restore';
 
-      const success = await saveEmployeeToFirebase(newEmployee);
-      if (success) {
-        showNotification('Mitarbeiter dupliziert', 'success');
+      try {
+        await db.collection('hrEmployees').doc(employeeId).update({
+          status: newStatus,
+          lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // Audit Log
+        await logAuditEvent(
+          action,
+          'employee',
+          employeeId,
+          {
+            employeeName: employee.name,
+            employeeDN: employee.dn,
+            previousStatus: employee.status,
+            newStatus: newStatus
+          }
+        );
+
+        const message = newStatus === 'archived' ? 'Mitarbeiter archiviert' : 'Mitarbeiter wiederhergestellt';
+        showNotification(message, 'success');
+        
         document.getElementById('contextMenu')?.remove();
+      } catch (error) {
+        console.error('Fehler beim Archivieren/Wiederherstellen:', error);
+        showNotification('Fehler: ' + error.message, 'error');
       }
-    }
-
-    function exportEmployee(employeeId) {
-      const employee = employees.find(emp => emp.id === employeeId);
-      if (!employee) return;
-
-      const data = JSON.stringify(employee, null, 2);
-      const blob = new Blob([data], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `mitarbeiter-${(employee.name || 'unbekannt')}-${(employee.dn || '')}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-
-      showNotification('Mitarbeiter exportiert', 'success');
-      document.getElementById('contextMenu')?.remove();
     }
 
     async function copyToClipboard(text) {
@@ -5068,11 +5803,26 @@ Sonstiges: ${notes}
         lastUpdated: new Date().toISOString(),
         inductions: { oral: { completed: false }, org: { completed: false } },
         oralData: { date: '', timeStart: '16:40', timeEnd: '18:00', person: '', notes: '', unit: unit || '', rank: rank || '' },
-        orgData: { date: '', timeStart: '22:10', timeEnd: '23:05', person: '', notes: '', unit: unit || '', rank: rank || '' }
+        orgData: { date: '', timeStart: '22:10', timeEnd: '23:05', person: '', notes: '', unit: unit || '', rank: rank || '' },
+        status: 'active'
       };
 
-      const success = await saveEmployeeToFirebase(newEmployee);
-      if (success) {
+      try {
+        await db.collection('hrEmployees').doc(employeeId).set(newEmployee);
+        
+        // Audit Log
+        await logAuditEvent(
+          'create',
+          'employee',
+          employeeId,
+          {
+            employeeName: name,
+            employeeDN: dn,
+            unit: unit,
+            rank: rank
+          }
+        );
+
         closeModal('newEmployeeModal');
         selectEmployee(newEmployee);
         updateStats();
@@ -5083,6 +5833,9 @@ Sonstiges: ${notes}
         document.getElementById('newEmployeeRank').value = '';
 
         showNotification(`Mitarbeiter "${name}" erstellt`, 'success');
+      } catch (error) {
+        console.error('Fehler beim Erstellen:', error);
+        showNotification('Fehler beim Erstellen: ' + error.message, 'error');
       }
     }
 
@@ -5115,7 +5868,7 @@ Beteiligte:
 Sonstiges:
 
 /////////////////////////////////////////////////////////////////////////
-<@&1097625910242447422>
+<@&${settings.hrRoleId || '1097625910242447422'}>
 ╚══════════════════╝`;
 
       document.getElementById('orgTemplateContent').textContent = `╔══════════════════╗
@@ -5133,7 +5886,7 @@ Beteiligte:
 Sonstiges:
 
 /////////////////////////////////////////////////////////////////////////
-<@&1097625910242447422>
+<@&${settings.hrRoleId || '1097625910242447422'}>
 ╚══════════════════╝`;
     }
 
