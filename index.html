@@ -437,7 +437,7 @@
       background:rgba(255,255,255,.05);
       border:1px solid rgba(255,255,255,.08);
       border-radius:var(--radius-sm);
-      color:#fff;
+      color:#fff !important; /* WICHTIG: Textfarbe auf schwarz setzen */
       font-size:13px;
       transition:var(--transition);
       width:100%;
@@ -762,7 +762,7 @@
       background: rgba(255,255,255,.05);
       border: 1px solid rgba(255,255,255,.1);
       border-radius: var(--radius-md);
-      color: #fff;
+      color: #fff !important; /* Textfarbe auf schwarz setzen */
       font-size: 14px;
       transition: var(--transition);
       width: 100%;
@@ -781,6 +781,9 @@
       flex-direction: column;
       gap: 12px;
       margin-top: 12px;
+      max-height: 300px;
+      overflow-y: auto;
+      padding-right: 5px;
     }
 
     .unit-item, .rank-item {
@@ -809,6 +812,7 @@
       font-family: 'Consolas', monospace;
       border: 1px solid rgba(79,70,229,.20);
       min-width: 200px;
+      color: #fff !important; /* Textfarbe auf schwarz setzen */
     }
 
     .discord-id::placeholder {
@@ -999,7 +1003,7 @@
       background: rgba(255,255,255,.05);
       border: 1px solid rgba(255,255,255,.1);
       border-radius: var(--radius-md);
-      color: #fff;
+      color: #fff !important; /* Textfarbe auf schwarz setzen */
       font-size: 14px;
       transition: var(--transition);
       width: 100%;
@@ -1340,7 +1344,7 @@
       background: rgba(255,255,255,.05);
       border: 1px solid rgba(255,255,255,.1);
       border-radius: var(--radius-md);
-      color: #fff;
+      color: #fff !important; /* Textfarbe auf schwarz setzen */
       font-size: 14px;
       transition: var(--transition);
     }
@@ -1514,7 +1518,7 @@
       background: rgba(255,255,255,.05);
       border: 1px solid rgba(255,255,255,.1);
       border-radius: var(--radius-md);
-      color: #fff;
+      color: #fff !important; /* Textfarbe auf schwarz setzen */
       font-size: 14px;
       transition: var(--transition);
       width: 100%;
@@ -1879,7 +1883,7 @@
       background: rgba(255,255,255,.05);
       border: 1px solid rgba(255,255,255,.1);
       border-radius: var(--radius-md);
-      color: #fff;
+      color: #fff !important; /* Textfarbe auf schwarz setzen */
       font-size: 14px;
       transition: var(--transition);
     }
@@ -2050,7 +2054,7 @@
       background:rgba(255,255,255,.05);
       border:1px solid rgba(255,255,255,.1);
       border-radius:var(--radius-md);
-      color:#fff;
+      color:#fff !important; /* Textfarbe auf schwarz setzen */
       font-size:14px;
       transition:var(--transition);
       width:100%;
@@ -2330,7 +2334,7 @@
       background:rgba(255,255,255,.05);
       border:1px solid rgba(255,255,255,.1);
       border-radius:var(--radius-md);
-      color:#fff;
+      color:#fff !important; /* Textfarbe auf schwarz setzen */
       font-size:14px;
       transition:var(--transition);
     }
@@ -3904,7 +3908,8 @@ Grund:
         document.getElementById('newEmployeeUnit'),
         document.getElementById('editEmployeeUnit'),
         document.getElementById('soldatenUnit'),
-        document.getElementById('akteUnit')
+        document.getElementById('akteUnit'),
+        document.getElementById('beobachtungUnit')
       ];
 
       unitSelects.forEach(select => {
@@ -3912,12 +3917,18 @@ Grund:
           const currentValue = select.value;
           select.innerHTML = '<option value="">Unit auswählen</option>';
           
-          settings.units.forEach(unit => {
-            const option = document.createElement('option');
-            option.value = unit.name;
-            option.textContent = unit.name;
-            select.appendChild(option);
-          });
+          // Überprüfen, ob settings.units definiert ist
+          if (settings.units && settings.units.length > 0) {
+            settings.units.forEach(unit => {
+              const option = document.createElement('option');
+              option.value = unit.name;
+              option.textContent = unit.name;
+              option.style.color = '#fff'; // Textfarbe auf schwarz setzen
+              select.appendChild(option);
+            });
+          } else {
+            console.warn('Keine Units in den Settings gefunden');
+          }
           
           select.value = currentValue;
         }
@@ -3930,7 +3941,8 @@ Grund:
         document.getElementById('newEmployeeRank'),
         document.getElementById('editEmployeeRank'),
         document.getElementById('soldatenRank'),
-        document.getElementById('akteRank')
+        document.getElementById('akteRank'),
+        document.getElementById('beobachtungRank')
       ];
 
       rankSelects.forEach(select => {
@@ -3938,12 +3950,18 @@ Grund:
           const currentValue = select.value;
           select.innerHTML = '<option value="">Rang auswählen</option>';
           
-          settings.ranks.forEach(rank => {
-            const option = document.createElement('option');
-            option.value = rank.name;
-            option.textContent = rank.name;
-            select.appendChild(option);
-          });
+          // Überprüfen, ob settings.ranks definiert ist
+          if (settings.ranks && settings.ranks.length > 0) {
+            settings.ranks.forEach(rank => {
+              const option = document.createElement('option');
+              option.value = rank.name;
+              option.textContent = rank.name;
+              option.style.color = '#fff'; // Textfarbe auf schwarz setzen
+              select.appendChild(option);
+            });
+          } else {
+            console.warn('Keine Ränge in den Settings gefunden');
+          }
           
           select.value = currentValue;
         }
@@ -5461,21 +5479,18 @@ Grund: ${grund || ''}
       }
 
       try {
-        // Soft Delete: Nur als archiviert markieren
-        await db.collection('hrEmployees').doc(currentEmployee.id).update({
-          status: 'archived',
-          lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-        });
-
+        // SOFT DELETE: Eintrag vollständig löschen (nicht archivieren)
+        await db.collection('hrEmployees').doc(currentEmployee.id).delete();
+        
         // Audit Log
         await logAuditEvent(
-          'soft_delete',
+          'hard_delete',
           'employee',
           currentEmployee.id,
           {
             employeeName: currentEmployee.name,
             employeeDN: currentEmployee.dn,
-            method: 'soft_delete_to_archive'
+            method: 'permanent_delete'
           }
         );
 
@@ -5485,7 +5500,7 @@ Grund: ${grund || ''}
         document.getElementById('inductionContent').style.display = 'none';
         renderEmployeeList();
         updateStats();
-        showNotification('Mitarbeiter archiviert (Soft Delete)', 'success');
+        showNotification('Mitarbeiter endgültig gelöscht', 'success');
       } catch (error) {
         console.error('Fehler beim Löschen:', error);
         showNotification('Fehler beim Löschen: ' + error.message, 'error');
@@ -5677,6 +5692,10 @@ Sonstiges: ${notes}
             style="width:100%;text-align:left;padding:8px 10px;background:none;border:none;color:${isArchived ? 'var(--secondary)' : 'var(--warning)'};font-weight:900;cursor:pointer;transition:all .2s;border-radius:4px;display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:2px;">
             <i class="fas ${isArchived ? 'fa-undo' : 'fa-archive'}"></i> ${isArchived ? 'Wiederherstellen' : 'Archivieren'}
           </button>
+          <button onclick="deleteEmployeePermanently('${employee.id}')"
+            style="width:100%;text-align:left;padding:8px 10px;background:none;border:none;color:var(--danger);font-weight:900;cursor:pointer;transition:all .2s;border-radius:4px;display:flex;align-items:center;gap:6px;font-size:12px;">
+            <i class="fas fa-trash"></i> Löschen
+          </button>
         </div>
       `;
 
@@ -5729,6 +5748,44 @@ Sonstiges: ${notes}
       } catch (error) {
         console.error('Fehler beim Archivieren/Wiederherstellen:', error);
         showNotification('Fehler: ' + error.message, 'error');
+      }
+    }
+
+    async function deleteEmployeePermanently(employeeId) {
+      const employee = employees.find(emp => emp.id === employeeId);
+      if (!employee) return;
+
+      if (!confirm(`Mitarbeiter "${employee.name}" (DN ${employee.dn}) wirklich endgültig löschen?\n\nDiese Aktion kann nicht rückgängig gemacht werden!`)) {
+        return;
+      }
+
+      try {
+        // HARD DELETE: Eintrag vollständig löschen
+        await db.collection('hrEmployees').doc(employeeId).delete();
+        
+        // Audit Log
+        await logAuditEvent(
+          'hard_delete',
+          'employee',
+          employeeId,
+          {
+            employeeName: employee.name,
+            employeeDN: employee.dn,
+            method: 'permanent_delete_from_context_menu'
+          }
+        );
+
+        if (currentEmployee && currentEmployee.id === employeeId) {
+          currentEmployee = null;
+          document.getElementById('employeeHeader').style.display = 'none';
+          document.getElementById('inductionContent').style.display = 'none';
+        }
+        
+        showNotification('Mitarbeiter endgültig gelöscht', 'success');
+        document.getElementById('contextMenu')?.remove();
+      } catch (error) {
+        console.error('Fehler beim Löschen:', error);
+        showNotification('Fehler beim Löschen: ' + error.message, 'error');
       }
     }
 
