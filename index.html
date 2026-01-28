@@ -335,7 +335,7 @@
       font-size: 10px;
     }
 
-    /* Besprechungen Modal */
+    /* Besprechungen Modal - NUR BESPRECHUNGEN */
     .besprechungen-modal {
       display: none;
       position: fixed;
@@ -2650,12 +2650,12 @@
     </div>
   </div>
 
-  <!-- Besprechungen Modal -->
+  <!-- Besprechungen Modal - NUR BESPRECHUNGEN -->
   <div class="besprechungen-modal" id="besprechungenModal" onclick="if(event.target===this)closeModal('besprechungenModal')">
     <div class="besprechungen-content">
       <div class="besprechungen-header">
         <div class="besprechungen-title">
-          <i class="fas fa-calendar-alt"></i> Besprechungen & Ankündigungen
+          <i class="fas fa-calendar-alt"></i> Besprechungen
         </div>
         <button class="besprechungen-close" onclick="closeModal('besprechungenModal')">
           <i class="fas fa-times"></i>
@@ -3569,7 +3569,7 @@ Grund:
       }
     }
 
-    // ==================== BESPRECHUNGEN MODAL ====================
+    // ==================== BESPRECHUNGEN MODAL - NUR BESPRECHUNGEN ====================
     function openBesprechungenModal() {
       openModal('besprechungenModal');
       loadBesprechungen();
@@ -3580,7 +3580,9 @@ Grund:
       container.innerHTML = '<div class="loading"><div class="loading-spinner"></div><div>Lade Besprechungen...</div></div>';
 
       try {
+        // NUR Besprechungen laden, keine Ankündigungen
         const querySnapshot = await db.collection('hrAnkundigungen')
+          .where('type', '==', 'besprechung')
           .orderBy('created', 'desc')
           .get();
         
@@ -3596,40 +3598,30 @@ Grund:
         }
 
         let html = '';
-        let hasItems = false;
         
         querySnapshot.forEach(doc => {
           const item = doc.data();
-          hasItems = true;
           
-          const typeLabel = item.type === 'ankundigung' ? 'Ankündigung' : 
-                          item.type === 'besprechung' ? 'Besprechung' : 'Aufstellung';
-          
-          const title = item.type === 'ankundigung' ? (item.title || 'Ohne Titel') :
-                       item.type === 'besprechung' ? item.thema : 
-                       item.type === 'aufstellung' ? `${item.typ} - ${item.ort}` : 'Eintrag';
-          
-          const date = item.type === 'ankundigung' ? item.createdFormatted : 
-                      item.date ? new Date(item.date).toLocaleDateString('de-DE') : item.createdFormatted;
-          
-          const content = item.type === 'ankundigung' ? item.content :
-                         item.type === 'besprechung' ? item.content : 
-                         item.type === 'aufstellung' ? item.bemerkungen : '';
+          const title = item.thema || 'Ohne Thema';
+          const date = item.date ? new Date(item.date).toLocaleDateString('de-DE') : '';
+          const time = item.time || '';
+          const ort = item.ort || '';
+          const content = item.content || '';
           
           html += `
             <div class="besprechungen-item">
               <div class="besprechungen-item-header">
                 <div class="besprechungen-item-title">
-                  <span>${item.icon || '📄'}</span> ${escapeHtml(title)}
+                  <span>🗃️</span> ${escapeHtml(title)}
                 </div>
                 <div class="besprechungen-item-type">
-                  ${typeLabel}
+                  Besprechung
                 </div>
               </div>
               <div class="besprechungen-item-date">
                 <i class="fas fa-calendar"></i> ${date}
-                ${item.time ? ` • ${item.time}` : ''}
-                ${item.ort ? ` • ${item.ort}` : ''}
+                ${time ? ` • ${time}` : ''}
+                ${ort ? ` • ${ort}` : ''}
               </div>
               <div class="besprechungen-item-content">
                 ${escapeHtml(content)}
@@ -3638,17 +3630,7 @@ Grund:
           `;
         });
 
-        if (hasItems) {
-          container.innerHTML = html;
-        } else {
-          container.innerHTML = `
-            <div class="empty-besprechungen">
-              <div class="empty-besprechungen-icon"><i class="fas fa-calendar-alt"></i></div>
-              <div class="empty-besprechungen-title">Keine Besprechungen gefunden</div>
-              <div class="empty-description">Erstellen Sie Ihre erste Besprechung in den Settings</div>
-            </div>
-          `;
-        }
+        container.innerHTML = html;
       } catch (error) {
         console.error('Fehler beim Laden der Besprechungen:', error);
         container.innerHTML = `
@@ -3816,8 +3798,9 @@ Grund:
 
     async function showLatestAnkundigung() {
       try {
-        // Lade die neueste Ankündigung
+        // Lade die neueste Ankündigung (nur vom Typ 'ankundigung')
         const querySnapshot = await db.collection('hrAnkundigungen')
+          .where('type', '==', 'ankundigung')
           .orderBy('created', 'desc')
           .limit(1)
           .get();
@@ -3835,21 +3818,10 @@ Grund:
         const date = document.getElementById('bannerDate');
         
         // Banner-Inhalt setzen
-        title.innerHTML = `<span>${ankundigung.icon || '🪧'}</span> ${escapeHtml(ankundigung.title || ankundigung.thema || 'Ankündigung')}`;
-        content.textContent = ankundigung.content || ankundigung.bemerkungen || '';
-        
-        if (ankundigung.type === 'besprechung') {
-          type.textContent = 'Besprechung';
-          const formattedDate = ankundigung.date ? new Date(ankundigung.date).toLocaleDateString('de-DE') : '';
-          date.textContent = `${formattedDate} ${ankundigung.time ? `um ${ankundigung.time}` : ''}`;
-        } else if (ankundigung.type === 'aufstellung') {
-          type.textContent = 'Aufstellung';
-          const formattedDate = ankundigung.date ? new Date(ankundigung.date).toLocaleDateString('de-DE') : '';
-          date.textContent = `${formattedDate} ${ankundigung.time ? `um ${ankundigung.time}` : ''}`;
-        } else {
-          type.textContent = 'Ankündigung';
-          date.textContent = ankundigung.createdFormatted || 'Heute';
-        }
+        title.innerHTML = `<span>${ankundigung.icon || '🪧'}</span> ${escapeHtml(ankundigung.title || 'Ankündigung')}`;
+        content.textContent = ankundigung.content || '';
+        type.textContent = 'Ankündigung';
+        date.textContent = ankundigung.createdFormatted || 'Heute';
         
         // Banner anzeigen
         banner.classList.add('show');
