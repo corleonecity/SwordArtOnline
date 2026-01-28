@@ -1343,7 +1343,7 @@
       flex: 1;
       overflow: hidden;
       display: flex;
-      flex-direction:column;
+      flex-direction: column;
       min-height: 0;
     }
 
@@ -2315,7 +2315,7 @@
             <button class="ankundigung-btn ankundigung-btn-copy" onclick="copyAnkundigungTemplate()">
               <i class="fas fa-copy"></i> In Zwischenablage kopieren
             </button>
-            <button class="ankundigung-btn ankundigung-btn-save" onclick="saveAnkündigung()">
+            <button class="ankundigung-btn ankundigung-btn-save" onclick="saveAnkundigung()">
               <i class="fas fa-save"></i> Ankündigung speichern
             </button>
           </div>
@@ -3139,46 +3139,55 @@ Grund:
   </div>
 
   <script>
-    // ==================== ENHANCED CACHE-BUSTING ====================
-    // Erzwingt Neuladen bei Version-Änderung mit Zeitstempel
-    const APP_VERSION = '1.0.' + Date.now();
+    // ==================== CACHE-BUSTING CODE ====================
+    // Erzwingt Neuladen bei Version-Änderung
+    const APP_VERSION = '1.0.20240128';
     const LAST_VERSION_KEY = 'hr_app_last_version';
     
-    // Prüfe und aktualisiere Version
+    // Prüfe ob neue Version geladen werden muss
     const lastVersion = localStorage.getItem(LAST_VERSION_KEY);
-    console.log(`App Version: ${APP_VERSION}, Letzte Version: ${lastVersion}`);
-    
     if (lastVersion !== APP_VERSION) {
-      console.log('Neue Version erkannt - erzwinge Hard Refresh');
+      console.log(`Neue Version erkannt: ${lastVersion} -> ${APP_VERSION}`);
       
       // Lösche alle Caches
       if ('caches' in window) {
         caches.keys().then(function(names) {
-          names.forEach(name => caches.delete(name));
+          for (let name of names) {
+            caches.delete(name);
+          }
           console.log('Service Worker Caches gelöscht');
         });
       }
-      
-      // Lösche localStorage für Firebase-Cache
-      Object.keys(localStorage).forEach(key => {
-        if (key.includes('firebase') || key.includes('firestore')) {
-          localStorage.removeItem(key);
-        }
-      });
       
       // Speichere neue Version
       localStorage.setItem(LAST_VERSION_KEY, APP_VERSION);
       
       // Erzwinge Hard Refresh
-      if (!window.location.search.includes('hardRefresh')) {
-        window.location.href = window.location.href.split('?')[0] + '?hardRefresh=true&v=' + Date.now();
+      if (performance.navigation.type === 0 || performance.navigation.type === 1) {
+        // NavigationType: 0 = fresh load, 1 = reload
+        console.log('Erzwinge Hard Refresh für neue Version');
+        setTimeout(() => {
+          window.location.reload(true);
+        }, 100);
       }
     }
     
-    // Version im Title anzeigen
+    // Füge Version zu allen dynamischen Elementen hinzu
     document.addEventListener('DOMContentLoaded', function() {
-      const versionText = APP_VERSION.split('.')[2]?.substring(0, 8) || 'dev';
-      document.title = document.title.replace('v1.0', `v1.0.${versionText}`);
+      // Setze Version in Footer/Title
+      document.title = document.title.replace('v1.0', `v${APP_VERSION}`);
+      
+      // Cache-Busting für dynamische Inhalte
+      const now = Date.now();
+      const cacheBuster = `?v=${APP_VERSION}&t=${now}`;
+      
+      // Füge Cache-Buster zu allen Skripten hinzu
+      const scripts = document.querySelectorAll('script[src]');
+      scripts.forEach(script => {
+        if (!script.src.includes('?v=')) {
+          script.src = script.src + cacheBuster;
+        }
+      });
     });
     // ==================== ENDE CACHE-BUSTING ====================
 
@@ -3193,7 +3202,6 @@ Grund:
       measurementId: "G-9SZREFTJS6"
     };
 
-    // Firebase initialisieren
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
     const storage = firebase.storage();
@@ -3250,35 +3258,19 @@ Grund:
       setupEventListeners();
       updateStats();
       adjustSidebarHeight();
-      
-      // Warte kurz und starte dann Listener
-      setTimeout(() => {
-        setupRealtimeListeners();
-      }, 500);
+      setupRealtimeListeners();
     });
 
-    // ==================== ENHANCED REALTIME LISTENER SETUP ====================
+    // ==================== REALTIME LISTENER SETUP ====================
     function setupRealtimeListeners() {
-      console.log('=== SETUP REALTIME LISTENERS ===');
-      
-      // Cleanup alte Listener
-      cleanupRealtimeListeners();
-      
-      // Listener für Mitarbeiter mit erweitertem Logging
+      // Listener für Mitarbeiter
       const unsubscribeEmployees = db.collection('hrEmployees')
         .orderBy('lastUpdated', 'desc')
         .onSnapshot((snapshot) => {
-          console.log(`🔥 Mitarbeiter Update: ${snapshot.size} Dokumente`);
-          
           employees = [];
           
           snapshot.forEach(doc => {
-            const data = doc.data();
-            employees.push({ 
-              id: doc.id, 
-              ...data,
-              lastUpdated: data.lastUpdated ? data.lastUpdated.toDate() : new Date()
-            });
+            employees.push({ id: doc.id, ...doc.data() });
           });
 
           renderEmployeeList();
@@ -3288,21 +3280,14 @@ Grund:
           if (currentEmployee) {
             const updatedEmployee = employees.find(emp => emp.id === currentEmployee.id);
             if (updatedEmployee) {
-              console.log(`🔥 Aktualisiere ausgewählten Mitarbeiter: ${updatedEmployee.name}`);
               selectEmployee(updatedEmployee);
             }
           }
           
-          // Log für Debugging
-          console.log(`Gespeicherte Mitarbeiter: ${employees.length}`);
-          employees.forEach(emp => {
-            console.log(`- ${emp.name} (DN: ${emp.dn}), Updated: ${emp.lastUpdated}`);
-          });
-          
           setTimeout(updateInductionDisplay, 100);
         }, (error) => {
-          console.error('❌ Fehler beim Lauschen auf Mitarbeiter-Änderungen:', error);
-          showNotification('Verbindungsfehler bei Live-Updates', 'error');
+          console.error('Fehler beim Lauschen auf Mitarbeiter-Änderungen:', error);
+          showNotification('Fehler bei Live-Updates', 'error');
         });
 
       // Listener für Akten
@@ -3310,21 +3295,19 @@ Grund:
         .orderBy('lastUpdated', 'desc')
         .limit(100)
         .onSnapshot((snapshot) => {
-          console.log(`📁 Akten Update: ${snapshot.size} Dokumente`);
           akten = [];
           snapshot.forEach(doc => {
             const data = doc.data();
             akten.push({ 
               id: doc.id, 
               ...data,
-              createdFormatted: data.createdFormatted || new Date(data.created).toLocaleDateString('de-DE'),
-              lastUpdated: data.lastUpdated ? data.lastUpdated.toDate() : new Date()
+              createdFormatted: data.createdFormatted || new Date(data.created).toLocaleDateString('de-DE')
             });
           });
           updateStats();
           renderAktenListe();
         }, (error) => {
-          console.error('❌ Fehler beim Lauschen auf Akten-Änderungen:', error);
+          console.error('Fehler beim Lauschen auf Akten-Änderungen:', error);
         });
 
       // Listener für Soldatengespräche
@@ -3332,7 +3315,6 @@ Grund:
         .orderBy('created', 'desc')
         .limit(100)
         .onSnapshot((snapshot) => {
-          console.log(`💬 Soldatengespräche Update: ${snapshot.size} Dokumente`);
           soldatenGespräche = [];
           snapshot.forEach(doc => {
             const data = doc.data();
@@ -3345,7 +3327,7 @@ Grund:
           });
           renderSoldatenListe();
         }, (error) => {
-          console.error('❌ Fehler beim Lauschen auf Soldatengespräche:', error);
+          console.error('Fehler beim Lauschen auf Soldatengespräche:', error);
         });
 
       // Listener für Ankündigungen
@@ -3353,7 +3335,6 @@ Grund:
         .orderBy('created', 'desc')
         .limit(100)
         .onSnapshot((snapshot) => {
-          console.log(`📢 Ankündigungen Update: ${snapshot.size} Dokumente`);
           ankundigungen = [];
           snapshot.forEach(doc => {
             const data = doc.data();
@@ -3366,7 +3347,7 @@ Grund:
           });
           renderAnkundigungListe();
         }, (error) => {
-          console.error('❌ Fehler beim Lauschen auf Ankündigungen:', error);
+          console.error('Fehler beim Lauschen auf Ankündigungen:', error);
         });
 
       // Speichere Unsubscribe-Funktionen
@@ -3376,12 +3357,10 @@ Grund:
         unsubscribeSoldaten,
         unsubscribeAnkundigungen
       ];
-      
-      console.log(`✅ ${unsubscribeFunctions.length} Realtime Listener aktiv`);
     }
 
     function cleanupRealtimeListeners() {
-      console.log('🧹 Cleanup Realtime Listener');
+      // Entferne alle Listener bei Seitenverlassen
       unsubscribeFunctions.forEach(unsubscribe => {
         if (typeof unsubscribe === 'function') {
           unsubscribe();
@@ -3392,41 +3371,6 @@ Grund:
 
     // Füge Event Listener für Seitenverlassen hinzu
     window.addEventListener('beforeunload', cleanupRealtimeListeners);
-
-    // Manuelle Refresh Funktion
-    function manualRefresh() {
-      console.log('🔄 Manuelles Refresh gestartet');
-      cleanupRealtimeListeners();
-      setTimeout(() => {
-        setupRealtimeListeners();
-        showNotification('Daten manuell aktualisiert', 'success');
-      }, 500);
-    }
-
-    // Debug Funktion
-    function debugRealtimeStatus() {
-      console.log('=== REALTIME STATUS ===');
-      console.log('Aktive Listener:', unsubscribeFunctions.length);
-      console.log('Mitarbeiter:', employees.length);
-      console.log('Akten:', akten.length);
-      console.log('Soldatengespräche:', soldatenGespräche.length);
-      console.log('Ankündigungen:', ankundigungen.length);
-      
-      // Test-Query
-      db.collection('hrEmployees').get().then(snapshot => {
-        console.log('📊 Datenbank Mitarbeiter (alle):', snapshot.size);
-        snapshot.forEach(doc => {
-          const data = doc.data();
-          console.log(`  - ${data.name || 'Unbekannt'} (DN: ${data.dn || '?'}), Updated: ${data.lastUpdated ? data.lastUpdated.toDate().toLocaleString() : '?'}`);
-        });
-      });
-      
-      showNotification('Status in Konsole ausgegeben', 'info');
-    }
-
-    // Zum Testen in der Konsole aufrufbar machen
-    window.debugApp = debugRealtimeStatus;
-    window.refreshApp = manualRefresh;
 
     // ==================== HAUPTFUNKTIONEN ====================
     function initializeApp() {
@@ -3468,8 +3412,6 @@ Grund:
         if (e.ctrlKey && e.key === 'b') { e.preventDefault(); openBeobachtungAktenModal(); }
         if (e.ctrlKey && e.key === 's') { e.preventDefault(); openSoldatenModal(); }
         if (e.ctrlKey && e.key === 'a') { e.preventDefault(); openAnkundigungModal(); }
-        if (e.ctrlKey && e.key === 'r') { e.preventDefault(); manualRefresh(); }
-        if (e.ctrlKey && e.key === 'd') { e.preventDefault(); debugRealtimeStatus(); }
       });
 
       window.addEventListener('resize', adjustSidebarHeight);
@@ -3643,7 +3585,7 @@ Bemerkungen: ${bemerkungen || ''}`;
       showNotification(success ? 'Aufstellung kopiert' : 'Fehler beim Kopieren', success ? 'success' : 'error');
     }
 
-    async function saveAnkündigung() {
+    async function saveAnkundigung() {
       const title = document.getElementById('ankundigungTitle').value.trim();
       const content = document.getElementById('ankundigungContent').value.trim();
 
@@ -3660,9 +3602,7 @@ Bemerkungen: ${bemerkungen || ''}`;
         date: new Date().toISOString(),
         dateFormatted: new Date().toLocaleDateString('de-DE'),
         template: document.getElementById('ankundigungPreview').textContent,
-        icon: '🪧',
-        created: firebase.firestore.FieldValue.serverTimestamp(),
-        syncVersion: Date.now()
+        icon: '🪧'
       };
 
       try {
@@ -3700,12 +3640,11 @@ Bemerkungen: ${bemerkungen || ''}`;
         time,
         ort: ort || '',
         content,
-        created: firebase.firestore.FieldValue.serverTimestamp(),
+        created: new Date().toISOString(),
         createdFormatted: new Date().toLocaleDateString('de-DE'),
         dateFormatted: new Date(date).toLocaleDateString('de-DE'),
         template: document.getElementById('besprechungPreview').textContent,
-        icon: '🖊️',
-        syncVersion: Date.now()
+        icon: '🖊️'
       };
 
       try {
@@ -3746,12 +3685,11 @@ Bemerkungen: ${bemerkungen || ''}`;
         time,
         ort,
         bemerkungen: bemerkungen || '',
-        created: firebase.firestore.FieldValue.serverTimestamp(),
+        created: new Date().toISOString(),
         createdFormatted: new Date().toLocaleDateString('de-DE'),
         dateFormatted: new Date(date).toLocaleDateString('de-DE'),
         template: document.getElementById('aufstellungPreview').textContent,
-        icon: '🕛',
-        syncVersion: Date.now()
+        icon: '🕛'
       };
 
       try {
@@ -3984,11 +3922,10 @@ Sonstiges: ${sonstiges || ''}
         time,
         notizen,
         sonstiges: sonstiges || '',
-        created: firebase.firestore.FieldValue.serverTimestamp(),
+        created: new Date().toISOString(),
         createdFormatted: new Date().toLocaleDateString('de-DE'),
         dateFormatted: new Date(date).toLocaleDateString('de-DE'),
-        template: document.getElementById('soldatenPreview').textContent,
-        syncVersion: Date.now()
+        template: document.getElementById('soldatenPreview').textContent
       };
 
       try {
@@ -4192,11 +4129,10 @@ Grund: ${grund || ''}
         dn,
         unit: unit || '',
         rank: rank || '',
-        created: firebase.firestore.FieldValue.serverTimestamp(),
+        created: new Date().toISOString(),
         createdFormatted: new Date().toLocaleDateString('de-DE'),
         beobachtungen: [],
-        lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
-        syncVersion: Date.now()
+        lastUpdated: new Date().toISOString()
       };
 
       try {
@@ -4239,11 +4175,10 @@ Grund: ${grund || ''}
           dn,
           unit: '',
           rank: '',
-          created: firebase.firestore.FieldValue.serverTimestamp(),
+          created: new Date().toISOString(),
           createdFormatted: new Date().toLocaleDateString('de-DE'),
           beobachtungen: [],
-          lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
-          syncVersion: Date.now()
+          lastUpdated: new Date().toISOString()
         };
         
         try {
@@ -4263,20 +4198,17 @@ Grund: ${grund || ''}
         grund,
         date: new Date().toISOString(),
         dateFormatted: new Date().toLocaleDateString('de-DE'),
-        template: document.getElementById('beobachtungPreview').textContent,
-        created: firebase.firestore.FieldValue.serverTimestamp()
+        template: document.getElementById('beobachtungPreview').textContent
       };
 
       try {
         if (!akte.beobachtungen) akte.beobachtungen = [];
         akte.beobachtungen.unshift(beobachtung);
-        akte.lastUpdated = firebase.firestore.FieldValue.serverTimestamp();
-        akte.syncVersion = Date.now();
+        akte.lastUpdated = new Date().toISOString();
         
         await db.collection('hrAkten').doc(akte.id).update({
           beobachtungen: akte.beobachtungen,
-          lastUpdated: akte.lastUpdated,
-          syncVersion: akte.syncVersion
+          lastUpdated: akte.lastUpdated
         });
         
         showNotification('Beobachtung zur Akte hinzugefügt', 'success');
@@ -4475,13 +4407,11 @@ Grund: ${grund || ''}
 
       try {
         akte.beobachtungen = akte.beobachtungen.filter(b => b.id !== beobachtungId);
-        akte.lastUpdated = firebase.firestore.FieldValue.serverTimestamp();
-        akte.syncVersion = Date.now();
+        akte.lastUpdated = new Date().toISOString();
         
         await db.collection('hrAkten').doc(akteId).update({
           beobachtungen: akte.beobachtungen,
-          lastUpdated: akte.lastUpdated,
-          syncVersion: akte.syncVersion
+          lastUpdated: akte.lastUpdated
         });
         
         showNotification('Beobachtung gelöscht', 'success');
@@ -4518,7 +4448,7 @@ Grund: ${grund || ''}
       updateBeobachtungPreview();
     }
 
-    // ==================== ENHANCED MITARBEITER FUNKTIONEN ====================
+    // ==================== MITARBEITER FUNKTIONEN ====================
     function renderEmployeeList() {
       const container = document.getElementById('employeeList');
       const countElement = document.getElementById('employeeCount');
@@ -4626,7 +4556,6 @@ Grund: ${grund || ''}
     }
 
     function selectEmployee(employee) {
-      console.log(`📌 Mitarbeiter ausgewählt: ${employee.name} (${employee.id})`);
       currentEmployee = employee;
 
       document.getElementById('employeeHeader').style.display = 'flex';
@@ -4640,8 +4569,6 @@ Grund: ${grund || ''}
 
     function loadEmployeeData() {
       if (!currentEmployee) return;
-
-      console.log(`📂 Lade Daten für Mitarbeiter: ${currentEmployee.name}`);
 
       const oralData = currentEmployee.oralData || {};
       const orgData = currentEmployee.orgData || {};
@@ -4740,44 +4667,6 @@ Grund: ${grund || ''}
       currentEmployee.lastUpdated = new Date().toISOString();
     }
 
-    async function saveEmployeeData(isAutoSave = false) {
-      if (!currentEmployee) return;
-
-      // Formular-Daten speichern
-      saveFormData();
-      
-      try {
-        // Update mit serverTimestamp für konsistente Updates
-        const updateData = {
-          name: currentEmployee.name,
-          dn: currentEmployee.dn,
-          unit: currentEmployee.unit || '',
-          rank: currentEmployee.rank || '',
-          inductions: currentEmployee.inductions || {},
-          oralData: currentEmployee.oralData || {},
-          orgData: currentEmployee.orgData || {},
-          lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
-          syncVersion: Date.now() // Für Konfliktlösung
-        };
-        
-        console.log(`💾 Speichere Mitarbeiter: ${currentEmployee.name}`, updateData);
-        
-        await db.collection('hrEmployees').doc(currentEmployee.id).set(updateData, { merge: true });
-        
-        console.log(`✅ Mitarbeiter ${currentEmployee.id} gespeichert`);
-        
-        if (!isAutoSave) {
-          showNotification('Änderungen gespeichert', 'success');
-        }
-        
-        return true;
-      } catch (error) {
-        console.error('❌ Fehler beim Speichern:', error);
-        showNotification('Fehler beim Speichern: ' + error.message, 'error');
-        return false;
-      }
-    }
-
     function openEditEmployeeModal() {
       if (!currentEmployee) {
         showNotification('Bitte wählen Sie zuerst einen Mitarbeiter aus', 'warning');
@@ -4808,7 +4697,7 @@ Grund: ${grund || ''}
       currentEmployee.unit = document.getElementById('editEmployeeUnit').value || '';
       currentEmployee.rank = document.getElementById('editEmployeeRank').value || '';
 
-      const success = await saveEmployeeData(false);
+      const success = await saveEmployeeToFirebase(currentEmployee);
       if (success) {
         closeModal('editEmployeeModal');
         updateEmployeeHeader();
@@ -4828,21 +4717,15 @@ Grund: ${grund || ''}
         return;
       }
 
-      try {
-        await db.collection('hrEmployees').doc(currentEmployee.id).delete();
-        showNotification('Mitarbeiter erfolgreich gelöscht', 'success');
-        
+      const success = await deleteEmployeeFromFirebase(currentEmployee.id);
+      if (success) {
         closeModal('editEmployeeModal');
         currentEmployee = null;
         document.getElementById('employeeHeader').style.display = 'none';
         document.getElementById('inductionContent').style.display = 'none';
         renderEmployeeList();
         updateStats();
-        
-      } catch (error) {
-        console.error('Fehler beim Löschen:', error);
-        showNotification('Fehler beim Löschen: ' + error.message, 'error');
-        return false;
+        showNotification('Mitarbeiter erfolgreich gelöscht', 'success');
       }
     }
 
@@ -4961,6 +4844,39 @@ Sonstiges: ${notes}
 ╚══════════════════╝`;
     }
 
+    async function saveEmployeeToFirebase(employee) {
+      try {
+        const dataToSave = {
+          name: employee.name,
+          dn: employee.dn,
+          unit: employee.unit,
+          rank: employee.rank,
+          lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
+          inductions: employee.inductions || {},
+          oralData: employee.oralData || {},
+          orgData: employee.orgData || {}
+        };
+
+        await db.collection('hrEmployees').doc(employee.id).set(dataToSave, { merge: true });
+        return true;
+      } catch (error) {
+        console.error('Fehler beim Speichern:', error);
+        showNotification('Fehler beim Speichern: ' + error.message, 'error');
+        return false;
+      }
+    }
+
+    async function deleteEmployeeFromFirebase(employeeId) {
+      try {
+        await db.collection('hrEmployees').doc(employeeId).delete();
+        return true;
+      } catch (error) {
+        console.error('Fehler beim Löschen:', error);
+        showNotification('Fehler beim Löschen: ' + error.message, 'error');
+        return false;
+      }
+    }
+
     function updateStats() {
       document.getElementById('totalEmployees').textContent = employees.length;
       document.getElementById('totalAkten').textContent = akten.length;
@@ -5030,20 +4946,16 @@ Sonstiges: ${notes}
     async function deleteEmployee(employeeId) {
       if (!confirm('Mitarbeiter wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.')) return;
 
-      try {
-        await db.collection('hrEmployees').doc(employeeId).delete();
-        showNotification('Mitarbeiter gelöscht', 'success');
-        
+      const success = await deleteEmployeeFromFirebase(employeeId);
+      if (success) {
         if (currentEmployee?.id === employeeId) {
           currentEmployee = null;
           document.getElementById('employeeHeader').style.display = 'none';
           document.getElementById('inductionContent').style.display = 'none';
         }
 
+        showNotification('Mitarbeiter gelöscht', 'success');
         document.getElementById('contextMenu')?.remove();
-      } catch (error) {
-        console.error('Fehler beim Löschen:', error);
-        showNotification('Fehler beim Löschen: ' + error.message, 'error');
       }
     }
 
@@ -5055,19 +4967,13 @@ Sonstiges: ${notes}
         ...JSON.parse(JSON.stringify(employee)),
         id: `EMP-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
         name: `${employee.name} (Kopie)`,
-        lastUpdated: new Date().toISOString(),
-        syncVersion: Date.now()
+        lastUpdated: new Date().toISOString()
       };
 
-      delete newEmployee.id; // Neue ID wird von Firebase generiert
-      
-      try {
-        await db.collection('hrEmployees').add(newEmployee);
+      const success = await saveEmployeeToFirebase(newEmployee);
+      if (success) {
         showNotification('Mitarbeiter dupliziert', 'success');
         document.getElementById('contextMenu')?.remove();
-      } catch (error) {
-        console.error('Fehler beim Duplizieren:', error);
-        showNotification('Fehler beim Duplizieren: ' + error.message, 'error');
       }
     }
 
@@ -5081,7 +4987,7 @@ Sonstiges: ${notes}
 
       const a = document.createElement('a');
       a.href = url;
-      a.download = `mitarbeiter-${(employee.name || 'unbekannt').replace(/[^a-z0-9]/gi, '_')}-${(employee.dn || '')}.json`;
+      a.download = `mitarbeiter-${(employee.name || 'unbekannt')}-${(employee.dn || '')}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -5151,33 +5057,22 @@ Sonstiges: ${notes}
         return;
       }
 
-      // Prüfe ob DN bereits existiert
-      const existingEmployee = employees.find(emp => emp.dn == dn);
-      if (existingEmployee) {
-        showNotification(`Die Dienstnummer ${dn} wird bereits von ${existingEmployee.name} verwendet`, 'warning');
-        return;
-      }
+      const employeeId = `EMP-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 
-      const employeeData = {
+      const newEmployee = {
+        id: employeeId,
         name,
         dn,
         unit: unit || '',
         rank: rank || '',
-        lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
+        lastUpdated: new Date().toISOString(),
         inductions: { oral: { completed: false }, org: { completed: false } },
         oralData: { date: '', timeStart: '16:40', timeEnd: '18:00', person: '', notes: '', unit: unit || '', rank: rank || '' },
-        orgData: { date: '', timeStart: '22:10', timeEnd: '23:05', person: '', notes: '', unit: unit || '', rank: rank || '' },
-        syncVersion: Date.now()
+        orgData: { date: '', timeStart: '22:10', timeEnd: '23:05', person: '', notes: '', unit: unit || '', rank: rank || '' }
       };
 
-      try {
-        const docRef = await db.collection('hrEmployees').add(employeeData);
-        
-        const newEmployee = {
-          id: docRef.id,
-          ...employeeData
-        };
-        
+      const success = await saveEmployeeToFirebase(newEmployee);
+      if (success) {
         closeModal('newEmployeeModal');
         selectEmployee(newEmployee);
         updateStats();
@@ -5188,10 +5083,6 @@ Sonstiges: ${notes}
         document.getElementById('newEmployeeRank').value = '';
 
         showNotification(`Mitarbeiter "${name}" erstellt`, 'success');
-        
-      } catch (error) {
-        console.error('Fehler beim Erstellen des Mitarbeiters:', error);
-        showNotification('Fehler beim Erstellen: ' + error.message, 'error');
       }
     }
 
@@ -5200,19 +5091,10 @@ Sonstiges: ${notes}
       const messageElement = document.getElementById('notificationMessage');
       messageElement.textContent = message;
 
-      if (type === 'success') {
-        notification.style.background = 'var(--secondary)';
-        notification.querySelector('.notification-icon').className = 'fas fa-check notification-icon';
-      } else if (type === 'error') {
-        notification.style.background = 'var(--danger)';
-        notification.querySelector('.notification-icon').className = 'fas fa-exclamation-triangle notification-icon';
-      } else if (type === 'warning') {
-        notification.style.background = 'var(--warning)';
-        notification.querySelector('.notification-icon').className = 'fas fa-exclamation-circle notification-icon';
-      } else {
-        notification.style.background = 'var(--primary)';
-        notification.querySelector('.notification-icon').className = 'fas fa-info-circle notification-icon';
-      }
+      if (type === 'success') notification.style.background = 'var(--secondary)';
+      else if (type === 'error') notification.style.background = 'var(--danger)';
+      else if (type === 'warning') notification.style.background = 'var(--warning)';
+      else notification.style.background = 'var(--primary)';
 
       notification.classList.add('show');
       setTimeout(() => notification.classList.remove('show'), 3000);
@@ -5240,6 +5122,7 @@ Sonstiges:
 /////////////////////////////////////////////////////////////////////////
 Organisatorische Einweisung
 
+Prüfer :
 Name:
 DN:
 Hauptunit:
