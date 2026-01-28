@@ -94,42 +94,7 @@
       align-items:center;
       gap:12px;
     }
-    /* Logo Container */
-    .logo-container {
-      width: 40px;
-      height: 40px;
-      background: var(--primary);
-      border-radius: var(--radius-md);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: var(--transition);
-      cursor: pointer;
-      overflow: hidden;
-      position: relative;
-      flex-shrink: 0;
-    }
-    .logo-container:hover {
-      transform: scale(1.05);
-      background: var(--primary-dark);
-    }
-    .logo-image {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: none;
-    }
-    .logo-default-icon {
-      font-size: 18px;
-      color: #fff;
-    }
-    .logo-container.has-image .logo-default-icon {
-      display: none;
-    }
-    .logo-container.has-image .logo-image {
-      display: block;
-    }
-
+    /* Logo Container entfernt - Logo komplett entfernt */
     .brand-text {
       display: flex;
       align-items: center;
@@ -175,8 +140,8 @@
     .stat-value{font-size:20px;font-weight:800;color:#fff;margin-bottom:2px}
     .stat-label{font-size:10px;color:var(--gray);text-transform:uppercase;letter-spacing:.4px;font-weight:700}
 
-    /* Password Modal */
-    .password-modal {
+    /* Password Modal für Settings */
+    .settings-password-modal {
       display: none;
       position: fixed;
       inset: 0;
@@ -189,11 +154,11 @@
       animation: fadeIn .2s ease;
     }
 
-    .password-modal.active {
+    .settings-password-modal.active {
       display: flex;
     }
 
-    .password-content {
+    .settings-password-content {
       background: rgba(31,41,55,.95);
       border-radius: var(--radius-lg);
       padding: 30px;
@@ -204,7 +169,7 @@
       animation: slideUp .2s ease;
     }
 
-    .password-header {
+    .settings-password-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -213,7 +178,7 @@
       border-bottom: 1px solid rgba(255,255,255,.1);
     }
 
-    .password-title {
+    .settings-password-title {
       font-size: 18px;
       font-weight: 900;
       color: #fff;
@@ -222,7 +187,7 @@
       gap: 10px;
     }
 
-    .password-close {
+    .settings-password-close {
       background: none;
       border: none;
       color: var(--gray);
@@ -237,18 +202,18 @@
       border-radius: 50%;
     }
 
-    .password-close:hover {
+    .settings-password-close:hover {
       color: #fff;
       background: rgba(255,255,255,.1);
     }
 
-    .password-form {
+    .settings-password-form {
       display: flex;
       flex-direction: column;
       gap: 16px;
     }
 
-    .password-input {
+    .settings-password-input {
       padding: 12px 16px;
       background: rgba(255,255,255,.05);
       border: 1px solid rgba(255,255,255,.1);
@@ -260,21 +225,21 @@
       font-family: 'Inter', sans-serif;
     }
 
-    .password-input:focus {
+    .settings-password-input:focus {
       outline: none;
       border-color: var(--primary);
       background: rgba(255,255,255,.08);
       box-shadow: 0 0 0 3px rgba(79,70,229,.15);
     }
 
-    .password-error {
+    .settings-password-error {
       color: var(--danger);
       font-size: 12px;
       display: none;
       margin-top: -8px;
     }
 
-    .password-error.show {
+    .settings-password-error.show {
       display: block;
     }
 
@@ -368,6 +333,254 @@
       border-radius: 12px;
       font-weight: 900;
       font-size: 10px;
+    }
+
+    /* Besprechungen Modal */
+    .besprechungen-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.85);
+      backdrop-filter: blur(4px);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      animation: fadeIn .2s ease;
+    }
+
+    .besprechungen-modal.active {
+      display: flex;
+    }
+
+    .besprechungen-content {
+      background: rgba(31,41,55,.95);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      width: 100%;
+      max-width: 1000px;
+      max-height: 90vh;
+      border: 1px solid rgba(255,255,255,.15);
+      box-shadow: var(--shadow-lg);
+      animation: slideUp .2s ease;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .besprechungen-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(255,255,255,.1);
+      flex-shrink: 0;
+    }
+
+    .besprechungen-title {
+      font-size: 18px;
+      font-weight: 900;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .besprechungen-close {
+      background: none;
+      border: none;
+      color: var(--gray);
+      font-size: 20px;
+      cursor: pointer;
+      transition: var(--transition);
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+    }
+
+    .besprechungen-close:hover {
+      color: #fff;
+      background: rgba(255,255,255,.1);
+    }
+
+    .besprechungen-body {
+      flex: 1;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .besprechungen-search-container {
+      position: relative;
+      margin-bottom: 20px;
+      flex-shrink: 0;
+    }
+
+    .besprechungen-search-input {
+      width: 100%;
+      padding: 12px 16px 12px 44px;
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: var(--radius-md);
+      color: #fff;
+      font-size: 14px;
+      transition: var(--transition);
+    }
+
+    .besprechungen-search-input::placeholder {
+      color: rgba(255,255,255,.5);
+    }
+
+    .besprechungen-search-input:focus {
+      outline: none;
+      border-color: #8b5cf6;
+      background: rgba(255,255,255,.08);
+      box-shadow: 0 0 0 3px rgba(139,92,246,.15);
+    }
+
+    .besprechungen-search-icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--gray);
+      font-size: 16px;
+    }
+
+    .besprechungen-list-container {
+      flex: 1;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .besprechungen-list {
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-height: 0;
+    }
+
+    .besprechungen-list::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .besprechungen-list::-webkit-scrollbar-track {
+      background: rgba(255,255,255,.05);
+      border-radius: 4px;
+    }
+
+    .besprechungen-list::-webkit-scrollbar-thumb {
+      background: #8b5cf6;
+      border-radius: 4px;
+    }
+
+    .besprechungen-item {
+      background: rgba(255,255,255,.03);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      border: 1px solid rgba(255,255,255,.08);
+      transition: var(--transition);
+    }
+
+    .besprechungen-item:hover {
+      background: rgba(255,255,255,.05);
+      border-color: #8b5cf6;
+    }
+
+    .besprechungen-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+
+    .besprechungen-item-title {
+      font-weight: 900;
+      color: #fff;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .besprechungen-item-type {
+      background: rgba(139,92,246,.10);
+      color: #a78bfa;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 900;
+      border: 1px solid rgba(139,92,246,.20);
+    }
+
+    .besprechungen-item-date {
+      color: var(--gray);
+      font-size: 11px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .besprechungen-item-content {
+      color: var(--gray-light);
+      font-size: 13px;
+      line-height: 1.5;
+      margin-bottom: 12px;
+      padding: 12px;
+      background: rgba(0,0,0,.2);
+      border-radius: var(--radius-sm);
+      border-left: 2px solid #8b5cf6;
+      max-height: 100px;
+      overflow-y: auto;
+    }
+
+    .besprechungen-item-content::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .besprechungen-item-content::-webkit-scrollbar-track {
+      background: rgba(255,255,255,.03);
+      border-radius: 2px;
+    }
+
+    .besprechungen-item-content::-webkit-scrollbar-thumb {
+      background: rgba(139,92,246,.30);
+      border-radius: 2px;
+    }
+
+    .empty-besprechungen {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--gray);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .empty-besprechungen-icon {
+      font-size: 36px;
+      margin-bottom: 12px;
+      opacity: .3;
+    }
+
+    .empty-besprechungen-title {
+      font-size: 14px;
+      font-weight: 900;
+      margin-bottom: 6px;
+      color: var(--gray-light);
     }
 
     /* Rest des vorhandenen CSS bleibt erhalten */
@@ -1174,97 +1387,6 @@
       border-radius: 4px;
     }
 
-    .ankundigungen-item {
-      background: rgba(255,255,255,.03);
-      border-radius: var(--radius-md);
-      padding: 16px;
-      border: 1px solid rgba(255,255,255,.08);
-      transition: var(--transition);
-    }
-
-    .ankundigungen-item:hover {
-      background: rgba(255,255,255,.05);
-      border-color: #8b5cf6;
-    }
-
-    .ankundigungen-item-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 12px;
-    }
-
-    .ankundigungen-item-title {
-      font-weight: 900;
-      color: #fff;
-      font-size: 15px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .ankundigungen-item-type {
-      background: rgba(139,92,246,.10);
-      color: #a78bfa;
-      padding: 4px 10px;
-      border-radius: 12px;
-      font-size: 11px;
-      font-weight: 900;
-      border: 1px solid rgba(139,92,246,.20);
-    }
-
-    .ankundigungen-item-date {
-      color: var(--gray);
-      font-size: 11px;
-      margin-bottom: 8px;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .ankundigungen-item-content {
-      color: var(--gray-light);
-      font-size: 13px;
-      line-height: 1.5;
-      margin-bottom: 12px;
-      padding: 12px;
-      background: rgba(0,0,0,.2);
-      border-radius: var(--radius-sm);
-      border-left: 2px solid #8b5cf6;
-      max-height: 100px;
-      overflow-y: auto;
-    }
-
-    .ankundigungen-item-actions {
-      display: flex;
-      gap: 8px;
-      justify-content: flex-end;
-    }
-
-    .ankundigungen-item-btn {
-      padding: 6px 12px;
-      border: none;
-      border-radius: var(--radius-sm);
-      font-weight: 900;
-      cursor: pointer;
-      transition: var(--transition);
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      font-size: 11px;
-    }
-
-    .ankundigungen-item-btn-delete {
-      background: rgba(239,68,68,.15);
-      color: #fca5a5;
-      border: 1px solid rgba(239,68,68,.25);
-    }
-
-    .ankundigungen-item-btn-delete:hover {
-      background: rgba(239,68,68,.25);
-    }
-
     .empty-ankundigungen {
       text-align: center;
       padding: 40px 20px;
@@ -1297,8 +1419,8 @@
     }
 
     .logo-preview {
-      width: 100px;
-      height: 100px;
+      width: 120px; /* Vergrößert von 100px auf 120px */
+      height: 120px; /* Vergrößert von 100px auf 120px */
       border-radius: var(--radius-md);
       background: rgba(255,255,255,.05);
       border: 2px dashed rgba(255,255,255,.1);
@@ -2437,7 +2559,6 @@
       .header-content{flex-direction:column;gap:12px;align-items:stretch}
       .header-stats{justify-content:center}
       .brand{gap:10px}
-      .logo-container{width:36px;height:36px}
       .brand-text h1{font-size:16px}
       .brand-text .subtitle{font-size:10px}
       .content-header{flex-direction:column;align-items:stretch;padding:14px}
@@ -2446,10 +2567,12 @@
       .oral-form-grid,.org-form-grid{grid-template-columns:1fr}
       .settings-modal,
       .soldaten-modal,
-      .beobachtung-akten-modal{padding:12px}
+      .beobachtung-akten-modal,
+      .besprechungen-modal{padding:12px}
       .settings-content,
       .soldaten-content,
-      .beobachtung-akten-content{padding:20px}
+      .beobachtung-akten-content,
+      .besprechungen-content{padding:20px}
       .settings-actions,
       .soldaten-actions,
       .beobachtung-actions{flex-direction:column;align-items:stretch}
@@ -2476,7 +2599,8 @@
       .notification{left:12px;right:12px;bottom:12px;min-width:auto}
       .settings-content,
       .soldaten-content,
-      .beobachtung-akten-content{padding:16px}
+      .beobachtung-akten-content,
+      .besprechungen-content{padding:16px}
       .soldaten-item-actions,
       .beobachtung-akte-actions{flex-direction:column}
     }
@@ -2486,21 +2610,21 @@
 <body>
   <div class="bg-effects"><div class="bg-gradient"></div></div>
 
-  <!-- Password Modal -->
-  <div class="password-modal" id="passwordModal">
-    <div class="password-content">
-      <div class="password-header">
-        <div class="password-title">
-          <i class="fas fa-lock"></i> Passwort erforderlich
+  <!-- Settings Password Modal -->
+  <div class="settings-password-modal" id="settingsPasswordModal">
+    <div class="settings-password-content">
+      <div class="settings-password-header">
+        <div class="settings-password-title">
+          <i class="fas fa-lock"></i> Passwort für Settings erforderlich
         </div>
-        <button class="password-close" onclick="closePasswordModal()">
+        <button class="settings-password-close" onclick="closeSettingsPasswordModal()">
           <i class="fas fa-times"></i>
         </button>
       </div>
-      <div class="password-form">
-        <input type="password" class="password-input" id="passwordInput" placeholder="Passwort eingeben" onkeypress="if(event.key === 'Enter') checkPassword()">
-        <div class="password-error" id="passwordError">Falsches Passwort</div>
-        <button class="btn btn-primary" onclick="checkPassword()">
+      <div class="settings-password-form">
+        <input type="password" class="settings-password-input" id="settingsPasswordInput" placeholder="Passwort eingeben" onkeypress="if(event.key === 'Enter') checkSettingsPassword()">
+        <div class="settings-password-error" id="settingsPasswordError">Falsches Passwort</div>
+        <button class="btn btn-primary" onclick="checkSettingsPassword()">
           <i class="fas fa-unlock"></i> Bestätigen
         </button>
       </div>
@@ -2526,6 +2650,37 @@
     </div>
   </div>
 
+  <!-- Besprechungen Modal -->
+  <div class="besprechungen-modal" id="besprechungenModal" onclick="if(event.target===this)closeModal('besprechungenModal')">
+    <div class="besprechungen-content">
+      <div class="besprechungen-header">
+        <div class="besprechungen-title">
+          <i class="fas fa-calendar-alt"></i> Besprechungen & Ankündigungen
+        </div>
+        <button class="besprechungen-close" onclick="closeModal('besprechungenModal')">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <div class="besprechungen-body">
+        <div class="besprechungen-search-container">
+          <i class="fas fa-search besprechungen-search-icon"></i>
+          <input type="text" class="besprechungen-search-input" id="besprechungenSearch" placeholder="Nach Thema oder Inhalt suchen..." oninput="searchBesprechungen(this.value)">
+        </div>
+        
+        <div class="besprechungen-list-container">
+          <div class="besprechungen-list" id="besprechungenList">
+            <div class="empty-besprechungen">
+              <div class="empty-besprechungen-icon"><i class="fas fa-calendar-alt"></i></div>
+              <div class="empty-besprechungen-title">Keine Besprechungen gefunden</div>
+              <div class="empty-description">Erstellen Sie Ihre erste Besprechung in den Settings</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Floating Buttons -->
   <div class="floating-buttons-container">
     <button class="floating-button soldaten" onclick="openSoldatenModal()" title="Soldatengespräche">
@@ -2534,7 +2689,7 @@
     <button class="floating-button" onclick="openBeobachtungAktenModal()" title="Beobachtungs-Akten">
       <i class="fas fa-folder-open"></i>
     </button>
-    <button class="floating-button" onclick="openSettingsModal()" title="Settings">
+    <button class="floating-button" onclick="openSettingsWithPassword()" title="Settings">
       <i class="fas fa-cog"></i>
     </button>
   </div>
@@ -2603,9 +2758,6 @@
               <button class="ankundigungen-tab" onclick="switchAnkundigungenTab('besprechung')">
                 <span>🗃️</span> Neue Besprechung
               </button>
-              <button class="ankundigungen-tab" onclick="switchAnkundigungenTab('list')">
-                <i class="fas fa-list"></i> Liste
-              </button>
             </div>
             
             <!-- Neue Ankündigung -->
@@ -2657,19 +2809,6 @@
                 </button>
               </div>
             </div>
-            
-            <!-- Liste -->
-            <div class="ankundigungen-tab-content" id="ankundigungenListTab" style="display:none;">
-              <div class="ankundigungen-list-container">
-                <div class="ankundigungen-list" id="ankundigungenList">
-                  <div class="empty-ankundigungen">
-                    <div class="empty-ankundigungen-icon"><i class="fas fa-bullhorn"></i></div>
-                    <div class="empty-ankundigungen-title">Keine Einträge gefunden</div>
-                    <div class="empty-description">Erstellen Sie Ihren ersten Eintrag</div>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
         
@@ -2698,6 +2837,9 @@
         <div class="settings-actions">
           <button class="btn btn-secondary" onclick="closeModal('settingsModal')">
             <i class="fas fa-times"></i> Schließen
+          </button>
+          <button class="btn btn-primary" onclick="saveSettings()">
+            <i class="fas fa-save"></i> Einstellungen speichern
           </button>
         </div>
       </div>
@@ -2954,17 +3096,11 @@ Grund:
     <header class="app-header">
       <div class="header-content">
         <div class="brand">
-          <!-- Logo Container -->
-          <div class="logo-container" id="logoContainer" onclick="openSettingsModal()">
-            <img src="" alt="Logo" class="logo-image" id="logoImage">
-            <div class="logo-default-icon">
-              <i class="fas fa-user-check"></i>
-            </div>
-          </div>
+          <!-- Logo Container entfernt -->
           <div class="brand-text">
             <h1>Human Resources <span class="header-icons">
               <span class="header-icon" onclick="showAnkundigungBanner()" title="Ankündigungen anzeigen">🔔</span>
-              <span class="header-icon" onclick="openAnkundigungenList()" title="Besprechungen anzeigen">🗃️</span>
+              <span class="header-icon" onclick="openBesprechungenModal()" title="Besprechungen anzeigen">🗃️</span>
             </span></h1>
             <div class="subtitle">•</div>
           </div>
@@ -3269,6 +3405,8 @@ Grund:
     // ==================== KONFIGURATION ====================
     const APP_VERSION = '1.0.20240128';
     const DEFAULT_PASSWORD = 'soc1';
+    const SETTINGS_PASSWORD = 'soc1';
+    const PASSWORD_EXPIRE_MINUTES = 5;
     
     // Firebase Configuration
     const firebaseConfig = {
@@ -3304,6 +3442,8 @@ Grund:
     let currentSoldatenTab = 'new';
     let currentBeobachtungTab = 'new';
     let isAuthenticated = false;
+    let settingsAuthenticated = false;
+    let settingsAuthTimestamp = 0;
     
     // Unsubscribe-Funktionen für Listener
     let unsubscribeFunctions = [];
@@ -3319,39 +3459,221 @@ Grund:
     // ==================== AUTHENTIFIZIERUNG ====================
     function checkAuthentication() {
       const savedPassword = localStorage.getItem('hr_app_password');
-      if (savedPassword === DEFAULT_PASSWORD) {
+      const savedTimestamp = localStorage.getItem('hr_app_password_timestamp');
+      const currentTime = Date.now();
+      const expireTime = PASSWORD_EXPIRE_MINUTES * 60 * 1000;
+      
+      if (savedPassword === DEFAULT_PASSWORD && savedTimestamp && (currentTime - parseInt(savedTimestamp) < expireTime)) {
         isAuthenticated = true;
         initializeApp();
       } else {
-        openPasswordModal();
+        // Password expired or not set, show password modal
+        showMainPasswordModal();
       }
     }
 
-    function openPasswordModal() {
-      document.getElementById('passwordModal').classList.add('active');
-      document.getElementById('passwordInput').focus();
+    function showMainPasswordModal() {
+      // Create a new password modal for main app
+      const passwordModal = document.createElement('div');
+      passwordModal.className = 'settings-password-modal active';
+      passwordModal.innerHTML = `
+        <div class="settings-password-content">
+          <div class="settings-password-header">
+            <div class="settings-password-title">
+              <i class="fas fa-lock"></i> Passwort für HR App erforderlich
+            </div>
+          </div>
+          <div class="settings-password-form">
+            <input type="password" class="settings-password-input" id="mainPasswordInput" placeholder="Passwort eingeben" onkeypress="if(event.key === 'Enter') checkMainPassword()">
+            <div class="settings-password-error" id="mainPasswordError" style="display:none">Falsches Passwort</div>
+            <button class="btn btn-primary" onclick="checkMainPassword()">
+              <i class="fas fa-unlock"></i> Bestätigen
+            </button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(passwordModal);
+      
+      // Focus the input field
+      setTimeout(() => {
+        const input = document.getElementById('mainPasswordInput');
+        if (input) input.focus();
+      }, 100);
     }
 
-    function closePasswordModal() {
-      document.getElementById('passwordModal').classList.remove('active');
-      document.getElementById('passwordInput').value = '';
-      document.getElementById('passwordError').classList.remove('show');
-    }
-
-    function checkPassword() {
-      const password = document.getElementById('passwordInput').value;
-      const errorElement = document.getElementById('passwordError');
+    function checkMainPassword() {
+      const password = document.getElementById('mainPasswordInput').value;
+      const errorElement = document.getElementById('mainPasswordError');
       
       if (password === DEFAULT_PASSWORD) {
         localStorage.setItem('hr_app_password', password);
+        localStorage.setItem('hr_app_password_timestamp', Date.now());
         isAuthenticated = true;
-        closePasswordModal();
+        
+        // Remove modal
+        const modal = document.querySelector('.settings-password-modal');
+        if (modal) modal.remove();
+        
         initializeApp();
       } else {
-        errorElement.classList.add('show');
-        document.getElementById('passwordInput').value = '';
-        document.getElementById('passwordInput').focus();
+        errorElement.style.display = 'block';
+        document.getElementById('mainPasswordInput').value = '';
+        document.getElementById('mainPasswordInput').focus();
       }
+    }
+
+    function checkSettingsAuth() {
+      const savedTimestamp = localStorage.getItem('hr_settings_auth_timestamp');
+      const currentTime = Date.now();
+      const expireTime = PASSWORD_EXPIRE_MINUTES * 60 * 1000;
+      
+      if (settingsAuthenticated && savedTimestamp && (currentTime - parseInt(savedTimestamp) < expireTime)) {
+        return true;
+      }
+      return false;
+    }
+
+    function openSettingsPasswordModal() {
+      document.getElementById('settingsPasswordModal').classList.add('active');
+      document.getElementById('settingsPasswordInput').focus();
+    }
+
+    function closeSettingsPasswordModal() {
+      document.getElementById('settingsPasswordModal').classList.remove('active');
+      document.getElementById('settingsPasswordInput').value = '';
+      document.getElementById('settingsPasswordError').classList.remove('show');
+    }
+
+    function checkSettingsPassword() {
+      const password = document.getElementById('settingsPasswordInput').value;
+      const errorElement = document.getElementById('settingsPasswordError');
+      
+      if (password === SETTINGS_PASSWORD) {
+        settingsAuthenticated = true;
+        settingsAuthTimestamp = Date.now();
+        localStorage.setItem('hr_settings_auth_timestamp', settingsAuthTimestamp);
+        closeSettingsPasswordModal();
+        openSettingsModal();
+      } else {
+        errorElement.classList.add('show');
+        document.getElementById('settingsPasswordInput').value = '';
+        document.getElementById('settingsPasswordInput').focus();
+      }
+    }
+
+    function openSettingsWithPassword() {
+      if (checkSettingsAuth()) {
+        openSettingsModal();
+      } else {
+        openSettingsPasswordModal();
+      }
+    }
+
+    // ==================== BESPRECHUNGEN MODAL ====================
+    function openBesprechungenModal() {
+      openModal('besprechungenModal');
+      loadBesprechungen();
+    }
+
+    async function loadBesprechungen() {
+      const container = document.getElementById('besprechungenList');
+      container.innerHTML = '<div class="loading"><div class="loading-spinner"></div><div>Lade Besprechungen...</div></div>';
+
+      try {
+        const querySnapshot = await db.collection('hrAnkundigungen')
+          .orderBy('created', 'desc')
+          .get();
+        
+        if (querySnapshot.empty) {
+          container.innerHTML = `
+            <div class="empty-besprechungen">
+              <div class="empty-besprechungen-icon"><i class="fas fa-calendar-alt"></i></div>
+              <div class="empty-besprechungen-title">Keine Besprechungen gefunden</div>
+              <div class="empty-description">Erstellen Sie Ihre erste Besprechung in den Settings</div>
+            </div>
+          `;
+          return;
+        }
+
+        let html = '';
+        let hasItems = false;
+        
+        querySnapshot.forEach(doc => {
+          const item = doc.data();
+          hasItems = true;
+          
+          const typeLabel = item.type === 'ankundigung' ? 'Ankündigung' : 
+                          item.type === 'besprechung' ? 'Besprechung' : 'Aufstellung';
+          
+          const title = item.type === 'ankundigung' ? (item.title || 'Ohne Titel') :
+                       item.type === 'besprechung' ? item.thema : 
+                       item.type === 'aufstellung' ? `${item.typ} - ${item.ort}` : 'Eintrag';
+          
+          const date = item.type === 'ankundigung' ? item.createdFormatted : 
+                      item.date ? new Date(item.date).toLocaleDateString('de-DE') : item.createdFormatted;
+          
+          const content = item.type === 'ankundigung' ? item.content :
+                         item.type === 'besprechung' ? item.content : 
+                         item.type === 'aufstellung' ? item.bemerkungen : '';
+          
+          html += `
+            <div class="besprechungen-item">
+              <div class="besprechungen-item-header">
+                <div class="besprechungen-item-title">
+                  <span>${item.icon || '📄'}</span> ${escapeHtml(title)}
+                </div>
+                <div class="besprechungen-item-type">
+                  ${typeLabel}
+                </div>
+              </div>
+              <div class="besprechungen-item-date">
+                <i class="fas fa-calendar"></i> ${date}
+                ${item.time ? ` • ${item.time}` : ''}
+                ${item.ort ? ` • ${item.ort}` : ''}
+              </div>
+              <div class="besprechungen-item-content">
+                ${escapeHtml(content)}
+              </div>
+            </div>
+          `;
+        });
+
+        if (hasItems) {
+          container.innerHTML = html;
+        } else {
+          container.innerHTML = `
+            <div class="empty-besprechungen">
+              <div class="empty-besprechungen-icon"><i class="fas fa-calendar-alt"></i></div>
+              <div class="empty-besprechungen-title">Keine Besprechungen gefunden</div>
+              <div class="empty-description">Erstellen Sie Ihre erste Besprechung in den Settings</div>
+            </div>
+          `;
+        }
+      } catch (error) {
+        console.error('Fehler beim Laden der Besprechungen:', error);
+        container.innerHTML = `
+          <div class="empty-besprechungen">
+            <div class="empty-besprechungen-icon"><i class="fas fa-exclamation-triangle"></i></div>
+            <div class="empty-besprechungen-title">Fehler beim Laden</div>
+            <div class="empty-description">${error.message}</div>
+          </div>
+        `;
+      }
+    }
+
+    function searchBesprechungen(searchTerm) {
+      const items = document.querySelectorAll('.besprechungen-item');
+      const term = searchTerm.toLowerCase().trim();
+      
+      if (!term) {
+        items.forEach(item => item.style.display = 'block');
+        return;
+      }
+      
+      items.forEach(item => {
+        const text = item.textContent.toLowerCase();
+        item.style.display = text.includes(term) ? 'block' : 'none';
+      });
     }
 
     // ==================== APP INITIALISIERUNG ====================
@@ -3398,31 +3720,30 @@ Grund:
         }
         
         // Versuche auch aus Firebase zu laden
-        const logoRef = storage.ref('hr/logo.jpg');
-        const url = await logoRef.getDownloadURL();
-        if (url) {
-          settings.logoUrl = url;
-          localStorage.setItem('hr_app_logo_url', url);
-          updateLogoDisplay();
+        try {
+          const logoRef = storage.ref('hr/logo.jpg');
+          const url = await logoRef.getDownloadURL();
+          if (url) {
+            settings.logoUrl = url;
+            localStorage.setItem('hr_app_logo_url', url);
+            updateLogoDisplay();
+          }
+        } catch (firebaseError) {
+          console.log('Kein Logo in Firebase gefunden, verwende Default');
         }
       } catch (error) {
-        console.log('Kein Logo in Firebase gefunden, verwende Default');
+        console.error('Fehler beim Laden des Logos:', error);
       }
     }
 
     function updateLogoDisplay() {
-      const logoContainer = document.getElementById('logoContainer');
-      const logoImage = document.getElementById('logoImage');
       const logoPreview = document.getElementById('logoPreview');
       const logoPreviewImage = document.getElementById('logoPreviewImage');
       
       if (settings.logoUrl) {
-        logoImage.src = settings.logoUrl;
-        logoContainer.classList.add('has-image');
         logoPreviewImage.src = settings.logoUrl;
         logoPreview.classList.add('has-image');
       } else {
-        logoContainer.classList.remove('has-image');
         logoPreview.classList.remove('has-image');
       }
     }
@@ -3546,12 +3867,6 @@ Grund:
       document.getElementById('ankundigungBanner').classList.remove('show');
     }
 
-    function openAnkundigungenList() {
-      openSettingsModal();
-      switchSettingsTab('ankundigungen');
-      switchAnkundigungenTab('list');
-    }
-
     function switchAnkundigungenTab(tabName) {
       currentAnkundigungenTab = tabName;
       
@@ -3569,10 +3884,6 @@ Grund:
       } else if (tabName === 'besprechung') {
         document.querySelector('.ankundigungen-tab:nth-child(2)').classList.add('active');
         document.getElementById('ankundigungenBesprechungTab').style.display = 'block';
-      } else {
-        document.querySelector('.ankundigungen-tab:nth-child(3)').classList.add('active');
-        document.getElementById('ankundigungenListTab').style.display = 'block';
-        renderAnkundigungenList();
       }
     }
 
@@ -3602,8 +3913,8 @@ Grund:
         document.getElementById('ankundigungTitle').value = '';
         document.getElementById('ankundigungContent').value = '';
         
-        // Zur Liste wechseln
-        switchAnkundigungenTab('list');
+        // Zurück zur App
+        closeModal('settingsModal');
       } catch (error) {
         console.error('Fehler beim Speichern der Ankündigung:', error);
         showNotification('Fehler beim Speichern: ' + error.message, 'error');
@@ -3645,108 +3956,18 @@ Grund:
         document.getElementById('besprechungOrt').value = '';
         document.getElementById('besprechungContent').value = '';
         
-        // Zur Liste wechseln
-        switchAnkundigungenTab('list');
+        // Zurück zur App
+        closeModal('settingsModal');
       } catch (error) {
         console.error('Fehler beim Speichern der Besprechung:', error);
         showNotification('Fehler beim Speichern: ' + error.message, 'error');
       }
     }
 
-    async function renderAnkundigungenList() {
-      const container = document.getElementById('ankundigungenList');
-      
-      try {
-        const querySnapshot = await db.collection('hrAnkundigungen')
-          .orderBy('created', 'desc')
-          .get();
-        
-        if (querySnapshot.empty) {
-          container.innerHTML = `
-            <div class="empty-ankundigungen">
-              <div class="empty-ankundigungen-icon"><i class="fas fa-bullhorn"></i></div>
-              <div class="empty-ankundigungen-title">Keine Einträge gefunden</div>
-              <div class="empty-description">Erstellen Sie Ihren ersten Eintrag</div>
-            </div>
-          `;
-          return;
-        }
-
-        let html = '';
-        querySnapshot.forEach(doc => {
-          const item = doc.data();
-          
-          const typeLabel = item.type === 'ankundigung' ? 'Ankündigung' : 
-                          item.type === 'besprechung' ? 'Besprechung' : 'Aufstellung';
-          
-          const title = item.type === 'ankundigung' ? (item.title || 'Ohne Titel') :
-                       item.type === 'besprechung' ? item.thema : 
-                       item.type === 'aufstellung' ? `${item.typ} - ${item.ort}` : 'Eintrag';
-          
-          const date = item.type === 'ankundigung' ? item.createdFormatted : 
-                      item.date ? new Date(item.date).toLocaleDateString('de-DE') : item.createdFormatted;
-          
-          const content = item.type === 'ankundigung' ? item.content :
-                         item.type === 'besprechung' ? item.content : 
-                         item.type === 'aufstellung' ? item.bemerkungen : '';
-          
-          html += `
-            <div class="ankundigungen-item">
-              <div class="ankundigungen-item-header">
-                <div class="ankundigungen-item-title">
-                  <span>${item.icon || '📄'}</span> ${escapeHtml(title)}
-                </div>
-                <div class="ankundigungen-item-type">
-                  ${typeLabel}
-                </div>
-              </div>
-              <div class="ankundigungen-item-date">
-                <i class="fas fa-calendar"></i> ${date}
-                ${item.time ? ` • ${item.time}` : ''}
-                ${item.ort ? ` • ${item.ort}` : ''}
-              </div>
-              <div class="ankundigungen-item-content">
-                ${escapeHtml(content.length > 200 ? content.substring(0, 200) + '...' : content)}
-              </div>
-              <div class="ankundigungen-item-actions">
-                <button class="ankundigungen-item-btn ankundigungen-item-btn-delete" onclick="deleteAnkundigung('${doc.id}')">
-                  <i class="fas fa-trash"></i> Löschen
-                </button>
-              </div>
-            </div>
-          `;
-        });
-
-        container.innerHTML = html;
-      } catch (error) {
-        console.error('Fehler beim Laden der Ankündigungen:', error);
-        container.innerHTML = `
-          <div class="empty-ankundigungen">
-            <div class="empty-ankundigungen-icon"><i class="fas fa-exclamation-triangle"></i></div>
-            <div class="empty-ankundigungen-title">Fehler beim Laden</div>
-            <div class="empty-description">${error.message}</div>
-          </div>
-        `;
-      }
-    }
-
-    async function deleteAnkundigung(id) {
-      if (!confirm('Eintrag wirklich löschen?')) return;
-
-      try {
-        await db.collection('hrAnkundigungen').doc(id).delete();
-        showNotification('Eintrag gelöscht', 'success');
-        renderAnkundigungenList();
-      } catch (error) {
-        console.error('Fehler beim Löschen:', error);
-        showNotification('Fehler beim Löschen: ' + error.message, 'error');
-      }
-    }
-
     // ==================== SETTINGS FUNKTIONEN ====================
     function openSettingsModal() {
-      if (!isAuthenticated) {
-        openPasswordModal();
+      if (!checkSettingsAuth()) {
+        openSettingsPasswordModal();
         return;
       }
       openModal('settingsModal');
@@ -4078,11 +4299,28 @@ Grund:
           console.error('Fehler beim Lauschen auf Settings:', error);
         });
 
+      // Listener für Ankündigungen
+      const unsubscribeAnkundigungen = db.collection('hrAnkundigungen')
+        .orderBy('created', 'desc')
+        .onSnapshot((snapshot) => {
+          ankundigungen = [];
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            ankundigungen.push({ 
+              id: doc.id, 
+              ...data
+            });
+          });
+        }, (error) => {
+          console.error('Fehler beim Lauschen auf Ankündigungen:', error);
+        });
+
       unsubscribeFunctions = [
         unsubscribeEmployees,
         unsubscribeAkten,
         unsubscribeSoldaten,
-        unsubscribeSettings
+        unsubscribeSettings,
+        unsubscribeAnkundigungen
       ];
     }
 
@@ -4721,7 +4959,7 @@ Grund: ${grund || ''}
         if (e.ctrlKey && e.key === 'e' && currentEmployee) { e.preventDefault(); openEditEmployeeModal(); }
         if (e.ctrlKey && e.key === 'b') { e.preventDefault(); openBeobachtungAktenModal(); }
         if (e.ctrlKey && e.key === 's') { e.preventDefault(); openSoldatenModal(); }
-        if (e.ctrlKey && e.key === ',') { e.preventDefault(); openSettingsModal(); }
+        if (e.ctrlKey && e.key === ',') { e.preventDefault(); openSettingsWithPassword(); }
       });
 
       window.addEventListener('resize', adjustSidebarHeight);
