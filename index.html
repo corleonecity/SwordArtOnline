@@ -2315,7 +2315,7 @@
             <button class="ankundigung-btn ankundigung-btn-copy" onclick="copyAnkundigungTemplate()">
               <i class="fas fa-copy"></i> In Zwischenablage kopieren
             </button>
-            <button class="ankundigung-btn ankundigung-btn-save" onclick="saveAnkundigung()">
+            <button class="ankundigung-btn ankundigung-btn-save" onclick="saveAnkündigung()">
               <i class="fas fa-save"></i> Ankündigung speichern
             </button>
           </div>
@@ -3643,7 +3643,7 @@ Bemerkungen: ${bemerkungen || ''}`;
       showNotification(success ? 'Aufstellung kopiert' : 'Fehler beim Kopieren', success ? 'success' : 'error');
     }
 
-    async function saveAnkundigung() {
+    async function saveAnkündigung() {
       const title = document.getElementById('ankundigungTitle').value.trim();
       const content = document.getElementById('ankundigungContent').value.trim();
 
