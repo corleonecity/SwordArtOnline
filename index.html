@@ -2752,7 +2752,10 @@
         <div class="settings-tab-content" id="ankundigungenTab" style="display:none;">
           <div class="ankundigungen-section">
             <div class="ankundigungen-tabs">
-              <button class="ankundigungen-tab active" onclick="switchAnkundigungenTab('new')">
+              <button class="ankundigungen-tab active" onclick="switchAnkundigungenTab('manage')">
+                <span>🗂️</span> Verwalten
+              </button>
+              <button class="ankundigungen-tab" onclick="switchAnkundigungenTab('new')">
                 <span>🪧</span> Neue Ankündigung
               </button>
               <button class="ankundigungen-tab" onclick="switchAnkundigungenTab('besprechung')">
@@ -2760,8 +2763,21 @@
               </button>
             </div>
             
+            <!-- Verwalten Tab -->
+            <div class="ankundigungen-tab-content" id="ankundigungenManageTab">
+              <div class="ankundigungen-list-container">
+                <div class="ankundigungen-list" id="ankundigungenList">
+                  <div class="empty-ankundigungen">
+                    <div class="empty-ankundigungen-icon"><i class="fas fa-bullhorn"></i></div>
+                    <div class="empty-ankundigungen-title">Keine Ankündigungen gefunden</div>
+                    <div class="empty-description">Erstellen Sie Ihre erste Ankündigung</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
             <!-- Neue Ankündigung -->
-            <div class="ankundigungen-tab-content" id="ankundigungenNewTab">
+            <div class="ankundigungen-tab-content" id="ankundigungenNewTab" style="display:none;">
               <div class="ankundigungen-form-grid">
                 <div class="settings-form-group">
                   <label class="settings-label">Titel</label>
@@ -3438,7 +3454,7 @@ Grund:
     let soldatenGespräche = [];
     let akten = [];
     let currentSettingsTab = 'units';
-    let currentAnkundigungenTab = 'new';
+    let currentAnkundigungenTab = 'manage';
     let currentSoldatenTab = 'new';
     let currentBeobachtungTab = 'new';
     let isAuthenticated = false;
@@ -3850,12 +3866,110 @@ Grund:
         content.style.display = 'none';
       });
       
-      if (tabName === 'new') {
+      if (tabName === 'manage') {
         document.querySelector('.ankundigungen-tab:nth-child(1)').classList.add('active');
+        document.getElementById('ankundigungenManageTab').style.display = 'block';
+        loadAnkundigungenList();
+      } else if (tabName === 'new') {
+        document.querySelector('.ankundigungen-tab:nth-child(2)').classList.add('active');
         document.getElementById('ankundigungenNewTab').style.display = 'block';
       } else if (tabName === 'besprechung') {
-        document.querySelector('.ankundigungen-tab:nth-child(2)').classList.add('active');
+        document.querySelector('.ankundigungen-tab:nth-child(3)').classList.add('active');
         document.getElementById('ankundigungenBesprechungTab').style.display = 'block';
+      }
+    }
+
+    async function loadAnkundigungenList() {
+      const container = document.getElementById('ankundigungenList');
+      container.innerHTML = '<div class="loading"><div class="loading-spinner"></div><div>Lade Ankündigungen...</div></div>';
+
+      try {
+        const querySnapshot = await db.collection('hrAnkundigungen')
+          .orderBy('created', 'desc')
+          .limit(50)
+          .get();
+        
+        if (querySnapshot.empty) {
+          container.innerHTML = `
+            <div class="empty-ankundigungen">
+              <div class="empty-ankundigungen-icon"><i class="fas fa-bullhorn"></i></div>
+              <div class="empty-ankundigungen-title">Keine Ankündigungen gefunden</div>
+              <div class="empty-description">Erstellen Sie Ihre erste Ankündigung</div>
+            </div>
+          `;
+          return;
+        }
+
+        let html = '';
+        
+        querySnapshot.forEach(doc => {
+          const item = doc.data();
+          const isAnkundigung = item.type === 'ankundigung';
+          const isBesprechung = item.type === 'besprechung';
+          
+          const title = isBesprechung ? (item.thema || 'Ohne Thema') : (item.title || 'Ohne Titel');
+          const date = item.createdFormatted || 'Unbekannt';
+          const content = item.content || '';
+          const typeText = isAnkundigung ? 'Ankündigung' : 'Besprechung';
+          const icon = isAnkundigung ? '🪧' : '🗃️';
+          
+          html += `
+            <div class="ankundigungen-item" style="background: rgba(255,255,255,.03); border-radius: var(--radius-md); padding: 16px; border: 1px solid rgba(255,255,255,.08); margin-bottom: 12px;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                <div style="font-weight: 900; color: #fff; font-size: 15px; display: flex; align-items: center; gap: 8px;">
+                  <span>${icon}</span> ${escapeHtml(title)}
+                </div>
+                <div style="background: rgba(139,92,246,.10); color: #a78bfa; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 900; border: 1px solid rgba(139,92,246,.20);">
+                  ${typeText}
+                </div>
+              </div>
+              <div style="color: var(--gray); font-size: 11px; margin-bottom: 8px; display: flex; align-items: center; gap: 4px;">
+                <i class="fas fa-calendar"></i> ${date}
+                ${isBesprechung && item.date ? ` • ${new Date(item.date).toLocaleDateString('de-DE')}` : ''}
+                ${isBesprechung && item.time ? ` • ${item.time}` : ''}
+                ${isBesprechung && item.ort ? ` • ${item.ort}` : ''}
+              </div>
+              <div style="color: var(--gray-light); font-size: 13px; line-height: 1.5; margin-bottom: 12px; padding: 12px; background: rgba(0,0,0,.2); border-radius: var(--radius-sm); border-left: 2px solid #8b5cf6; max-height: 100px; overflow-y: auto;">
+                ${escapeHtml(content.length > 200 ? content.substring(0, 200) + '...' : content)}
+              </div>
+              <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                <button class="btn btn-danger" style="padding: 6px 12px; font-size: 11px;" onclick="deleteAnkundigung('${doc.id}')">
+                  <i class="fas fa-trash"></i> Löschen
+                </button>
+              </div>
+            </div>
+          `;
+        });
+
+        container.innerHTML = html;
+      } catch (error) {
+        console.error('Fehler beim Laden der Ankündigungen:', error);
+        container.innerHTML = `
+          <div class="empty-ankundigungen">
+            <div class="empty-ankundigungen-icon"><i class="fas fa-exclamation-triangle"></i></div>
+            <div class="empty-ankundigungen-title">Fehler beim Laden</div>
+            <div class="empty-description">${error.message}</div>
+          </div>
+        `;
+      }
+    }
+
+    async function deleteAnkundigung(id) {
+      if (!confirm('Ankündigung/Besprechung wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.')) return;
+
+      try {
+        await db.collection('hrAnkundigungen').doc(id).delete();
+        
+        showNotification('Ankündigung/Besprechung gelöscht', 'success');
+        loadAnkundigungenList();
+        
+        // Wenn wir im Besprechungen-Modal sind, aktualisieren wir auch dort
+        if (document.getElementById('besprechungenModal').classList.contains('active')) {
+          loadBesprechungen();
+        }
+      } catch (error) {
+        console.error('Fehler beim Löschen:', error);
+        showNotification('Fehler beim Löschen: ' + error.message, 'error');
       }
     }
 
@@ -3885,8 +3999,8 @@ Grund:
         document.getElementById('ankundigungTitle').value = '';
         document.getElementById('ankundigungContent').value = '';
         
-        // Zurück zur App
-        closeModal('settingsModal');
+        // Zurück zur Verwaltung
+        switchAnkundigungenTab('manage');
       } catch (error) {
         console.error('Fehler beim Speichern der Ankündigung:', error);
         showNotification('Fehler beim Speichern: ' + error.message, 'error');
@@ -3928,8 +4042,8 @@ Grund:
         document.getElementById('besprechungOrt').value = '';
         document.getElementById('besprechungContent').value = '';
         
-        // Zurück zur App
-        closeModal('settingsModal');
+        // Zurück zur Verwaltung
+        switchAnkundigungenTab('manage');
       } catch (error) {
         console.error('Fehler beim Speichern der Besprechung:', error);
         showNotification('Fehler beim Speichern: ' + error.message, 'error');
@@ -3944,6 +4058,8 @@ Grund:
       }
       openModal('settingsModal');
       populateSettingsUI();
+      // Standardmäßig zur Verwaltung gehen
+      switchAnkundigungenTab('manage');
     }
 
     function switchSettingsTab(tabName) {
@@ -4607,7 +4723,7 @@ Grund: ${grund || ''}
       try {
         await db.collection('hrAkten').doc(akte.id).set(akte);
         
-        showNotification('Akte erfolgreich erstellt', 'success');
+        showNotification('Akte erfolgreicht erstellt', 'success');
         document.getElementById('akteName').value = '';
         document.getElementById('akteDN').value = '';
         document.getElementById('akteUnit').value = '';
