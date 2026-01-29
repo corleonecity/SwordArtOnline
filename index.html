@@ -94,7 +94,24 @@
       align-items:center;
       gap:12px;
     }
-    /* Logo Container entfernt - Logo komplett entfernt */
+    /* Logo Container */
+    .logo-container {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.08);
+      flex-shrink: 0;
+    }
+    .logo-container img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
     .brand-text {
       display: flex;
       align-items: center;
@@ -612,6 +629,7 @@
       gap: 4px;
     }
 
+    /* Vergrößerte Textbereiche für Besprechungen */
     .besprechungen-item-content {
       color: var(--gray-light);
       font-size: 13px;
@@ -621,23 +639,27 @@
       background: rgba(0,0,0,.2);
       border-radius: var(--radius-sm);
       border-left: 2px solid #8b5cf6;
-      max-height: 100px;
+      max-height: 200px; /* Vergrößert von 100px auf 200px */
       overflow-y: auto;
       white-space: pre-line;
     }
 
     .besprechungen-item-content::-webkit-scrollbar {
-      width: 4px;
+      width: 6px;
     }
 
     .besprechungen-item-content::-webkit-scrollbar-track {
       background: rgba(255,255,255,.03);
-      border-radius: 2px;
+      border-radius: 3px;
     }
 
     .besprechungen-item-content::-webkit-scrollbar-thumb {
-      background: rgba(139,92,246,.30);
-      border-radius: 2px;
+      background: rgba(139,92,246,.50);
+      border-radius: 3px;
+    }
+
+    .besprechungen-item-content::-webkit-scrollbar-thumb:hover {
+      background: rgba(139,92,246,.70);
     }
 
     .empty-besprechungen {
@@ -861,6 +883,7 @@
       gap: 4px;
     }
 
+    /* Vergrößerte Textbereiche für Ankündigungen */
     .ankundigungen-item-content {
       color: var(--gray-light);
       font-size: 13px;
@@ -870,23 +893,27 @@
       background: rgba(0,0,0,.2);
       border-radius: var(--radius-sm);
       border-left: 2px solid #8b5cf6;
-      max-height: 100px;
+      max-height: 200px; /* Vergrößert von 100px auf 200px */
       overflow-y: auto;
       white-space: pre-line;
     }
 
     .ankundigungen-item-content::-webkit-scrollbar {
-      width: 4px;
+      width: 6px;
     }
 
     .ankundigungen-item-content::-webkit-scrollbar-track {
       background: rgba(255,255,255,.03);
-      border-radius: 2px;
+      border-radius: 3px;
     }
 
     .ankundigungen-item-content::-webkit-scrollbar-thumb {
-      background: rgba(139,92,246,.30);
-      border-radius: 2px;
+      background: rgba(139,92,246,.50);
+      border-radius: 3px;
+    }
+
+    .ankundigungen-item-content::-webkit-scrollbar-thumb:hover {
+      background: rgba(139,92,246,.70);
     }
 
     .empty-ankundigungen {
@@ -3531,7 +3558,13 @@ Grund:
     <header class="app-header">
       <div class="header-content">
         <div class="brand">
-          <!-- Logo Container entfernt -->
+          <!-- Logo Container -->
+          <div class="logo-container" id="logoContainer">
+            <img src="" alt="Logo" id="logoImage" style="display:none;">
+            <div id="logoPlaceholder" style="color:var(--gray);font-size:20px;">
+              <i class="fas fa-building"></i>
+            </div>
+          </div>
           <div class="brand-text">
             <h1>Human Resources <span class="header-icons">
               <span class="header-icon" onclick="openAnkundigungenModal()" title="Ankündigungen anzeigen">🔔</span>
@@ -3886,7 +3919,107 @@ Grund:
     document.addEventListener('DOMContentLoaded', function () {
       console.log(`HR App Version ${APP_VERSION} geladen`);
       checkAuthentication();
+      loadLogo();
     });
+
+    // ==================== LOGO FUNKTIONEN ====================
+    async function loadLogo() {
+      try {
+        const logoUrl = localStorage.getItem('hr_app_logo_url');
+        if (logoUrl) {
+          settings.logoUrl = logoUrl;
+          updateLogoDisplay();
+        }
+        
+        try {
+          const logoRef = storage.ref('hr/logo.jpg');
+          const url = await logoRef.getDownloadURL();
+          if (url) {
+            settings.logoUrl = url;
+            localStorage.setItem('hr_app_logo_url', url);
+            updateLogoDisplay();
+          }
+        } catch (firebaseError) {
+          console.log('Kein Logo in Firebase gefunden, verwende Default');
+        }
+      } catch (error) {
+        console.error('Fehler beim Laden des Logos:', error);
+      }
+    }
+
+    function updateLogoDisplay() {
+      const logoImage = document.getElementById('logoImage');
+      const logoPlaceholder = document.getElementById('logoPlaceholder');
+      const logoContainer = document.getElementById('logoContainer');
+      
+      if (settings.logoUrl) {
+        logoImage.src = settings.logoUrl;
+        logoImage.style.display = 'block';
+        logoPlaceholder.style.display = 'none';
+        logoContainer.classList.add('has-image');
+      } else {
+        logoImage.style.display = 'none';
+        logoPlaceholder.style.display = 'flex';
+        logoContainer.classList.remove('has-image');
+      }
+    }
+
+    async function handleLogoUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      if (!file.type.startsWith('image/')) {
+        showNotification('Nur Bilddateien sind erlaubt', 'error');
+        return;
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        showNotification('Datei ist zu groß (max. 5MB)', 'error');
+        return;
+      }
+
+      try {
+        showNotification('Logo wird hochgeladen...', 'info');
+        
+        try {
+          const oldLogoRef = storage.ref('hr/logo.jpg');
+          await oldLogoRef.delete();
+        } catch (error) {
+          console.log('Kein altes Logo zum Löschen gefunden');
+        }
+
+        const storageRef = storage.ref('hr/logo.jpg');
+        await storageRef.put(file);
+        const downloadURL = await storageRef.getDownloadURL();
+        
+        settings.logoUrl = downloadURL;
+        localStorage.setItem('hr_app_logo_url', downloadURL);
+        updateLogoDisplay();
+        
+        showNotification('Logo erfolgreich hochgeladen', 'success');
+      } catch (error) {
+        console.error('Fehler beim Hochladen des Logos:', error);
+        showNotification('Fehler beim Hochladen des Logos', 'error');
+      }
+    }
+
+    async function removeLogo() {
+      if (!confirm('Logo wirklich entfernen?')) return;
+
+      try {
+        const logoRef = storage.ref('hr/logo.jpg');
+        await logoRef.delete();
+        
+        localStorage.removeItem('hr_app_logo_url');
+        settings.logoUrl = '';
+        updateLogoDisplay();
+        
+        showNotification('Logo entfernt', 'success');
+      } catch (error) {
+        console.error('Fehler beim Entfernen des Logos:', error);
+        showNotification('Fehler beim Entfernen des Logos', 'error');
+      }
+    }
 
     // ==================== AUTHENTIFIZIERUNG ====================
     function checkAuthentication() {
@@ -4225,100 +4358,6 @@ Grund:
       adjustSidebarHeight();
       
       setTimeout(showLatestAnkundigung, 1000);
-    }
-
-    // ==================== LOGO FUNKTIONEN ====================
-    async function loadLogo() {
-      try {
-        const logoUrl = localStorage.getItem('hr_app_logo_url');
-        if (logoUrl) {
-          settings.logoUrl = logoUrl;
-          updateLogoDisplay();
-        }
-        
-        try {
-          const logoRef = storage.ref('hr/logo.jpg');
-          const url = await logoRef.getDownloadURL();
-          if (url) {
-            settings.logoUrl = url;
-            localStorage.setItem('hr_app_logo_url', url);
-            updateLogoDisplay();
-          }
-        } catch (firebaseError) {
-          console.log('Kein Logo in Firebase gefunden, verwende Default');
-        }
-      } catch (error) {
-        console.error('Fehler beim Laden des Logos:', error);
-      }
-    }
-
-    function updateLogoDisplay() {
-      const logoPreview = document.getElementById('logoPreview');
-      const logoPreviewImage = document.getElementById('logoPreviewImage');
-      
-      if (settings.logoUrl) {
-        logoPreviewImage.src = settings.logoUrl;
-        logoPreview.classList.add('has-image');
-      } else {
-        logoPreview.classList.remove('has-image');
-      }
-    }
-
-    async function handleLogoUpload(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-
-      if (!file.type.startsWith('image/')) {
-        showNotification('Nur Bilddateien sind erlaubt', 'error');
-        return;
-      }
-
-      if (file.size > 5 * 1024 * 1024) {
-        showNotification('Datei ist zu groß (max. 5MB)', 'error');
-        return;
-      }
-
-      try {
-        showNotification('Logo wird hochgeladen...', 'info');
-        
-        try {
-          const oldLogoRef = storage.ref('hr/logo.jpg');
-          await oldLogoRef.delete();
-        } catch (error) {
-          console.log('Kein altes Logo zum Löschen gefunden');
-        }
-
-        const storageRef = storage.ref('hr/logo.jpg');
-        await storageRef.put(file);
-        const downloadURL = await storageRef.getDownloadURL();
-        
-        settings.logoUrl = downloadURL;
-        localStorage.setItem('hr_app_logo_url', downloadURL);
-        updateLogoDisplay();
-        
-        showNotification('Logo erfolgreich hochgeladen', 'success');
-      } catch (error) {
-        console.error('Fehler beim Hochladen des Logos:', error);
-        showNotification('Fehler beim Hochladen des Logos', 'error');
-      }
-    }
-
-    async function removeLogo() {
-      if (!confirm('Logo wirklich entfernen?')) return;
-
-      try {
-        const logoRef = storage.ref('hr/logo.jpg');
-        await logoRef.delete();
-        
-        localStorage.removeItem('hr_app_logo_url');
-        settings.logoUrl = '';
-        updateLogoDisplay();
-        
-        showNotification('Logo entfernt', 'success');
-      } catch (error) {
-        console.error('Fehler beim Entfernen des Logos:', error);
-        showNotification('Fehler beim Entfernen des Logos', 'error');
-      }
     }
 
     // ==================== ANKÜNDIGUNGEN FUNKTIONEN ====================
