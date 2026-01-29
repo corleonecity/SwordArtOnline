@@ -583,6 +583,254 @@
       color: var(--gray-light);
     }
 
+    /* Ankündigungen Modal */
+    .ankundigungen-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.85);
+      backdrop-filter: blur(4px);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      animation: fadeIn .2s ease;
+    }
+
+    .ankundigungen-modal.active {
+      display: flex;
+    }
+
+    .ankundigungen-content {
+      background: rgba(31,41,55,.95);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      width: 100%;
+      max-width: 1000px;
+      max-height: 90vh;
+      border: 1px solid rgba(255,255,255,.15);
+      box-shadow: var(--shadow-lg);
+      animation: slideUp .2s ease;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .ankundigungen-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(255,255,255,.1);
+      flex-shrink: 0;
+    }
+
+    .ankundigungen-title {
+      font-size: 18px;
+      font-weight: 900;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .ankundigungen-close {
+      background: none;
+      border: none;
+      color: var(--gray);
+      font-size: 20px;
+      cursor: pointer;
+      transition: var(--transition);
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+    }
+
+    .ankundigungen-close:hover {
+      color: #fff;
+      background: rgba(255,255,255,.1);
+    }
+
+    .ankundigungen-body {
+      flex: 1;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .ankundigungen-search-container {
+      position: relative;
+      margin-bottom: 20px;
+      flex-shrink: 0;
+    }
+
+    .ankundigungen-search-input {
+      width: 100%;
+      padding: 12px 16px 12px 44px;
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: var(--radius-md);
+      color: #fff;
+      font-size: 14px;
+      transition: var(--transition);
+    }
+
+    .ankundigungen-search-input::placeholder {
+      color: rgba(255,255,255,.5);
+    }
+
+    .ankundigungen-search-input:focus {
+      outline: none;
+      border-color: #8b5cf6;
+      background: rgba(255,255,255,.08);
+      box-shadow: 0 0 0 3px rgba(139,92,246,.15);
+    }
+
+    .ankundigungen-search-icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--gray);
+      font-size: 16px;
+    }
+
+    .ankundigungen-list-container {
+      flex: 1;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .ankundigungen-list {
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-height: 0;
+    }
+
+    .ankundigungen-list::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .ankundigungen-list::-webkit-scrollbar-track {
+      background: rgba(255,255,255,.05);
+      border-radius: 4px;
+    }
+
+    .ankundigungen-list::-webkit-scrollbar-thumb {
+      background: #8b5cf6;
+      border-radius: 4px;
+    }
+
+    .ankundigungen-item {
+      background: rgba(255,255,255,.03);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      border: 1px solid rgba(255,255,255,.08);
+      transition: var(--transition);
+    }
+
+    .ankundigungen-item:hover {
+      background: rgba(255,255,255,.05);
+      border-color: #8b5cf6;
+    }
+
+    .ankundigungen-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+
+    .ankundigungen-item-title {
+      font-weight: 900;
+      color: #fff;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .ankundigungen-item-type {
+      background: rgba(139,92,246,.10);
+      color: #a78bfa;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 900;
+      border: 1px solid rgba(139,92,246,.20);
+    }
+
+    .ankundigungen-item-date {
+      color: var(--gray);
+      font-size: 11px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .ankundigungen-item-content {
+      color: var(--gray-light);
+      font-size: 13px;
+      line-height: 1.5;
+      margin-bottom: 12px;
+      padding: 12px;
+      background: rgba(0,0,0,.2);
+      border-radius: var(--radius-sm);
+      border-left: 2px solid #8b5cf6;
+      max-height: 100px;
+      overflow-y: auto;
+    }
+
+    .ankundigungen-item-content::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .ankundigungen-item-content::-webkit-scrollbar-track {
+      background: rgba(255,255,255,.03);
+      border-radius: 2px;
+    }
+
+    .ankundigungen-item-content::-webkit-scrollbar-thumb {
+      background: rgba(139,92,246,.30);
+      border-radius: 2px;
+    }
+
+    .empty-ankundigungen {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--gray);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .empty-ankundigungen-icon {
+      font-size: 36px;
+      margin-bottom: 12px;
+      opacity: .3;
+    }
+
+    .empty-ankundigungen-title {
+      font-size: 14px;
+      font-weight: 900;
+      margin-bottom: 6px;
+      color: var(--gray-light);
+    }
+
     /* Rest des vorhandenen CSS bleibt erhalten */
     .sidebar{
       background:rgba(31,41,55,.8);
@@ -2568,11 +2816,13 @@
       .settings-modal,
       .soldaten-modal,
       .beobachtung-akten-modal,
-      .besprechungen-modal{padding:12px}
+      .besprechungen-modal,
+      .ankundigungen-modal{padding:12px}
       .settings-content,
       .soldaten-content,
       .beobachtung-akten-content,
-      .besprechungen-content{padding:20px}
+      .besprechungen-content,
+      .ankundigungen-content{padding:20px}
       .settings-actions,
       .soldaten-actions,
       .beobachtung-actions{flex-direction:column;align-items:stretch}
@@ -2600,7 +2850,8 @@
       .settings-content,
       .soldaten-content,
       .beobachtung-akten-content,
-      .besprechungen-content{padding:16px}
+      .besprechungen-content,
+      .ankundigungen-content{padding:16px}
       .soldaten-item-actions,
       .beobachtung-akte-actions{flex-direction:column}
     }
@@ -2650,12 +2901,43 @@
     </div>
   </div>
 
+  <!-- Ankündigungen Modal -->
+  <div class="ankundigungen-modal" id="ankundigungenModal" onclick="if(event.target===this)closeModal('ankundigungenModal')">
+    <div class="ankundigungen-content">
+      <div class="ankundigungen-header">
+        <div class="ankundigungen-title">
+          <i class="fas fa-bullhorn"></i> Ankündigungen
+        </div>
+        <button class="ankundigungen-close" onclick="closeModal('ankundigungenModal')">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <div class="ankundigungen-body">
+        <div class="ankundigungen-search-container">
+          <i class="fas fa-search ankundigungen-search-icon"></i>
+          <input type="text" class="ankundigungen-search-input" id="ankundigungenSearch" placeholder="Nach Thema oder Inhalt suchen..." oninput="searchAnkundigungen(this.value)">
+        </div>
+        
+        <div class="ankundigungen-list-container">
+          <div class="ankundigungen-list" id="ankundigungenList">
+            <div class="empty-ankundigungen">
+              <div class="empty-ankundigungen-icon"><i class="fas fa-bullhorn"></i></div>
+              <div class="empty-ankundigungen-title">Keine Ankündigungen gefunden</div>
+              <div class="empty-description">Erstellen Sie Ihre erste Ankündigung in den Settings</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Besprechungen Modal -->
   <div class="besprechungen-modal" id="besprechungenModal" onclick="if(event.target===this)closeModal('besprechungenModal')">
     <div class="besprechungen-content">
       <div class="besprechungen-header">
         <div class="besprechungen-title">
-          <i class="fas fa-calendar-alt"></i> Besprechungen & Ankündigungen
+          <i class="fas fa-calendar-alt"></i> Besprechungen
         </div>
         <button class="besprechungen-close" onclick="closeModal('besprechungenModal')">
           <i class="fas fa-times"></i>
@@ -3099,7 +3381,7 @@ Grund:
           <!-- Logo Container entfernt -->
           <div class="brand-text">
             <h1>Human Resources <span class="header-icons">
-              <span class="header-icon" onclick="showAnkundigungBanner()" title="Ankündigungen anzeigen">🔔</span>
+              <span class="header-icon" onclick="openAnkundigungenModal()" title="Ankündigungen anzeigen">🔔</span>
               <span class="header-icon" onclick="openBesprechungenModal()" title="Besprechungen anzeigen">🗃️</span>
             </span></h1>
             <div class="subtitle">•</div>
@@ -3406,7 +3688,7 @@ Grund:
     const APP_VERSION = '1.0.20240128';
     const DEFAULT_PASSWORD = 'soc1';
     const SETTINGS_PASSWORD = 'soc1';
-    const PASSWORD_EXPIRE_MINUTES = 5;
+    const PASSWORD_EXPIRE_MINUTES = 60; // Erhöht auf 60 Minuten
     
     // Firebase Configuration
     const firebaseConfig = {
@@ -3465,6 +3747,7 @@ Grund:
       
       if (savedPassword === DEFAULT_PASSWORD && savedTimestamp && (currentTime - parseInt(savedTimestamp) < expireTime)) {
         isAuthenticated = true;
+        settingsAuthenticated = true; // Wenn App authentifiziert ist, sind Settings auch authentifiziert
         initializeApp();
       } else {
         // Password expired or not set, show password modal
@@ -3509,6 +3792,9 @@ Grund:
         localStorage.setItem('hr_app_password', password);
         localStorage.setItem('hr_app_password_timestamp', Date.now());
         isAuthenticated = true;
+        settingsAuthenticated = true; // Settings auch authentifizieren
+        settingsAuthTimestamp = Date.now();
+        localStorage.setItem('hr_settings_auth_timestamp', settingsAuthTimestamp);
         
         // Remove modal
         const modal = document.querySelector('.settings-password-modal');
@@ -3523,12 +3809,14 @@ Grund:
     }
 
     function checkSettingsAuth() {
-      const savedTimestamp = localStorage.getItem('hr_settings_auth_timestamp');
-      const currentTime = Date.now();
-      const expireTime = PASSWORD_EXPIRE_MINUTES * 60 * 1000;
-      
-      if (settingsAuthenticated && savedTimestamp && (currentTime - parseInt(savedTimestamp) < expireTime)) {
-        return true;
+      if (settingsAuthenticated) {
+        const savedTimestamp = localStorage.getItem('hr_settings_auth_timestamp');
+        const currentTime = Date.now();
+        const expireTime = PASSWORD_EXPIRE_MINUTES * 60 * 1000;
+        
+        if (savedTimestamp && (currentTime - parseInt(savedTimestamp) < expireTime)) {
+          return true;
+        }
       }
       return false;
     }
@@ -3569,6 +3857,102 @@ Grund:
       }
     }
 
+    // ==================== ANKÜNDIGUNGEN MODAL ====================
+    function openAnkundigungenModal() {
+      openModal('ankundigungenModal');
+      loadAnkundigungen();
+    }
+
+    async function loadAnkundigungen() {
+      const container = document.getElementById('ankundigungenList');
+      container.innerHTML = '<div class="loading"><div class="loading-spinner"></div><div>Lade Ankündigungen...</div></div>';
+
+      try {
+        const querySnapshot = await db.collection('hrAnkundigungen')
+          .where('type', '==', 'ankundigung')
+          .orderBy('created', 'desc')
+          .get();
+        
+        if (querySnapshot.empty) {
+          container.innerHTML = `
+            <div class="empty-ankundigungen">
+              <div class="empty-ankundigungen-icon"><i class="fas fa-bullhorn"></i></div>
+              <div class="empty-ankundigungen-title">Keine Ankündigungen gefunden</div>
+              <div class="empty-description">Erstellen Sie Ihre erste Ankündigung in den Settings</div>
+            </div>
+          `;
+          return;
+        }
+
+        let html = '';
+        let hasItems = false;
+        
+        querySnapshot.forEach(doc => {
+          const item = doc.data();
+          hasItems = true;
+          
+          const title = item.title || 'Ohne Titel';
+          const date = item.createdFormatted || 'Heute';
+          const content = item.content || '';
+          
+          html += `
+            <div class="ankundigungen-item">
+              <div class="ankundigungen-item-header">
+                <div class="ankundigungen-item-title">
+                  <span>${item.icon || '🪧'}</span> ${escapeHtml(title)}
+                </div>
+                <div class="ankundigungen-item-type">
+                  Ankündigung
+                </div>
+              </div>
+              <div class="ankundigungen-item-date">
+                <i class="fas fa-calendar"></i> ${date}
+              </div>
+              <div class="ankundigungen-item-content">
+                ${escapeHtml(content)}
+              </div>
+            </div>
+          `;
+        });
+
+        if (hasItems) {
+          container.innerHTML = html;
+        } else {
+          container.innerHTML = `
+            <div class="empty-ankundigungen">
+              <div class="empty-ankundigungen-icon"><i class="fas fa-bullhorn"></i></div>
+              <div class="empty-ankundigungen-title">Keine Ankündigungen gefunden</div>
+              <div class="empty-description">Erstellen Sie Ihre erste Ankündigung in den Settings</div>
+            </div>
+          `;
+        }
+      } catch (error) {
+        console.error('Fehler beim Laden der Ankündigungen:', error);
+        container.innerHTML = `
+          <div class="empty-ankundigungen">
+            <div class="empty-ankundigungen-icon"><i class="fas fa-exclamation-triangle"></i></div>
+            <div class="empty-ankundigungen-title">Fehler beim Laden</div>
+            <div class="empty-description">${error.message}</div>
+          </div>
+        `;
+      }
+    }
+
+    function searchAnkundigungen(searchTerm) {
+      const items = document.querySelectorAll('.ankundigungen-item');
+      const term = searchTerm.toLowerCase().trim();
+      
+      if (!term) {
+        items.forEach(item => item.style.display = 'block');
+        return;
+      }
+      
+      items.forEach(item => {
+        const text = item.textContent.toLowerCase();
+        item.style.display = text.includes(term) ? 'block' : 'none';
+      });
+    }
+
     // ==================== BESPRECHUNGEN MODAL ====================
     function openBesprechungenModal() {
       openModal('besprechungenModal');
@@ -3581,6 +3965,7 @@ Grund:
 
       try {
         const querySnapshot = await db.collection('hrAnkundigungen')
+          .where('type', '==', 'besprechung')
           .orderBy('created', 'desc')
           .get();
         
@@ -3602,28 +3987,18 @@ Grund:
           const item = doc.data();
           hasItems = true;
           
-          const typeLabel = item.type === 'ankundigung' ? 'Ankündigung' : 
-                          item.type === 'besprechung' ? 'Besprechung' : 'Aufstellung';
-          
-          const title = item.type === 'ankundigung' ? (item.title || 'Ohne Titel') :
-                       item.type === 'besprechung' ? item.thema : 
-                       item.type === 'aufstellung' ? `${item.typ} - ${item.ort}` : 'Eintrag';
-          
-          const date = item.type === 'ankundigung' ? item.createdFormatted : 
-                      item.date ? new Date(item.date).toLocaleDateString('de-DE') : item.createdFormatted;
-          
-          const content = item.type === 'ankundigung' ? item.content :
-                         item.type === 'besprechung' ? item.content : 
-                         item.type === 'aufstellung' ? item.bemerkungen : '';
+          const title = item.thema || 'Ohne Thema';
+          const date = item.date ? new Date(item.date).toLocaleDateString('de-DE') : item.createdFormatted;
+          const content = item.content || '';
           
           html += `
             <div class="besprechungen-item">
               <div class="besprechungen-item-header">
                 <div class="besprechungen-item-title">
-                  <span>${item.icon || '📄'}</span> ${escapeHtml(title)}
+                  <span>${item.icon || '🗃️'}</span> ${escapeHtml(title)}
                 </div>
                 <div class="besprechungen-item-type">
-                  ${typeLabel}
+                  Besprechung
                 </div>
               </div>
               <div class="besprechungen-item-date">
@@ -3818,6 +4193,7 @@ Grund:
       try {
         // Lade die neueste Ankündigung
         const querySnapshot = await db.collection('hrAnkundigungen')
+          .where('type', '==', 'ankundigung')
           .orderBy('created', 'desc')
           .limit(1)
           .get();
@@ -3835,21 +4211,10 @@ Grund:
         const date = document.getElementById('bannerDate');
         
         // Banner-Inhalt setzen
-        title.innerHTML = `<span>${ankundigung.icon || '🪧'}</span> ${escapeHtml(ankundigung.title || ankundigung.thema || 'Ankündigung')}`;
-        content.textContent = ankundigung.content || ankundigung.bemerkungen || '';
-        
-        if (ankundigung.type === 'besprechung') {
-          type.textContent = 'Besprechung';
-          const formattedDate = ankundigung.date ? new Date(ankundigung.date).toLocaleDateString('de-DE') : '';
-          date.textContent = `${formattedDate} ${ankundigung.time ? `um ${ankundigung.time}` : ''}`;
-        } else if (ankundigung.type === 'aufstellung') {
-          type.textContent = 'Aufstellung';
-          const formattedDate = ankundigung.date ? new Date(ankundigung.date).toLocaleDateString('de-DE') : '';
-          date.textContent = `${formattedDate} ${ankundigung.time ? `um ${ankundigung.time}` : ''}`;
-        } else {
-          type.textContent = 'Ankündigung';
-          date.textContent = ankundigung.createdFormatted || 'Heute';
-        }
+        title.innerHTML = `<span>${ankundigung.icon || '🪧'}</span> ${escapeHtml(ankundigung.title || 'Ankündigung')}`;
+        content.textContent = ankundigung.content || '';
+        type.textContent = 'Ankündigung';
+        date.textContent = ankundigung.createdFormatted || 'Heute';
         
         // Banner anzeigen
         banner.classList.add('show');
