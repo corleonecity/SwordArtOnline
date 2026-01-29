@@ -3510,6 +3510,61 @@ Grund:
       }
     }
 
+    // ==================== ANKÜNDIGUNGEN FUNKTIONEN ====================
+    function showAnkundigungBanner() {
+      if (!isAuthenticated) {
+        showNotification('Bitte zuerst anmelden', 'warning');
+        return;
+      }
+      showLatestAnkundigung();
+    }
+
+    async function showLatestAnkundigung() {
+      try {
+        console.log('Suche nach Ankündigungen...');
+        
+        const querySnapshot = await db.collection('hrAnkundigungen')
+          .where('type', '==', 'ankundigung')
+          .orderBy('created', 'desc')
+          .limit(1)
+          .get();
+        
+        console.log('Ankündigungen gefunden:', querySnapshot.size);
+        
+        if (querySnapshot.empty) {
+          console.log('Keine Ankündigungen gefunden');
+          return;
+        }
+        
+        const ankundigung = querySnapshot.docs[0].data();
+        const banner = document.getElementById('ankundigungBanner');
+        const title = document.getElementById('bannerTitle');
+        const content = document.getElementById('bannerContent');
+        const type = document.getElementById('bannerType');
+        const date = document.getElementById('bannerDate');
+        
+        console.log('Ankündigung geladen:', ankundigung);
+        
+        title.innerHTML = `<span>${ankundigung.icon || '🪧'}</span> ${escapeHtml(ankundigung.title || 'Ankündigung')}`;
+        content.textContent = ankundigung.content || '';
+        type.textContent = 'Ankündigung';
+        date.textContent = ankundigung.createdFormatted || 
+                          (ankundigung.created ? new Date(ankundigung.created).toLocaleDateString('de-DE') : 'Heute');
+        
+        banner.classList.add('show');
+        
+        setTimeout(() => {
+          banner.classList.remove('show');
+        }, 10000);
+      } catch (error) {
+        console.error('Fehler beim Laden der Ankündigung:', error);
+      }
+    }
+
+    function closeBanner() {
+      document.getElementById('ankundigungBanner').classList.remove('show');
+    }
+
     // ==================== BESPRECHUNGEN MODAL - NUR BESPRECHUNGEN ====================
     function openBesprechungenModal() {
       if (!isAuthenticated) {
@@ -3525,10 +3580,13 @@ Grund:
       container.innerHTML = '<div class="loading"><div class="loading-spinner"></div><div>Lade Besprechungen...</div></div>';
 
       try {
+        console.log('Lade Besprechungen...');
         const querySnapshot = await db.collection('hrAnkundigungen')
           .where('type', '==', 'besprechung')
           .orderBy('created', 'desc')
           .get();
+        
+        console.log('Besprechungen gefunden:', querySnapshot.size);
         
         if (querySnapshot.empty) {
           container.innerHTML = `
@@ -3545,6 +3603,7 @@ Grund:
         
         querySnapshot.forEach(doc => {
           const item = doc.data();
+          console.log('Besprechung:', item);
           
           const title = item.thema || 'Ohne Thema';
           const date = item.date ? new Date(item.date).toLocaleDateString('de-DE') : '';
@@ -3737,50 +3796,6 @@ Grund:
       }
     }
 
-    // ==================== ANKÜNDIGUNGEN FUNKTIONEN ====================
-    function showAnkundigungBanner() {
-      showLatestAnkundigung();
-    }
-
-    async function showLatestAnkundigung() {
-      try {
-        const querySnapshot = await db.collection('hrAnkundigungen')
-          .where('type', '==', 'ankundigung')
-          .orderBy('created', 'desc')
-          .limit(1)
-          .get();
-        
-        if (querySnapshot.empty) {
-          console.log('Keine Ankündigungen gefunden');
-          return;
-        }
-        
-        const ankundigung = querySnapshot.docs[0].data();
-        const banner = document.getElementById('ankundigungBanner');
-        const title = document.getElementById('bannerTitle');
-        const content = document.getElementById('bannerContent');
-        const type = document.getElementById('bannerType');
-        const date = document.getElementById('bannerDate');
-        
-        title.innerHTML = `<span>${ankundigung.icon || '🪧'}</span> ${escapeHtml(ankundigung.title || 'Ankündigung')}`;
-        content.textContent = ankundigung.content || '';
-        type.textContent = 'Ankündigung';
-        date.textContent = ankundigung.createdFormatted || 'Heute';
-        
-        banner.classList.add('show');
-        
-        setTimeout(() => {
-          banner.classList.remove('show');
-        }, 10000);
-      } catch (error) {
-        console.error('Fehler beim Laden der Ankündigung:', error);
-      }
-    }
-
-    function closeBanner() {
-      document.getElementById('ankundigungBanner').classList.remove('show');
-    }
-
     function switchAnkundigungenTab(tabName) {
       currentAnkundigungenTab = tabName;
       
@@ -3810,10 +3825,13 @@ Grund:
       container.innerHTML = '<div class="loading"><div class="loading-spinner"></div><div>Lade Ankündigungen...</div></div>';
 
       try {
+        console.log('Lade Ankündigungen Liste...');
         const querySnapshot = await db.collection('hrAnkundigungen')
           .orderBy('created', 'desc')
           .limit(50)
           .get();
+        
+        console.log('Ankündigungen in Liste gefunden:', querySnapshot.size);
         
         if (querySnapshot.empty) {
           container.innerHTML = `
@@ -3834,7 +3852,8 @@ Grund:
           const isBesprechung = item.type === 'besprechung';
           
           const title = isBesprechung ? (item.thema || 'Ohne Thema') : (item.title || 'Ohne Titel');
-          const date = item.createdFormatted || 'Unbekannt';
+          const date = item.createdFormatted || 
+                      (item.created ? new Date(item.created).toLocaleDateString('de-DE') : 'Unbekannt');
           const content = item.content || '';
           const typeText = isAnkundigung ? 'Ankündigung' : 'Besprechung';
           const icon = isAnkundigung ? '🪧' : '🗃️';
@@ -3918,6 +3937,7 @@ Grund:
       };
 
       try {
+        console.log('Speichere Ankündigung:', ankundigung);
         await db.collection('hrAnkundigungen').doc(ankundigung.id).set(ankundigung);
         
         showNotification('Ankündigung erfolgreich gespeichert', 'success');
@@ -3957,6 +3977,7 @@ Grund:
       };
 
       try {
+        console.log('Speichere Besprechung:', besprechung);
         await db.collection('hrAnkundigungen').doc(besprechung.id).set(besprechung);
         
         showNotification('Besprechung erfolgreich gespeichert', 'success');
@@ -4271,7 +4292,7 @@ Grund:
             akten.push({ 
               id: doc.id, 
               ...data,
-              createdFormatted: data.createdFormatted || new Date(data.created).toLocaleDateString('de-DE')
+              createdFormatted: data.createdFormatted || (data.created ? new Date(data.created).toLocaleDateString('de-DE') : '')
             });
           });
           updateStats();
@@ -4290,7 +4311,7 @@ Grund:
             soldatenGespräche.push({ 
               id: doc.id, 
               ...data,
-              createdFormatted: data.createdFormatted || new Date(data.created).toLocaleDateString('de-DE'),
+              createdFormatted: data.createdFormatted || (data.created ? new Date(data.created).toLocaleDateString('de-DE') : ''),
               dateFormatted: data.dateFormatted || (data.date ? new Date(data.date).toLocaleDateString('de-DE') : '')
             });
           });
@@ -4324,6 +4345,14 @@ Grund:
               ...data
             });
           });
+          
+          // Zeige die neueste Ankündigung automatisch
+          if (ankundigungen.length > 0) {
+            const latestAnk = ankundigungen.filter(a => a.type === 'ankundigung')[0];
+            if (latestAnk && !document.getElementById('ankundigungBanner').classList.contains('show')) {
+              setTimeout(showLatestAnkundigung, 1000);
+            }
+          }
         }, (error) => {
           console.error('Fehler beim Lauschen auf Ankündigungen:', error);
         });
