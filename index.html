@@ -140,7 +140,86 @@
     .stat-value{font-size:20px;font-weight:800;color:#fff;margin-bottom:2px}
     .stat-label{font-size:10px;color:var(--gray);text-transform:uppercase;letter-spacing:.4px;font-weight:700}
 
-    /* Password Modal für Settings */
+    /* Password Modal für App-Login */
+    .main-password-modal {
+      display: flex;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.85);
+      backdrop-filter: blur(4px);
+      z-index: 3000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      animation: fadeIn .2s ease;
+    }
+
+    .main-password-content {
+      background: rgba(31,41,55,.95);
+      border-radius: var(--radius-lg);
+      padding: 30px;
+      width: 100%;
+      max-width: 400px;
+      border: 1px solid rgba(255,255,255,.15);
+      box-shadow: var(--shadow-lg);
+      animation: slideUp .2s ease;
+    }
+
+    .main-password-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(255,255,255,.1);
+    }
+
+    .main-password-title {
+      font-size: 18px;
+      font-weight: 900;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .main-password-form {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .main-password-input {
+      padding: 12px 16px;
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: var(--radius-md);
+      color: #fff;
+      font-size: 14px;
+      transition: var(--transition);
+      width: 100%;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .main-password-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      background: rgba(255,255,255,.08);
+      box-shadow: 0 0 0 3px rgba(79,70,229,.15);
+    }
+
+    .main-password-error {
+      color: var(--danger);
+      font-size: 12px;
+      display: none;
+      margin-top: -8px;
+    }
+
+    .main-password-error.show {
+      display: block;
+    }
+
+    /* Settings Password Modal */
     .settings-password-modal {
       display: none;
       position: fixed;
@@ -316,6 +395,7 @@
       font-size: 13px;
       line-height: 1.5;
       margin-bottom: 8px;
+      white-space: pre-line;
     }
 
     .banner-meta {
@@ -543,6 +623,7 @@
       border-left: 2px solid #8b5cf6;
       max-height: 100px;
       overflow-y: auto;
+      white-space: pre-line;
     }
 
     .besprechungen-item-content::-webkit-scrollbar {
@@ -791,6 +872,7 @@
       border-left: 2px solid #8b5cf6;
       max-height: 100px;
       overflow-y: auto;
+      white-space: pre-line;
     }
 
     .ankundigungen-item-content::-webkit-scrollbar {
@@ -2560,6 +2642,7 @@
       background:rgba(0,0,0,.2);
       border-radius:var(--radius-sm);
       border-left:2px solid var(--primary);
+      white-space: pre-line;
     }
     
     .beobachtung-akte-template{
@@ -2859,7 +2942,24 @@
 </head>
 
 <body>
-  <div class="bg-effects"><div class="bg-gradient"></div></div>
+  <!-- Main Password Modal (am Anfang) -->
+  <div class="main-password-modal" id="mainPasswordModal">
+    <div class="main-password-content">
+      <div class="main-password-header">
+        <div class="main-password-title">
+          <i class="fas fa-lock"></i> Passwort für HR App erforderlich
+        </div>
+      </div>
+      <div class="main-password-form">
+        <input type="password" class="main-password-input" id="mainPasswordInput" 
+               placeholder="Passwort eingeben" onkeypress="if(event.key === 'Enter') checkMainPassword()">
+        <div class="main-password-error" id="mainPasswordError" style="display:none">Falsches Passwort</div>
+        <button class="btn btn-primary" onclick="checkMainPassword()">
+          <i class="fas fa-unlock"></i> Bestätigen
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- Settings Password Modal -->
   <div class="settings-password-modal" id="settingsPasswordModal">
@@ -2873,7 +2973,8 @@
         </button>
       </div>
       <div class="settings-password-form">
-        <input type="password" class="settings-password-input" id="settingsPasswordInput" placeholder="Passwort eingeben" onkeypress="if(event.key === 'Enter') checkSettingsPassword()">
+        <input type="password" class="settings-password-input" id="settingsPasswordInput" 
+               placeholder="Passwort eingeben" onkeypress="if(event.key === 'Enter') checkSettingsPassword()">
         <div class="settings-password-error" id="settingsPasswordError">Falsches Passwort</div>
         <button class="btn btn-primary" onclick="checkSettingsPassword()">
           <i class="fas fa-unlock"></i> Bestätigen
@@ -2916,7 +3017,8 @@
       <div class="ankundigungen-body">
         <div class="ankundigungen-search-container">
           <i class="fas fa-search ankundigungen-search-icon"></i>
-          <input type="text" class="ankundigungen-search-input" id="ankundigungenSearch" placeholder="Nach Thema oder Inhalt suchen..." oninput="searchAnkundigungen(this.value)">
+          <input type="text" class="ankundigungen-search-input" id="ankundigungenSearch" 
+                 placeholder="Nach Thema oder Inhalt suchen..." oninput="searchAnkundigungen(this.value)">
         </div>
         
         <div class="ankundigungen-list-container">
@@ -2947,7 +3049,8 @@
       <div class="besprechungen-body">
         <div class="besprechungen-search-container">
           <i class="fas fa-search besprechungen-search-icon"></i>
-          <input type="text" class="besprechungen-search-input" id="besprechungenSearch" placeholder="Nach Thema oder Inhalt suchen..." oninput="searchBesprechungen(this.value)">
+          <input type="text" class="besprechungen-search-input" id="besprechungenSearch" 
+                 placeholder="Nach Thema oder Inhalt suchen..." oninput="searchBesprechungen(this.value)">
         </div>
         
         <div class="besprechungen-list-container">
@@ -3057,7 +3160,8 @@
                 </div>
                 <div class="settings-form-group">
                   <label class="settings-label">Inhalt *</label>
-                  <textarea class="settings-input" id="ankundigungContent" placeholder="Inhalt der Ankündigung..." rows="4"></textarea>
+                  <textarea class="settings-input" id="ankundigungContent" 
+                            placeholder="Inhalt der Ankündigung..." rows="4"></textarea>
                 </div>
               </div>
               <div class="settings-actions">
@@ -3088,7 +3192,8 @@
                 </div>
                 <div class="settings-form-group">
                   <label class="settings-label">Inhalt *</label>
-                  <textarea class="settings-input" id="besprechungContent" placeholder="Inhalt der Besprechung..." rows="4"></textarea>
+                  <textarea class="settings-input" id="besprechungContent" 
+                            placeholder="Inhalt der Besprechung..." rows="4"></textarea>
                 </div>
               </div>
               <div class="settings-actions">
@@ -3102,7 +3207,8 @@
             <div class="ankundigungen-tab-content" id="ankundigungenManageAnkundigungenTab" style="display:none;">
               <div class="settings-form-group">
                 <label class="settings-label">Ankündigungen durchsuchen</label>
-                <input type="text" class="settings-input" id="manageAnkundigungenSearch" placeholder="Nach Ankündigungen suchen..." oninput="searchManageAnkundigungen(this.value)">
+                <input type="text" class="settings-input" id="manageAnkundigungenSearch" 
+                       placeholder="Nach Ankündigungen suchen..." oninput="searchManageAnkundigungen(this.value)">
               </div>
               
               <div class="ankundigungen-list-container">
@@ -3119,7 +3225,8 @@
             <div class="ankundigungen-tab-content" id="ankundigungenManageBesprechungenTab" style="display:none;">
               <div class="settings-form-group">
                 <label class="settings-label">Besprechungen durchsuchen</label>
-                <input type="text" class="settings-input" id="manageBesprechungenSearch" placeholder="Nach Besprechungen suchen..." oninput="searchManageBesprechungen(this.value)">
+                <input type="text" class="settings-input" id="manageBesprechungenSearch" 
+                       placeholder="Nach Besprechungen suchen..." oninput="searchManageBesprechungen(this.value)">
               </div>
               
               <div class="ankundigungen-list-container">
@@ -3225,12 +3332,14 @@
             
             <div class="soldaten-form-group" style="grid-column: span 2;">
               <label class="soldaten-label">Notizen *</label>
-              <textarea class="soldaten-input soldaten-textarea" id="soldatenNotizen" placeholder="Notizen zum Gespräch..."></textarea>
+              <textarea class="soldaten-input soldaten-textarea" id="soldatenNotizen" 
+                        placeholder="Notizen zum Gespräch..."></textarea>
             </div>
             
             <div class="soldaten-form-group" style="grid-column: span 2;">
               <label class="soldaten-label">Sonstiges</label>
-              <textarea class="soldaten-input soldaten-textarea" id="soldatenSonstiges" placeholder="Weitere Informationen..."></textarea>
+              <textarea class="soldaten-input soldaten-textarea" id="soldatenSonstiges" 
+                        placeholder="Weitere Informationen..."></textarea>
             </div>
           </div>
           
@@ -3272,7 +3381,8 @@ Sonstiges:
         <div class="soldaten-tab-content" id="soldatenListTab" style="display:none;">
           <div class="soldaten-search-container">
             <i class="fas fa-search soldaten-search-icon"></i>
-            <input type="text" class="soldaten-search-input" id="soldatenSearch" placeholder="Nach Name oder DN suchen..." oninput="searchSoldaten(this.value)">
+            <input type="text" class="soldaten-search-input" id="soldatenSearch" 
+                   placeholder="Nach Name oder DN suchen..." oninput="searchSoldaten(this.value)">
           </div>
           
           <!-- Scrollbar-Container für die Liste -->
@@ -3348,7 +3458,8 @@ Sonstiges:
         <div class="beobachtung-tab-content" id="beobachtungListTab" style="display:none;">
           <div class="akten-search-container">
             <i class="fas fa-search akten-search-icon"></i>
-            <input type="text" class="akten-search-input" id="aktenSearch" placeholder="Nach Name oder DN suchen..." oninput="searchAkten(this.value)">
+            <input type="text" class="akten-search-input" id="aktenSearch" 
+                   placeholder="Nach Name oder DN suchen..." oninput="searchAkten(this.value)">
           </div>
           
           <div class="beobachtung-akten-liste" id="aktenListe">
@@ -3375,7 +3486,8 @@ Sonstiges:
             
             <div class="akte-form-group" style="grid-column: span 2;">
               <label class="akte-label">Grund der Beobachtung *</label>
-              <textarea class="akte-input akte-textarea" id="beobachtungGrund" placeholder="Beschreiben Sie den Grund der Beobachtung..."></textarea>
+              <textarea class="akte-input akte-textarea" id="beobachtungGrund" 
+                        placeholder="Beschreiben Sie den Grund der Beobachtung..."></textarea>
             </div>
           </div>
           
@@ -3414,7 +3526,8 @@ Grund:
     <span class="notification-message" id="notificationMessage"></span>
   </div>
 
-  <div class="app-container">
+  <!-- App Container (wird erst nach Passwort-Eingabe angezeigt) -->
+  <div class="app-container" id="appContainer" style="display:none;">
     <header class="app-header">
       <div class="header-content">
         <div class="brand">
@@ -3728,7 +3841,7 @@ Grund:
     const APP_VERSION = '1.0.20240128';
     const DEFAULT_PASSWORD = 'soc1';
     const SETTINGS_PASSWORD = 'soc1';
-    const PASSWORD_EXPIRE_MINUTES = 60; // Erhöht auf 60 Minuten
+    const PASSWORD_EXPIRE_MINUTES = 60;
     
     // Firebase Configuration
     const firebaseConfig = {
@@ -3773,9 +3886,6 @@ Grund:
     document.addEventListener('DOMContentLoaded', function () {
       console.log(`HR App Version ${APP_VERSION} geladen`);
       checkAuthentication();
-      setupEventListeners();
-      adjustSidebarHeight();
-      loadLogo();
     });
 
     // ==================== AUTHENTIFIZIERUNG ====================
@@ -3787,41 +3897,16 @@ Grund:
       
       if (savedPassword === DEFAULT_PASSWORD && savedTimestamp && (currentTime - parseInt(savedTimestamp) < expireTime)) {
         isAuthenticated = true;
-        settingsAuthenticated = true; // Wenn App authentifiziert ist, sind Settings auch authentifiziert
+        settingsAuthenticated = true;
+        settingsAuthTimestamp = Date.now();
+        localStorage.setItem('hr_settings_auth_timestamp', settingsAuthTimestamp);
         initializeApp();
       } else {
-        // Password expired or not set, show password modal
-        showMainPasswordModal();
+        // Password modal ist bereits im HTML sichtbar
+        setTimeout(() => {
+          document.getElementById('mainPasswordInput').focus();
+        }, 100);
       }
-    }
-
-    function showMainPasswordModal() {
-      // Create a new password modal for main app
-      const passwordModal = document.createElement('div');
-      passwordModal.className = 'settings-password-modal active';
-      passwordModal.innerHTML = `
-        <div class="settings-password-content">
-          <div class="settings-password-header">
-            <div class="settings-password-title">
-              <i class="fas fa-lock"></i> Passwort für HR App erforderlich
-            </div>
-          </div>
-          <div class="settings-password-form">
-            <input type="password" class="settings-password-input" id="mainPasswordInput" placeholder="Passwort eingeben" onkeypress="if(event.key === 'Enter') checkMainPassword()">
-            <div class="settings-password-error" id="mainPasswordError" style="display:none">Falsches Passwort</div>
-            <button class="btn btn-primary" onclick="checkMainPassword()">
-              <i class="fas fa-unlock"></i> Bestätigen
-            </button>
-          </div>
-        </div>
-      `;
-      document.body.appendChild(passwordModal);
-      
-      // Focus the input field
-      setTimeout(() => {
-        const input = document.getElementById('mainPasswordInput');
-        if (input) input.focus();
-      }, 100);
     }
 
     function checkMainPassword() {
@@ -3832,13 +3917,13 @@ Grund:
         localStorage.setItem('hr_app_password', password);
         localStorage.setItem('hr_app_password_timestamp', Date.now());
         isAuthenticated = true;
-        settingsAuthenticated = true; // Settings auch authentifizieren
+        settingsAuthenticated = true;
         settingsAuthTimestamp = Date.now();
         localStorage.setItem('hr_settings_auth_timestamp', settingsAuthTimestamp);
         
-        // Remove modal
-        const modal = document.querySelector('.settings-password-modal');
-        if (modal) modal.remove();
+        // Modal ausblenden und App anzeigen
+        document.getElementById('mainPasswordModal').style.display = 'none';
+        document.getElementById('appContainer').style.display = 'grid';
         
         initializeApp();
       } else {
@@ -3908,7 +3993,6 @@ Grund:
       container.innerHTML = '<div class="loading"><div class="loading-spinner"></div><div>Lade Ankündigungen...</div></div>';
 
       try {
-        // Ohne Index-Query - Einfacher laden
         const querySnapshot = await db.collection('hrAnkundigungen')
           .where('type', '==', 'ankundigung')
           .get();
@@ -3933,7 +4017,6 @@ Grund:
           items.push({ ...item, id: doc.id });
         });
         
-        // Sortieren im JavaScript statt in der Query
         items.sort((a, b) => {
           return new Date(b.created || 0) - new Date(a.created || 0);
         });
@@ -4014,7 +4097,6 @@ Grund:
       container.innerHTML = '<div class="loading"><div class="loading-spinner"></div><div>Lade Besprechungen...</div></div>';
 
       try {
-        // Ohne Index-Query - Einfacher laden
         const querySnapshot = await db.collection('hrAnkundigungen')
           .where('type', '==', 'besprechung')
           .get();
@@ -4039,7 +4121,6 @@ Grund:
           items.push({ ...item, id: doc.id });
         });
         
-        // Sortieren im JavaScript statt in der Query
         items.sort((a, b) => {
           return new Date(b.created || 0) - new Date(a.created || 0);
         });
@@ -4137,11 +4218,12 @@ Grund:
       document.getElementById('orgTimeStart').value = '22:10';
       document.getElementById('orgTimeEnd').value = '23:05';
 
+      setupEventListeners();
       setupFormChangeListeners();
       seedTemplateBoxes();
       setupSoldatenEventListeners();
+      adjustSidebarHeight();
       
-      // Zeige Ankündigung beim Laden
       setTimeout(showLatestAnkundigung, 1000);
     }
 
@@ -4154,7 +4236,6 @@ Grund:
           updateLogoDisplay();
         }
         
-        // Versuche auch aus Firebase zu laden
         try {
           const logoRef = storage.ref('hr/logo.jpg');
           const url = await logoRef.getDownloadURL();
@@ -4200,7 +4281,6 @@ Grund:
       try {
         showNotification('Logo wird hochgeladen...', 'info');
         
-        // Altes Logo löschen
         try {
           const oldLogoRef = storage.ref('hr/logo.jpg');
           await oldLogoRef.delete();
@@ -4208,7 +4288,6 @@ Grund:
           console.log('Kein altes Logo zum Löschen gefunden');
         }
 
-        // Neues Logo hochladen
         const storageRef = storage.ref('hr/logo.jpg');
         await storageRef.put(file);
         const downloadURL = await storageRef.getDownloadURL();
@@ -4228,11 +4307,9 @@ Grund:
       if (!confirm('Logo wirklich entfernen?')) return;
 
       try {
-        // Logo aus Firebase löschen
         const logoRef = storage.ref('hr/logo.jpg');
         await logoRef.delete();
         
-        // Logo aus LocalStorage löschen
         localStorage.removeItem('hr_app_logo_url');
         settings.logoUrl = '';
         updateLogoDisplay();
@@ -4245,13 +4322,8 @@ Grund:
     }
 
     // ==================== ANKÜNDIGUNGEN FUNKTIONEN ====================
-    function showAnkundigungBanner() {
-      showLatestAnkundigung();
-    }
-
     async function showLatestAnkundigung() {
       try {
-        // Lade die neueste Ankündigung
         const querySnapshot = await db.collection('hrAnkundigungen')
           .where('type', '==', 'ankundigung')
           .get();
@@ -4281,16 +4353,13 @@ Grund:
         const type = document.getElementById('bannerType');
         const date = document.getElementById('bannerDate');
         
-        // Banner-Inhalt setzen
         title.innerHTML = `<span>${latestAnkundigung.icon || '🪧'}</span> ${escapeHtml(latestAnkundigung.title || 'Ankündigung')}`;
         content.textContent = latestAnkundigung.content || '';
         type.textContent = 'Ankündigung';
         date.textContent = latestAnkundigung.createdFormatted || new Date(latestDate).toLocaleDateString('de-DE');
         
-        // Banner anzeigen
         banner.classList.add('show');
         
-        // Automatisch nach 10 Sekunden ausblenden
         setTimeout(() => {
           banner.classList.remove('show');
         }, 10000);
@@ -4358,7 +4427,6 @@ Grund:
           items.push({ ...item, id: doc.id });
         });
         
-        // Sortieren im JavaScript
         items.sort((a, b) => {
           return new Date(b.created || 0) - new Date(a.created || 0);
         });
@@ -4433,7 +4501,6 @@ Grund:
           items.push({ ...item, id: doc.id });
         });
         
-        // Sortieren im JavaScript
         items.sort((a, b) => {
           return new Date(b.created || 0) - new Date(a.created || 0);
         });
@@ -4523,7 +4590,6 @@ Grund:
 
         const ankundigung = doc.data();
         
-        // Modal zum Bearbeiten öffnen
         const modalHtml = `
           <div class="modal-overlay active" onclick="if(event.target===this)closeModal('editAnkundigungModal')">
             <div class="modal">
@@ -4581,7 +4647,6 @@ Grund:
         closeModal('editAnkundigungModal');
         showNotification('Ankündigung erfolgreich aktualisiert', 'success');
         
-        // Liste neu laden
         loadManageAnkundigungen();
       } catch (error) {
         console.error('Fehler beim Aktualisieren der Ankündigung:', error);
@@ -4597,7 +4662,6 @@ Grund:
         
         showNotification('Ankündigung gelöscht', 'success');
         
-        // Liste neu laden
         loadManageAnkundigungen();
       } catch (error) {
         console.error('Fehler beim Löschen der Ankündigung:', error);
@@ -4615,7 +4679,6 @@ Grund:
 
         const besprechung = doc.data();
         
-        // Modal zum Bearbeiten öffnen
         const modalHtml = `
           <div class="modal-overlay active" onclick="if(event.target===this)closeModal('editBesprechungModal')">
             <div class="modal">
@@ -4694,7 +4757,6 @@ Grund:
         closeModal('editBesprechungModal');
         showNotification('Besprechung erfolgreich aktualisiert', 'success');
         
-        // Liste neu laden
         loadManageBesprechungen();
       } catch (error) {
         console.error('Fehler beim Aktualisieren der Besprechung:', error);
@@ -4710,7 +4772,6 @@ Grund:
         
         showNotification('Besprechung gelöscht', 'success');
         
-        // Liste neu laden
         loadManageBesprechungen();
       } catch (error) {
         console.error('Fehler beim Löschen der Besprechung:', error);
@@ -4731,7 +4792,7 @@ Grund:
         id: `ANK-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
         type: 'ankundigung',
         title: title || 'Ohne Titel',
-        content,
+        content: content,
         created: new Date().toISOString(),
         createdFormatted: new Date().toLocaleDateString('de-DE'),
         icon: '🪧'
@@ -4744,7 +4805,6 @@ Grund:
         document.getElementById('ankundigungTitle').value = '';
         document.getElementById('ankundigungContent').value = '';
         
-        // Zurück zur App
         closeModal('settingsModal');
       } catch (error) {
         console.error('Fehler beim Speichern der Ankündigung:', error);
@@ -4787,7 +4847,6 @@ Grund:
         document.getElementById('besprechungOrt').value = '';
         document.getElementById('besprechungContent').value = '';
         
-        // Zurück zur App
         closeModal('settingsModal');
       } catch (error) {
         console.error('Fehler beim Speichern der Besprechung:', error);
@@ -4839,7 +4898,6 @@ Grund:
           settings = { ...settings, ...loadedSettings };
         }
         
-        // Standard-Units und Ränge, falls keine vorhanden
         if (!settings.units || settings.units.length === 0) {
           settings.units = [
             { name: "Air Force", discordId: "1269229762400878675" },
@@ -4878,7 +4936,6 @@ Grund:
     }
 
     function populateSettingsUI() {
-      // Units
       const unitList = document.getElementById('unitList');
       unitList.innerHTML = '';
       
@@ -4896,7 +4953,6 @@ Grund:
         unitList.appendChild(unitItem);
       });
 
-      // Ränge
       const rankList = document.getElementById('rankList');
       rankList.innerHTML = '';
       
@@ -4914,7 +4970,6 @@ Grund:
         rankList.appendChild(rankItem);
       });
 
-      // Logo Preview
       updateLogoDisplay();
     }
 
@@ -4984,7 +5039,6 @@ Grund:
     }
 
     function updateUnitAndRankSelects() {
-      // Update alle Unit Selects
       const unitSelects = [
         document.getElementById('unitSelect'),
         document.getElementById('unitSelect2'),
@@ -5013,7 +5067,6 @@ Grund:
         }
       });
 
-      // Update alle Rank Selects
       const rankSelects = [
         document.getElementById('rankSelect'),
         document.getElementById('rankSelect2'),
@@ -5045,7 +5098,6 @@ Grund:
 
     // ==================== REALTIME LISTENER SETUP ====================
     function setupRealtimeListeners() {
-      // Listener für Mitarbeiter
       const unsubscribeEmployees = db.collection('hrEmployees')
         .orderBy('lastUpdated', 'desc')
         .onSnapshot((snapshot) => {
@@ -5078,7 +5130,6 @@ Grund:
           showNotification('Fehler bei Live-Updates', 'error');
         });
 
-      // Listener für Akten
       const unsubscribeAkten = db.collection('hrAkten')
         .orderBy('lastUpdated', 'desc')
         .limit(100)
@@ -5097,7 +5148,6 @@ Grund:
           console.error('Fehler beim Lauschen auf Akten-Änderungen:', error);
         });
 
-      // Listener für Soldatengespräche
       const unsubscribeSoldaten = db.collection('hrSoldatenGespräche')
         .orderBy('created', 'desc')
         .limit(100)
@@ -5116,7 +5166,6 @@ Grund:
           console.error('Fehler beim Lauschen auf Soldatengespräche:', error);
         });
 
-      // Listener für Settings
       const unsubscribeSettings = db.collection('hrSettings')
         .doc('settings')
         .onSnapshot((doc) => {
@@ -5130,7 +5179,6 @@ Grund:
           console.error('Fehler beim Lauschen auf Settings:', error);
         });
 
-      // Listener für Ankündigungen
       const unsubscribeAnkundigungen = db.collection('hrAnkundigungen')
         .onSnapshot((snapshot) => {
           ankundigungen = [];
@@ -5984,7 +6032,6 @@ Grund: ${grund || ''}
       updateInductionUI('oral', oralCompleted);
       updateInductionUI('org', orgCompleted);
 
-      // Archive Status anzeigen
       const archiveTag = document.getElementById('archiveStatusTag');
       const archiveButton = document.getElementById('archiveButton');
       const archiveButtonText = document.getElementById('archiveButtonText');
@@ -6257,7 +6304,6 @@ Grund: ${grund || ''}
 
       const timeSeparator = isOral ? 'bis' : '-';
 
-      // Finde Discord IDs aus den Settings
       const unitSetting = settings.units.find(u => u.name === unit);
       const rankSetting = settings.ranks.find(r => r.name === rank);
       
@@ -6292,7 +6338,6 @@ Sonstiges: ${notes}
       document.getElementById('totalEmployees').textContent = totalEmployees;
       document.getElementById('totalArchived').textContent = totalArchived;
       
-      // Akten zählen (Beobachtungen)
       let aktenCount = 0;
       employees.forEach(emp => {
         if (emp.beobachtungen && emp.beobachtungen.length > 0) {
