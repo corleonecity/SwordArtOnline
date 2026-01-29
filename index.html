@@ -3040,6 +3040,12 @@
               <button class="ankundigungen-tab" onclick="switchAnkundigungenTab('besprechung')">
                 <span>🗃️</span> Neue Besprechung
               </button>
+              <button class="ankundigungen-tab" onclick="switchAnkundigungenTab('manage-ankundigungen')">
+                <span>📋</span> Ankündigungen verwalten
+              </button>
+              <button class="ankundigungen-tab" onclick="switchAnkundigungenTab('manage-besprechungen')">
+                <span>📅</span> Besprechungen verwalten
+              </button>
             </div>
             
             <!-- Neue Ankündigung -->
@@ -3089,6 +3095,40 @@
                 <button class="btn btn-primary" onclick="saveBesprechung()">
                   <i class="fas fa-save"></i> Besprechung speichern
                 </button>
+              </div>
+            </div>
+            
+            <!-- Ankündigungen verwalten -->
+            <div class="ankundigungen-tab-content" id="ankundigungenManageAnkundigungenTab" style="display:none;">
+              <div class="settings-form-group">
+                <label class="settings-label">Ankündigungen durchsuchen</label>
+                <input type="text" class="settings-input" id="manageAnkundigungenSearch" placeholder="Nach Ankündigungen suchen..." oninput="searchManageAnkundigungen(this.value)">
+              </div>
+              
+              <div class="ankundigungen-list-container">
+                <div class="ankundigungen-list" id="manageAnkundigungenList">
+                  <div class="empty-ankundigungen">
+                    <div class="empty-ankundigungen-icon"><i class="fas fa-bullhorn"></i></div>
+                    <div class="empty-ankundigungen-title">Keine Ankündigungen gefunden</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Besprechungen verwalten -->
+            <div class="ankundigungen-tab-content" id="ankundigungenManageBesprechungenTab" style="display:none;">
+              <div class="settings-form-group">
+                <label class="settings-label">Besprechungen durchsuchen</label>
+                <input type="text" class="settings-input" id="manageBesprechungenSearch" placeholder="Nach Besprechungen suchen..." oninput="searchManageBesprechungen(this.value)">
+              </div>
+              
+              <div class="ankundigungen-list-container">
+                <div class="ankundigungen-list" id="manageBesprechungenList">
+                  <div class="empty-ankundigungen">
+                    <div class="empty-ankundigungen-icon"><i class="fas fa-calendar-alt"></i></div>
+                    <div class="empty-ankundigungen-title">Keine Besprechungen gefunden</div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -3868,9 +3908,9 @@ Grund:
       container.innerHTML = '<div class="loading"><div class="loading-spinner"></div><div>Lade Ankündigungen...</div></div>';
 
       try {
+        // Ohne Index-Query - Einfacher laden
         const querySnapshot = await db.collection('hrAnkundigungen')
           .where('type', '==', 'ankundigung')
-          .orderBy('created', 'desc')
           .get();
         
         if (querySnapshot.empty) {
@@ -3886,13 +3926,23 @@ Grund:
 
         let html = '';
         let hasItems = false;
+        let items = [];
         
         querySnapshot.forEach(doc => {
           const item = doc.data();
+          items.push({ ...item, id: doc.id });
+        });
+        
+        // Sortieren im JavaScript statt in der Query
+        items.sort((a, b) => {
+          return new Date(b.created || 0) - new Date(a.created || 0);
+        });
+        
+        items.forEach(item => {
           hasItems = true;
           
           const title = item.title || 'Ohne Titel';
-          const date = item.createdFormatted || 'Heute';
+          const date = item.createdFormatted || new Date(item.created || Date.now()).toLocaleDateString('de-DE');
           const content = item.content || '';
           
           html += `
@@ -3964,9 +4014,9 @@ Grund:
       container.innerHTML = '<div class="loading"><div class="loading-spinner"></div><div>Lade Besprechungen...</div></div>';
 
       try {
+        // Ohne Index-Query - Einfacher laden
         const querySnapshot = await db.collection('hrAnkundigungen')
           .where('type', '==', 'besprechung')
-          .orderBy('created', 'desc')
           .get();
         
         if (querySnapshot.empty) {
@@ -3982,13 +4032,23 @@ Grund:
 
         let html = '';
         let hasItems = false;
+        let items = [];
         
         querySnapshot.forEach(doc => {
           const item = doc.data();
+          items.push({ ...item, id: doc.id });
+        });
+        
+        // Sortieren im JavaScript statt in der Query
+        items.sort((a, b) => {
+          return new Date(b.created || 0) - new Date(a.created || 0);
+        });
+        
+        items.forEach(item => {
           hasItems = true;
           
           const title = item.thema || 'Ohne Thema';
-          const date = item.date ? new Date(item.date).toLocaleDateString('de-DE') : item.createdFormatted;
+          const date = item.date ? new Date(item.date).toLocaleDateString('de-DE') : new Date(item.created || Date.now()).toLocaleDateString('de-DE');
           const content = item.content || '';
           
           html += `
@@ -4194,8 +4254,6 @@ Grund:
         // Lade die neueste Ankündigung
         const querySnapshot = await db.collection('hrAnkundigungen')
           .where('type', '==', 'ankundigung')
-          .orderBy('created', 'desc')
-          .limit(1)
           .get();
         
         if (querySnapshot.empty) {
@@ -4203,7 +4261,20 @@ Grund:
           return;
         }
         
-        const ankundigung = querySnapshot.docs[0].data();
+        let latestAnkundigung = null;
+        let latestDate = 0;
+        
+        querySnapshot.forEach(doc => {
+          const ankundigung = doc.data();
+          const date = new Date(ankundigung.created || 0).getTime();
+          if (date > latestDate) {
+            latestDate = date;
+            latestAnkundigung = ankundigung;
+          }
+        });
+        
+        if (!latestAnkundigung) return;
+        
         const banner = document.getElementById('ankundigungBanner');
         const title = document.getElementById('bannerTitle');
         const content = document.getElementById('bannerContent');
@@ -4211,10 +4282,10 @@ Grund:
         const date = document.getElementById('bannerDate');
         
         // Banner-Inhalt setzen
-        title.innerHTML = `<span>${ankundigung.icon || '🪧'}</span> ${escapeHtml(ankundigung.title || 'Ankündigung')}`;
-        content.textContent = ankundigung.content || '';
+        title.innerHTML = `<span>${latestAnkundigung.icon || '🪧'}</span> ${escapeHtml(latestAnkundigung.title || 'Ankündigung')}`;
+        content.textContent = latestAnkundigung.content || '';
         type.textContent = 'Ankündigung';
-        date.textContent = ankundigung.createdFormatted || 'Heute';
+        date.textContent = latestAnkundigung.createdFormatted || new Date(latestDate).toLocaleDateString('de-DE');
         
         // Banner anzeigen
         banner.classList.add('show');
@@ -4249,6 +4320,401 @@ Grund:
       } else if (tabName === 'besprechung') {
         document.querySelector('.ankundigungen-tab:nth-child(2)').classList.add('active');
         document.getElementById('ankundigungenBesprechungTab').style.display = 'block';
+      } else if (tabName === 'manage-ankundigungen') {
+        document.querySelector('.ankundigungen-tab:nth-child(3)').classList.add('active');
+        document.getElementById('ankundigungenManageAnkundigungenTab').style.display = 'block';
+        loadManageAnkundigungen();
+      } else if (tabName === 'manage-besprechungen') {
+        document.querySelector('.ankundigungen-tab:nth-child(4)').classList.add('active');
+        document.getElementById('ankundigungenManageBesprechungenTab').style.display = 'block';
+        loadManageBesprechungen();
+      }
+    }
+
+    async function loadManageAnkundigungen() {
+      const container = document.getElementById('manageAnkundigungenList');
+      container.innerHTML = '<div class="loading"><div class="loading-spinner"></div><div>Lade Ankündigungen...</div></div>';
+
+      try {
+        const querySnapshot = await db.collection('hrAnkundigungen')
+          .where('type', '==', 'ankundigung')
+          .get();
+        
+        if (querySnapshot.empty) {
+          container.innerHTML = `
+            <div class="empty-ankundigungen">
+              <div class="empty-ankundigungen-icon"><i class="fas fa-bullhorn"></i></div>
+              <div class="empty-ankundigungen-title">Keine Ankündigungen gefunden</div>
+            </div>
+          `;
+          return;
+        }
+
+        let html = '';
+        let items = [];
+        
+        querySnapshot.forEach(doc => {
+          const item = doc.data();
+          items.push({ ...item, id: doc.id });
+        });
+        
+        // Sortieren im JavaScript
+        items.sort((a, b) => {
+          return new Date(b.created || 0) - new Date(a.created || 0);
+        });
+        
+        items.forEach(item => {
+          const date = item.createdFormatted || new Date(item.created || Date.now()).toLocaleDateString('de-DE');
+          
+          html += `
+            <div class="ankundigungen-item" data-id="${item.id}">
+              <div class="ankundigungen-item-header">
+                <div class="ankundigungen-item-title">
+                  <span>${item.icon || '🪧'}</span> ${escapeHtml(item.title || 'Ohne Titel')}
+                </div>
+                <div class="ankundigungen-item-type">
+                  Ankündigung
+                </div>
+              </div>
+              <div class="ankundigungen-item-date">
+                <i class="fas fa-calendar"></i> ${date}
+              </div>
+              <div class="ankundigungen-item-content">
+                ${escapeHtml(item.content || '')}
+              </div>
+              <div class="beobachtung-akte-actions" style="margin-top: 12px;">
+                <button class="beobachtung-akte-btn beobachtung-akte-btn-copy" onclick="editAnkundigung('${item.id}')">
+                  <i class="fas fa-edit"></i> Bearbeiten
+                </button>
+                <button class="beobachtung-akte-btn beobachtung-akte-btn-delete" onclick="deleteAnkundigung('${item.id}')">
+                  <i class="fas fa-trash"></i> Löschen
+                </button>
+              </div>
+            </div>
+          `;
+        });
+
+        container.innerHTML = html;
+      } catch (error) {
+        console.error('Fehler beim Laden der Ankündigungen:', error);
+        container.innerHTML = `
+          <div class="empty-ankundigungen">
+            <div class="empty-ankundigungen-icon"><i class="fas fa-exclamation-triangle"></i></div>
+            <div class="empty-ankundigungen-title">Fehler beim Laden</div>
+          </div>
+        `;
+      }
+    }
+
+    async function loadManageBesprechungen() {
+      const container = document.getElementById('manageBesprechungenList');
+      container.innerHTML = '<div class="loading"><div class="loading-spinner"></div><div>Lade Besprechungen...</div></div>';
+
+      try {
+        const querySnapshot = await db.collection('hrAnkundigungen')
+          .where('type', '==', 'besprechung')
+          .get();
+        
+        if (querySnapshot.empty) {
+          container.innerHTML = `
+            <div class="empty-ankundigungen">
+              <div class="empty-ankundigungen-icon"><i class="fas fa-calendar-alt"></i></div>
+              <div class="empty-ankundigungen-title">Keine Besprechungen gefunden</div>
+            </div>
+          `;
+          return;
+        }
+
+        let html = '';
+        let items = [];
+        
+        querySnapshot.forEach(doc => {
+          const item = doc.data();
+          items.push({ ...item, id: doc.id });
+        });
+        
+        // Sortieren im JavaScript
+        items.sort((a, b) => {
+          return new Date(b.created || 0) - new Date(a.created || 0);
+        });
+        
+        items.forEach(item => {
+          const date = item.date ? new Date(item.date).toLocaleDateString('de-DE') : new Date(item.created || Date.now()).toLocaleDateString('de-DE');
+          
+          html += `
+            <div class="ankundigungen-item" data-id="${item.id}">
+              <div class="ankundigungen-item-header">
+                <div class="ankundigungen-item-title">
+                  <span>${item.icon || '🗃️'}</span> ${escapeHtml(item.thema || 'Ohne Thema')}
+                </div>
+                <div class="ankundigungen-item-type">
+                  Besprechung
+                </div>
+              </div>
+              <div class="ankundigungen-item-date">
+                <i class="fas fa-calendar"></i> ${date}
+                ${item.time ? ` • ${item.time}` : ''}
+                ${item.ort ? ` • ${item.ort}` : ''}
+              </div>
+              <div class="ankundigungen-item-content">
+                ${escapeHtml(item.content || '')}
+              </div>
+              <div class="beobachtung-akte-actions" style="margin-top: 12px;">
+                <button class="beobachtung-akte-btn beobachtung-akte-btn-copy" onclick="editBesprechung('${item.id}')">
+                  <i class="fas fa-edit"></i> Bearbeiten
+                </button>
+                <button class="beobachtung-akte-btn beobachtung-akte-btn-delete" onclick="deleteBesprechung('${item.id}')">
+                  <i class="fas fa-trash"></i> Löschen
+                </button>
+              </div>
+            </div>
+          `;
+        });
+
+        container.innerHTML = html;
+      } catch (error) {
+        console.error('Fehler beim Laden der Besprechungen:', error);
+        container.innerHTML = `
+          <div class="empty-ankundigungen">
+            <div class="empty-ankundigungen-icon"><i class="fas fa-exclamation-triangle"></i></div>
+            <div class="empty-ankundigungen-title">Fehler beim Laden</div>
+          </div>
+        `;
+      }
+    }
+
+    function searchManageAnkundigungen(searchTerm) {
+      const items = document.querySelectorAll('#manageAnkundigungenList .ankundigungen-item');
+      const term = searchTerm.toLowerCase().trim();
+      
+      if (!term) {
+        items.forEach(item => item.style.display = 'block');
+        return;
+      }
+      
+      items.forEach(item => {
+        const text = item.textContent.toLowerCase();
+        item.style.display = text.includes(term) ? 'block' : 'none';
+      });
+    }
+
+    function searchManageBesprechungen(searchTerm) {
+      const items = document.querySelectorAll('#manageBesprechungenList .ankundigungen-item');
+      const term = searchTerm.toLowerCase().trim();
+      
+      if (!term) {
+        items.forEach(item => item.style.display = 'block');
+        return;
+      }
+      
+      items.forEach(item => {
+        const text = item.textContent.toLowerCase();
+        item.style.display = text.includes(term) ? 'block' : 'none';
+      });
+    }
+
+    async function editAnkundigung(id) {
+      try {
+        const doc = await db.collection('hrAnkundigungen').doc(id).get();
+        if (!doc.exists) {
+          showNotification('Ankündigung nicht gefunden', 'error');
+          return;
+        }
+
+        const ankundigung = doc.data();
+        
+        // Modal zum Bearbeiten öffnen
+        const modalHtml = `
+          <div class="modal-overlay active" onclick="if(event.target===this)closeModal('editAnkundigungModal')">
+            <div class="modal">
+              <div class="modal-header">
+                <div class="modal-title"><i class="fas fa-edit"></i> Ankündigung bearbeiten</div>
+                <button class="modal-close" onclick="closeModal('editAnkundigungModal')"><i class="fas fa-times"></i></button>
+              </div>
+              
+              <div class="settings-form-group" style="margin-bottom: 16px;">
+                <label class="settings-label">Titel</label>
+                <input type="text" class="settings-input" id="editAnkundigungTitle" value="${escapeHtml(ankundigung.title || '')}">
+              </div>
+              
+              <div class="settings-form-group" style="margin-bottom: 16px;">
+                <label class="settings-label">Inhalt *</label>
+                <textarea class="settings-input" id="editAnkundigungContent" rows="6">${escapeHtml(ankundigung.content || '')}</textarea>
+              </div>
+              
+              <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:20px;">
+                <button class="btn btn-secondary" onclick="closeModal('editAnkundigungModal')">Abbrechen</button>
+                <button class="btn btn-primary" onclick="updateAnkundigung('${id}')">
+                  <i class="fas fa-save"></i> Änderungen speichern
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+
+        const modalContainer = document.createElement('div');
+        modalContainer.id = 'editAnkundigungModal';
+        modalContainer.innerHTML = modalHtml;
+        document.body.appendChild(modalContainer);
+      } catch (error) {
+        console.error('Fehler beim Laden der Ankündigung:', error);
+        showNotification('Fehler: ' + error.message, 'error');
+      }
+    }
+
+    async function updateAnkundigung(id) {
+      const title = document.getElementById('editAnkundigungTitle').value.trim();
+      const content = document.getElementById('editAnkundigungContent').value.trim();
+
+      if (!content) {
+        showNotification('Bitte geben Sie den Inhalt der Ankündigung ein', 'warning');
+        return;
+      }
+
+      try {
+        await db.collection('hrAnkundigungen').doc(id).update({
+          title: title || 'Ohne Titel',
+          content,
+          updated: new Date().toISOString()
+        });
+        
+        closeModal('editAnkundigungModal');
+        showNotification('Ankündigung erfolgreich aktualisiert', 'success');
+        
+        // Liste neu laden
+        loadManageAnkundigungen();
+      } catch (error) {
+        console.error('Fehler beim Aktualisieren der Ankündigung:', error);
+        showNotification('Fehler: ' + error.message, 'error');
+      }
+    }
+
+    async function deleteAnkundigung(id) {
+      if (!confirm('Ankündigung wirklich löschen?')) return;
+
+      try {
+        await db.collection('hrAnkundigungen').doc(id).delete();
+        
+        showNotification('Ankündigung gelöscht', 'success');
+        
+        // Liste neu laden
+        loadManageAnkundigungen();
+      } catch (error) {
+        console.error('Fehler beim Löschen der Ankündigung:', error);
+        showNotification('Fehler: ' + error.message, 'error');
+      }
+    }
+
+    async function editBesprechung(id) {
+      try {
+        const doc = await db.collection('hrAnkundigungen').doc(id).get();
+        if (!doc.exists) {
+          showNotification('Besprechung nicht gefunden', 'error');
+          return;
+        }
+
+        const besprechung = doc.data();
+        
+        // Modal zum Bearbeiten öffnen
+        const modalHtml = `
+          <div class="modal-overlay active" onclick="if(event.target===this)closeModal('editBesprechungModal')">
+            <div class="modal">
+              <div class="modal-header">
+                <div class="modal-title"><i class="fas fa-edit"></i> Besprechung bearbeiten</div>
+                <button class="modal-close" onclick="closeModal('editBesprechungModal')"><i class="fas fa-times"></i></button>
+              </div>
+              
+              <div class="settings-form-group" style="margin-bottom: 16px;">
+                <label class="settings-label">Thema *</label>
+                <input type="text" class="settings-input" id="editBesprechungThema" value="${escapeHtml(besprechung.thema || '')}">
+              </div>
+              
+              <div class="settings-form-group" style="margin-bottom: 16px;">
+                <label class="settings-label">Datum *</label>
+                <input type="date" class="settings-input" id="editBesprechungDate" value="${besprechung.date || ''}">
+              </div>
+              
+              <div class="settings-form-group" style="margin-bottom: 16px;">
+                <label class="settings-label">Uhrzeit *</label>
+                <input type="time" class="settings-input" id="editBesprechungTime" value="${besprechung.time || ''}">
+              </div>
+              
+              <div class="settings-form-group" style="margin-bottom: 16px;">
+                <label class="settings-label">Ort</label>
+                <input type="text" class="settings-input" id="editBesprechungOrt" value="${escapeHtml(besprechung.ort || '')}">
+              </div>
+              
+              <div class="settings-form-group" style="margin-bottom: 16px;">
+                <label class="settings-label">Inhalt *</label>
+                <textarea class="settings-input" id="editBesprechungContent" rows="6">${escapeHtml(besprechung.content || '')}</textarea>
+              </div>
+              
+              <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:20px;">
+                <button class="btn btn-secondary" onclick="closeModal('editBesprechungModal')">Abbrechen</button>
+                <button class="btn btn-primary" onclick="updateBesprechung('${id}')">
+                  <i class="fas fa-save"></i> Änderungen speichern
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+
+        const modalContainer = document.createElement('div');
+        modalContainer.id = 'editBesprechungModal';
+        modalContainer.innerHTML = modalHtml;
+        document.body.appendChild(modalContainer);
+      } catch (error) {
+        console.error('Fehler beim Laden der Besprechung:', error);
+        showNotification('Fehler: ' + error.message, 'error');
+      }
+    }
+
+    async function updateBesprechung(id) {
+      const thema = document.getElementById('editBesprechungThema').value.trim();
+      const date = document.getElementById('editBesprechungDate').value;
+      const time = document.getElementById('editBesprechungTime').value;
+      const ort = document.getElementById('editBesprechungOrt').value.trim();
+      const content = document.getElementById('editBesprechungContent').value.trim();
+
+      if (!thema || !date || !time || !content) {
+        showNotification('Bitte füllen Sie alle Pflichtfelder aus (*)', 'warning');
+        return;
+      }
+
+      try {
+        await db.collection('hrAnkundigungen').doc(id).update({
+          thema,
+          date,
+          time,
+          ort: ort || '',
+          content,
+          updated: new Date().toISOString()
+        });
+        
+        closeModal('editBesprechungModal');
+        showNotification('Besprechung erfolgreich aktualisiert', 'success');
+        
+        // Liste neu laden
+        loadManageBesprechungen();
+      } catch (error) {
+        console.error('Fehler beim Aktualisieren der Besprechung:', error);
+        showNotification('Fehler: ' + error.message, 'error');
+      }
+    }
+
+    async function deleteBesprechung(id) {
+      if (!confirm('Besprechung wirklich löschen?')) return;
+
+      try {
+        await db.collection('hrAnkundigungen').doc(id).delete();
+        
+        showNotification('Besprechung gelöscht', 'success');
+        
+        // Liste neu laden
+        loadManageBesprechungen();
+      } catch (error) {
+        console.error('Fehler beim Löschen der Besprechung:', error);
+        showNotification('Fehler: ' + error.message, 'error');
       }
     }
 
@@ -4666,7 +5132,6 @@ Grund:
 
       // Listener für Ankündigungen
       const unsubscribeAnkundigungen = db.collection('hrAnkundigungen')
-        .orderBy('created', 'desc')
         .onSnapshot((snapshot) => {
           ankundigungen = [];
           snapshot.forEach(doc => {
@@ -5983,7 +6448,7 @@ Sonstiges: ${notes}
       const modal = document.getElementById(modalId);
       if (modal) {
         modal.classList.remove('active');
-        if (modalId === 'akteDetailModal') {
+        if (modalId === 'akteDetailModal' || modalId === 'editAnkundigungModal' || modalId === 'editBesprechungModal') {
           setTimeout(() => modal.remove(), 300);
         }
       }
