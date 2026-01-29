@@ -2610,21 +2610,18 @@
 <body>
   <div class="bg-effects"><div class="bg-gradient"></div></div>
 
-  <!-- Settings Password Modal -->
-  <div class="settings-password-modal" id="settingsPasswordModal">
+  <!-- Password Modal for App -->
+  <div class="settings-password-modal" id="mainPasswordModal">
     <div class="settings-password-content">
       <div class="settings-password-header">
         <div class="settings-password-title">
-          <i class="fas fa-lock"></i> Passwort für Settings erforderlich
+          <i class="fas fa-lock"></i> Passwort für HR App erforderlich
         </div>
-        <button class="settings-password-close" onclick="closeSettingsPasswordModal()">
-          <i class="fas fa-times"></i>
-        </button>
       </div>
       <div class="settings-password-form">
-        <input type="password" class="settings-password-input" id="settingsPasswordInput" placeholder="Passwort eingeben" onkeypress="if(event.key === 'Enter') checkSettingsPassword()">
-        <div class="settings-password-error" id="settingsPasswordError">Falsches Passwort</div>
-        <button class="btn btn-primary" onclick="checkSettingsPassword()">
+        <input type="password" class="settings-password-input" id="mainPasswordInput" placeholder="Passwort eingeben" onkeypress="if(event.key === 'Enter') checkMainPassword()">
+        <div class="settings-password-error" id="mainPasswordError">Falsches Passwort</div>
+        <button class="btn btn-primary" onclick="checkMainPassword()">
           <i class="fas fa-unlock"></i> Bestätigen
         </button>
       </div>
@@ -2689,7 +2686,7 @@
     <button class="floating-button" onclick="openBeobachtungAktenModal()" title="Beobachtungs-Akten">
       <i class="fas fa-folder-open"></i>
     </button>
-    <button class="floating-button" onclick="openSettingsWithPassword()" title="Settings">
+    <button class="floating-button" onclick="openSettingsModal()" title="Settings">
       <i class="fas fa-cog"></i>
     </button>
   </div>
@@ -3422,7 +3419,7 @@ Grund:
     const APP_VERSION = '1.0.20240128';
     const DEFAULT_PASSWORD = 'soc1';
     const SETTINGS_PASSWORD = 'soc1';
-    const PASSWORD_EXPIRE_MINUTES = 5;
+    const PASSWORD_EXPIRE_MINUTES = 480; // 8 Stunden
     
     // Firebase Configuration
     const firebaseConfig = {
@@ -3467,9 +3464,6 @@ Grund:
     document.addEventListener('DOMContentLoaded', function () {
       console.log(`HR App Version ${APP_VERSION} geladen`);
       checkAuthentication();
-      setupEventListeners();
-      adjustSidebarHeight();
-      loadLogo();
     });
 
     // ==================== AUTHENTIFIZIERUNG ====================
@@ -3483,34 +3477,12 @@ Grund:
         isAuthenticated = true;
         initializeApp();
       } else {
-        // Password expired or not set, show password modal
         showMainPasswordModal();
       }
     }
 
     function showMainPasswordModal() {
-      // Create a new password modal for main app
-      const passwordModal = document.createElement('div');
-      passwordModal.className = 'settings-password-modal active';
-      passwordModal.innerHTML = `
-        <div class="settings-password-content">
-          <div class="settings-password-header">
-            <div class="settings-password-title">
-              <i class="fas fa-lock"></i> Passwort für HR App erforderlich
-            </div>
-          </div>
-          <div class="settings-password-form">
-            <input type="password" class="settings-password-input" id="mainPasswordInput" placeholder="Passwort eingeben" onkeypress="if(event.key === 'Enter') checkMainPassword()">
-            <div class="settings-password-error" id="mainPasswordError" style="display:none">Falsches Passwort</div>
-            <button class="btn btn-primary" onclick="checkMainPassword()">
-              <i class="fas fa-unlock"></i> Bestätigen
-            </button>
-          </div>
-        </div>
-      `;
-      document.body.appendChild(passwordModal);
-      
-      // Focus the input field
+      document.getElementById('mainPasswordModal').classList.add('active');
       setTimeout(() => {
         const input = document.getElementById('mainPasswordInput');
         if (input) input.focus();
@@ -3526,9 +3498,9 @@ Grund:
         localStorage.setItem('hr_app_password_timestamp', Date.now());
         isAuthenticated = true;
         
-        // Remove modal
-        const modal = document.querySelector('.settings-password-modal');
-        if (modal) modal.remove();
+        document.getElementById('mainPasswordModal').classList.remove('active');
+        document.getElementById('mainPasswordInput').value = '';
+        errorElement.style.display = 'none';
         
         initializeApp();
       } else {
@@ -3538,55 +3510,12 @@ Grund:
       }
     }
 
-    function checkSettingsAuth() {
-      const savedTimestamp = localStorage.getItem('hr_settings_auth_timestamp');
-      const currentTime = Date.now();
-      const expireTime = PASSWORD_EXPIRE_MINUTES * 60 * 1000;
-      
-      if (settingsAuthenticated && savedTimestamp && (currentTime - parseInt(savedTimestamp) < expireTime)) {
-        return true;
-      }
-      return false;
-    }
-
-    function openSettingsPasswordModal() {
-      document.getElementById('settingsPasswordModal').classList.add('active');
-      document.getElementById('settingsPasswordInput').focus();
-    }
-
-    function closeSettingsPasswordModal() {
-      document.getElementById('settingsPasswordModal').classList.remove('active');
-      document.getElementById('settingsPasswordInput').value = '';
-      document.getElementById('settingsPasswordError').classList.remove('show');
-    }
-
-    function checkSettingsPassword() {
-      const password = document.getElementById('settingsPasswordInput').value;
-      const errorElement = document.getElementById('settingsPasswordError');
-      
-      if (password === SETTINGS_PASSWORD) {
-        settingsAuthenticated = true;
-        settingsAuthTimestamp = Date.now();
-        localStorage.setItem('hr_settings_auth_timestamp', settingsAuthTimestamp);
-        closeSettingsPasswordModal();
-        openSettingsModal();
-      } else {
-        errorElement.classList.add('show');
-        document.getElementById('settingsPasswordInput').value = '';
-        document.getElementById('settingsPasswordInput').focus();
-      }
-    }
-
-    function openSettingsWithPassword() {
-      if (checkSettingsAuth()) {
-        openSettingsModal();
-      } else {
-        openSettingsPasswordModal();
-      }
-    }
-
     // ==================== BESPRECHUNGEN MODAL - NUR BESPRECHUNGEN ====================
     function openBesprechungenModal() {
+      if (!isAuthenticated) {
+        showNotification('Bitte zuerst anmelden', 'warning');
+        return;
+      }
       openModal('besprechungenModal');
       loadBesprechungen();
     }
@@ -3596,7 +3525,6 @@ Grund:
       container.innerHTML = '<div class="loading"><div class="loading-spinner"></div><div>Lade Besprechungen...</div></div>';
 
       try {
-        // NUR Besprechungen laden, keine Ankündigungen
         const querySnapshot = await db.collection('hrAnkundigungen')
           .where('type', '==', 'besprechung')
           .orderBy('created', 'desc')
@@ -3700,7 +3628,9 @@ Grund:
       document.getElementById('orgTimeStart').value = '22:10';
       document.getElementById('orgTimeEnd').value = '23:05';
 
+      setupEventListeners();
       setupFormChangeListeners();
+      adjustSidebarHeight();
       seedTemplateBoxes();
       setupSoldatenEventListeners();
       
@@ -3814,7 +3744,6 @@ Grund:
 
     async function showLatestAnkundigung() {
       try {
-        // Lade die neueste Ankündigung (nur vom Typ 'ankundigung')
         const querySnapshot = await db.collection('hrAnkundigungen')
           .where('type', '==', 'ankundigung')
           .orderBy('created', 'desc')
@@ -3833,16 +3762,13 @@ Grund:
         const type = document.getElementById('bannerType');
         const date = document.getElementById('bannerDate');
         
-        // Banner-Inhalt setzen
         title.innerHTML = `<span>${ankundigung.icon || '🪧'}</span> ${escapeHtml(ankundigung.title || 'Ankündigung')}`;
         content.textContent = ankundigung.content || '';
         type.textContent = 'Ankündigung';
         date.textContent = ankundigung.createdFormatted || 'Heute';
         
-        // Banner anzeigen
         banner.classList.add('show');
         
-        // Automatisch nach 10 Sekunden ausblenden
         setTimeout(() => {
           banner.classList.remove('show');
         }, 10000);
@@ -3963,7 +3889,6 @@ Grund:
         showNotification('Ankündigung/Besprechung gelöscht', 'success');
         loadAnkundigungenList();
         
-        // Wenn wir im Besprechungen-Modal sind, aktualisieren wir auch dort
         if (document.getElementById('besprechungenModal').classList.contains('active')) {
           loadBesprechungen();
         }
@@ -3999,7 +3924,6 @@ Grund:
         document.getElementById('ankundigungTitle').value = '';
         document.getElementById('ankundigungContent').value = '';
         
-        // Zurück zur Verwaltung
         switchAnkundigungenTab('manage');
       } catch (error) {
         console.error('Fehler beim Speichern der Ankündigung:', error);
@@ -4042,7 +3966,6 @@ Grund:
         document.getElementById('besprechungOrt').value = '';
         document.getElementById('besprechungContent').value = '';
         
-        // Zurück zur Verwaltung
         switchAnkundigungenTab('manage');
       } catch (error) {
         console.error('Fehler beim Speichern der Besprechung:', error);
@@ -4052,13 +3975,14 @@ Grund:
 
     // ==================== SETTINGS FUNKTIONEN ====================
     function openSettingsModal() {
-      if (!checkSettingsAuth()) {
-        openSettingsPasswordModal();
+      if (!isAuthenticated) {
+        showNotification('Bitte zuerst anmelden', 'warning');
         return;
       }
+      
+      // Einfacher Zugang zu Settings - kein zusätzliches Passwort benötigt
       openModal('settingsModal');
       populateSettingsUI();
-      // Standardmäßig zur Verwaltung gehen
       switchAnkundigungenTab('manage');
     }
 
@@ -4129,6 +4053,7 @@ Grund:
 
         updateUnitAndRankSelects();
         populateSettingsUI();
+        loadLogo();
       } catch (error) {
         console.error('Fehler beim Laden der Einstellungen:', error);
       }
@@ -4414,6 +4339,10 @@ Grund:
 
     // ==================== SOLDATENGESPRÄCH FUNKTIONEN ====================
     function openSoldatenModal() {
+      if (!isAuthenticated) {
+        showNotification('Bitte zuerst anmelden', 'warning');
+        return;
+      }
       openModal('soldatenModal');
       updateSoldatenPreview();
     }
@@ -4640,6 +4569,10 @@ Sonstiges: ${sonstiges || ''}
 
     // ==================== BEOBACHTUNGS AKTEN FUNKTIONEN ====================
     function openBeobachtungAktenModal() {
+      if (!isAuthenticated) {
+        showNotification('Bitte zuerst anmelden', 'warning');
+        return;
+      }
       openModal('beobachtungAktenModal');
       updateBeobachtungPreview();
     }
@@ -5047,7 +4980,7 @@ Grund: ${grund || ''}
         if (e.ctrlKey && e.key === 'e' && currentEmployee) { e.preventDefault(); openEditEmployeeModal(); }
         if (e.ctrlKey && e.key === 'b') { e.preventDefault(); openBeobachtungAktenModal(); }
         if (e.ctrlKey && e.key === 's') { e.preventDefault(); openSoldatenModal(); }
-        if (e.ctrlKey && e.key === ',') { e.preventDefault(); openSettingsWithPassword(); }
+        if (e.ctrlKey && e.key === ',') { e.preventDefault(); openSettingsModal(); }
       });
 
       window.addEventListener('resize', adjustSidebarHeight);
@@ -5713,6 +5646,10 @@ Sonstiges: ${notes}
     }
 
     function openNewEmployeeModal() {
+      if (!isAuthenticated) {
+        showNotification('Bitte zuerst anmelden', 'warning');
+        return;
+      }
       openModal('newEmployeeModal');
     }
 
@@ -5841,6 +5778,10 @@ Sonstiges:
     }
 
     function toggleArchiveView() {
+      if (!isAuthenticated) {
+        showNotification('Bitte zuerst anmelden', 'warning');
+        return;
+      }
       showArchived = !showArchived;
       const buttonText = document.getElementById('archiveToggleText');
       buttonText.textContent = showArchived ? 'Aktive anzeigen' : 'Archiv anzeigen';
