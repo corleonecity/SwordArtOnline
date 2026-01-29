@@ -3278,6 +3278,7 @@
                 <img src="" alt="Logo" class="logo-preview-image" id="logoPreviewImage">
                 <div class="logo-preview-default">
                   <i class="fas fa-image logo-default-icon"></i>
+                  <div style="font-size: 11px; margin-top: 4px; color: var(--gray);">Logo-Vorschau</div>
                 </div>
               </div>
               <input type="file" id="logoUpload" accept="image/*" style="display: none;" onchange="handleLogoUpload(event)">
@@ -3562,8 +3563,9 @@ Grund:
           <!-- Logo Container -->
           <div class="logo-container" id="logoContainer">
             <img src="" alt="Logo" id="logoImage" style="display:none;">
-            <div id="logoPlaceholder" style="color:var(--gray);font-size:20px;">
+            <div id="logoPlaceholder" style="color:var(--gray);font-size:20px;display:flex;flex-direction:column;align-items:center;gap:4px;">
               <i class="fas fa-building"></i>
+              <div style="font-size: 9px; color: var(--gray);">Logo</div>
             </div>
           </div>
           <div class="brand-text">
@@ -3952,16 +3954,29 @@ Grund:
       const logoImage = document.getElementById('logoImage');
       const logoPlaceholder = document.getElementById('logoPlaceholder');
       const logoContainer = document.getElementById('logoContainer');
+      const logoPreviewImage = document.getElementById('logoPreviewImage');
+      const logoPreview = document.getElementById('logoPreview');
       
       if (settings.logoUrl) {
+        // Update header logo
         logoImage.src = settings.logoUrl;
         logoImage.style.display = 'block';
         logoPlaceholder.style.display = 'none';
         logoContainer.classList.add('has-image');
+        
+        // Update settings preview
+        logoPreviewImage.src = settings.logoUrl;
+        logoPreviewImage.style.display = 'block';
+        logoPreview.classList.add('has-image');
       } else {
+        // Reset header logo
         logoImage.style.display = 'none';
         logoPlaceholder.style.display = 'flex';
         logoContainer.classList.remove('has-image');
+        
+        // Reset settings preview
+        logoPreviewImage.style.display = 'none';
+        logoPreview.classList.remove('has-image');
       }
     }
 
