@@ -335,7 +335,7 @@
       font-size: 10px;
     }
 
-    /* Besprechungen Modal - NUR BESPRECHUNGEN */
+    /* Besprechungen Modal */
     .besprechungen-modal {
       display: none;
       position: fixed;
@@ -2610,18 +2610,21 @@
 <body>
   <div class="bg-effects"><div class="bg-gradient"></div></div>
 
-  <!-- Password Modal for App -->
-  <div class="settings-password-modal" id="mainPasswordModal">
+  <!-- Settings Password Modal -->
+  <div class="settings-password-modal" id="settingsPasswordModal">
     <div class="settings-password-content">
       <div class="settings-password-header">
         <div class="settings-password-title">
-          <i class="fas fa-lock"></i> Passwort für HR App erforderlich
+          <i class="fas fa-lock"></i> Passwort für Settings erforderlich
         </div>
+        <button class="settings-password-close" onclick="closeSettingsPasswordModal()">
+          <i class="fas fa-times"></i>
+        </button>
       </div>
       <div class="settings-password-form">
-        <input type="password" class="settings-password-input" id="mainPasswordInput" placeholder="Passwort eingeben" onkeypress="if(event.key === 'Enter') checkMainPassword()">
-        <div class="settings-password-error" id="mainPasswordError">Falsches Passwort</div>
-        <button class="btn btn-primary" onclick="checkMainPassword()">
+        <input type="password" class="settings-password-input" id="settingsPasswordInput" placeholder="Passwort eingeben" onkeypress="if(event.key === 'Enter') checkSettingsPassword()">
+        <div class="settings-password-error" id="settingsPasswordError">Falsches Passwort</div>
+        <button class="btn btn-primary" onclick="checkSettingsPassword()">
           <i class="fas fa-unlock"></i> Bestätigen
         </button>
       </div>
@@ -2647,12 +2650,12 @@
     </div>
   </div>
 
-  <!-- Besprechungen Modal - NUR BESPRECHUNGEN -->
+  <!-- Besprechungen Modal -->
   <div class="besprechungen-modal" id="besprechungenModal" onclick="if(event.target===this)closeModal('besprechungenModal')">
     <div class="besprechungen-content">
       <div class="besprechungen-header">
         <div class="besprechungen-title">
-          <i class="fas fa-calendar-alt"></i> Besprechungen
+          <i class="fas fa-calendar-alt"></i> Besprechungen & Ankündigungen
         </div>
         <button class="besprechungen-close" onclick="closeModal('besprechungenModal')">
           <i class="fas fa-times"></i>
@@ -2686,7 +2689,7 @@
     <button class="floating-button" onclick="openBeobachtungAktenModal()" title="Beobachtungs-Akten">
       <i class="fas fa-folder-open"></i>
     </button>
-    <button class="floating-button" onclick="openSettingsModal()" title="Settings">
+    <button class="floating-button" onclick="openSettingsWithPassword()" title="Settings">
       <i class="fas fa-cog"></i>
     </button>
   </div>
@@ -2749,10 +2752,7 @@
         <div class="settings-tab-content" id="ankundigungenTab" style="display:none;">
           <div class="ankundigungen-section">
             <div class="ankundigungen-tabs">
-              <button class="ankundigungen-tab active" onclick="switchAnkundigungenTab('manage')">
-                <span>🗂️</span> Verwalten
-              </button>
-              <button class="ankundigungen-tab" onclick="switchAnkundigungenTab('new')">
+              <button class="ankundigungen-tab active" onclick="switchAnkundigungenTab('new')">
                 <span>🪧</span> Neue Ankündigung
               </button>
               <button class="ankundigungen-tab" onclick="switchAnkundigungenTab('besprechung')">
@@ -2760,21 +2760,8 @@
               </button>
             </div>
             
-            <!-- Verwalten Tab -->
-            <div class="ankundigungen-tab-content" id="ankundigungenManageTab">
-              <div class="ankundigungen-list-container">
-                <div class="ankundigungen-list" id="ankundigungenList">
-                  <div class="empty-ankundigungen">
-                    <div class="empty-ankundigungen-icon"><i class="fas fa-bullhorn"></i></div>
-                    <div class="empty-ankundigungen-title">Keine Ankündigungen gefunden</div>
-                    <div class="empty-description">Erstellen Sie Ihre erste Ankündigung</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
             <!-- Neue Ankündigung -->
-            <div class="ankundigungen-tab-content" id="ankundigungenNewTab" style="display:none;">
+            <div class="ankundigungen-tab-content" id="ankundigungenNewTab">
               <div class="ankundigungen-form-grid">
                 <div class="settings-form-group">
                   <label class="settings-label">Titel</label>
@@ -3419,7 +3406,7 @@ Grund:
     const APP_VERSION = '1.0.20240128';
     const DEFAULT_PASSWORD = 'soc1';
     const SETTINGS_PASSWORD = 'soc1';
-    const PASSWORD_EXPIRE_MINUTES = 480; // 8 Stunden
+    const PASSWORD_EXPIRE_MINUTES = 5;
     
     // Firebase Configuration
     const firebaseConfig = {
@@ -3451,7 +3438,7 @@ Grund:
     let soldatenGespräche = [];
     let akten = [];
     let currentSettingsTab = 'units';
-    let currentAnkundigungenTab = 'manage';
+    let currentAnkundigungenTab = 'new';
     let currentSoldatenTab = 'new';
     let currentBeobachtungTab = 'new';
     let isAuthenticated = false;
@@ -3464,6 +3451,9 @@ Grund:
     document.addEventListener('DOMContentLoaded', function () {
       console.log(`HR App Version ${APP_VERSION} geladen`);
       checkAuthentication();
+      setupEventListeners();
+      adjustSidebarHeight();
+      loadLogo();
     });
 
     // ==================== AUTHENTIFIZIERUNG ====================
@@ -3477,12 +3467,34 @@ Grund:
         isAuthenticated = true;
         initializeApp();
       } else {
+        // Password expired or not set, show password modal
         showMainPasswordModal();
       }
     }
 
     function showMainPasswordModal() {
-      document.getElementById('mainPasswordModal').classList.add('active');
+      // Create a new password modal for main app
+      const passwordModal = document.createElement('div');
+      passwordModal.className = 'settings-password-modal active';
+      passwordModal.innerHTML = `
+        <div class="settings-password-content">
+          <div class="settings-password-header">
+            <div class="settings-password-title">
+              <i class="fas fa-lock"></i> Passwort für HR App erforderlich
+            </div>
+          </div>
+          <div class="settings-password-form">
+            <input type="password" class="settings-password-input" id="mainPasswordInput" placeholder="Passwort eingeben" onkeypress="if(event.key === 'Enter') checkMainPassword()">
+            <div class="settings-password-error" id="mainPasswordError" style="display:none">Falsches Passwort</div>
+            <button class="btn btn-primary" onclick="checkMainPassword()">
+              <i class="fas fa-unlock"></i> Bestätigen
+            </button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(passwordModal);
+      
+      // Focus the input field
       setTimeout(() => {
         const input = document.getElementById('mainPasswordInput');
         if (input) input.focus();
@@ -3498,9 +3510,9 @@ Grund:
         localStorage.setItem('hr_app_password_timestamp', Date.now());
         isAuthenticated = true;
         
-        document.getElementById('mainPasswordModal').classList.remove('active');
-        document.getElementById('mainPasswordInput').value = '';
-        errorElement.style.display = 'none';
+        // Remove modal
+        const modal = document.querySelector('.settings-password-modal');
+        if (modal) modal.remove();
         
         initializeApp();
       } else {
@@ -3510,67 +3522,55 @@ Grund:
       }
     }
 
-    // ==================== ANKÜNDIGUNGEN FUNKTIONEN ====================
-    function showAnkundigungBanner() {
-      if (!isAuthenticated) {
-        showNotification('Bitte zuerst anmelden', 'warning');
-        return;
+    function checkSettingsAuth() {
+      const savedTimestamp = localStorage.getItem('hr_settings_auth_timestamp');
+      const currentTime = Date.now();
+      const expireTime = PASSWORD_EXPIRE_MINUTES * 60 * 1000;
+      
+      if (settingsAuthenticated && savedTimestamp && (currentTime - parseInt(savedTimestamp) < expireTime)) {
+        return true;
       }
-      showLatestAnkundigung();
+      return false;
     }
 
-    async function showLatestAnkundigung() {
-      try {
-        console.log('Suche nach Ankündigungen...');
-        
-        const querySnapshot = await db.collection('hrAnkundigungen')
-          .where('type', '==', 'ankundigung')
-          .orderBy('created', 'desc')
-          .limit(1)
-          .get();
-        
-        console.log('Ankündigungen gefunden:', querySnapshot.size);
-        
-        if (querySnapshot.empty) {
-          console.log('Keine Ankündigungen gefunden');
-          return;
-        }
-        
-        const ankundigung = querySnapshot.docs[0].data();
-        const banner = document.getElementById('ankundigungBanner');
-        const title = document.getElementById('bannerTitle');
-        const content = document.getElementById('bannerContent');
-        const type = document.getElementById('bannerType');
-        const date = document.getElementById('bannerDate');
-        
-        console.log('Ankündigung geladen:', ankundigung);
-        
-        title.innerHTML = `<span>${ankundigung.icon || '🪧'}</span> ${escapeHtml(ankundigung.title || 'Ankündigung')}`;
-        content.textContent = ankundigung.content || '';
-        type.textContent = 'Ankündigung';
-        date.textContent = ankundigung.createdFormatted || 
-                          (ankundigung.created ? new Date(ankundigung.created).toLocaleDateString('de-DE') : 'Heute');
-        
-        banner.classList.add('show');
-        
-        setTimeout(() => {
-          banner.classList.remove('show');
-        }, 10000);
-      } catch (error) {
-        console.error('Fehler beim Laden der Ankündigung:', error);
+    function openSettingsPasswordModal() {
+      document.getElementById('settingsPasswordModal').classList.add('active');
+      document.getElementById('settingsPasswordInput').focus();
+    }
+
+    function closeSettingsPasswordModal() {
+      document.getElementById('settingsPasswordModal').classList.remove('active');
+      document.getElementById('settingsPasswordInput').value = '';
+      document.getElementById('settingsPasswordError').classList.remove('show');
+    }
+
+    function checkSettingsPassword() {
+      const password = document.getElementById('settingsPasswordInput').value;
+      const errorElement = document.getElementById('settingsPasswordError');
+      
+      if (password === SETTINGS_PASSWORD) {
+        settingsAuthenticated = true;
+        settingsAuthTimestamp = Date.now();
+        localStorage.setItem('hr_settings_auth_timestamp', settingsAuthTimestamp);
+        closeSettingsPasswordModal();
+        openSettingsModal();
+      } else {
+        errorElement.classList.add('show');
+        document.getElementById('settingsPasswordInput').value = '';
+        document.getElementById('settingsPasswordInput').focus();
       }
     }
 
-    function closeBanner() {
-      document.getElementById('ankundigungBanner').classList.remove('show');
+    function openSettingsWithPassword() {
+      if (checkSettingsAuth()) {
+        openSettingsModal();
+      } else {
+        openSettingsPasswordModal();
+      }
     }
 
-    // ==================== BESPRECHUNGEN MODAL - NUR BESPRECHUNGEN ====================
+    // ==================== BESPRECHUNGEN MODAL ====================
     function openBesprechungenModal() {
-      if (!isAuthenticated) {
-        showNotification('Bitte zuerst anmelden', 'warning');
-        return;
-      }
       openModal('besprechungenModal');
       loadBesprechungen();
     }
@@ -3580,13 +3580,9 @@ Grund:
       container.innerHTML = '<div class="loading"><div class="loading-spinner"></div><div>Lade Besprechungen...</div></div>';
 
       try {
-        console.log('Lade Besprechungen...');
         const querySnapshot = await db.collection('hrAnkundigungen')
-          .where('type', '==', 'besprechung')
           .orderBy('created', 'desc')
           .get();
-        
-        console.log('Besprechungen gefunden:', querySnapshot.size);
         
         if (querySnapshot.empty) {
           container.innerHTML = `
@@ -3600,31 +3596,40 @@ Grund:
         }
 
         let html = '';
+        let hasItems = false;
         
         querySnapshot.forEach(doc => {
           const item = doc.data();
-          console.log('Besprechung:', item);
+          hasItems = true;
           
-          const title = item.thema || 'Ohne Thema';
-          const date = item.date ? new Date(item.date).toLocaleDateString('de-DE') : '';
-          const time = item.time || '';
-          const ort = item.ort || '';
-          const content = item.content || '';
+          const typeLabel = item.type === 'ankundigung' ? 'Ankündigung' : 
+                          item.type === 'besprechung' ? 'Besprechung' : 'Aufstellung';
+          
+          const title = item.type === 'ankundigung' ? (item.title || 'Ohne Titel') :
+                       item.type === 'besprechung' ? item.thema : 
+                       item.type === 'aufstellung' ? `${item.typ} - ${item.ort}` : 'Eintrag';
+          
+          const date = item.type === 'ankundigung' ? item.createdFormatted : 
+                      item.date ? new Date(item.date).toLocaleDateString('de-DE') : item.createdFormatted;
+          
+          const content = item.type === 'ankundigung' ? item.content :
+                         item.type === 'besprechung' ? item.content : 
+                         item.type === 'aufstellung' ? item.bemerkungen : '';
           
           html += `
             <div class="besprechungen-item">
               <div class="besprechungen-item-header">
                 <div class="besprechungen-item-title">
-                  <span>🗃️</span> ${escapeHtml(title)}
+                  <span>${item.icon || '📄'}</span> ${escapeHtml(title)}
                 </div>
                 <div class="besprechungen-item-type">
-                  Besprechung
+                  ${typeLabel}
                 </div>
               </div>
               <div class="besprechungen-item-date">
                 <i class="fas fa-calendar"></i> ${date}
-                ${time ? ` • ${time}` : ''}
-                ${ort ? ` • ${ort}` : ''}
+                ${item.time ? ` • ${item.time}` : ''}
+                ${item.ort ? ` • ${item.ort}` : ''}
               </div>
               <div class="besprechungen-item-content">
                 ${escapeHtml(content)}
@@ -3633,7 +3638,17 @@ Grund:
           `;
         });
 
-        container.innerHTML = html;
+        if (hasItems) {
+          container.innerHTML = html;
+        } else {
+          container.innerHTML = `
+            <div class="empty-besprechungen">
+              <div class="empty-besprechungen-icon"><i class="fas fa-calendar-alt"></i></div>
+              <div class="empty-besprechungen-title">Keine Besprechungen gefunden</div>
+              <div class="empty-description">Erstellen Sie Ihre erste Besprechung in den Settings</div>
+            </div>
+          `;
+        }
       } catch (error) {
         console.error('Fehler beim Laden der Besprechungen:', error);
         container.innerHTML = `
@@ -3687,9 +3702,7 @@ Grund:
       document.getElementById('orgTimeStart').value = '22:10';
       document.getElementById('orgTimeEnd').value = '23:05';
 
-      setupEventListeners();
       setupFormChangeListeners();
-      adjustSidebarHeight();
       seedTemplateBoxes();
       setupSoldatenEventListeners();
       
@@ -3796,6 +3809,64 @@ Grund:
       }
     }
 
+    // ==================== ANKÜNDIGUNGEN FUNKTIONEN ====================
+    function showAnkundigungBanner() {
+      showLatestAnkundigung();
+    }
+
+    async function showLatestAnkundigung() {
+      try {
+        // Lade die neueste Ankündigung
+        const querySnapshot = await db.collection('hrAnkundigungen')
+          .orderBy('created', 'desc')
+          .limit(1)
+          .get();
+        
+        if (querySnapshot.empty) {
+          console.log('Keine Ankündigungen gefunden');
+          return;
+        }
+        
+        const ankundigung = querySnapshot.docs[0].data();
+        const banner = document.getElementById('ankundigungBanner');
+        const title = document.getElementById('bannerTitle');
+        const content = document.getElementById('bannerContent');
+        const type = document.getElementById('bannerType');
+        const date = document.getElementById('bannerDate');
+        
+        // Banner-Inhalt setzen
+        title.innerHTML = `<span>${ankundigung.icon || '🪧'}</span> ${escapeHtml(ankundigung.title || ankundigung.thema || 'Ankündigung')}`;
+        content.textContent = ankundigung.content || ankundigung.bemerkungen || '';
+        
+        if (ankundigung.type === 'besprechung') {
+          type.textContent = 'Besprechung';
+          const formattedDate = ankundigung.date ? new Date(ankundigung.date).toLocaleDateString('de-DE') : '';
+          date.textContent = `${formattedDate} ${ankundigung.time ? `um ${ankundigung.time}` : ''}`;
+        } else if (ankundigung.type === 'aufstellung') {
+          type.textContent = 'Aufstellung';
+          const formattedDate = ankundigung.date ? new Date(ankundigung.date).toLocaleDateString('de-DE') : '';
+          date.textContent = `${formattedDate} ${ankundigung.time ? `um ${ankundigung.time}` : ''}`;
+        } else {
+          type.textContent = 'Ankündigung';
+          date.textContent = ankundigung.createdFormatted || 'Heute';
+        }
+        
+        // Banner anzeigen
+        banner.classList.add('show');
+        
+        // Automatisch nach 10 Sekunden ausblenden
+        setTimeout(() => {
+          banner.classList.remove('show');
+        }, 10000);
+      } catch (error) {
+        console.error('Fehler beim Laden der Ankündigung:', error);
+      }
+    }
+
+    function closeBanner() {
+      document.getElementById('ankundigungBanner').classList.remove('show');
+    }
+
     function switchAnkundigungenTab(tabName) {
       currentAnkundigungenTab = tabName;
       
@@ -3807,113 +3878,12 @@ Grund:
         content.style.display = 'none';
       });
       
-      if (tabName === 'manage') {
+      if (tabName === 'new') {
         document.querySelector('.ankundigungen-tab:nth-child(1)').classList.add('active');
-        document.getElementById('ankundigungenManageTab').style.display = 'block';
-        loadAnkundigungenList();
-      } else if (tabName === 'new') {
-        document.querySelector('.ankundigungen-tab:nth-child(2)').classList.add('active');
         document.getElementById('ankundigungenNewTab').style.display = 'block';
       } else if (tabName === 'besprechung') {
-        document.querySelector('.ankundigungen-tab:nth-child(3)').classList.add('active');
+        document.querySelector('.ankundigungen-tab:nth-child(2)').classList.add('active');
         document.getElementById('ankundigungenBesprechungTab').style.display = 'block';
-      }
-    }
-
-    async function loadAnkundigungenList() {
-      const container = document.getElementById('ankundigungenList');
-      container.innerHTML = '<div class="loading"><div class="loading-spinner"></div><div>Lade Ankündigungen...</div></div>';
-
-      try {
-        console.log('Lade Ankündigungen Liste...');
-        const querySnapshot = await db.collection('hrAnkundigungen')
-          .orderBy('created', 'desc')
-          .limit(50)
-          .get();
-        
-        console.log('Ankündigungen in Liste gefunden:', querySnapshot.size);
-        
-        if (querySnapshot.empty) {
-          container.innerHTML = `
-            <div class="empty-ankundigungen">
-              <div class="empty-ankundigungen-icon"><i class="fas fa-bullhorn"></i></div>
-              <div class="empty-ankundigungen-title">Keine Ankündigungen gefunden</div>
-              <div class="empty-description">Erstellen Sie Ihre erste Ankündigung</div>
-            </div>
-          `;
-          return;
-        }
-
-        let html = '';
-        
-        querySnapshot.forEach(doc => {
-          const item = doc.data();
-          const isAnkundigung = item.type === 'ankundigung';
-          const isBesprechung = item.type === 'besprechung';
-          
-          const title = isBesprechung ? (item.thema || 'Ohne Thema') : (item.title || 'Ohne Titel');
-          const date = item.createdFormatted || 
-                      (item.created ? new Date(item.created).toLocaleDateString('de-DE') : 'Unbekannt');
-          const content = item.content || '';
-          const typeText = isAnkundigung ? 'Ankündigung' : 'Besprechung';
-          const icon = isAnkundigung ? '🪧' : '🗃️';
-          
-          html += `
-            <div class="ankundigungen-item" style="background: rgba(255,255,255,.03); border-radius: var(--radius-md); padding: 16px; border: 1px solid rgba(255,255,255,.08); margin-bottom: 12px;">
-              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
-                <div style="font-weight: 900; color: #fff; font-size: 15px; display: flex; align-items: center; gap: 8px;">
-                  <span>${icon}</span> ${escapeHtml(title)}
-                </div>
-                <div style="background: rgba(139,92,246,.10); color: #a78bfa; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 900; border: 1px solid rgba(139,92,246,.20);">
-                  ${typeText}
-                </div>
-              </div>
-              <div style="color: var(--gray); font-size: 11px; margin-bottom: 8px; display: flex; align-items: center; gap: 4px;">
-                <i class="fas fa-calendar"></i> ${date}
-                ${isBesprechung && item.date ? ` • ${new Date(item.date).toLocaleDateString('de-DE')}` : ''}
-                ${isBesprechung && item.time ? ` • ${item.time}` : ''}
-                ${isBesprechung && item.ort ? ` • ${item.ort}` : ''}
-              </div>
-              <div style="color: var(--gray-light); font-size: 13px; line-height: 1.5; margin-bottom: 12px; padding: 12px; background: rgba(0,0,0,.2); border-radius: var(--radius-sm); border-left: 2px solid #8b5cf6; max-height: 100px; overflow-y: auto;">
-                ${escapeHtml(content.length > 200 ? content.substring(0, 200) + '...' : content)}
-              </div>
-              <div style="display: flex; gap: 8px; justify-content: flex-end;">
-                <button class="btn btn-danger" style="padding: 6px 12px; font-size: 11px;" onclick="deleteAnkundigung('${doc.id}')">
-                  <i class="fas fa-trash"></i> Löschen
-                </button>
-              </div>
-            </div>
-          `;
-        });
-
-        container.innerHTML = html;
-      } catch (error) {
-        console.error('Fehler beim Laden der Ankündigungen:', error);
-        container.innerHTML = `
-          <div class="empty-ankundigungen">
-            <div class="empty-ankundigungen-icon"><i class="fas fa-exclamation-triangle"></i></div>
-            <div class="empty-ankundigungen-title">Fehler beim Laden</div>
-            <div class="empty-description">${error.message}</div>
-          </div>
-        `;
-      }
-    }
-
-    async function deleteAnkundigung(id) {
-      if (!confirm('Ankündigung/Besprechung wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.')) return;
-
-      try {
-        await db.collection('hrAnkundigungen').doc(id).delete();
-        
-        showNotification('Ankündigung/Besprechung gelöscht', 'success');
-        loadAnkundigungenList();
-        
-        if (document.getElementById('besprechungenModal').classList.contains('active')) {
-          loadBesprechungen();
-        }
-      } catch (error) {
-        console.error('Fehler beim Löschen:', error);
-        showNotification('Fehler beim Löschen: ' + error.message, 'error');
       }
     }
 
@@ -3937,14 +3907,14 @@ Grund:
       };
 
       try {
-        console.log('Speichere Ankündigung:', ankundigung);
         await db.collection('hrAnkundigungen').doc(ankundigung.id).set(ankundigung);
         
         showNotification('Ankündigung erfolgreich gespeichert', 'success');
         document.getElementById('ankundigungTitle').value = '';
         document.getElementById('ankundigungContent').value = '';
         
-        switchAnkundigungenTab('manage');
+        // Zurück zur App
+        closeModal('settingsModal');
       } catch (error) {
         console.error('Fehler beim Speichern der Ankündigung:', error);
         showNotification('Fehler beim Speichern: ' + error.message, 'error');
@@ -3977,7 +3947,6 @@ Grund:
       };
 
       try {
-        console.log('Speichere Besprechung:', besprechung);
         await db.collection('hrAnkundigungen').doc(besprechung.id).set(besprechung);
         
         showNotification('Besprechung erfolgreich gespeichert', 'success');
@@ -3987,7 +3956,8 @@ Grund:
         document.getElementById('besprechungOrt').value = '';
         document.getElementById('besprechungContent').value = '';
         
-        switchAnkundigungenTab('manage');
+        // Zurück zur App
+        closeModal('settingsModal');
       } catch (error) {
         console.error('Fehler beim Speichern der Besprechung:', error);
         showNotification('Fehler beim Speichern: ' + error.message, 'error');
@@ -3996,15 +3966,12 @@ Grund:
 
     // ==================== SETTINGS FUNKTIONEN ====================
     function openSettingsModal() {
-      if (!isAuthenticated) {
-        showNotification('Bitte zuerst anmelden', 'warning');
+      if (!checkSettingsAuth()) {
+        openSettingsPasswordModal();
         return;
       }
-      
-      // Einfacher Zugang zu Settings - kein zusätzliches Passwort benötigt
       openModal('settingsModal');
       populateSettingsUI();
-      switchAnkundigungenTab('manage');
     }
 
     function switchSettingsTab(tabName) {
@@ -4074,7 +4041,6 @@ Grund:
 
         updateUnitAndRankSelects();
         populateSettingsUI();
-        loadLogo();
       } catch (error) {
         console.error('Fehler beim Laden der Einstellungen:', error);
       }
@@ -4292,7 +4258,7 @@ Grund:
             akten.push({ 
               id: doc.id, 
               ...data,
-              createdFormatted: data.createdFormatted || (data.created ? new Date(data.created).toLocaleDateString('de-DE') : '')
+              createdFormatted: data.createdFormatted || new Date(data.created).toLocaleDateString('de-DE')
             });
           });
           updateStats();
@@ -4311,7 +4277,7 @@ Grund:
             soldatenGespräche.push({ 
               id: doc.id, 
               ...data,
-              createdFormatted: data.createdFormatted || (data.created ? new Date(data.created).toLocaleDateString('de-DE') : ''),
+              createdFormatted: data.createdFormatted || new Date(data.created).toLocaleDateString('de-DE'),
               dateFormatted: data.dateFormatted || (data.date ? new Date(data.date).toLocaleDateString('de-DE') : '')
             });
           });
@@ -4345,14 +4311,6 @@ Grund:
               ...data
             });
           });
-          
-          // Zeige die neueste Ankündigung automatisch
-          if (ankundigungen.length > 0) {
-            const latestAnk = ankundigungen.filter(a => a.type === 'ankundigung')[0];
-            if (latestAnk && !document.getElementById('ankundigungBanner').classList.contains('show')) {
-              setTimeout(showLatestAnkundigung, 1000);
-            }
-          }
         }, (error) => {
           console.error('Fehler beim Lauschen auf Ankündigungen:', error);
         });
@@ -4368,10 +4326,6 @@ Grund:
 
     // ==================== SOLDATENGESPRÄCH FUNKTIONEN ====================
     function openSoldatenModal() {
-      if (!isAuthenticated) {
-        showNotification('Bitte zuerst anmelden', 'warning');
-        return;
-      }
       openModal('soldatenModal');
       updateSoldatenPreview();
     }
@@ -4598,10 +4552,6 @@ Sonstiges: ${sonstiges || ''}
 
     // ==================== BEOBACHTUNGS AKTEN FUNKTIONEN ====================
     function openBeobachtungAktenModal() {
-      if (!isAuthenticated) {
-        showNotification('Bitte zuerst anmelden', 'warning');
-        return;
-      }
       openModal('beobachtungAktenModal');
       updateBeobachtungPreview();
     }
@@ -4685,7 +4635,7 @@ Grund: ${grund || ''}
       try {
         await db.collection('hrAkten').doc(akte.id).set(akte);
         
-        showNotification('Akte erfolgreicht erstellt', 'success');
+        showNotification('Akte erfolgreich erstellt', 'success');
         document.getElementById('akteName').value = '';
         document.getElementById('akteDN').value = '';
         document.getElementById('akteUnit').value = '';
@@ -5009,7 +4959,7 @@ Grund: ${grund || ''}
         if (e.ctrlKey && e.key === 'e' && currentEmployee) { e.preventDefault(); openEditEmployeeModal(); }
         if (e.ctrlKey && e.key === 'b') { e.preventDefault(); openBeobachtungAktenModal(); }
         if (e.ctrlKey && e.key === 's') { e.preventDefault(); openSoldatenModal(); }
-        if (e.ctrlKey && e.key === ',') { e.preventDefault(); openSettingsModal(); }
+        if (e.ctrlKey && e.key === ',') { e.preventDefault(); openSettingsWithPassword(); }
       });
 
       window.addEventListener('resize', adjustSidebarHeight);
@@ -5675,10 +5625,6 @@ Sonstiges: ${notes}
     }
 
     function openNewEmployeeModal() {
-      if (!isAuthenticated) {
-        showNotification('Bitte zuerst anmelden', 'warning');
-        return;
-      }
       openModal('newEmployeeModal');
     }
 
@@ -5807,10 +5753,6 @@ Sonstiges:
     }
 
     function toggleArchiveView() {
-      if (!isAuthenticated) {
-        showNotification('Bitte zuerst anmelden', 'warning');
-        return;
-      }
       showArchived = !showArchived;
       const buttonText = document.getElementById('archiveToggleText');
       buttonText.textContent = showArchived ? 'Aktive anzeigen' : 'Archiv anzeigen';
