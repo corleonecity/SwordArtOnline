@@ -3925,25 +3925,54 @@ Grund:
       loadLogo();
     });
 
-    // ==================== LOGO FUNKTIONEN ====================
+    // ==================== LOGO FUNKTIONEN (VERBESSERT) ====================
     async function loadLogo() {
       try {
-        const logoUrl = localStorage.getItem('hr_app_logo_url');
-        if (logoUrl) {
-          settings.logoUrl = logoUrl;
+        console.log('Lade Logo...');
+        
+        // Prüfe zuerst localStorage
+        const cachedLogoUrl = localStorage.getItem('hr_app_logo_url');
+        const cachedTimestamp = localStorage.getItem('hr_app_logo_timestamp');
+        const currentTime = Date.now();
+        const cacheExpireTime = 24 * 60 * 60 * 1000; // 24 Stunden
+        
+        if (cachedLogoUrl && cachedTimestamp && (currentTime - parseInt(cachedTimestamp) < cacheExpireTime)) {
+          console.log('Logo aus Cache laden:', cachedLogoUrl);
+          settings.logoUrl = cachedLogoUrl;
           updateLogoDisplay();
+          return;
         }
         
+        // Versuche Logo von Firebase zu laden
         try {
+          console.log('Versuche Logo von Firebase zu laden...');
           const logoRef = storage.ref('hr/logo.jpg');
-          const url = await logoRef.getDownloadURL();
-          if (url) {
-            settings.logoUrl = url;
-            localStorage.setItem('hr_app_logo_url', url);
+          const downloadURL = await logoRef.getDownloadURL();
+          
+          if (downloadURL) {
+            console.log('Logo von Firebase geladen:', downloadURL);
+            settings.logoUrl = downloadURL;
+            localStorage.setItem('hr_app_logo_url', downloadURL);
+            localStorage.setItem('hr_app_logo_timestamp', currentTime.toString());
             updateLogoDisplay();
           }
         } catch (firebaseError) {
-          console.log('Kein Logo in Firebase gefunden, verwende Default');
+          console.log('Kein Logo in Firebase gefunden, verwende Default:', firebaseError.message);
+          
+          // Versuche alternative Pfade
+          try {
+            const altLogoRef = storage.ref('hr/logo.png');
+            const altDownloadURL = await altLogoRef.getDownloadURL();
+            if (altDownloadURL) {
+              console.log('Logo (PNG) von Firebase geladen:', altDownloadURL);
+              settings.logoUrl = altDownloadURL;
+              localStorage.setItem('hr_app_logo_url', altDownloadURL);
+              localStorage.setItem('hr_app_logo_timestamp', currentTime.toString());
+              updateLogoDisplay();
+            }
+          } catch (altError) {
+            console.log('Auch kein PNG-Logo gefunden');
+          }
         }
       } catch (error) {
         console.error('Fehler beim Laden des Logos:', error);
@@ -3958,16 +3987,21 @@ Grund:
       const logoPreview = document.getElementById('logoPreview');
       
       if (settings.logoUrl) {
+        // Cache-Busting: Füge Zeitstempel zur URL hinzu
+        const cacheBustUrl = settings.logoUrl + '?t=' + Date.now();
+        
         // Update header logo
-        logoImage.src = settings.logoUrl;
+        logoImage.src = cacheBustUrl;
         logoImage.style.display = 'block';
         logoPlaceholder.style.display = 'none';
         logoContainer.classList.add('has-image');
         
         // Update settings preview
-        logoPreviewImage.src = settings.logoUrl;
+        logoPreviewImage.src = cacheBustUrl;
         logoPreviewImage.style.display = 'block';
         logoPreview.classList.add('has-image');
+        
+        console.log('Logo angezeigt:', cacheBustUrl);
       } else {
         // Reset header logo
         logoImage.style.display = 'none';
@@ -3977,6 +4011,8 @@ Grund:
         // Reset settings preview
         logoPreviewImage.style.display = 'none';
         logoPreview.classList.remove('has-image');
+        
+        console.log('Kein Logo verfügbar, zeige Platzhalter');
       }
     }
 
@@ -3997,25 +4033,47 @@ Grund:
       try {
         showNotification('Logo wird hochgeladen...', 'info');
         
+        // Lösche alte Logos
         try {
-          const oldLogoRef = storage.ref('hr/logo.jpg');
-          await oldLogoRef.delete();
+          const oldJpgRef = storage.ref('hr/logo.jpg');
+          await oldJpgRef.delete();
         } catch (error) {
-          console.log('Kein altes Logo zum Löschen gefunden');
+          console.log('Kein altes JPG-Logo zum Löschen gefunden');
+        }
+        
+        try {
+          const oldPngRef = storage.ref('hr/logo.png');
+          await oldPngRef.delete();
+        } catch (error) {
+          console.log('Kein altes PNG-Logo zum Löschen gefunden');
         }
 
-        const storageRef = storage.ref('hr/logo.jpg');
-        await storageRef.put(file);
+        // Bestimme Dateityp
+        const fileExtension = file.name.split('.').pop().toLowerCase();
+        const isPng = fileExtension === 'png';
+        const fileName = isPng ? 'logo.png' : 'logo.jpg';
+        
+        // Upload
+        const storageRef = storage.ref('hr/' + fileName);
+        const uploadTask = storageRef.put(file);
+        
+        // Warte auf Upload-Ende
+        await uploadTask;
         const downloadURL = await storageRef.getDownloadURL();
         
+        // Speichere in settings
         settings.logoUrl = downloadURL;
         localStorage.setItem('hr_app_logo_url', downloadURL);
+        localStorage.setItem('hr_app_logo_timestamp', Date.now().toString());
+        
+        // Update Anzeige
         updateLogoDisplay();
         
         showNotification('Logo erfolgreich hochgeladen', 'success');
+        console.log('Logo hochgeladen:', downloadURL);
       } catch (error) {
         console.error('Fehler beim Hochladen des Logos:', error);
-        showNotification('Fehler beim Hochladen des Logos', 'error');
+        showNotification('Fehler beim Hochladen des Logos: ' + error.message, 'error');
       }
     }
 
@@ -4023,17 +4081,33 @@ Grund:
       if (!confirm('Logo wirklich entfernen?')) return;
 
       try {
-        const logoRef = storage.ref('hr/logo.jpg');
-        await logoRef.delete();
+        // Lösche alle möglichen Logo-Dateien
+        try {
+          const jpgRef = storage.ref('hr/logo.jpg');
+          await jpgRef.delete();
+        } catch (error) {
+          console.log('Kein JPG-Logo zum Löschen gefunden');
+        }
         
+        try {
+          const pngRef = storage.ref('hr/logo.png');
+          await pngRef.delete();
+        } catch (error) {
+          console.log('Kein PNG-Logo zum Löschen gefunden');
+        }
+        
+        // Lösche aus localStorage
         localStorage.removeItem('hr_app_logo_url');
+        localStorage.removeItem('hr_app_logo_timestamp');
+        
+        // Reset settings
         settings.logoUrl = '';
         updateLogoDisplay();
         
         showNotification('Logo entfernt', 'success');
       } catch (error) {
         console.error('Fehler beim Entfernen des Logos:', error);
-        showNotification('Fehler beim Entfernen des Logos', 'error');
+        showNotification('Fehler beim Entfernen des Logos: ' + error.message, 'error');
       }
     }
 
