@@ -5071,14 +5071,21 @@ Grund:
 
       const formattedDate = date ? new Date(date).toLocaleDateString('de-DE') : '';
       
+      // Find Discord IDs for unit and rank
+      const unitSetting = settings.units.find(u => u.name === unit);
+      const rankSetting = settings.ranks.find(r => r.name === rank);
+      
+      const unitDisplay = unitSetting?.discordId ? `<@&${unitSetting.discordId}>` : unit;
+      const rankDisplay = rankSetting?.discordId ? `<@&${rankSetting.discordId}>` : rank;
+      
       const template = `╔══════════════════╗
 /////////////////////////////////////////////////////////////////////////
 Soldatengespräch
 
 Name: ${name || ''}
 DN: ${dn || ''}
-Hauptunit: ${unit || ''}
-Rang: ${rank || ''}
+Hauptunit: ${unitDisplay || ''}
+Rang: ${rankDisplay || ''}
 Datum: ${formattedDate}
 Uhrzeit: ${time || ''}
 Notizen: ${notizen || ''}
@@ -5291,11 +5298,24 @@ Sonstiges: ${sonstiges || ''}
       const dn = document.getElementById('beobachtungDN').value;
       const grund = document.getElementById('beobachtungGrund').value;
 
+      // Find Discord IDs for unit and rank if they exist in the akten
+      const akte = akten.find(a => a.dn == dn && a.name.toLowerCase() === name.toLowerCase());
+      const unit = akte?.unit || '';
+      const rank = akte?.rank || '';
+      
+      const unitSetting = settings.units.find(u => u.name === unit);
+      const rankSetting = settings.ranks.find(r => r.name === rank);
+      
+      const unitDisplay = unitSetting?.discordId ? `<@&${unitSetting.discordId}>` : unit;
+      const rankDisplay = rankSetting?.discordId ? `<@&${rankSetting.discordId}>` : rank;
+
       const template = `╔══════════════════╗
 /////////////////////////////////////////////////////////////////////////
 Beobachtung
 Name: ${name || ''}
 DN: ${dn || ''}
+Unit: ${unitDisplay || ''}
+Rang: ${rankDisplay || ''}
 Grund: ${grund || ''}
 /////////////////////////////////////////////////////////////////////////
 <@&1097625910242447422>
@@ -6011,7 +6031,7 @@ Grund: ${grund || ''}
         closeModal('editEmployeeModal');
         updateEmployeeHeader();
         renderEmployeeList();
-        updateTemplates();
+        updateTemplates(); // WICHTIG: Vorlagen aktualisieren!
         showNotification('Mitarbeiterdaten erfolgreich aktualisiert', 'success');
       }
     }
