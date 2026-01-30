@@ -1780,108 +1780,6 @@
       color: var(--gray-light);
     }
 
-    /* Logo Upload - VERBESSERT */
-    .logo-upload-container {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .logo-preview {
-      width: 120px;
-      height: 120px;
-      border-radius: var(--radius-md);
-      background: rgba(255,255,255,.05);
-      border: 2px solid rgba(255,255,255,.1);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-      margin: 0 auto;
-    }
-
-    .logo-preview.has-logo {
-      border-style: solid;
-      background: transparent;
-    }
-
-    .logo-preview-image {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      display: none;
-    }
-
-    .logo-preview-default {
-      text-align: center;
-      color: var(--gray);
-    }
-
-    .logo-preview.has-logo .logo-preview-image {
-      display: block;
-    }
-
-    .logo-preview.has-logo .logo-preview-default {
-      display: none;
-    }
-
-    .logo-upload-btn {
-      padding: 10px 20px;
-      background: var(--primary);
-      color: #fff;
-      border: none;
-      border-radius: var(--radius-md);
-      font-weight: 900;
-      cursor: pointer;
-      transition: var(--transition);
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      font-size: 13px;
-      width: 100%;
-    }
-
-    .logo-upload-btn:hover {
-      background: var(--primary-dark);
-      transform: translateY(-1px);
-    }
-
-    .logo-remove-btn {
-      padding: 8px 16px;
-      background: rgba(239,68,68,.15);
-      color: #fca5a5;
-      border: 1px solid rgba(239,68,68,.25);
-      border-radius: var(--radius-md);
-      font-weight: 900;
-      cursor: pointer;
-      transition: var(--transition);
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      font-size: 12px;
-      width: 100%;
-    }
-
-    .logo-remove-btn:hover {
-      background: rgba(239,68,68,.25);
-    }
-
-    /* Header Logo Container */
-    .logo-container.has-logo {
-      background: transparent;
-      border-color: transparent;
-    }
-
-    .logo-container.has-logo img {
-      display: block;
-    }
-
-    .logo-container.has-logo #logoPlaceholder {
-      display: none;
-    }
-
     /* Soldatengespräch Modal */
     .soldaten-modal {
       display: none;
@@ -3161,9 +3059,6 @@
           <button class="settings-tab" onclick="switchSettingsTab('ankundigungen')">
             <i class="fas fa-bullhorn"></i> Ankündigungen
           </button>
-          <button class="settings-tab" onclick="switchSettingsTab('logo')">
-            <i class="fas fa-image"></i> Logo
-          </button>
         </div>
         
         <!-- Units Tab -->
@@ -3296,29 +3191,6 @@
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Logo Tab -->
-        <div class="settings-tab-content" id="logoTab" style="display:none;">
-          <div class="settings-section">
-            <h3 class="section-title-settings"><i class="fas fa-image"></i> Logo anpassen</h3>
-            <div class="logo-upload-container">
-              <div class="logo-preview" id="logoPreview">
-                <img src="" alt="Logo" class="logo-preview-image" id="logoPreviewImage">
-                <div class="logo-preview-default">
-                  <i class="fas fa-image"></i>
-                  <div style="font-size: 11px; margin-top: 4px; color: var(--gray);">Logo-Vorschau</div>
-                </div>
-              </div>
-              <input type="file" id="logoUpload" accept="image/*" style="display: none;" onchange="handleLogoUpload(event)">
-              <button class="logo-upload-btn" onclick="document.getElementById('logoUpload').click()">
-                <i class="fas fa-upload"></i> Logo hochladen
-              </button>
-              <button class="logo-remove-btn" onclick="removeLogo()">
-                <i class="fas fa-trash"></i> Logo entfernen
-              </button>
             </div>
           </div>
         </div>
@@ -3953,260 +3825,7 @@ Grund:
     document.addEventListener('DOMContentLoaded', function () {
       console.log(`HR App Version ${APP_VERSION} geladen`);
       checkAuthentication();
-      loadLogo();
     });
-
-    // ==================== VERBESSERTE LOGO FUNKTIONEN ====================
-    async function loadLogo() {
-      try {
-        console.log('Lade Logo...');
-        
-        // 1. Versuche aus localStorage zu laden
-        const localLogoUrl = localStorage.getItem('hr_app_logo_url');
-        if (localLogoUrl && localLogoUrl.startsWith('http')) {
-          console.log('Logo aus localStorage gefunden');
-          settings.logoUrl = localLogoUrl;
-          updateLogoDisplay();
-        }
-        
-        // 2. Versuche aus Firebase Storage zu laden
-        try {
-          console.log('Suche Logo in Firebase Storage...');
-          
-          // Versuche verschiedene Dateiformate
-          const formats = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-          let logoFound = false;
-          
-          for (const format of formats) {
-            try {
-              const url = await storage.ref(`hr_logo.${format}`).getDownloadURL();
-              if (url) {
-                console.log(`Logo gefunden: hr_logo.${format}`);
-                settings.logoUrl = url;
-                localStorage.setItem('hr_app_logo_url', url);
-                updateLogoDisplay();
-                logoFound = true;
-                break;
-              }
-            } catch (formatError) {
-              // Datei mit diesem Format nicht gefunden, weiter zum nächsten Format
-              console.log(`Logo nicht als .${format} gefunden`);
-            }
-          }
-          
-          // Wenn keine Datei mit spezifischer Erweiterung gefunden wurde, versuche generisch
-          if (!logoFound) {
-            try {
-              const logoRef = storage.ref('hr_logo');
-              const url = await logoRef.getDownloadURL();
-              if (url) {
-                console.log('Logo gefunden: hr_logo');
-                settings.logoUrl = url;
-                localStorage.setItem('hr_app_logo_url', url);
-                updateLogoDisplay();
-                logoFound = true;
-              }
-            } catch (genericError) {
-              console.log('Kein Logo in Firebase gefunden');
-            }
-          }
-        } catch (storageError) {
-          console.log('Kein Logo in Firebase Storage:', storageError.message);
-        }
-        
-        // 3. Wenn immer noch kein Logo, setze auf default
-        if (!settings.logoUrl) {
-          console.log('Kein Logo gefunden, verwende Default');
-          updateLogoDisplay(); // Zeige Placeholder an
-        }
-        
-      } catch (error) {
-        console.error('Fehler beim Laden des Logos:', error);
-        updateLogoDisplay(); // Zeige Placeholder an
-      }
-    }
-
-    function updateLogoDisplay() {
-      const logoImage = document.getElementById('logoImage');
-      const logoPlaceholder = document.getElementById('logoPlaceholder');
-      const logoContainer = document.getElementById('logoContainer');
-      const logoPreviewImage = document.getElementById('logoPreviewImage');
-      const logoPreview = document.getElementById('logoPreview');
-      
-      console.log('Update Logo Display, URL:', settings.logoUrl ? 'Vorhanden' : 'Nicht vorhanden');
-      
-      if (settings.logoUrl && settings.logoUrl.startsWith('http')) {
-        try {
-          // Header Logo
-          logoImage.src = settings.logoUrl;
-          logoImage.onload = function() {
-            console.log('Header Logo geladen');
-            logoImage.style.display = 'block';
-            logoPlaceholder.style.display = 'none';
-            logoContainer.classList.add('has-logo');
-          };
-          logoImage.onerror = function() {
-            console.error('Header Logo konnte nicht geladen werden');
-            logoImage.style.display = 'none';
-            logoPlaceholder.style.display = 'flex';
-            logoContainer.classList.remove('has-logo');
-          };
-          
-          // Settings Preview
-          logoPreviewImage.src = settings.logoUrl;
-          logoPreviewImage.onload = function() {
-            console.log('Preview Logo geladen');
-            logoPreviewImage.style.display = 'block';
-            logoPreview.classList.add('has-logo');
-          };
-          logoPreviewImage.onerror = function() {
-            console.error('Preview Logo konnte nicht geladen werden');
-            logoPreviewImage.style.display = 'none';
-            logoPreview.classList.remove('has-logo');
-          };
-          
-        } catch (error) {
-          console.error('Fehler beim Setzen des Logos:', error);
-          resetLogoDisplay();
-        }
-      } else {
-        resetLogoDisplay();
-      }
-    }
-
-    function resetLogoDisplay() {
-      const logoImage = document.getElementById('logoImage');
-      const logoPlaceholder = document.getElementById('logoPlaceholder');
-      const logoContainer = document.getElementById('logoContainer');
-      const logoPreviewImage = document.getElementById('logoPreviewImage');
-      const logoPreview = document.getElementById('logoPreview');
-      
-      // Header Logo zurücksetzen
-      logoImage.style.display = 'none';
-      logoPlaceholder.style.display = 'flex';
-      logoContainer.classList.remove('has-logo');
-      
-      // Settings Preview zurücksetzen
-      logoPreviewImage.style.display = 'none';
-      logoPreview.classList.remove('has-logo');
-    }
-
-    async function handleLogoUpload(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-
-      console.log('Logo Upload gestartet:', file.name, file.type, file.size);
-
-      if (!file.type.startsWith('image/')) {
-        showNotification('Nur Bilddateien sind erlaubt (jpg, png, gif, webp)', 'error');
-        return;
-      }
-
-      if (file.size > 5 * 1024 * 1024) {
-        showNotification('Datei ist zu groß (max. 5MB)', 'error');
-        return;
-      }
-
-      try {
-        showNotification('Logo wird hochgeladen...', 'info');
-        
-        // Bestimme Dateiendung
-        const fileExtension = file.name.split('.').pop().toLowerCase();
-        const validExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-        
-        if (!validExtensions.includes(fileExtension)) {
-          showNotification('Ungültiges Dateiformat. Erlaubt: jpg, png, gif, webp', 'error');
-          return;
-        }
-        
-        // Lösche alte Logos
-        await deleteOldLogos();
-        
-        // Lade neues Logo hoch
-        const storageRef = storage.ref(`hr_logo.${fileExtension}`);
-        
-        // Zeige Upload-Fortschritt
-        const uploadTask = storageRef.put(file);
-        
-        uploadTask.on('state_changed',
-          (snapshot) => {
-            // Optional: Fortschrittsanzeige hier implementieren
-            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-            console.log('Upload ist ' + progress + '% fertig');
-          },
-          (error) => {
-            console.error('Upload Fehler:', error);
-            showNotification('Fehler beim Hochladen: ' + error.message, 'error');
-          },
-          async () => {
-            try {
-              // Upload erfolgreich
-              const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
-              
-              console.log('Logo erfolgreich hochgeladen:', downloadURL);
-              
-              settings.logoUrl = downloadURL;
-              localStorage.setItem('hr_app_logo_url', downloadURL);
-              updateLogoDisplay();
-              
-              showNotification('Logo erfolgreich hochgeladen', 'success');
-            } catch (urlError) {
-              console.error('Fehler beim Abrufen der Download-URL:', urlError);
-              showNotification('Logo hochgeladen, aber URL konnte nicht abgerufen werden', 'warning');
-            }
-          }
-        );
-        
-      } catch (error) {
-        console.error('Fehler beim Hochladen des Logos:', error);
-        showNotification('Fehler beim Hochladen: ' + error.message, 'error');
-      }
-    }
-
-    async function deleteOldLogos() {
-      const formats = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-      
-      for (const format of formats) {
-        try {
-          const oldLogoRef = storage.ref(`hr_logo.${format}`);
-          await oldLogoRef.delete();
-          console.log(`Altes Logo hr_logo.${format} gelöscht`);
-        } catch (deleteError) {
-          // Datei existiert nicht - das ist in Ordnung
-          console.log(`Kein altes Logo hr_logo.${format} zum Löschen gefunden`);
-        }
-      }
-      
-      // Versuche auch die generische Referenz zu löschen
-      try {
-        const genericRef = storage.ref('hr_logo');
-        await genericRef.delete();
-        console.log('Altes Logo hr_logo gelöscht');
-      } catch (genericError) {
-        console.log('Kein generisches Logo hr_logo gefunden');
-      }
-    }
-
-    async function removeLogo() {
-      if (!confirm('Logo wirklich entfernen?')) return;
-
-      try {
-        // Lösche aus Firebase Storage
-        await deleteOldLogos();
-        
-        // Lösche aus localStorage
-        localStorage.removeItem('hr_app_logo_url');
-        
-        // Reset State
-        settings.logoUrl = '';
-        updateLogoDisplay();
-        
-        showNotification('Logo entfernt', 'success');
-      } catch (error) {
-        console.error('Fehler beim Entfernen des Logos:', error);
-        showNotification('Fehler beim Entfernen des Logos', 'error');
-      }
-    }
 
     // ==================== AUTHENTIFIZIERUNG ====================
     function checkAuthentication() {
@@ -5110,9 +4729,6 @@ Grund:
       } else if (tabName === 'ankundigungen') {
         document.querySelector('.settings-tab:nth-child(3)').classList.add('active');
         document.getElementById('ankundigungenTab').style.display = 'block';
-      } else if (tabName === 'logo') {
-        document.querySelector('.settings-tab:nth-child(4)').classList.add('active');
-        document.getElementById('logoTab').style.display = 'block';
       }
     }
 
@@ -5195,8 +4811,6 @@ Grund:
         `;
         rankList.appendChild(rankItem);
       });
-
-      updateLogoDisplay();
     }
 
     function addNewUnit() {
