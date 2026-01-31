@@ -1114,15 +1114,21 @@
       background: rgba(239,68,68,.25);
     }
 
-    /* KORRIGIERT: Scroll-Container für Besprechungsformular */
-    #ankundigungenBesprechungTab {
+    /* Ankündigungen Tab Content */
+    .ankundigungen-tab-content {
       flex: 1;
       overflow: hidden;
       display: flex;
       flex-direction: column;
       min-height: 0;
+      position: relative;
     }
 
+    .ankundigungen-tab-content.active {
+      display: flex;
+    }
+
+    /* NEU: Verbesserter Scroll-Container für Besprechungsformular */
     #ankundigungenBesprechungTab .ankundigungen-form-container {
       flex: 1;
       overflow: hidden;
@@ -1134,9 +1140,9 @@
     #ankundigungenBesprechungTab .ankundigungen-form-scroll {
       flex: 1;
       overflow-y: auto;
-      padding: 0 8px 20px 0;
+      padding-right: 8px;
+      margin-bottom: 16px;
       min-height: 0;
-      max-height: 400px; /* Maximale Höhe festlegen */
     }
 
     #ankundigungenBesprechungTab .ankundigungen-form-scroll::-webkit-scrollbar {
@@ -1156,7 +1162,7 @@
     /* Sicherstellen, dass der Button-Container sichtbar bleibt */
     #ankundigungenBesprechungTab .settings-actions {
       flex-shrink: 0;
-      margin-top: 20px;
+      margin-top: auto;
       padding-top: 20px;
       border-top: 1px solid rgba(255,255,255,.1);
     }
@@ -4619,9 +4625,9 @@ Grund:
         
         // Nach dem Tab-Wechsel den Scrollbereich fokusieren
         setTimeout(() => {
-          const formScroll = document.querySelector('#ankundigungenBesprechungTab .ankundigungen-form-scroll');
-          if (formScroll) {
-            formScroll.scrollTop = 0;
+          const formContainer = document.querySelector('#ankundigungenBesprechungTab .ankundigungen-form-scroll');
+          if (formContainer) {
+            formContainer.scrollTop = 0;
           }
         }, 100);
       } else if (tabName === 'manage-ankundigungen') {
