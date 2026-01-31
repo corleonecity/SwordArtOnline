@@ -1114,20 +1114,6 @@
       background: rgba(239,68,68,.25);
     }
 
-    /* Ankündigungen Tab Content */
-    .ankundigungen-tab-content {
-      flex: 1;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      min-height: 0;
-      position: relative;
-    }
-
-    .ankundigungen-tab-content.active {
-      display: flex;
-    }
-
     /* KORRIGIERT: Scroll-Container für Besprechungsformular */
     #ankundigungenBesprechungTab {
       flex: 1;
@@ -1148,9 +1134,9 @@
     #ankundigungenBesprechungTab .ankundigungen-form-scroll {
       flex: 1;
       overflow-y: auto;
-      padding-right: 8px;
-      padding-bottom: 20px;
+      padding: 0 8px 20px 0;
       min-height: 0;
+      max-height: 400px; /* Maximale Höhe festlegen */
     }
 
     #ankundigungenBesprechungTab .ankundigungen-form-scroll::-webkit-scrollbar {
@@ -1170,7 +1156,7 @@
     /* Sicherstellen, dass der Button-Container sichtbar bleibt */
     #ankundigungenBesprechungTab .settings-actions {
       flex-shrink: 0;
-      margin-top: auto;
+      margin-top: 20px;
       padding-top: 20px;
       border-top: 1px solid rgba(255,255,255,.1);
     }
