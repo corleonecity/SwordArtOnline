@@ -940,7 +940,7 @@
       color: var(--gray-light);
     }
 
-    /* Settings - Manage Ankündigungen/Besprechungen Container - NEU MIT SCROLL */
+    /* Settings - Manage Ankündigungen/Besprechungen Container - KORRIGIERT MIT SCROLL */
     .manage-items-container {
       flex: 1;
       overflow: hidden;
@@ -948,6 +948,9 @@
       flex-direction: column;
       min-height: 0;
       margin-top: 16px;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: var(--radius-md);
+      background: rgba(0,0,0,.1);
     }
 
     .manage-items-list-container {
@@ -956,16 +959,18 @@
       display: flex;
       flex-direction: column;
       min-height: 0;
+      position: relative;
     }
 
     .manage-items-list {
       flex: 1;
       overflow-y: auto;
-      padding-right: 8px;
+      padding: 12px;
       display: flex;
       flex-direction: column;
       gap: 12px;
       min-height: 0;
+      max-height: 400px;
     }
 
     .manage-items-list::-webkit-scrollbar {
@@ -980,6 +985,15 @@
     .manage-items-list::-webkit-scrollbar-thumb {
       background: #8b5cf6;
       border-radius: 4px;
+    }
+
+    .manage-items-list::-webkit-scrollbar-thumb:hover {
+      background: #7c3aed;
+    }
+
+    .manage-items-list {
+      scrollbar-width: thin;
+      scrollbar-color: #8b5cf6 rgba(255,255,255,.05);
     }
 
     .manage-item {
@@ -1098,6 +1112,19 @@
 
     .manage-item-btn-delete:hover {
       background: rgba(239,68,68,.25);
+    }
+
+    /* Ankündigungen Tab Content - KORRIGIERT */
+    .ankundigungen-tab-content {
+      flex: 1;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 400px;
+    }
+
+    .ankundigungen-tab-content.active {
+      display: flex;
     }
 
     /* Edit Ankündigung/Besprechung Modal */
@@ -5750,7 +5777,7 @@ Grund: ${grund || ''}
           lastUpdated: akte.lastUpdated
         });
 
-        showNotification('Beobachtung zur Akte hinzugefügt', 'success');
+        showNotification('Beobachtung zur Akte hinzufügt', 'success');
         document.getElementById('beobachtungName').value = '';
         document.getElementById('beobachtungDN').value = '';
         document.getElementById('beobachtungGrund').value = '';
