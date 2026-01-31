@@ -1114,7 +1114,7 @@
       background: rgba(239,68,68,.25);
     }
 
-    /* Ankündigungen Tab Content - MIT SCROLL FIX FÜR NEUE BESPRECHUNG */
+    /* Ankündigungen Tab Content */
     .ankundigungen-tab-content {
       flex: 1;
       overflow: hidden;
@@ -1128,8 +1128,8 @@
       display: flex;
     }
 
-    /* Neue Besprechung Tab Scrollbar Fix */
-    #ankundigungenBesprechungTab {
+    /* NEU: Verbesserter Scroll-Container für Besprechungsformular */
+    #ankundigungenBesprechungTab .ankundigungen-form-container {
       flex: 1;
       overflow: hidden;
       display: flex;
@@ -1137,29 +1137,34 @@
       min-height: 0;
     }
 
-    #ankundigungenBesprechungTab .ankundigungen-form-grid {
+    #ankundigungenBesprechungTab .ankundigungen-form-scroll {
       flex: 1;
       overflow-y: auto;
       padding-right: 8px;
       margin-bottom: 16px;
       min-height: 0;
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 12px;
     }
 
-    #ankundigungenBesprechungTab .ankundigungen-form-grid::-webkit-scrollbar {
+    #ankundigungenBesprechungTab .ankundigungen-form-scroll::-webkit-scrollbar {
       width: 8px;
     }
 
-    #ankundigungenBesprechungTab .ankundigungen-form-grid::-webkit-scrollbar-track {
+    #ankundigungenBesprechungTab .ankundigungen-form-scroll::-webkit-scrollbar-track {
       background: rgba(255,255,255,.05);
       border-radius: 4px;
     }
 
-    #ankundigungenBesprechungTab .ankundigungen-form-grid::-webkit-scrollbar-thumb {
+    #ankundigungenBesprechungTab .ankundigungen-form-scroll::-webkit-scrollbar-thumb {
       background: #8b5cf6;
       border-radius: 4px;
+    }
+
+    /* Sicherstellen, dass der Button-Container sichtbar bleibt */
+    #ankundigungenBesprechungTab .settings-actions {
+      flex-shrink: 0;
+      margin-top: auto;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255,255,255,.1);
     }
 
     /* Edit Ankündigung/Besprechung Modal */
@@ -2096,7 +2101,6 @@
       display: grid;
       grid-template-columns: 1fr;
       gap: 12px;
-      margin-bottom: 20px;
     }
 
     .empty-ankundigungen {
@@ -3500,39 +3504,43 @@
               </div>
             </div>
             
-            <!-- Neue Besprechung - KORRIGIERT MIT SCROLLBAR -->
+            <!-- NEUE BESPRECHUNG - KORRIGIERTE VERSION MIT SCROLL -->
             <div class="ankundigungen-tab-content" id="ankundigungenBesprechungTab" style="display:none;">
-              <div class="ankundigungen-form-grid">
-                <div class="settings-form-group">
-                  <label class="settings-label">Thema *</label>
-                  <input type="text" class="settings-input" id="besprechungThema" placeholder="Thema der Besprechung">
+              <div class="ankundigungen-form-container">
+                <div class="ankundigungen-form-scroll">
+                  <div class="ankundigungen-form-grid">
+                    <div class="settings-form-group">
+                      <label class="settings-label">Thema *</label>
+                      <input type="text" class="settings-input" id="besprechungThema" placeholder="Thema der Besprechung">
+                    </div>
+                    <div class="settings-form-group">
+                      <label class="settings-label">Datum *</label>
+                      <input type="date" class="settings-input" id="besprechungDate" value="">
+                    </div>
+                    <div class="settings-form-group">
+                      <label class="settings-label">Uhrzeit *</label>
+                      <input type="time" class="settings-input" id="besprechungTime" value="">
+                    </div>
+                    <div class="settings-form-group">
+                      <label class="settings-label">Ort</label>
+                      <input type="text" class="settings-input" id="besprechungOrt" placeholder="Ort der Besprechung">
+                    </div>
+                    <div class="settings-form-group">
+                      <label class="settings-label">Inhalt *</label>
+                      <textarea class="settings-input" id="besprechungContent" 
+                                placeholder="Inhalt der Besprechung..." rows="6"></textarea>
+                    </div>
+                  </div>
                 </div>
-                <div class="settings-form-group">
-                  <label class="settings-label">Datum *</label>
-                  <input type="date" class="settings-input" id="besprechungDate" value="">
+                <div class="settings-actions">
+                  <button class="btn btn-primary" onclick="saveBesprechung()">
+                    <i class="fas fa-save"></i> Besprechung speichern
+                  </button>
                 </div>
-                <div class="settings-form-group">
-                  <label class="settings-label">Uhrzeit *</label>
-                  <input type="time" class="settings-input" id="besprechungTime" value="">
-                </div>
-                <div class="settings-form-group">
-                  <label class="settings-label">Ort</label>
-                  <input type="text" class="settings-input" id="besprechungOrt" placeholder="Ort der Besprechung">
-                </div>
-                <div class="settings-form-group">
-                  <label class="settings-label">Inhalt *</label>
-                  <textarea class="settings-input" id="besprechungContent" 
-                            placeholder="Inhalt der Besprechung..." rows="6"></textarea>
-                </div>
-              </div>
-              <div class="settings-actions">
-                <button class="btn btn-primary" onclick="saveBesprechung()">
-                  <i class="fas fa-save"></i> Besprechung speichern
-                </button>
               </div>
             </div>
             
-            <!-- Ankündigungen verwalten - MIT SCROLL -->
+            <!-- Ankündigungen verwalten -->
             <div class="ankundigungen-tab-content" id="ankundigungenManageAnkundigungenTab" style="display:none;">
               <div class="settings-form-group">
                 <label class="settings-label">Ankündigungen durchsuchen</label>
@@ -3552,7 +3560,7 @@
               </div>
             </div>
             
-            <!-- Besprechungen verwalten - MIT SCROLL -->
+            <!-- Besprechungen verwalten -->
             <div class="ankundigungen-tab-content" id="ankundigungenManageBesprechungenTab" style="display:none;">
               <div class="settings-form-group">
                 <label class="settings-label">Besprechungen durchsuchen</label>
@@ -4617,9 +4625,9 @@ Grund:
         
         // Nach dem Tab-Wechsel den Scrollbereich fokusieren
         setTimeout(() => {
-          const formGrid = document.querySelector('#ankundigungenBesprechungTab .ankundigungen-form-grid');
-          if (formGrid) {
-            formGrid.scrollTop = 0;
+          const formContainer = document.querySelector('#ankundigungenBesprechungTab .ankundigungen-form-scroll');
+          if (formContainer) {
+            formContainer.scrollTop = 0;
           }
         }, 100);
       } else if (tabName === 'manage-ankundigungen') {
