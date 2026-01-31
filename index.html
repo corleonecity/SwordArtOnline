@@ -1128,7 +1128,15 @@
       display: flex;
     }
 
-    /* NEU: Verbesserter Scroll-Container für Besprechungsformular */
+    /* KORRIGIERT: Scroll-Container für Besprechungsformular */
+    #ankundigungenBesprechungTab {
+      flex: 1;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
     #ankundigungenBesprechungTab .ankundigungen-form-container {
       flex: 1;
       overflow: hidden;
@@ -1141,7 +1149,7 @@
       flex: 1;
       overflow-y: auto;
       padding-right: 8px;
-      margin-bottom: 16px;
+      padding-bottom: 20px;
       min-height: 0;
     }
 
@@ -4625,9 +4633,9 @@ Grund:
         
         // Nach dem Tab-Wechsel den Scrollbereich fokusieren
         setTimeout(() => {
-          const formContainer = document.querySelector('#ankundigungenBesprechungTab .ankundigungen-form-scroll');
-          if (formContainer) {
-            formContainer.scrollTop = 0;
+          const formScroll = document.querySelector('#ankundigungenBesprechungTab .ankundigungen-form-scroll');
+          if (formScroll) {
+            formScroll.scrollTop = 0;
           }
         }, 100);
       } else if (tabName === 'manage-ankundigungen') {
