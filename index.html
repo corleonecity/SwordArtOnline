@@ -1128,8 +1128,8 @@
       display: flex;
     }
 
-    /* NEU: Verbesserter Scroll-Container für Besprechungsformular */
-    #ankundigungenBesprechungTab .ankundigungen-form-container {
+    /* NEU: Scroll-Container für Besprechungsformular (KORRIGIERT) */
+    .besprechung-form-container {
       flex: 1;
       overflow: hidden;
       display: flex;
@@ -1137,32 +1137,31 @@
       min-height: 0;
     }
 
-    #ankundigungenBesprechungTab .ankundigungen-form-scroll {
+    .besprechung-form-scroll {
       flex: 1;
       overflow-y: auto;
       padding-right: 8px;
-      margin-bottom: 16px;
       min-height: 0;
+      margin-bottom: 16px;
     }
 
-    #ankundigungenBesprechungTab .ankundigungen-form-scroll::-webkit-scrollbar {
+    .besprechung-form-scroll::-webkit-scrollbar {
       width: 8px;
     }
 
-    #ankundigungenBesprechungTab .ankundigungen-form-scroll::-webkit-scrollbar-track {
+    .besprechung-form-scroll::-webkit-scrollbar-track {
       background: rgba(255,255,255,.05);
       border-radius: 4px;
     }
 
-    #ankundigungenBesprechungTab .ankundigungen-form-scroll::-webkit-scrollbar-thumb {
+    .besprechung-form-scroll::-webkit-scrollbar-thumb {
       background: #8b5cf6;
       border-radius: 4px;
     }
 
     /* Sicherstellen, dass der Button-Container sichtbar bleibt */
-    #ankundigungenBesprechungTab .settings-actions {
+    .settings-actions {
       flex-shrink: 0;
-      margin-top: auto;
       padding-top: 20px;
       border-top: 1px solid rgba(255,255,255,.1);
     }
@@ -3485,7 +3484,7 @@
             </div>
             
             <!-- Neue Ankündigung -->
-            <div class="ankundigungen-tab-content" id="ankundigungenNewTab">
+            <div class="ankundigungen-tab-content active" id="ankundigungenNewTab">
               <div class="ankundigungen-form-grid">
                 <div class="settings-form-group">
                   <label class="settings-label">Titel</label>
@@ -3506,8 +3505,8 @@
             
             <!-- NEUE BESPRECHUNG - KORRIGIERTE VERSION MIT SCROLL -->
             <div class="ankundigungen-tab-content" id="ankundigungenBesprechungTab" style="display:none;">
-              <div class="ankundigungen-form-container">
-                <div class="ankundigungen-form-scroll">
+              <div class="besprechung-form-container">
+                <div class="besprechung-form-scroll">
                   <div class="ankundigungen-form-grid">
                     <div class="settings-form-group">
                       <label class="settings-label">Thema *</label>
@@ -3613,7 +3612,7 @@
         </div>
         
         <!-- Neues Gespräch Tab -->
-        <div class="soldaten-tab-content" id="soldatenNewTab">
+        <div class="soldaten-tab-content active" id="soldatenNewTab">
           <div class="soldaten-form-grid">
             <div class="soldaten-form-group">
               <label class="soldaten-label">Name *</label>
@@ -3739,7 +3738,7 @@ Sonstiges:
         </div>
         
         <!-- Neue Akte erstellen Tab -->
-        <div class="beobachtung-tab-content" id="beobachtungNewTab">
+        <div class="beobachtung-tab-content active" id="beobachtungNewTab">
           <div class="akte-form-grid">
             <div class="akte-form-group">
               <label class="akte-label">Name *</label>
@@ -4625,7 +4624,7 @@ Grund:
         
         // Nach dem Tab-Wechsel den Scrollbereich fokusieren
         setTimeout(() => {
-          const formContainer = document.querySelector('#ankundigungenBesprechungTab .ankundigungen-form-scroll');
+          const formContainer = document.querySelector('#ankundigungenBesprechungTab .besprechung-form-scroll');
           if (formContainer) {
             formContainer.scrollTop = 0;
           }
