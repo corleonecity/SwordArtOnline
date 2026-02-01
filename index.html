@@ -1159,6 +1159,31 @@
       border-radius: 4px;
     }
 
+    /* NEU: Verbessertes Layout für Besprechungsformular */
+    .besprechung-form-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .besprechung-form-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .besprechung-form-details-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+    }
+
+    @media (max-width: 768px) {
+      .besprechung-form-details-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
     /* Edit Ankündigung/Besprechung Modal */
     .edit-item-modal {
       display: none;
@@ -3496,31 +3521,39 @@
               </div>
             </div>
             
-            <!-- NEUE BESPRECHUNG - MIT SCROLLBAR -->
+            <!-- NEUE BESPRECHUNG - MIT VERBESSERTEM LAYOUT -->
             <div class="ankundigungen-tab-content" id="ankundigungenBesprechungTab" style="display:none;">
               <div class="besprechung-form-scroll-container">
                 <div class="besprechung-form-scroll">
-                  <div class="ankundigungen-form-grid">
-                    <div class="settings-form-group">
-                      <label class="settings-label">Thema *</label>
-                      <input type="text" class="settings-input" id="besprechungThema" placeholder="Thema der Besprechung">
+                  <div class="besprechung-form-grid">
+                    <div class="besprechung-form-row">
+                      <div class="settings-form-group">
+                        <label class="settings-label">Thema *</label>
+                        <input type="text" class="settings-input" id="besprechungThema" placeholder="Thema der Besprechung">
+                      </div>
                     </div>
-                    <div class="settings-form-group">
-                      <label class="settings-label">Datum *</label>
-                      <input type="date" class="settings-input" id="besprechungDate" value="">
+                    
+                    <div class="besprechung-form-details-row">
+                      <div class="settings-form-group">
+                        <label class="settings-label">Datum *</label>
+                        <input type="date" class="settings-input" id="besprechungDate" value="">
+                      </div>
+                      <div class="settings-form-group">
+                        <label class="settings-label">Uhrzeit *</label>
+                        <input type="time" class="settings-input" id="besprechungTime" value="">
+                      </div>
+                      <div class="settings-form-group">
+                        <label class="settings-label">Ort</label>
+                        <input type="text" class="settings-input" id="besprechungOrt" placeholder="Ort der Besprechung">
+                      </div>
                     </div>
-                    <div class="settings-form-group">
-                      <label class="settings-label">Uhrzeit *</label>
-                      <input type="time" class="settings-input" id="besprechungTime" value="">
-                    </div>
-                    <div class="settings-form-group">
-                      <label class="settings-label">Ort</label>
-                      <input type="text" class="settings-input" id="besprechungOrt" placeholder="Ort der Besprechung">
-                    </div>
-                    <div class="settings-form-group">
-                      <label class="settings-label">Inhalt *</label>
-                      <textarea class="settings-input" id="besprechungContent" 
-                                placeholder="Inhalt der Besprechung..." rows="8"></textarea>
+                    
+                    <div class="besprechung-form-row">
+                      <div class="settings-form-group">
+                        <label class="settings-label">Inhalt *</label>
+                        <textarea class="settings-input" id="besprechungContent" 
+                                  placeholder="Inhalt der Besprechung..." rows="8"></textarea>
+                      </div>
                     </div>
                   </div>
                 </div>
