@@ -639,7 +639,7 @@
       background: rgba(0,0,0,.2);
       border-radius: var(--radius-sm);
       border-left: 2px solid #8b5cf6;
-      max-height: 200px; /* Vergrößert von 100px auf 200px */
+      max-height: 200px;
       overflow-y: auto;
       white-space: pre-line;
     }
@@ -893,7 +893,7 @@
       background: rgba(0,0,0,.2);
       border-radius: var(--radius-sm);
       border-left: 2px solid #8b5cf6;
-      max-height: 200px; /* Vergrößert von 100px auf 200px */
+      max-height: 200px;
       overflow-y: auto;
       white-space: pre-line;
     }
@@ -1128,8 +1128,8 @@
       display: flex;
     }
 
-    /* NEU: Scroll-Container für Besprechungsformular (KORRIGIERT) */
-    .besprechung-form-container {
+    /* NEU: Scroll-Container für Besprechungsformular */
+    .besprechung-form-scroll-container {
       flex: 1;
       overflow: hidden;
       display: flex;
@@ -1141,8 +1141,8 @@
       flex: 1;
       overflow-y: auto;
       padding-right: 8px;
-      min-height: 0;
       margin-bottom: 16px;
+      min-height: 0;
     }
 
     .besprechung-form-scroll::-webkit-scrollbar {
@@ -1157,13 +1157,6 @@
     .besprechung-form-scroll::-webkit-scrollbar-thumb {
       background: #8b5cf6;
       border-radius: 4px;
-    }
-
-    /* Sicherstellen, dass der Button-Container sichtbar bleibt */
-    .settings-actions {
-      flex-shrink: 0;
-      padding-top: 20px;
-      border-top: 1px solid rgba(255,255,255,.1);
     }
 
     /* Edit Ankündigung/Besprechung Modal */
@@ -3484,7 +3477,7 @@
             </div>
             
             <!-- Neue Ankündigung -->
-            <div class="ankundigungen-tab-content active" id="ankundigungenNewTab">
+            <div class="ankundigungen-tab-content" id="ankundigungenNewTab">
               <div class="ankundigungen-form-grid">
                 <div class="settings-form-group">
                   <label class="settings-label">Titel</label>
@@ -3503,9 +3496,9 @@
               </div>
             </div>
             
-            <!-- NEUE BESPRECHUNG - KORRIGIERTE VERSION MIT SCROLL -->
+            <!-- NEUE BESPRECHUNG - MIT SCROLLBAR -->
             <div class="ankundigungen-tab-content" id="ankundigungenBesprechungTab" style="display:none;">
-              <div class="besprechung-form-container">
+              <div class="besprechung-form-scroll-container">
                 <div class="besprechung-form-scroll">
                   <div class="ankundigungen-form-grid">
                     <div class="settings-form-group">
@@ -3527,7 +3520,7 @@
                     <div class="settings-form-group">
                       <label class="settings-label">Inhalt *</label>
                       <textarea class="settings-input" id="besprechungContent" 
-                                placeholder="Inhalt der Besprechung..." rows="6"></textarea>
+                                placeholder="Inhalt der Besprechung..." rows="8"></textarea>
                     </div>
                   </div>
                 </div>
@@ -3612,7 +3605,7 @@
         </div>
         
         <!-- Neues Gespräch Tab -->
-        <div class="soldaten-tab-content active" id="soldatenNewTab">
+        <div class="soldaten-tab-content" id="soldatenNewTab">
           <div class="soldaten-form-grid">
             <div class="soldaten-form-group">
               <label class="soldaten-label">Name *</label>
@@ -3738,7 +3731,7 @@ Sonstiges:
         </div>
         
         <!-- Neue Akte erstellen Tab -->
-        <div class="beobachtung-tab-content active" id="beobachtungNewTab">
+        <div class="beobachtung-tab-content" id="beobachtungNewTab">
           <div class="akte-form-grid">
             <div class="akte-form-group">
               <label class="akte-label">Name *</label>
@@ -4624,7 +4617,7 @@ Grund:
         
         // Nach dem Tab-Wechsel den Scrollbereich fokusieren
         setTimeout(() => {
-          const formContainer = document.querySelector('#ankundigungenBesprechungTab .besprechung-form-scroll');
+          const formContainer = document.querySelector('.besprechung-form-scroll');
           if (formContainer) {
             formContainer.scrollTop = 0;
           }
