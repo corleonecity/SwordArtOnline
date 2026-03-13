@@ -4297,47 +4297,42 @@ Grund:
       }
     }
 
-    async function checkAuthorization(user) {
-      try {
-        const response = await fetch(`${CLOUDFLARE_WORKER_URL}/authorize`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ discordId: user.id })
-        });
+   async function checkAuthorization(user) {
+  // DIREKTE AUTORISIERUNG - Liste der erlaubten User-IDs
+  const ALLOWED_USERS = [
+    '706946131459964930', // Lisa La Rosa Morales
+    '325642637954646016', // Sergio La Rosa Morales
+    '917426398120005653', // Colin Ehrlich
+    '750837871702704209', // Max Fiart
+    '478615566496563221', // Torben Blake
+    '939533269341438052', // Nick Ivanov
+    '1189349976862634045' // Renyu Navarro
+  ];
 
-        if (!response.ok) throw new Error('Authorization failed');
+  // Prüfen ob die Discord-ID in der Liste ist
+  const isAuthorized = ALLOWED_USERS.includes(user.id);
 
-        const data = await response.json();
+  if (isAuthorized) {
+    // Benutzer ist autorisiert
+    currentUser = {
+      id: user.id,
+      username: user.username,
+      global_name: user.global_name,
+      avatar: user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : 'https://cdn.discordapp.com/embed/avatars/0.png'
+    };
 
-        if (data.authorized) {
-          // Benutzer ist autorisiert
-          currentUser = {
-            id: user.id,
-            username: user.username,
-            global_name: user.global_name,
-            avatar: user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : 'https://cdn.discordapp.com/embed/avatars/0.png'
-          };
+    localStorage.setItem('discord_user', JSON.stringify(currentUser));
+    localStorage.setItem('discord_login_timestamp', Date.now());
 
-          localStorage.setItem('discord_user', JSON.stringify(currentUser));
-          localStorage.setItem('discord_login_timestamp', Date.now());
-          isAuthenticated = true;
-
-          document.getElementById('discordLoginModal').style.display = 'none';
-          document.getElementById('discordLoginLoading').classList.remove('show');
-          showUserInfo();
-          initializeApp();
-        } else {
-          showLoginError('Zugriff verweigert. Sie sind nicht autorisiert.');
-          resetLoginButton();
-        }
-      } catch (error) {
-        console.error('Authorization error:', error);
-        showLoginError('Fehler bei der Autorisierung');
-        resetLoginButton();
-      }
-    }
+    document.getElementById('discordLoginModal').style.display = 'none';
+    document.getElementById('discordLoginLoading').classList.remove('show');
+    showUserInfo();
+    initializeApp();
+  } else {
+    showLoginError('Zugriff verweigert. Sie sind nicht autorisiert.');
+    resetLoginButton();
+  }
+}
 
     function showUserInfo() {
       if (!currentUser) return;
