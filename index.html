@@ -199,6 +199,8 @@
       background: rgba(255,255,255,.05);
       border: 1px solid rgba(255,255,255,.08);
       flex-shrink: 0;
+      cursor: default;
+      pointer-events: none;
     }
     .logo-container img {
       width: 100%;
@@ -3983,7 +3985,7 @@ Grund:
       <div class="header-content">
         <div class="brand">
           <div class="logo-container" id="logoContainer">
-            <img src="" alt="Logo">
+            <img src="https://i.ibb.co/HLjKS2Yz/US-Army-Civilian-Human-Resources-Agency-seal.png" alt="US-Army Civilian Human Resources Agency seal">
           </div>
           <div class="brand-text">
             <h1>Human Resources <span class="header-icons">
@@ -4316,6 +4318,9 @@ Grund:
     ];
 
     let currentUser = null;
+    let accessCheckInterval = null;
+    const TOKEN_VALIDITY_MINUTES = 10; // Token nur 10 Minuten gültig
+    const ACCESS_CHECK_INTERVAL = 30000; // Alle 30 Sekunden prüfen
 
     // ==================== DISCORD LOGIN FUNKTIONEN ====================
     function discordLogin() {
@@ -4326,6 +4331,13 @@ Grund:
       localStorage.removeItem('discord_token');
       localStorage.removeItem('discord_user');
       localStorage.removeItem('discord_expires');
+      localStorage.removeItem('discord_login_timestamp');
+      
+      if (accessCheckInterval) {
+        clearInterval(accessCheckInterval);
+        accessCheckInterval = null;
+      }
+      
       document.getElementById('loginScreen').classList.remove('hidden');
       document.getElementById('appContainer').style.display = 'none';
       window.location.hash = '';
@@ -4342,8 +4354,10 @@ Grund:
 
       if (accessToken) {
         localStorage.setItem('discord_token', accessToken);
-        const expiresAt = Date.now() + (parseInt(expiresIn) * 1000);
+        // Explizit auf 10 Minuten setzen für regelmäßige Relogins
+        const expiresAt = Date.now() + (TOKEN_VALIDITY_MINUTES * 60 * 1000);
         localStorage.setItem('discord_expires', expiresAt);
+        localStorage.setItem('discord_login_timestamp', Date.now());
         window.location.hash = '';
         return true;
       }
@@ -4381,9 +4395,38 @@ Grund:
         localStorage.removeItem('discord_token');
         localStorage.removeItem('discord_user');
         localStorage.removeItem('discord_expires');
+        localStorage.removeItem('discord_login_timestamp');
         return false;
       }
       
+      return true;
+    }
+
+    // Regelmäßiger Access-Check
+    async function checkUserAccess() {
+      if (!checkTokenValidity()) {
+        console.log('Token abgelaufen, logge aus');
+        showNotification('Sitzung abgelaufen. Bitte erneut anmelden.', 'warning');
+        logout();
+        return false;
+      }
+
+      const token = localStorage.getItem('discord_token');
+      const user = await fetchDiscordUser(token);
+      
+      if (!user) {
+        console.log('Kein gültiger User, logge aus');
+        logout();
+        return false;
+      }
+
+      if (!ALLOWED_USERS.includes(user.id)) {
+        console.log('User nicht mehr berechtigt, logge aus');
+        showNotification('Zugriff entfernt. Du hast keine Berechtigung mehr.', 'error');
+        logout();
+        return false;
+      }
+
       return true;
     }
 
@@ -4442,6 +4485,12 @@ Grund:
       updateUserProfile(user);
       loginScreen.classList.add('hidden');
       appContainer.style.display = 'grid';
+      
+      // Regelmäßigen Access-Check starten
+      if (accessCheckInterval) {
+        clearInterval(accessCheckInterval);
+      }
+      accessCheckInterval = setInterval(checkUserAccess, ACCESS_CHECK_INTERVAL);
       
       // App initialisieren
       initializeApp();
