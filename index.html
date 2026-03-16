@@ -833,13 +833,14 @@
     }
     .settings-password-error.show { display: block; }
 
-    /* -------------------- MODALS (verkleinert) -------------------- */
+    /* -------------------- MODALS -------------------- */
     .ankundigungen-modal,
     .besprechungen-modal,
     .soldaten-modal,
     .beobachtung-akten-modal,
     .settings-modal,
-    .edit-item-modal {
+    .edit-item-modal,
+    .modal-overlay {
       display: none;
       position: fixed;
       inset: 0;
@@ -856,7 +857,8 @@
     .soldaten-modal.active,
     .beobachtung-akten-modal.active,
     .settings-modal.active,
-    .edit-item-modal.active {
+    .edit-item-modal.active,
+    .modal-overlay.active {
       display: flex;
     }
 
@@ -865,7 +867,8 @@
     .soldaten-content,
     .beobachtung-akten-content,
     .settings-content,
-    .edit-item-content {
+    .edit-item-content,
+    .modal {
       background: var(--bg-card);
       border-radius: var(--radius-lg);
       padding: 20px;
@@ -879,6 +882,7 @@
       overflow: hidden;
     }
 
+    .modal { max-width: 500px; }
     .edit-item-content { max-width: 500px; }
 
     .ankundigungen-header,
@@ -886,7 +890,8 @@
     .soldaten-header,
     .beobachtung-akten-header,
     .settings-header,
-    .edit-item-header {
+    .edit-item-header,
+    .modal-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -901,7 +906,8 @@
     .soldaten-title,
     .beobachtung-akten-title,
     .settings-title,
-    .edit-item-title {
+    .edit-item-title,
+    .modal-title {
       font-size: 18px;
       font-weight: 800;
       color: #fff;
@@ -915,7 +921,8 @@
     .soldaten-close,
     .beobachtung-akten-close,
     .settings-close,
-    .edit-item-close {
+    .edit-item-close,
+    .modal-close {
       background: rgba(255,255,255,0.1);
       border: none;
       color: #fff;
@@ -934,7 +941,8 @@
     .soldaten-close:hover,
     .beobachtung-akten-close:hover,
     .settings-close:hover,
-    .edit-item-close:hover {
+    .edit-item-close:hover,
+    .modal-close:hover {
       background: var(--accent-danger);
     }
 
@@ -1274,7 +1282,8 @@
     .empty-ankundigungen,
     .empty-besprechungen,
     .empty-soldaten,
-    .empty-beobachtungen {
+    .empty-beobachtungen,
+    .empty-state {
       text-align: center;
       padding: 40px 20px;
       color: var(--text-muted);
@@ -1282,7 +1291,8 @@
     .empty-ankundigungen-icon,
     .empty-besprechungen-icon,
     .empty-soldaten-icon,
-    .empty-beobachtungen-icon {
+    .empty-beobachtungen-icon,
+    .empty-icon {
       font-size: 32px;
       margin-bottom: 12px;
       opacity: 0.3;
@@ -1290,7 +1300,8 @@
     .empty-ankundigungen-title,
     .empty-besprechungen-title,
     .empty-soldaten-title,
-    .empty-beobachtungen-title {
+    .empty-beobachtungen-title,
+    .empty-title {
       font-size: 14px;
       font-weight: 700;
       color: var(--text-secondary);
@@ -1403,2171 +1414,50 @@
     ::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); }
     ::-webkit-scrollbar-thumb { background: var(--accent-primary); border-radius: 2px; }
 
-    /* Responsive */
-    @media (max-width: 1000px) {
-      .app-container { grid-template-columns: 1fr; }
-      .sidebar { position: static; height: auto; max-height: 400px; }
-      .induction-grid { grid-template-columns: 1fr; }
-      .template-cards { grid-template-columns: 1fr; }
-    }
-  </style>
-</head>
-
-<body>
-  <!-- DISCORD LOGIN SCREEN -->
-  <div class="login-screen" id="loginScreen">
-    <div class="login-card">
-      <div class="login-logo">
-        <i class="fab fa-discord"></i>
-      </div>
-      <div class="login-title">HR - Einweisungsmanagement</div>
-      <div class="login-subtitle">Melde dich mit Discord an</div>
-      
-      <button class="discord-login-btn" onclick="discordLogin()">
-        <i class="fab fa-discord"></i> Mit Discord anmelden
-      </button>
-      
-      <div class="login-error" id="loginError"></div>
-    </div>
-  </div>
-
-  <!-- VERBESSERTES Settings Password Modal (kleiner & schöner) -->
-  <div class="settings-password-modal" id="settingsPasswordModal">
-    <div class="settings-password-content">
-      <div class="settings-password-header">
-        <div class="settings-password-title">
-          <i class="fas fa-lock"></i> Passwort erforderlich
-        </div>
-        <button class="settings-password-close" onclick="closeSettingsPasswordModal()">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-      <div class="settings-password-form">
-        <input type="password" class="settings-password-input" id="settingsPasswordInput" 
-               placeholder="Passwort eingeben" onkeypress="if(event.key === 'Enter') checkSettingsPassword()">
-        <div class="settings-password-error" id="settingsPasswordError">Falsches Passwort</div>
-        <button class="btn btn-primary" onclick="checkSettingsPassword()">
-          <i class="fas fa-unlock"></i> Bestätigen
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Edit Ankündigung/Besprechung Modal -->
-  <div class="edit-item-modal" id="editItemModal">
-    <div class="edit-item-content">
-      <div class="edit-item-header">
-        <div class="edit-item-title" id="editItemTitle">
-          <i class="fas fa-edit"></i> Bearbeiten
-        </div>
-        <button class="edit-item-close" onclick="closeEditItemModal()">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-      
-      <div class="edit-item-body">
-        <div class="edit-item-form" id="editItemForm"></div>
-      </div>
-      
-      <div class="edit-item-actions">
-        <button class="btn btn-secondary" onclick="closeEditItemModal()">Abbrechen</button>
-        <button class="btn btn-primary" onclick="saveEditedItem()">Speichern</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Ankündigung Banner -->
-  <div class="ankundigung-banner" id="ankundigungBanner">
-    <div class="banner-header">
-      <div class="banner-title" id="bannerTitle">🪧 Ankündigung</div>
-      <button class="banner-close" onclick="closeBanner()"><i class="fas fa-times"></i></button>
-    </div>
-    <div class="banner-content" id="bannerContent">Lade Ankündigung...</div>
-    <div class="banner-meta">
-      <div class="banner-type" id="bannerType">Ankündigung</div>
-      <div id="bannerDate">Heute</div>
-    </div>
-  </div>
-
-  <!-- Ankündigungen Modal -->
-  <div class="ankundigungen-modal" id="ankundigungenModal" onclick="if(event.target===this)closeModal('ankundigungenModal')">
-    <div class="ankundigungen-content">
-      <div class="ankundigungen-header">
-        <div class="ankundigungen-title"><i class="fas fa-bullhorn"></i> Ankündigungen</div>
-        <button class="ankundigungen-close" onclick="closeModal('ankundigungenModal')"><i class="fas fa-times"></i></button>
-      </div>
-      <div class="ankundigungen-body">
-        <div class="ankundigungen-search-container">
-          <i class="fas fa-search ankundigungen-search-icon"></i>
-          <input type="text" class="ankundigungen-search-input" id="ankundigungenSearch" 
-                 placeholder="Suchen..." oninput="searchAnkundigungen(this.value)">
-        </div>
-        <div class="ankundigungen-list-container">
-          <div class="ankundigungen-list" id="ankundigungenList">
-            <div class="empty-ankundigungen">
-              <div class="empty-ankundigungen-icon"><i class="fas fa-bullhorn"></i></div>
-              <div class="empty-ankundigungen-title">Keine Ankündigungen</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Besprechungen Modal -->
-  <div class="besprechungen-modal" id="besprechungenModal" onclick="if(event.target===this)closeModal('besprechungenModal')">
-    <div class="besprechungen-content">
-      <div class="besprechungen-header">
-        <div class="besprechungen-title"><i class="fas fa-calendar-alt"></i> Besprechungen</div>
-        <button class="besprechungen-close" onclick="closeModal('besprechungenModal')"><i class="fas fa-times"></i></button>
-      </div>
-      <div class="besprechungen-body">
-        <div class="besprechungen-search-container">
-          <i class="fas fa-search besprechungen-search-icon"></i>
-          <input type="text" class="besprechungen-search-input" id="besprechungenSearch" 
-                 placeholder="Suchen..." oninput="searchBesprechungen(this.value)">
-        </div>
-        <div class="besprechungen-list-container">
-          <div class="besprechungen-list" id="besprechungenList">
-            <div class="empty-besprechungen">
-              <div class="empty-besprechungen-icon"><i class="fas fa-calendar-alt"></i></div>
-              <div class="empty-besprechungen-title">Keine Besprechungen</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Floating Buttons -->
-  <div class="floating-buttons-container">
-    <button class="floating-button soldaten" onclick="openSoldatenModal()" title="Soldatengespräche">
-      <i class="fas fa-comments"></i>
-    </button>
-    <button class="floating-button" onclick="openBeobachtungAktenModal()" title="Beobachtungs-Akten">
-      <i class="fas fa-folder-open"></i>
-    </button>
-    <button class="floating-button" onclick="openSettingsWithPassword()" title="Settings">
-      <i class="fas fa-cog"></i>
-    </button>
-  </div>
-
-  <!-- Settings Modal -->
-  <div class="settings-modal" id="settingsModal" onclick="if(event.target===this)closeModal('settingsModal')">
-    <div class="settings-content">
-      <div class="settings-header">
-        <div class="settings-title"><i class="fas fa-cog"></i> Settings</div>
-        <button class="settings-close" onclick="closeModal('settingsModal')"><i class="fas fa-times"></i></button>
-      </div>
-      <div class="settings-body">
-        <div class="settings-tabs">
-          <button class="settings-tab active" onclick="switchSettingsTab('units')">Units</button>
-          <button class="settings-tab" onclick="switchSettingsTab('ranks')">Ränge</button>
-          <button class="settings-tab" onclick="switchSettingsTab('ankundigungen')">Ankündigungen</button>
-        </div>
-        
-        <!-- Units Tab -->
-        <div class="settings-tab-content" id="unitsTab">
-          <div class="unit-list" id="unitList"></div>
-          <button class="add-btn" onclick="addNewUnit()">+ Unit hinzufügen</button>
-        </div>
-        
-        <!-- Ränge Tab -->
-        <div class="settings-tab-content" id="ranksTab" style="display:none;">
-          <div class="rank-list" id="rankList"></div>
-          <button class="add-btn" onclick="addNewRank()">+ Rang hinzufügen</button>
-        </div>
-        
-        <!-- Ankündigungen Tab -->
-        <div class="settings-tab-content" id="ankundigungenTab" style="display:none;">
-          <div class="ankundigungen-tabs">
-            <button class="ankundigungen-tab active" onclick="switchAnkundigungenTab('new')">Neu</button>
-            <button class="ankundigungen-tab" onclick="switchAnkundigungenTab('besprechung')">Besprechung</button>
-            <button class="ankundigungen-tab" onclick="switchAnkundigungenTab('manage-ankundigungen')">Verwalten</button>
-            <button class="ankundigungen-tab" onclick="switchAnkundigungenTab('manage-besprechungen')">Besprechungen</button>
-          </div>
-          
-          <!-- Neue Ankündigung -->
-          <div class="ankundigungen-tab-content" id="ankundigungenNewTab">
-            <input type="text" class="settings-input" id="ankundigungTitle" placeholder="Titel">
-            <textarea class="settings-input" id="ankundigungContent" placeholder="Inhalt..." rows="3"></textarea>
-            <button class="btn btn-primary" onclick="saveAnkundigung()">Speichern</button>
-          </div>
-          
-          <!-- Neue Besprechung -->
-          <div class="ankundigungen-tab-content" id="ankundigungenBesprechungTab" style="display:none;">
-            <input type="text" class="settings-input" id="besprechungThema" placeholder="Thema">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0">
-              <input type="date" class="settings-input" id="besprechungDate">
-              <input type="time" class="settings-input" id="besprechungTime">
-            </div>
-            <input type="text" class="settings-input" id="besprechungOrt" placeholder="Ort">
-            <textarea class="settings-input" id="besprechungContent" placeholder="Inhalt..." rows="3"></textarea>
-            <button class="btn btn-primary" onclick="saveBesprechung()">Speichern</button>
-          </div>
-          
-          <!-- Ankündigungen verwalten -->
-          <div class="ankundigungen-tab-content" id="ankundigungenManageAnkundigungenTab" style="display:none;">
-            <input type="text" class="settings-input" id="manageAnkundigungenSearch" placeholder="Suchen..." oninput="searchManageAnkundigungen(this.value)">
-            <div class="manage-items-list" id="manageAnkundigungenList"></div>
-          </div>
-          
-          <!-- Besprechungen verwalten -->
-          <div class="ankundigungen-tab-content" id="ankundigungenManageBesprechungenTab" style="display:none;">
-            <input type="text" class="settings-input" id="manageBesprechungenSearch" placeholder="Suchen..." oninput="searchManageBesprechungen(this.value)">
-            <div class="manage-items-list" id="manageBesprechungenList"></div>
-          </div>
-        </div>
-        
-        <div class="settings-actions">
-          <button class="btn btn-secondary" onclick="closeModal('settingsModal')">Schließen</button>
-          <button class="btn btn-primary" onclick="saveSettings()">Speichern</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Soldatengespräch Modal -->
-  <div class="soldaten-modal" id="soldatenModal" onclick="if(event.target===this)closeModal('soldatenModal')">
-    <div class="soldaten-content">
-      <div class="soldaten-header">
-        <div class="soldaten-title"><i class="fas fa-comments"></i> Soldatengespräche</div>
-        <button class="soldaten-close" onclick="closeModal('soldatenModal')"><i class="fas fa-times"></i></button>
-      </div>
-      <div class="soldaten-body">
-        <div class="soldaten-tabs">
-          <button class="soldaten-tab active" onclick="switchSoldatenTab('new')">Neu</button>
-          <button class="soldaten-tab" onclick="switchSoldatenTab('list')">Liste</button>
-        </div>
-        
-        <!-- Neues Gespräch -->
-        <div class="soldaten-tab-content" id="soldatenNewTab">
-          <div class="soldaten-form-grid">
-            <input type="text" class="soldaten-input" id="soldatenName" placeholder="Name *">
-            <input type="number" class="soldaten-input" id="soldatenDN" placeholder="DN *">
-            <select class="soldaten-input" id="soldatenUnit"><option value="">Unit</option></select>
-            <select class="soldaten-input" id="soldatenRank"><option value="">Rang</option></select>
-            <input type="date" class="soldaten-input" id="soldatenDate">
-            <input type="time" class="soldaten-input" id="soldatenTime">
-            <textarea class="soldaten-input soldaten-textarea" id="soldatenNotizen" placeholder="Notizen *" style="grid-column:span 2"></textarea>
-            <textarea class="soldaten-input soldaten-textarea" id="soldatenSonstiges" placeholder="Sonstiges" style="grid-column:span 2"></textarea>
-          </div>
-          
-          <div class="soldaten-preview">
-            <div class="soldaten-preview-title">Vorschau</div>
-            <div class="soldaten-preview-content" id="soldatenPreview"></div>
-          </div>
-          
-          <div class="soldaten-actions">
-            <button class="soldaten-btn soldaten-btn-copy" onclick="copySoldatenTemplate()">Kopieren</button>
-            <button class="soldaten-btn soldaten-btn-save" onclick="saveSoldatenGespräch()">Speichern</button>
-          </div>
-        </div>
-        
-        <!-- Gesprächsliste -->
-        <div class="soldaten-tab-content" id="soldatenListTab" style="display:none;">
-          <div class="soldaten-search-container">
-            <i class="fas fa-search soldaten-search-icon"></i>
-            <input type="text" class="soldaten-search-input" id="soldatenSearch" placeholder="Suchen..." oninput="searchSoldaten(this.value)">
-          </div>
-          <div class="soldaten-liste" id="soldatenListe"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Beobachtungs Akten Modal -->
-  <div class="beobachtung-akten-modal" id="beobachtungAktenModal" onclick="if(event.target===this)closeModal('beobachtungAktenModal')">
-    <div class="beobachtung-akten-content">
-      <div class="beobachtung-akten-header">
-        <div class="beobachtung-akten-title"><i class="fas fa-folder-open"></i> Beobachtungs-Akten</div>
-        <button class="beobachtung-akten-close" onclick="closeModal('beobachtungAktenModal')"><i class="fas fa-times"></i></button>
-      </div>
-      <div class="beobachtung-akten-body">
-        <div class="beobachtung-tabs">
-          <button class="beobachtung-tab active" onclick="switchBeobachtungTab('new')">Neue Akte</button>
-          <button class="beobachtung-tab" onclick="switchBeobachtungTab('list')">Akten</button>
-          <button class="beobachtung-tab" onclick="switchBeobachtungTab('beobachtung')">Beobachtung</button>
-        </div>
-        
-        <!-- Neue Akte -->
-        <div class="beobachtung-tab-content" id="beobachtungNewTab">
-          <div class="akte-form-grid">
-            <input type="text" class="akte-input" id="akteName" placeholder="Name *">
-            <input type="number" class="akte-input" id="akteDN" placeholder="DN *">
-            <select class="akte-input" id="akteUnit"><option value="">Unit</option></select>
-            <select class="akte-input" id="akteRank"><option value="">Rang</option></select>
-          </div>
-          <button class="btn btn-primary" onclick="createNewAkte()">Akte erstellen</button>
-        </div>
-        
-        <!-- Akten durchsuchen -->
-        <div class="beobachtung-tab-content" id="beobachtungListTab" style="display:none;">
-          <div class="akten-search-container">
-            <i class="fas fa-search akten-search-icon"></i>
-            <input type="text" class="akten-search-input" id="aktenSearch" placeholder="Suchen..." oninput="searchAkten(this.value)">
-          </div>
-          <div class="beobachtung-akten-liste" id="aktenListe"></div>
-        </div>
-        
-        <!-- Beobachtung hinzufügen -->
-        <div class="beobachtung-tab-content" id="beobachtungBeobachtungTab" style="display:none;">
-          <div class="akte-form-grid">
-            <input type="text" class="akte-input" id="beobachtungName" placeholder="Name *">
-            <input type="number" class="akte-input" id="beobachtungDN" placeholder="DN *">
-            <textarea class="akte-input akte-textarea" id="beobachtungGrund" placeholder="Grund *" style="grid-column:span 2"></textarea>
-          </div>
-          
-          <div class="beobachtung-preview">
-            <div class="beobachtung-preview-title">Vorschau</div>
-            <div class="beobachtung-preview-content" id="beobachtungPreview"></div>
-          </div>
-          
-          <div class="beobachtung-actions">
-            <button class="beobachtung-btn beobachtung-btn-copy" onclick="copyBeobachtungTemplate()">Kopieren</button>
-            <button class="beobachtung-btn beobachtung-btn-save" onclick="saveBeobachtungToAkte()">Hinzufügen</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Notification -->
-  <div class="notification" id="notification">
-    <i class="fas fa-check notification-icon"></i>
-    <span class="notification-message" id="notificationMessage"></span>
-  </div>
-
-  <!-- App Container -->
-  <div class="app-container" id="appContainer" style="display:none;">
-    <header class="app-header">
-      <div class="header-content">
-        <div class="brand">
-          <div class="logo-container">
-            <img src="https://i.ibb.co/HLjKS2Yz/US-Army-Civilian-Human-Resources-Agency-seal.png" alt="Logo">
-          </div>
-          <div class="brand-text">
-            <h1>HR <span class="header-icons">
-              <span class="header-icon" onclick="openAnkundigungenModal()">🔔</span>
-              <span class="header-icon" onclick="openBesprechungenModal()">🗃️</span>
-            </span></h1>
-          </div>
-        </div>
-        <div style="display: flex; align-items: center; gap: 12px;">
-          <div class="user-profile">
-            <img class="user-avatar" id="userAvatar" src="https://cdn.discordapp.com/embed/avatars/0.png" alt="Avatar">
-            <span class="user-name" id="userName">User</span>
-            <button class="logout-btn" onclick="logout()">Abmelden</button>
-          </div>
-          <div class="header-stats">
-            <div class="stat-card"><span class="stat-value" id="totalEmployees">0</span><span class="stat-label">Mitarbeiter</span></div>
-            <div class="stat-card"><span class="stat-value" id="totalAkten">0</span><span class="stat-label">Akten</span></div>
-            <div class="stat-card"><span class="stat-value" id="totalArchived">0</span><span class="stat-label">Archiv</span></div>
-          </div>
-        </div>
-      </div>
-    </header>
-
-    <aside class="sidebar">
-      <div class="sidebar-header">
-        <h3 class="sidebar-title"><i class="fas fa-users"></i> Mitarbeiter</h3>
-        <div class="employee-count" id="employeeCount">0</div>
-      </div>
-
-      <div class="sidebar-filter-buttons">
-        <button class="sidebar-filter-btn active" onclick="filterEmployeesByType('all')">Alle</button>
-        <button class="sidebar-filter-btn" onclick="filterEmployeesByType('oral')">Mündlich</button>
-        <button class="sidebar-filter-btn" onclick="filterEmployeesByType('org')">Organ.</button>
-      </div>
-
-      <div class="search-container">
-        <i class="fas fa-search search-icon"></i>
-        <input type="text" class="search-input" id="searchEmployees" placeholder="Suchen...">
-      </div>
-
-      <div class="employee-list-container">
-        <div class="employee-list" id="employeeList"></div>
-      </div>
-
-      <div class="quick-actions">
-        <button class="quick-action-btn" onclick="openNewEmployeeModal()">+ Mitarbeiter</button>
-        <button class="quick-action-btn" onclick="toggleArchiveView()"><span id="archiveToggleText">Archiv</span></button>
-      </div>
-    </aside>
-
-    <main class="main-content">
-      <div class="content-header" id="employeeHeader">
-        <div class="employee-info">
-          <h2 id="currentEmployeeName">Mitarbeiter wählen</h2>
-          <div class="employee-tags">
-            <span class="tag-value" id="currentEmployeeDN">DN-</span>
-            <span class="tag-value" id="currentEmployeeUnit">Unit</span>
-            <span class="tag-value" id="currentEmployeeRank">Rang</span>
-          </div>
-        </div>
-        <div class="action-buttons">
-          <button class="btn btn-secondary" onclick="openEditEmployeeModal()">Bearbeiten</button>
-          <button class="btn btn-secondary" id="archiveButton" onclick="toggleArchiveEmployee()" style="display:none;">Archivieren</button>
-        </div>
-      </div>
-
-      <div class="induction-content" id="inductionContent">
-        <div class="induction-grid">
-          <!-- Mündliche Einweisung -->
-          <div class="induction-card" id="oralInductionCard">
-            <div class="induction-card-header">
-              <div class="induction-title"><div class="induction-icon"><i class="fas fa-comments"></i></div>Mündlich</div>
-              <div class="induction-status" id="oralInductionStatus">AUSSTEHEND</div>
-            </div>
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
-              <span style="font-size:11px;">Bestanden:</span>
-              <label class="toggle-switch">
-                <input type="checkbox" id="oralInductionToggle" onchange="toggleInduction('oral', this.checked)">
-                <span class="toggle-slider"></span>
-              </label>
-            </div>
-            <div class="oral-form-grid">
-              <input type="date" class="form-input" id="oralDate">
-              <div class="time-container">
-                <input type="time" class="form-input" id="oralTimeStart">
-                <span class="time-separator">-</span>
-                <input type="time" class="form-input" id="oralTimeEnd">
-              </div>
-              <input type="text" class="form-input" id="oralPerson" placeholder="Beteiligte Person">
-              <select class="form-select" id="unitSelect"><option value="">Unit</option></select>
-              <select class="form-select" id="rankSelect"><option value="">Rang</option></select>
-              <textarea class="form-textarea" id="oralNotes" placeholder="Bemerkungen" rows="2"></textarea>
-            </div>
-          </div>
-
-          <!-- Organisatorische Einweisung -->
-          <div class="induction-card" id="orgInductionCard">
-            <div class="induction-card-header">
-              <div class="induction-title"><div class="induction-icon"><i class="fas fa-clipboard-list"></i></div>Organ.</div>
-              <div class="induction-status" id="orgInductionStatus">AUSSTEHEND</div>
-            </div>
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
-              <span style="font-size:11px;">Bestanden:</span>
-              <label class="toggle-switch">
-                <input type="checkbox" id="orgInductionToggle" onchange="toggleInduction('org', this.checked)">
-                <span class="toggle-slider"></span>
-              </label>
-            </div>
-            <div class="org-form-grid">
-              <input type="date" class="form-input" id="orgDate">
-              <div class="time-container">
-                <input type="time" class="form-input" id="orgTimeStart">
-                <span class="time-separator">-</span>
-                <input type="time" class="form-input" id="orgTimeEnd">
-              </div>
-              <input type="text" class="form-input" id="orgPerson" placeholder="Beteiligte Person">
-              <select class="form-select" id="unitSelect2"><option value="">Unit</option></select>
-              <select class="form-select" id="rankSelect2"><option value="">Rang</option></select>
-              <textarea class="form-textarea" id="orgNotes" placeholder="Bemerkungen" rows="2"></textarea>
-            </div>
-          </div>
-        </div>
-
-        <div class="templates-section">
-          <div class="section-header">
-            <div class="section-title"><i class="fas fa-file-code"></i> Vorlagen</div>
-            <div class="template-actions">
-              <button class="btn btn-secondary" onclick="copyOralTemplate()">Mündlich</button>
-              <button class="btn btn-secondary" onclick="copyOrgTemplate()">Organ.</button>
-            </div>
-          </div>
-          <div class="template-cards">
-            <div class="template-card" id="oralTemplateCard">
-              <div class="template-card-header">
-                <span class="template-card-title">Mündlich</span>
-                <span class="template-badge" id="oralTemplateBadge">AUSSTEHEND</span>
-              </div>
-              <div class="template-content" id="oralTemplateContent"></div>
-            </div>
-            <div class="template-card" id="orgTemplateCard">
-              <div class="template-card-header">
-                <span class="template-card-title">Organ.</span>
-                <span class="template-badge" id="orgTemplateBadge">AUSSTEHEND</span>
-              </div>
-              <div class="template-content" id="orgTemplateContent"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </main>
-  </div>
-
-  <!-- New Employee Modal -->
-  <div class="modal-overlay" id="newEmployeeModal" onclick="if(event.target===this)closeModal('newEmployeeModal')">
-    <div class="modal">
-      <div class="modal-header">
-        <div class="modal-title">Neuer Mitarbeiter</div>
-        <button class="modal-close" onclick="closeModal('newEmployeeModal')"><i class="fas fa-times"></i></button>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <input type="text" class="form-input" id="newEmployeeName" placeholder="Name *">
-        <input type="number" class="form-input" id="newEmployeeDN" placeholder="DN *">
-        <select class="form-select" id="newEmployeeUnit"><option value="">Unit</option></select>
-        <select class="form-select" id="newEmployeeRank"><option value="">Rang</option></select>
-      </div>
-      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;">
-        <button class="btn btn-secondary" onclick="closeModal('newEmployeeModal')">Abbrechen</button>
-        <button class="btn btn-primary" onclick="createNewEmployee()">Erstellen</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Edit Employee Modal -->
-  <div class="modal-overlay" id="editEmployeeModal" onclick="if(event.target===this)closeModal('editEmployeeModal')">
-    <div class="modal">
-      <div class="modal-header">
-        <div class="modal-title">Mitarbeiter bearbeiten</div>
-        <button class="modal-close" onclick="closeModal('editEmployeeModal')"><i class="fas fa-times"></i></button>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <input type="text" class="form-input" id="editEmployeeName" placeholder="Name *">
-        <input type="number" class="form-input" id="editEmployeeDN" placeholder="DN *">
-        <select class="form-select" id="editEmployeeUnit"><option value="">Unit</option></select>
-        <select class="form-select" id="editEmployeeRank"><option value="">Rang</option></select>
-      </div>
-      <div style="display:flex;justify-content:space-between;margin-top:16px;">
-        <button class="btn btn-danger" onclick="deleteCurrentEmployee()">Löschen</button>
-        <div style="display:flex;gap:8px;">
-          <button class="btn btn-secondary" onclick="closeModal('editEmployeeModal')">Abbrechen</button>
-          <button class="btn btn-primary" onclick="saveEditedEmployee()">Speichern</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    // ==================== DISCORD LOGIN KONFIGURATION ====================
-    const DISCORD_CLIENT_ID = '1432942180770644079';
-    const DISCORD_REDIRECT_URI = encodeURIComponent('https://corleonecity.github.io/HR/');
-    const DISCORD_OAUTH_URL = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${DISCORD_REDIRECT_URI}&response_type=token&scope=identify`;
-
-    const ALLOWED_USERS = [
-      '750837871702704209', '478615566496563221', '917426398120005653',
-      '1018382345717432370', '1201847402160459827', '894293249219522651', ''
-    ];
-
-    let currentUser = null;
-    let accessCheckInterval = null;
-    const TOKEN_VALIDITY_MINUTES = 10;
-    const ACCESS_CHECK_INTERVAL = 30000;
-
-    // ==================== DISCORD LOGIN FUNKTIONEN ====================
-    function discordLogin() {
-      window.location.href = DISCORD_OAUTH_URL;
-    }
-
-    function logout() {
-      localStorage.clear();
-      if (accessCheckInterval) clearInterval(accessCheckInterval);
-      document.getElementById('loginScreen').classList.remove('hidden');
-      document.getElementById('appContainer').style.display = 'none';
-      window.location.hash = '';
-    }
-
-    function handleDiscordRedirect() {
-      const hash = window.location.hash.substring(1);
-      if (!hash) return false;
-      const params = new URLSearchParams(hash);
-      const accessToken = params.get('access_token');
-      if (accessToken) {
-        localStorage.setItem('discord_token', accessToken);
-        localStorage.setItem('discord_expires', Date.now() + (TOKEN_VALIDITY_MINUTES * 60 * 1000));
-        window.location.hash = '';
-        return true;
-      }
-      return false;
-    }
-
-    async function fetchDiscordUser(token) {
-      try {
-        const response = await fetch('https://discord.com/api/users/@me', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        return response.ok ? await response.json() : null;
-      } catch {
-        return null;
-      }
-    }
-
-    function checkTokenValidity() {
-      const token = localStorage.getItem('discord_token');
-      const expiresAt = localStorage.getItem('discord_expires');
-      if (!token || !expiresAt || Date.now() > parseInt(expiresAt)) {
-        localStorage.clear();
-        return false;
-      }
-      return true;
-    }
-
-    async function authenticateWithDiscord() {
-      const loginScreen = document.getElementById('loginScreen');
-      const appContainer = document.getElementById('appContainer');
-      const errorEl = document.getElementById('loginError');
-
-      handleDiscordRedirect();
-
-      if (!checkTokenValidity()) {
-        loginScreen.classList.remove('hidden');
-        appContainer.style.display = 'none';
-        return false;
-      }
-
-      const token = localStorage.getItem('discord_token');
-      const savedUser = localStorage.getItem('discord_user');
-      
-      let user = savedUser ? JSON.parse(savedUser) : await fetchDiscordUser(token);
-      
-      if (!user || !ALLOWED_USERS.includes(user.id)) {
-        errorEl.textContent = !user ? 'Fehler beim Abrufen der Daten' : 'Keine Berechtigung';
-        errorEl.classList.add('show');
-        logout();
-        return false;
-      }
-
-      localStorage.setItem('discord_user', JSON.stringify(user));
-      currentUser = user;
-      
-      document.getElementById('userName').textContent = user.global_name || user.username;
-      document.getElementById('userAvatar').src = user.avatar 
-        ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`
-        : `https://cdn.discordapp.com/embed/avatars/0.png`;
-
-      loginScreen.classList.add('hidden');
-      appContainer.style.display = 'grid';
-      
-      accessCheckInterval = setInterval(() => {
-        if (!checkTokenValidity()) logout();
-      }, ACCESS_CHECK_INTERVAL);
-      
-      initializeApp();
-      return true;
-    }
-
-    // ==================== KONFIGURATION ====================
-    const APP_VERSION = '2.0.20240315';
-    const SETTINGS_PASSWORD = 'soc1';
-    const PASSWORD_EXPIRE_MINUTES = 60;
-    
-    const firebaseConfig = {
-      apiKey: "AIzaSyBTnsLNw68UuOd5Xa2ymMffWk4SYGDQjso",
-      authDomain: "cc-shop-finanzsystem.firebaseapp.com",
-      projectId: "cc-shop-finanzsystem",
-      storageBucket: "cc-shop-finanzsystem.firebasestorage.app",
-      messagingSenderId: "575918945925",
-      appId: "1:575918945925:web:bf9d973d5cd9fc547e5bec"
-    };
-
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-
-    // App State
-    let currentEmployee = null;
-    let employees = [];
-    let bothInductionsCompleted = false;
-    let currentFilter = 'all';
-    let settings = { units: [], ranks: [] };
-    let showArchived = false;
-    let ankundigungen = [];
-    let soldatenGespräche = [];
-    let akten = [];
-    let currentSettingsTab = 'units';
-    let currentAnkundigungenTab = 'new';
-    let currentSoldatenTab = 'new';
-    let currentBeobachtungTab = 'new';
-    let settingsAuthenticated = false;
-    let settingsAuthTimestamp = 0;
-    
-    let unsubscribeFunctions = [];
-    let currentEditItemId = null;
-    let currentEditItemType = null;
-
-    document.addEventListener('DOMContentLoaded', authenticateWithDiscord);
-
-    // ==================== SETTINGS PASSWORT FUNKTIONEN ====================
-    function checkSettingsAuth() {
-      if (settingsAuthenticated) {
-        const savedTimestamp = localStorage.getItem('hr_settings_auth_timestamp');
-        return savedTimestamp && (Date.now() - parseInt(savedTimestamp) < PASSWORD_EXPIRE_MINUTES * 60 * 1000);
-      }
-      return false;
-    }
-
-    function openSettingsPasswordModal() {
-      document.getElementById('settingsPasswordModal').classList.add('active');
-      document.getElementById('settingsPasswordInput').focus();
-    }
-
-    function closeSettingsPasswordModal() {
-      document.getElementById('settingsPasswordModal').classList.remove('active');
-      document.getElementById('settingsPasswordInput').value = '';
-      document.getElementById('settingsPasswordError').classList.remove('show');
-    }
-
-    function checkSettingsPassword() {
-      const password = document.getElementById('settingsPasswordInput').value;
-      if (password === SETTINGS_PASSWORD) {
-        settingsAuthenticated = true;
-        settingsAuthTimestamp = Date.now();
-        localStorage.setItem('hr_settings_auth_timestamp', settingsAuthTimestamp);
-        closeSettingsPasswordModal();
-        openSettingsModal();
-      } else {
-        document.getElementById('settingsPasswordError').classList.add('show');
-        document.getElementById('settingsPasswordInput').value = '';
-        document.getElementById('settingsPasswordInput').focus();
-      }
-    }
-
-    function openSettingsWithPassword() {
-      checkSettingsAuth() ? openSettingsModal() : openSettingsPasswordModal();
-    }
-
-    // ==================== MODAL FUNKTIONEN ====================
-    function openModal(modalId) {
-      document.getElementById(modalId).classList.add('active');
-    }
-
-    function closeModal(modalId) {
-      const modal = document.getElementById(modalId);
-      if (modal) modal.classList.remove('active');
-    }
-
-    // ==================== WEITERE FUNKTIONEN (verkürzt) ====================
-    // Aus Platzgründen werden hier nur die wichtigsten Funktionen definiert.
-    // Die vollständigen Funktionen aus der vorherigen Version bleiben erhalten,
-    // werden aber aus Platzgründen hier nicht nochmal aufgeführt.
-    // Sie können den vollständigen Script-Teil aus der vorherigen Antwort übernehmen.
-    
-    // Platzhalter für die fehlenden Funktionen - in der Praxis müssen alle Funktionen hier stehen
-    function initializeApp() { console.log('App initialisiert'); }
-    function loadSettings() { console.log('Settings geladen'); }
-    function setupRealtimeListeners() {}
-    function updateUnitAndRankSelects() {}
-    function populateSettingsUI() {}
-    function addNewUnit() {}
-    function addNewRank() {}
-    function saveSettings() {}
-    function switchSettingsTab(tab) {}
-    function switchAnkundigungenTab(tab) {}
-    function openAnkundigungenModal() { openModal('ankundigungenModal'); }
-    function openBesprechungenModal() { openModal('besprechungenModal'); }
-    function openSoldatenModal() { openModal('soldatenModal'); }
-    function openBeobachtungAktenModal() { openModal('beobachtungAktenModal'); }
-    function openNewEmployeeModal() { openModal('newEmployeeModal'); }
-    function openEditEmployeeModal() { openModal('editEmployeeModal'); }
-    function closeEditItemModal() { closeModal('editItemModal'); }
-    function showNotification(msg, type) { console.log(msg); }
-    function escapeHtml(str) { return String(str).replace(/[&<>"]/g, function(m) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]; }); }
-    
- <!DOCTYPE html>
-<html lang="de">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
-  <!-- CACHE-CONTROL META TAGS -->
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-  <meta http-equiv="Pragma" content="no-cache">
-  <meta http-equiv="Expires" content="0">
-  
-  <title>📋 HR - Einweisungsmanagement v2.0</title>
-
-  <!-- Font Awesome -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
-
-  <style>
-    /* -------------------- RESET & VARIABLES -------------------- */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    :root {
-      --bg-dark: #0b1120;
-      --bg-card: #1a2639;
-      --bg-card-light: #25344d;
-      --bg-sidebar: #1e2a3a;
-      --text-primary: #f0f4fa;
-      --text-secondary: #b0c4de;
-      --text-muted: #8a9db0;
-      --accent-primary: #3b82f6;
-      --accent-primary-dark: #2563eb;
-      --accent-success: #22c55e;
-      --accent-success-dark: #16a34a;
-      --accent-warning: #eab308;
-      --accent-warning-dark: #ca8a04;
-      --accent-danger: #ef4444;
-      --accent-danger-dark: #dc2626;
-      --accent-discord: #5865f2;
-      --border-light: rgba(255, 255, 255, 0.08);
-      --border-hover: rgba(59, 130, 246, 0.3);
-      --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
-      --shadow-md: 0 4px 12px -4px rgba(0, 0, 0, 0.4);
-      --radius-lg: 12px;
-      --radius-md: 8px;
-      --radius-sm: 4px;
-      --transition: all 0.15s ease;
-    }
-
-    body {
-      font-family: 'Inter', sans-serif;
-      background: var(--bg-dark);
-      color: var(--text-primary);
-      min-height: 100vh;
-      font-size: 13px;
-      line-height: 1.4;
-      overflow-x: hidden;
-    }
-
-    /* -------------------- LOGIN SCREEN -------------------- */
-    .login-screen {
-      position: fixed;
-      inset: 0;
-      background: var(--bg-dark);
-      z-index: 10000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-      transition: opacity 0.3s ease;
-    }
-    .login-screen.hidden { opacity: 0; pointer-events: none; }
-
-    .login-card {
-      background: var(--bg-card);
-      border-radius: var(--radius-lg);
-      padding: 32px 24px;
-      width: 100%;
-      max-width: 360px;
-      border: 1px solid var(--border-light);
-      box-shadow: var(--shadow-lg);
-      text-align: center;
-    }
-
-    .login-logo {
-      width: 64px;
-      height: 64px;
-      background: var(--accent-discord);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 20px;
-      font-size: 32px;
-    }
-
-    .login-title {
-      font-size: 20px;
-      font-weight: 800;
-      margin-bottom: 6px;
-    }
-
-    .login-subtitle {
-      font-size: 13px;
-      color: var(--text-muted);
-      margin-bottom: 24px;
-    }
-
-    .discord-login-btn {
-      background: var(--accent-discord);
-      color: white;
-      border: none;
-      border-radius: var(--radius-md);
-      padding: 12px 20px;
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: var(--transition);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      width: 100%;
-    }
-    .discord-login-btn:hover {
-      background: #4752c4;
-      transform: translateY(-1px);
-    }
-
-    .login-error {
-      background: rgba(239, 68, 68, 0.15);
-      border: 1px solid rgba(239, 68, 68, 0.25);
-      color: #fecaca;
-      padding: 10px;
-      border-radius: var(--radius-md);
-      margin-top: 16px;
-      display: none;
-      font-size: 12px;
-    }
-    .login-error.show { display: block; }
-
-    /* -------------------- APP CONTAINER & HEADER -------------------- */
-    .app-container {
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: 16px;
-      display: grid;
-      grid-template-columns: 280px 1fr;
-      gap: 16px;
-      min-height: 100vh;
-    }
-
-    .app-header {
-      grid-column: 1 / -1;
-      background: var(--bg-card);
-      border-radius: var(--radius-lg);
-      padding: 12px 20px;
-      border: 1px solid var(--border-light);
-    }
-    .header-content {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .logo-container {
-      width: 40px;
-      height: 40px;
-      border-radius: var(--radius-md);
-      overflow: hidden;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid var(--border-light);
-      flex-shrink: 0;
-    }
-    .logo-container img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-    }
-    .brand-text h1 {
-      font-size: 18px;
-      font-weight: 800;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .header-icons {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-    .header-icon {
-      font-size: 18px;
-      cursor: pointer;
-      transition: var(--transition);
-      opacity: 0.8;
-    }
-    .header-icon:hover {
-      opacity: 1;
-      color: var(--accent-primary);
-    }
-
-    .user-profile {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      background: rgba(255,255,255,0.05);
-      padding: 4px 10px 4px 6px;
-      border-radius: 30px;
-      border: 1px solid var(--border-light);
-    }
-    .user-avatar {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-    }
-    .user-name {
-      font-weight: 700;
-      font-size: 12px;
-    }
-    .logout-btn {
-      background: rgba(239,68,68,0.15);
-      color: #fca5a5;
-      border: 1px solid rgba(239,68,68,0.25);
-      border-radius: 30px;
-      padding: 3px 10px;
-      font-size: 11px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: var(--transition);
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-    .logout-btn:hover { background: rgba(239,68,68,0.25); }
-
-    .header-stats {
-      display: flex;
-      gap: 8px;
-    }
-    .stat-card {
+    /* Unit/Rank Items */
+    .unit-list, .rank-list, .manage-items-list {
       display: flex;
       flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 6px 12px;
-      background: rgba(255,255,255,0.05);
-      border-radius: var(--radius-md);
-      border: 1px solid var(--border-light);
-      min-width: 70px;
-    }
-    .stat-value {
-      font-size: 18px;
-      font-weight: 800;
-      color: #fff;
-    }
-    .stat-label {
-      font-size: 9px;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      font-weight: 700;
-      letter-spacing: 0.3px;
-    }
-
-    /* -------------------- SIDEBAR -------------------- */
-    .sidebar {
-      background: var(--bg-sidebar);
-      border-radius: var(--radius-lg);
-      padding: 16px;
-      border: 1px solid var(--border-light);
-      height: calc(100vh - 120px);
-      position: sticky;
-      top: 16px;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .sidebar-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-    }
-    .sidebar-title {
-      font-size: 14px;
-      font-weight: 800;
-      color: var(--text-secondary);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      text-transform: uppercase;
-      letter-spacing: 0.3px;
-    }
-    .employee-count {
-      background: var(--accent-primary);
-      color: #fff;
-      font-size: 11px;
-      font-weight: 800;
-      padding: 3px 10px;
-      border-radius: 30px;
-    }
-
-    .sidebar-filter-buttons {
-      display: flex;
-      gap: 4px;
-      margin-bottom: 12px;
-    }
-    .sidebar-filter-btn {
-      padding: 6px 0;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid var(--border-light);
-      border-radius: var(--radius-sm);
-      color: var(--text-secondary);
-      font-size: 11px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: var(--transition);
-      flex: 1;
-      text-align: center;
-    }
-    .sidebar-filter-btn:hover { background: rgba(255,255,255,0.1); }
-    .sidebar-filter-btn.active { background: var(--accent-primary); color: white; border-color: var(--accent-primary); }
-
-    .search-container {
-      position: relative;
-      margin-bottom: 12px;
-    }
-    .search-input {
-      width: 100%;
-      padding: 8px 10px 8px 32px;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid var(--border-light);
-      border-radius: var(--radius-md);
-      color: #fff;
-      font-size: 12px;
-    }
-    .search-input:focus {
-      outline: none;
-      border-color: var(--accent-primary);
-      background: rgba(255,255,255,0.08);
-    }
-    .search-icon {
-      position: absolute;
-      left: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--text-muted);
-      font-size: 12px;
-    }
-
-    .employee-list-container {
-      flex: 1;
-      overflow: hidden;
-      margin-bottom: 12px;
-    }
-    .employee-list {
-      height: 100%;
+      gap: 8px;
+      max-height: 300px;
       overflow-y: auto;
+      margin-bottom: 12px;
+    }
+    .unit-item, .rank-item, .manage-item {
       display: flex;
-      flex-direction: column;
+      align-items: center;
       gap: 8px;
-      padding-right: 4px;
-    }
-    .employee-list::-webkit-scrollbar { width: 4px; }
-    .employee-list::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 2px; }
-    .employee-list::-webkit-scrollbar-thumb { background: var(--accent-primary); border-radius: 2px; }
-
-    .employee-card {
-      background: rgba(255,255,255,0.03);
-      border-radius: var(--radius-md);
-      padding: 12px;
-      border: 1px solid var(--border-light);
-      cursor: pointer;
-      transition: var(--transition);
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-    .employee-card:hover {
-      background: rgba(255,255,255,0.06);
-      border-color: var(--accent-primary);
-    }
-    .employee-card.active {
-      background: rgba(59,130,246,0.15);
-      border-color: var(--accent-primary);
-    }
-    .employee-card.archived { opacity: 0.7; border-color: var(--accent-warning); }
-    .employee-card.archived .employee-name:after {
-      content: ' [A]';
-      color: var(--accent-warning);
-      font-size: 9px;
-      font-weight: 700;
-      margin-left: 2px;
-    }
-
-    .employee-top-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .employee-name {
-      font-weight: 700;
-      font-size: 13px;
-      color: #fff;
-    }
-    .employee-dn {
-      font-size: 10px;
-      font-weight: 700;
-      color: var(--accent-primary);
-      background: rgba(59,130,246,0.15);
-      padding: 2px 6px;
-      border-radius: 20px;
-      border: 1px solid rgba(59,130,246,0.25);
-    }
-    .employee-meta {
-      font-size: 11px;
-      color: var(--text-secondary);
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .induction-badges {
-      display: flex;
-      gap: 6px;
-      margin-top: 4px;
-      padding-top: 6px;
-      border-top: 1px solid rgba(255,255,255,0.1);
-    }
-    .induction-badge {
-      font-size: 9px;
-      padding: 3px 6px;
-      border-radius: 20px;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      gap: 3px;
-      flex: 1;
-      justify-content: center;
-    }
-    .badge-oral.pending { background: rgba(239,68,68,0.12); color: #fca5a5; }
-    .badge-oral.completed { background: rgba(34,197,94,0.12); color: #86efac; }
-    .badge-org.pending { background: rgba(234,179,8,0.12); color: #fde047; }
-    .badge-org.completed { background: rgba(34,197,94,0.12); color: #86efac; }
-
-    .quick-actions {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 6px;
-      margin-top: auto;
-    }
-    .quick-action-btn {
       padding: 8px;
-      background: rgba(59,130,246,0.1);
-      border: 1px solid rgba(59,130,246,0.2);
-      border-radius: var(--radius-md);
-      color: var(--accent-primary);
-      font-size: 11px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: var(--transition);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-    }
-    .quick-action-btn:hover {
-      background: rgba(59,130,246,0.2);
-      color: #fff;
-    }
-
-    /* -------------------- MAIN CONTENT -------------------- */
-    .main-content {
-      background: var(--bg-card);
-      border-radius: var(--radius-lg);
-      border: 1px solid var(--border-light);
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .content-header {
-      padding: 16px 20px;
-      background: rgba(59,130,246,0.08);
-      border-bottom: 1px solid var(--border-light);
-      display: none;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-    .employee-info h2 {
-      font-size: 18px;
-      font-weight: 800;
-      color: #fff;
-      margin-bottom: 6px;
-    }
-    .employee-tags {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-    .employee-tag {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 11px;
-      color: var(--text-secondary);
-      font-weight: 700;
-    }
-    .tag-value {
-      color: #fff;
-      font-weight: 700;
-      background: rgba(59,130,246,0.1);
-      padding: 3px 10px;
-      border-radius: 30px;
-      border: 1px solid rgba(59,130,246,0.2);
-      font-size: 11px;
-    }
-
-    .btn {
-      padding: 6px 12px;
-      border: none;
-      border-radius: var(--radius-md);
-      font-weight: 700;
-      cursor: pointer;
-      transition: var(--transition);
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-      font-size: 11px;
-    }
-    .btn-primary { background: var(--accent-primary); color: #fff; }
-    .btn-primary:hover { background: var(--accent-primary-dark); }
-    .btn-secondary { background: rgba(255,255,255,0.08); color: #fff; border: 1px solid var(--border-light); }
-    .btn-secondary:hover { background: rgba(255,255,255,0.15); }
-    .btn-danger { background: var(--accent-danger); color: #fff; }
-    .btn-danger:hover { background: var(--accent-danger-dark); }
-
-    .induction-content {
-      padding: 20px;
-      flex: 1;
-      overflow-y: auto;
-      display: none;
-    }
-
-    .induction-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      margin-bottom: 16px;
-    }
-
-    .induction-card {
-      background: var(--bg-card-light);
-      border-radius: var(--radius-lg);
-      padding: 16px;
-      border: 1px solid var(--border-light);
-    }
-    .induction-card.completed { border-color: var(--accent-success); }
-    .induction-card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-    }
-    .induction-title {
-      font-size: 14px;
-      font-weight: 800;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .induction-icon {
-      width: 28px;
-      height: 28px;
-      background: var(--accent-primary);
-      border-radius: var(--radius-md);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
-    }
-    .induction-card.completed .induction-icon { background: var(--accent-success); }
-    .induction-status {
-      font-size: 11px;
-      font-weight: 700;
-      padding: 3px 10px;
-      border-radius: 30px;
-      background: rgba(255,255,255,0.08);
-      color: var(--text-secondary);
-    }
-    .induction-card.completed .induction-status { background: rgba(34,197,94,0.15); color: var(--accent-success); }
-
-    .oral-form-grid, .org-form-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-    }
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-    .form-label {
-      font-weight: 700;
-      color: var(--text-secondary);
-      font-size: 10px;
-      text-transform: uppercase;
-    }
-    .form-input, .form-select, .form-textarea {
-      padding: 8px 10px;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid var(--border-light);
-      border-radius: var(--radius-sm);
-      color: #fff;
-      font-size: 12px;
-      width: 100%;
-    }
-    .form-input:focus, .form-select:focus, .form-textarea:focus {
-      outline: none;
-      border-color: var(--accent-primary);
-    }
-    .form-textarea { resize: vertical; min-height: 60px; }
-
-    .time-container {
-      display: grid;
-      grid-template-columns: 1fr auto 1fr;
-      gap: 4px;
-      align-items: center;
-    }
-    .time-separator { color: var(--text-muted); font-weight: 700; font-size: 11px; }
-
-    .toggle-switch {
-      position: relative;
-      display: inline-block;
-      width: 40px;
-      height: 22px;
-    }
-    .toggle-switch input { opacity: 0; width: 0; height: 0; }
-    .toggle-slider {
-      position: absolute;
-      cursor: pointer;
-      inset: 0;
-      background: rgba(255,255,255,0.15);
-      transition: var(--transition);
-      border-radius: 30px;
-    }
-    .toggle-slider:before {
-      position: absolute;
-      content: "";
-      height: 16px;
-      width: 16px;
-      left: 3px;
-      bottom: 3px;
-      background-color: #fff;
-      transition: var(--transition);
-      border-radius: 50%;
-    }
-    input:checked + .toggle-slider { background-color: var(--accent-success); }
-    input:checked + .toggle-slider:before { transform: translateX(18px); }
-
-    .templates-section {
-      background: rgba(0,0,0,0.2);
-      border-radius: var(--radius-lg);
-      padding: 16px;
-    }
-    .section-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-    }
-    .section-title {
-      font-size: 14px;
-      font-weight: 800;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .template-cards {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-    }
-    .template-card {
-      background: var(--bg-card-light);
-      border-radius: var(--radius-md);
-      padding: 12px;
-      border: 1px solid var(--border-light);
-    }
-    .template-card.completed { border-color: var(--accent-success); }
-    .template-card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
-    }
-    .template-card-title {
-      font-weight: 700;
-      color: #fff;
-      font-size: 12px;
-    }
-    .template-badge {
-      font-size: 9px;
-      font-weight: 700;
-      padding: 2px 8px;
-      border-radius: 30px;
-      background: rgba(255,255,255,0.08);
-      color: var(--text-secondary);
-    }
-    .template-card.completed .template-badge { background: rgba(34,197,94,0.15); color: var(--accent-success); }
-    .template-content {
-      background: rgba(0,0,0,0.3);
-      padding: 12px;
-      border-radius: var(--radius-sm);
-      border-left: 2px solid var(--accent-primary);
-      font-family: 'Consolas', monospace;
-      font-size: 10px;
-      line-height: 1.4;
-      color: var(--text-secondary);
-      max-height: 150px;
-      overflow-y: auto;
-      white-space: pre-wrap;
-    }
-
-    /* -------------------- VERBESSERTES PASSWORT MODAL -------------------- */
-    .settings-password-modal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.85);
-      backdrop-filter: blur(4px);
-      z-index: 2000;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-    }
-    .settings-password-modal.active { display: flex; }
-
-    .settings-password-content {
-      background: var(--bg-card);
-      border-radius: var(--radius-lg);
-      padding: 24px;
-      width: 100%;
-      max-width: 340px;
-      border: 1px solid var(--border-light);
-      box-shadow: var(--shadow-lg);
-    }
-
-    .settings-password-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid var(--border-light);
-    }
-
-    .settings-password-title {
-      font-size: 16px;
-      font-weight: 800;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .settings-password-close {
-      background: rgba(255,255,255,0.1);
-      border: none;
-      color: #fff;
-      font-size: 16px;
-      cursor: pointer;
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: var(--transition);
-    }
-    .settings-password-close:hover {
-      background: var(--accent-danger);
-    }
-
-    .settings-password-form {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .settings-password-input {
-      padding: 10px 12px;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid var(--border-light);
-      border-radius: var(--radius-md);
-      color: #fff;
-      font-size: 13px;
-      width: 100%;
-    }
-    .settings-password-input:focus {
-      outline: none;
-      border-color: var(--accent-primary);
-    }
-
-    .settings-password-error {
-      color: var(--accent-danger);
-      font-size: 12px;
-      display: none;
-      text-align: center;
-    }
-    .settings-password-error.show { display: block; }
-
-    /* -------------------- MODALS (verkleinert) -------------------- */
-    .ankundigungen-modal,
-    .besprechungen-modal,
-    .soldaten-modal,
-    .beobachtung-akten-modal,
-    .settings-modal,
-    .edit-item-modal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.85);
-      backdrop-filter: blur(4px);
-      z-index: 2000;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-    }
-    
-    .ankundigungen-modal.active,
-    .besprechungen-modal.active,
-    .soldaten-modal.active,
-    .beobachtung-akten-modal.active,
-    .settings-modal.active,
-    .edit-item-modal.active {
-      display: flex;
-    }
-
-    .ankundigungen-content,
-    .besprechungen-content,
-    .soldaten-content,
-    .beobachtung-akten-content,
-    .settings-content,
-    .edit-item-content {
-      background: var(--bg-card);
-      border-radius: var(--radius-lg);
-      padding: 20px;
-      width: 100%;
-      max-width: 800px;
-      max-height: 85vh;
-      border: 1px solid var(--border-light);
-      box-shadow: var(--shadow-lg);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-
-    .edit-item-content { max-width: 500px; }
-
-    .ankundigungen-header,
-    .besprechungen-header,
-    .soldaten-header,
-    .beobachtung-akten-header,
-    .settings-header,
-    .edit-item-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid var(--border-light);
-      flex-shrink: 0;
-    }
-
-    .ankundigungen-title,
-    .besprechungen-title,
-    .soldaten-title,
-    .beobachtung-akten-title,
-    .settings-title,
-    .edit-item-title {
-      font-size: 18px;
-      font-weight: 800;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .ankundigungen-close,
-    .besprechungen-close,
-    .soldaten-close,
-    .beobachtung-akten-close,
-    .settings-close,
-    .edit-item-close {
-      background: rgba(255,255,255,0.1);
-      border: none;
-      color: #fff;
-      font-size: 16px;
-      cursor: pointer;
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: var(--transition);
-    }
-    .ankundigungen-close:hover,
-    .besprechungen-close:hover,
-    .soldaten-close:hover,
-    .beobachtung-akten-close:hover,
-    .settings-close:hover,
-    .edit-item-close:hover {
-      background: var(--accent-danger);
-    }
-
-    /* Suchleisten */
-    .ankundigungen-search-container,
-    .besprechungen-search-container,
-    .soldaten-search-container,
-    .akten-search-container {
-      position: relative;
-      margin-bottom: 16px;
-      flex-shrink: 0;
-    }
-
-    .ankundigungen-search-input,
-    .besprechungen-search-input,
-    .soldaten-search-input,
-    .akten-search-input {
-      width: 100%;
-      padding: 10px 10px 10px 36px;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid var(--border-light);
-      border-radius: var(--radius-md);
-      color: #fff;
-      font-size: 13px;
-    }
-    .ankundigungen-search-input:focus,
-    .besprechungen-search-input:focus,
-    .soldaten-search-input:focus,
-    .akten-search-input:focus {
-      outline: none;
-      border-color: var(--accent-primary);
-    }
-
-    .ankundigungen-search-icon,
-    .besprechungen-search-icon,
-    .soldaten-search-icon,
-    .akten-search-icon {
-      position: absolute;
-      left: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--text-muted);
-      font-size: 14px;
-    }
-
-    /* Listen */
-    .ankundigungen-list-container,
-    .besprechungen-list-container,
-    .soldaten-liste-container,
-    .beobachtung-akten-liste {
-      flex: 1;
-      overflow-y: auto;
-      padding-right: 4px;
-    }
-
-    .ankundigungen-list,
-    .besprechungen-list,
-    .soldaten-liste,
-    .beobachtung-akten-liste {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .ankundigungen-item,
-    .besprechungen-item,
-    .soldaten-item,
-    .beobachtung-akte-item {
       background: rgba(255,255,255,0.03);
       border-radius: var(--radius-md);
-      padding: 16px;
       border: 1px solid var(--border-light);
     }
-
-    .ankundigungen-item-header,
-    .besprechungen-item-header,
-    .soldaten-item-header,
-    .beobachtung-akte-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-    }
-
-    .ankundigungen-item-title,
-    .besprechungen-item-title,
-    .soldaten-item-name,
-    .beobachtung-akte-name {
-      font-size: 15px;
-      font-weight: 800;
+    .unit-name, .rank-name, .manage-item-title {
+      flex: 1;
+      font-weight: 600;
       color: #fff;
+      font-size: 12px;
     }
-
-    .ankundigungen-item-type,
-    .besprechungen-item-type,
-    .soldaten-item-dn,
-    .beobachtung-akte-dn {
-      background: rgba(59,130,246,0.15);
-      color: var(--accent-primary);
-      padding: 4px 10px;
-      border-radius: 30px;
-      font-size: 11px;
-      font-weight: 700;
-    }
-
-    .soldaten-item-dn { background: rgba(234,179,8,0.15); color: var(--accent-warning); }
-    .beobachtung-akte-dn { background: rgba(59,130,246,0.15); color: var(--accent-primary); }
-
-    .ankundigungen-item-date,
-    .besprechungen-item-date,
-    .soldaten-item-date,
-    .beobachtung-akte-date {
-      color: var(--text-muted);
-      font-size: 11px;
-      margin-bottom: 12px;
-    }
-
-    .ankundigungen-item-content,
-    .besprechungen-item-content,
-    .soldaten-item-notizen,
-    .beobachtung-akte-grund {
-      background: rgba(0,0,0,0.3);
-      padding: 12px;
+    .discord-id {
+      padding: 4px 8px;
+      background: rgba(59,130,246,0.1);
+      border: 1px solid rgba(59,130,246,0.2);
       border-radius: var(--radius-sm);
-      border-left: 2px solid var(--accent-primary);
-      color: var(--text-secondary);
-      font-size: 12px;
-      line-height: 1.5;
-      margin-bottom: 12px;
-      max-height: 150px;
-      overflow-y: auto;
-    }
-
-    .besprechungen-item-content { border-left-color: var(--accent-success); }
-    .soldaten-item-notizen { border-left-color: var(--accent-warning); }
-
-    /* Tabs */
-    .settings-tabs,
-    .soldaten-tabs,
-    .beobachtung-tabs,
-    .ankundigungen-tabs {
-      display: flex;
-      gap: 2px;
-      margin-bottom: 16px;
-      border-bottom: 1px solid var(--border-light);
-      flex-shrink: 0;
-    }
-
-    .settings-tab,
-    .soldaten-tab,
-    .beobachtung-tab,
-    .ankundigungen-tab {
-      padding: 8px 16px;
-      background: none;
-      border: none;
-      color: var(--text-muted);
-      font-weight: 700;
-      cursor: pointer;
-      transition: var(--transition);
-      font-size: 12px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .settings-tab:hover,
-    .soldaten-tab:hover,
-    .beobachtung-tab:hover,
-    .ankundigungen-tab:hover { color: var(--accent-primary); }
-    .settings-tab.active,
-    .soldaten-tab.active,
-    .beobachtung-tab.active,
-    .ankundigungen-tab.active {
-      color: var(--accent-primary);
-      border-bottom: 2px solid var(--accent-primary);
-    }
-
-    /* Formulare */
-    .soldaten-form-grid,
-    .akte-form-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-
-    .soldaten-form-group,
-    .akte-form-group,
-    .settings-form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .soldaten-label,
-    .akte-label,
-    .settings-label {
-      font-weight: 700;
-      color: var(--text-secondary);
-      font-size: 11px;
-      text-transform: uppercase;
-    }
-
-    .soldaten-input,
-    .akte-input,
-    .settings-input,
-    .edit-item-input {
-      padding: 8px 12px;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid var(--border-light);
-      border-radius: var(--radius-md);
       color: #fff;
-      font-size: 13px;
+      font-size: 11px;
+      width: 150px;
+    }
+    .add-btn {
+      padding: 8px 12px;
+      background: var(--accent-primary);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-md);
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 12px;
       width: 100%;
     }
-    .soldaten-input:focus,
-    .akte-input:focus,
-    .settings-input:focus,
-    .edit-item-input:focus {
-      outline: none;
-      border-color: var(--accent-primary);
-    }
-
-    .soldaten-textarea,
-    .akte-textarea,
-    .edit-item-textarea {
-      min-height: 80px;
-      resize: vertical;
-    }
-
-    /* Preview */
-    .soldaten-preview,
-    .beobachtung-preview {
-      background: rgba(0,0,0,0.3);
-      border-radius: var(--radius-md);
-      padding: 16px;
-      border-left: 2px solid var(--accent-warning);
-      margin: 16px 0;
-    }
-    .beobachtung-preview { border-left-color: var(--accent-primary); }
-
-    .soldaten-preview-title,
-    .beobachtung-preview-title {
-      font-weight: 700;
-      color: var(--text-secondary);
-      margin-bottom: 8px;
-      font-size: 12px;
-    }
-
-    .soldaten-preview-content,
-    .beobachtung-preview-content {
-      font-family: 'Consolas', monospace;
-      white-space: pre-wrap;
-      font-size: 11px;
-      line-height: 1.4;
-      color: var(--text-secondary);
-      background: rgba(0,0,0,0.2);
-      padding: 12px;
-      border-radius: var(--radius-sm);
-      max-height: 200px;
-      overflow-y: auto;
-    }
-
-    /* Actions */
-    .soldaten-actions,
-    .beobachtung-actions,
-    .settings-actions,
-    .edit-item-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 12px;
-      margin-top: 16px;
-      padding-top: 16px;
-      border-top: 1px solid var(--border-light);
-      flex-shrink: 0;
-    }
-
-    .soldaten-btn,
-    .beobachtung-btn,
-    .manage-item-btn {
-      padding: 8px 16px;
-      border: none;
-      border-radius: var(--radius-md);
-      font-weight: 700;
-      cursor: pointer;
-      transition: var(--transition);
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 12px;
-    }
-
-    .soldaten-btn-copy,
-    .beobachtung-btn-copy,
-    .manage-item-btn-edit {
-      background: rgba(59,130,246,0.15);
-      color: var(--accent-primary);
-      border: 1px solid rgba(59,130,246,0.25);
-    }
-    .soldaten-btn-copy:hover,
-    .beobachtung-btn-copy:hover,
-    .manage-item-btn-edit:hover {
-      background: rgba(59,130,246,0.25);
-    }
-
-    .soldaten-btn-save,
-    .beobachtung-btn-save {
-      background: var(--accent-success);
-      color: #fff;
-    }
-    .soldaten-btn-save:hover,
-    .beobachtung-btn-save:hover {
-      background: var(--accent-success-dark);
-    }
-
-    .soldaten-item-btn,
-    .beobachtung-akte-btn {
-      padding: 4px 10px;
-      border: none;
-      border-radius: var(--radius-sm);
-      font-weight: 700;
-      cursor: pointer;
-      font-size: 11px;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .soldaten-item-actions,
-    .beobachtung-akte-actions,
-    .manage-item-actions {
-      display: flex;
-      gap: 8px;
-      justify-content: flex-end;
-    }
-
-    /* Empty States */
-    .empty-ankundigungen,
-    .empty-besprechungen,
-    .empty-soldaten,
-    .empty-beobachtungen {
-      text-align: center;
-      padding: 40px 20px;
-      color: var(--text-muted);
-    }
-    .empty-ankundigungen-icon,
-    .empty-besprechungen-icon,
-    .empty-soldaten-icon,
-    .empty-beobachtungen-icon {
-      font-size: 32px;
-      margin-bottom: 12px;
-      opacity: 0.3;
-    }
-    .empty-ankundigungen-title,
-    .empty-besprechungen-title,
-    .empty-soldaten-title,
-    .empty-beobachtungen-title {
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--text-secondary);
-    }
-
-    /* Floating Buttons */
-    .floating-buttons-container {
-      position: fixed;
-      bottom: 16px;
-      right: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      z-index: 1000;
-    }
-    .floating-button {
-      width: 44px;
-      height: 44px;
-      background: var(--accent-primary);
-      border: none;
-      border-radius: 50%;
-      color: #fff;
-      font-size: 18px;
-      cursor: pointer;
-      box-shadow: var(--shadow-lg);
-      transition: var(--transition);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .floating-button:hover {
-      background: var(--accent-primary-dark);
-      transform: scale(1.05);
-    }
-    .floating-button.soldaten { background: var(--accent-warning); }
-
-    /* Notification */
-    .notification {
-      position: fixed;
-      bottom: 16px;
-      right: 16px;
-      background: var(--accent-success);
-      color: #fff;
-      padding: 10px 16px;
-      border-radius: var(--radius-md);
-      box-shadow: var(--shadow-lg);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      z-index: 2001;
-      transform: translateY(100px);
-      opacity: 0;
-      transition: all 0.2s ease;
-      font-size: 12px;
-      font-weight: 600;
-    }
-    .notification.show { transform: translateY(0); opacity: 1; }
-    .notification.error { background: var(--accent-danger); }
-    .notification.warning { background: var(--accent-warning); }
-
-    /* Loading */
-    .loading {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 40px;
-    }
-    .loading-spinner {
-      width: 28px;
-      height: 28px;
-      border: 2px solid rgba(255,255,255,0.1);
-      border-top-color: var(--accent-primary);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      margin-bottom: 12px;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* Ankündigung Banner */
-    .ankundigung-banner {
-      position: fixed;
-      top: 16px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: var(--bg-card);
-      border: 1px solid var(--accent-primary);
-      border-radius: var(--radius-lg);
-      padding: 16px 20px;
-      z-index: 1900;
-      max-width: 500px;
-      width: 90%;
-      box-shadow: var(--shadow-lg);
-      display: none;
-    }
-    .ankundigung-banner.show { display: block; }
-    .banner-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
-    }
-    .banner-title { font-size: 15px; font-weight: 800; color: #fff; }
-    .banner-close { background: rgba(255,255,255,0.1); border: none; color: #fff; cursor: pointer; width: 24px; height: 24px; border-radius: 50%; }
-    .banner-close:hover { background: var(--accent-danger); }
-    .banner-content { color: var(--text-secondary); font-size: 13px; line-height: 1.5; }
-    .banner-meta { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-top: 8px; }
-
-    /* Scrollbar */
-    ::-webkit-scrollbar { width: 4px; height: 4px; }
-    ::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); }
-    ::-webkit-scrollbar-thumb { background: var(--accent-primary); border-radius: 2px; }
 
     /* Responsive */
     @media (max-width: 1000px) {
@@ -3597,7 +1487,7 @@
     </div>
   </div>
 
-  <!-- VERBESSERTES Settings Password Modal (kleiner & schöner) -->
+  <!-- Settings Password Modal -->
   <div class="settings-password-modal" id="settingsPasswordModal">
     <div class="settings-password-content">
       <div class="settings-password-header">
@@ -3669,12 +1559,7 @@
                  placeholder="Suchen..." oninput="searchAnkundigungen(this.value)">
         </div>
         <div class="ankundigungen-list-container">
-          <div class="ankundigungen-list" id="ankundigungenList">
-            <div class="empty-ankundigungen">
-              <div class="empty-ankundigungen-icon"><i class="fas fa-bullhorn"></i></div>
-              <div class="empty-ankundigungen-title">Keine Ankündigungen</div>
-            </div>
-          </div>
+          <div class="ankundigungen-list" id="ankundigungenList"></div>
         </div>
       </div>
     </div>
@@ -3694,12 +1579,7 @@
                  placeholder="Suchen..." oninput="searchBesprechungen(this.value)">
         </div>
         <div class="besprechungen-list-container">
-          <div class="besprechungen-list" id="besprechungenList">
-            <div class="empty-besprechungen">
-              <div class="empty-besprechungen-icon"><i class="fas fa-calendar-alt"></i></div>
-              <div class="empty-besprechungen-title">Keine Besprechungen</div>
-            </div>
-          </div>
+          <div class="besprechungen-list" id="besprechungenList"></div>
         </div>
       </div>
     </div>
@@ -4322,6 +2202,21 @@
       checkSettingsAuth() ? openSettingsModal() : openSettingsPasswordModal();
     }
 
+    // ==================== MODAL FUNKTIONEN ====================
+    function openModal(modalId) {
+      document.getElementById(modalId).classList.add('active');
+    }
+
+    function closeModal(modalId) {
+      const modal = document.getElementById(modalId);
+      if (modal) {
+        modal.classList.remove('active');
+        if (modalId === 'akteDetailModal') {
+          setTimeout(() => modal.remove(), 300);
+        }
+      }
+    }
+
     // ==================== ANKÜNDIGUNGEN FUNKTIONEN ====================
     function openAnkundigungenModal() {
       openModal('ankundigungenModal');
@@ -4486,6 +2381,7 @@
 
     // ==================== APP INITIALISIERUNG ====================
     function initializeApp() {
+      console.log('App wird initialisiert');
       loadSettings();
       setupRealtimeListeners();
       updateUnitAndRankSelects();
@@ -4582,7 +2478,9 @@
 
         updateUnitAndRankSelects();
         populateSettingsUI();
-      } catch (error) {}
+      } catch (error) {
+        console.error('Fehler beim Laden der Einstellungen:', error);
+      }
     }
 
     function populateSettingsUI() {
@@ -4622,6 +2520,7 @@
       if (name && name.trim()) {
         settings.units.push({ name: name.trim(), discordId: '' });
         populateSettingsUI();
+        showNotification('Unit hinzugefügt');
       }
     }
 
@@ -4630,6 +2529,7 @@
       if (name && name.trim()) {
         settings.ranks.push({ name: name.trim(), discordId: '' });
         populateSettingsUI();
+        showNotification('Rang hinzugefügt');
       }
     }
 
@@ -4645,6 +2545,7 @@
       if (confirm('Unit wirklich löschen?')) {
         settings.units.splice(index, 1);
         populateSettingsUI();
+        showNotification('Unit gelöscht');
       }
     }
 
@@ -4652,6 +2553,7 @@
       if (confirm('Rang wirklich löschen?')) {
         settings.ranks.splice(index, 1);
         populateSettingsUI();
+        showNotification('Rang gelöscht');
       }
     }
 
@@ -4662,6 +2564,7 @@
         closeModal('settingsModal');
         showNotification('Einstellungen gespeichert');
       } catch (error) {
+        console.error('Fehler beim Speichern der Einstellungen:', error);
         showNotification('Fehler beim Speichern', 'error');
       }
     }
@@ -4684,7 +2587,7 @@
             option.textContent = unit.name;
             select.appendChild(option);
           });
-          select.value = currentValue;
+          if (currentValue) select.value = currentValue;
         }
       });
 
@@ -4705,7 +2608,7 @@
             option.textContent = rank.name;
             select.appendChild(option);
           });
-          select.value = currentValue;
+          if (currentValue) select.value = currentValue;
         }
       });
     }
@@ -4728,6 +2631,9 @@
             const updated = employees.find(e => e.id === currentEmployee.id);
             if (updated) selectEmployee(updated);
           }
+          setTimeout(updateInductionDisplay, 100);
+        }, (error) => {
+          console.error('Fehler beim Lauschen auf Mitarbeiter-Änderungen:', error);
         });
 
       const unsubscribeAkten = db.collection('hrAkten').orderBy('lastUpdated', 'desc').limit(100)
@@ -4738,6 +2644,8 @@
             akten.push({ id: doc.id, ...data, createdFormatted: data.createdFormatted || new Date(data.created).toLocaleDateString('de-DE') });
           });
           updateStats();
+        }, (error) => {
+          console.error('Fehler beim Lauschen auf Akten-Änderungen:', error);
         });
 
       const unsubscribeSoldaten = db.collection('hrSoldatenGespräche').orderBy('created', 'desc').limit(100)
@@ -4751,6 +2659,8 @@
               dateFormatted: data.dateFormatted || (data.date ? new Date(data.date).toLocaleDateString('de-DE') : '')
             });
           });
+        }, (error) => {
+          console.error('Fehler beim Lauschen auf Soldatengespräche:', error);
         });
 
       const unsubscribeSettings = db.collection('hrSettings').doc('settings')
@@ -4760,9 +2670,21 @@
             populateSettingsUI();
             updateUnitAndRankSelects();
           }
+        }, (error) => {
+          console.error('Fehler beim Lauschen auf Settings:', error);
         });
 
-      unsubscribeFunctions = [unsubscribeEmployees, unsubscribeAkten, unsubscribeSoldaten, unsubscribeSettings];
+      const unsubscribeAnkundigungen = db.collection('hrAnkundigungen')
+        .onSnapshot((snapshot) => {
+          ankundigungen = [];
+          snapshot.forEach(doc => {
+            ankundigungen.push({ id: doc.id, ...doc.data() });
+          });
+        }, (error) => {
+          console.error('Fehler beim Lauschen auf Ankündigungen:', error);
+        });
+
+      unsubscribeFunctions = [unsubscribeEmployees, unsubscribeAkten, unsubscribeSoldaten, unsubscribeSettings, unsubscribeAnkundigungen];
     }
 
     // ==================== SOLDATENGESPRÄCH FUNKTIONEN ====================
@@ -4862,6 +2784,7 @@ Sonstiges: ${sonstiges || ''}
         renderSoldatenListe();
         switchSoldatenTab('list');
       } catch (error) {
+        console.error('Fehler beim Speichern des Soldatengesprächs:', error);
         showNotification('Fehler', 'error');
       }
     }
@@ -4893,8 +2816,8 @@ Sonstiges: ${sonstiges || ''}
             <div class="soldaten-item-date">${g.dateFormatted} um ${g.time || ''}</div>
             <div class="soldaten-item-notizen">${escapeHtml(g.notizen)}</div>
             <div class="soldaten-item-actions">
-              <button class="soldaten-item-btn" onclick="copySoldatenFromList('${g.id}')">Kopieren</button>
-              <button class="soldaten-item-btn" onclick="deleteSoldatenGespräch('${g.id}')">Löschen</button>
+              <button class="soldaten-item-btn soldaten-item-btn-copy" onclick="copySoldatenFromList('${g.id}')">Kopieren</button>
+              <button class="soldaten-item-btn soldaten-item-btn-delete" onclick="deleteSoldatenGespräch('${g.id}')">Löschen</button>
             </div>
           </div>
         `;
@@ -4920,6 +2843,7 @@ Sonstiges: ${sonstiges || ''}
         await db.collection('hrSoldatenGespräche').doc(id).delete();
         showNotification('Gelöscht');
       } catch (error) {
+        console.error('Fehler beim Löschen:', error);
         showNotification('Fehler', 'error');
       }
     }
@@ -5002,9 +2926,11 @@ Grund: ${grund || ''}
         document.getElementById('akteDN').value = '';
         document.getElementById('akteUnit').value = '';
         document.getElementById('akteRank').value = '';
+        updateStats();
         renderAktenListe();
         switchBeobachtungTab('list');
       } catch (error) {
+        console.error('Fehler beim Erstellen der Akte:', error);
         showNotification('Fehler', 'error');
       }
     }
@@ -5033,6 +2959,7 @@ Grund: ${grund || ''}
         try {
           await db.collection('hrAkten').doc(akte.id).set(akte);
         } catch (error) {
+          console.error('Fehler beim Erstellen der Akte:', error);
           showNotification('Fehler', 'error');
           return;
         }
@@ -5061,8 +2988,10 @@ Grund: ${grund || ''}
         document.getElementById('beobachtungDN').value = '';
         document.getElementById('beobachtungGrund').value = '';
         updateBeobachtungPreview();
+        updateStats();
         renderAktenListe();
       } catch (error) {
+        console.error('Fehler beim Speichern der Beobachtung:', error);
         showNotification('Fehler', 'error');
       }
     }
@@ -5094,10 +3023,10 @@ Grund: ${grund || ''}
               <div class="beobachtung-akte-dn">DN ${escapeHtml(akte.dn)}</div>
             </div>
             <div class="beobachtung-akte-date">Erstellt: ${akte.createdFormatted}</div>
-            <div>${count} Beobachtung(en)</div>
+            <div style="margin-bottom:12px;">${count} Beobachtung(en)</div>
             <div class="beobachtung-akte-actions">
-              <button class="beobachtung-akte-btn" onclick="openAkteDetail('${akte.id}')">Öffnen</button>
-              <button class="beobachtung-akte-btn" onclick="deleteAkte('${akte.id}')">Löschen</button>
+              <button class="beobachtung-akte-btn beobachtung-akte-btn-copy" onclick="openAkteDetail('${akte.id}')">Öffnen</button>
+              <button class="beobachtung-akte-btn beobachtung-akte-btn-delete" onclick="deleteAkte('${akte.id}')">Löschen</button>
             </div>
           </div>
         `;
@@ -5122,8 +3051,8 @@ Grund: ${grund || ''}
               <div class="beobachtung-akte-date">${b.dateFormatted}</div>
               <div class="beobachtung-akte-grund">${escapeHtml(b.grund)}</div>
               <div class="beobachtung-akte-actions">
-                <button class="beobachtung-akte-btn" onclick="copyBeobachtungFromAkte('${akte.id}', '${b.id}')">Kopieren</button>
-                <button class="beobachtung-akte-btn" onclick="deleteBeobachtungFromAkte('${akte.id}', '${b.id}')">Löschen</button>
+                <button class="beobachtung-akte-btn beobachtung-akte-btn-copy" onclick="copyBeobachtungFromAkte('${akte.id}', '${b.id}')">Kopieren</button>
+                <button class="beobachtung-akte-btn beobachtung-akte-btn-delete" onclick="deleteBeobachtungFromAkte('${akte.id}', '${b.id}')">Löschen</button>
               </div>
             </div>
           `;
@@ -5141,7 +3070,9 @@ Grund: ${grund || ''}
             </div>
             <div class="beobachtung-akten-body">
               <div class="beobachtung-akten-liste">${beobachtungenHtml}</div>
-              <button class="btn btn-primary" onclick="addNewBeobachtungToAkte('${akte.id}')">+ Beobachtung</button>
+              <div class="beobachtung-actions">
+                <button class="beobachtung-btn beobachtung-btn-save" onclick="addNewBeobachtungToAkte('${akte.id}')">+ Beobachtung</button>
+              </div>
             </div>
           </div>
         </div>
@@ -5179,7 +3110,9 @@ Grund: ${grund || ''}
         showNotification('Beobachtung gelöscht');
         closeModal('akteDetailModal');
         setTimeout(() => openAkteDetail(akteId), 100);
+        renderAktenListe();
       } catch (error) {
+        console.error('Fehler beim Löschen der Beobachtung:', error);
         showNotification('Fehler', 'error');
       }
     }
@@ -5190,6 +3123,7 @@ Grund: ${grund || ''}
         await db.collection('hrAkten').doc(akteId).delete();
         showNotification('Akte gelöscht');
       } catch (error) {
+        console.error('Fehler beim Löschen der Akte:', error);
         showNotification('Fehler', 'error');
       }
     }
@@ -5259,6 +3193,7 @@ Grund: ${grund || ''}
 
         container.innerHTML = html;
       } catch (error) {
+        console.error('Fehler beim Laden der Ankündigungen:', error);
         container.innerHTML = '<div class="empty-ankundigungen">Fehler</div>';
       }
     }
@@ -5293,6 +3228,7 @@ Grund: ${grund || ''}
 
         container.innerHTML = html;
       } catch (error) {
+        console.error('Fehler beim Laden der Besprechungen:', error);
         container.innerHTML = '<div class="empty-ankundigungen">Fehler</div>';
       }
     }
@@ -5316,7 +3252,10 @@ Grund: ${grund || ''}
     async function editAnkundigung(id) {
       try {
         const doc = await db.collection('hrAnkundigungen').doc(id).get();
-        if (!doc.exists) return;
+        if (!doc.exists) {
+          showNotification('Ankündigung nicht gefunden', 'error');
+          return;
+        }
 
         const data = doc.data();
         currentEditItemId = id;
@@ -5325,19 +3264,31 @@ Grund: ${grund || ''}
         document.getElementById('editItemTitle').innerHTML = '<i class="fas fa-edit"></i> Ankündigung bearbeiten';
         
         const formHtml = `
-          <input type="text" class="edit-item-input" id="editAnkundigungTitle" value="${escapeHtml(data.title || '')}" placeholder="Titel">
-          <textarea class="edit-item-input edit-item-textarea" id="editAnkundigungContent" rows="4">${escapeHtml(data.content || '')}</textarea>
+          <div class="settings-form-group">
+            <label class="settings-label">Titel</label>
+            <input type="text" class="edit-item-input" id="editAnkundigungTitle" value="${escapeHtml(data.title || '')}" placeholder="Titel">
+          </div>
+          <div class="settings-form-group">
+            <label class="settings-label">Inhalt *</label>
+            <textarea class="edit-item-input edit-item-textarea" id="editAnkundigungContent" rows="4">${escapeHtml(data.content || '')}</textarea>
+          </div>
         `;
         
         document.getElementById('editItemForm').innerHTML = formHtml;
         openEditItemModal();
-      } catch (error) {}
+      } catch (error) {
+        console.error('Fehler beim Laden der Ankündigung:', error);
+        showNotification('Fehler', 'error');
+      }
     }
 
     async function editBesprechung(id) {
       try {
         const doc = await db.collection('hrAnkundigungen').doc(id).get();
-        if (!doc.exists) return;
+        if (!doc.exists) {
+          showNotification('Besprechung nicht gefunden', 'error');
+          return;
+        }
 
         const data = doc.data();
         currentEditItemId = id;
@@ -5346,16 +3297,34 @@ Grund: ${grund || ''}
         document.getElementById('editItemTitle').innerHTML = '<i class="fas fa-edit"></i> Besprechung bearbeiten';
         
         const formHtml = `
-          <input type="text" class="edit-item-input" id="editBesprechungThema" value="${escapeHtml(data.thema || '')}" placeholder="Thema">
-          <input type="date" class="edit-item-input" id="editBesprechungDate" value="${data.date || ''}">
-          <input type="time" class="edit-item-input" id="editBesprechungTime" value="${data.time || ''}">
-          <input type="text" class="edit-item-input" id="editBesprechungOrt" value="${escapeHtml(data.ort || '')}" placeholder="Ort">
-          <textarea class="edit-item-input edit-item-textarea" id="editBesprechungContent" rows="4">${escapeHtml(data.content || '')}</textarea>
+          <div class="settings-form-group">
+            <label class="settings-label">Thema *</label>
+            <input type="text" class="edit-item-input" id="editBesprechungThema" value="${escapeHtml(data.thema || '')}" placeholder="Thema">
+          </div>
+          <div class="settings-form-group">
+            <label class="settings-label">Datum *</label>
+            <input type="date" class="edit-item-input" id="editBesprechungDate" value="${data.date || ''}">
+          </div>
+          <div class="settings-form-group">
+            <label class="settings-label">Uhrzeit *</label>
+            <input type="time" class="edit-item-input" id="editBesprechungTime" value="${data.time || ''}">
+          </div>
+          <div class="settings-form-group">
+            <label class="settings-label">Ort</label>
+            <input type="text" class="edit-item-input" id="editBesprechungOrt" value="${escapeHtml(data.ort || '')}" placeholder="Ort">
+          </div>
+          <div class="settings-form-group">
+            <label class="settings-label">Inhalt *</label>
+            <textarea class="edit-item-input edit-item-textarea" id="editBesprechungContent" rows="4">${escapeHtml(data.content || '')}</textarea>
+          </div>
         `;
         
         document.getElementById('editItemForm').innerHTML = formHtml;
         openEditItemModal();
-      } catch (error) {}
+      } catch (error) {
+        console.error('Fehler beim Laden der Besprechung:', error);
+        showNotification('Fehler', 'error');
+      }
     }
 
     async function saveEditedItem() {
@@ -5382,6 +3351,7 @@ Grund: ${grund || ''}
           loadManageAnkundigungen();
           loadAnkundigungen();
         } catch (error) {
+          console.error('Fehler beim Aktualisieren der Ankündigung:', error);
           showNotification('Fehler', 'error');
         }
       } else if (currentEditItemType === 'besprechung') {
@@ -5407,6 +3377,7 @@ Grund: ${grund || ''}
           loadManageBesprechungen();
           loadBesprechungen();
         } catch (error) {
+          console.error('Fehler beim Aktualisieren der Besprechung:', error);
           showNotification('Fehler', 'error');
         }
       }
@@ -5418,7 +3389,10 @@ Grund: ${grund || ''}
         await db.collection('hrAnkundigungen').doc(id).delete();
         showNotification('Gelöscht');
         loadManageAnkundigungen();
-      } catch (error) {}
+      } catch (error) {
+        console.error('Fehler beim Löschen:', error);
+        showNotification('Fehler', 'error');
+      }
     }
 
     async function deleteBesprechung(id) {
@@ -5427,7 +3401,10 @@ Grund: ${grund || ''}
         await db.collection('hrAnkundigungen').doc(id).delete();
         showNotification('Gelöscht');
         loadManageBesprechungen();
-      } catch (error) {}
+      } catch (error) {
+        console.error('Fehler beim Löschen:', error);
+        showNotification('Fehler', 'error');
+      }
     }
 
     function openEditItemModal() {
@@ -5467,6 +3444,7 @@ Grund: ${grund || ''}
         document.getElementById('ankundigungContent').value = '';
         closeModal('settingsModal');
       } catch (error) {
+        console.error('Fehler beim Speichern der Ankündigung:', error);
         showNotification('Fehler', 'error');
       }
     }
@@ -5502,6 +3480,7 @@ Grund: ${grund || ''}
         document.getElementById('besprechungContent').value = '';
         closeModal('settingsModal');
       } catch (error) {
+        console.error('Fehler beim Speichern der Besprechung:', error);
         showNotification('Fehler', 'error');
       }
     }
@@ -5510,6 +3489,15 @@ Grund: ${grund || ''}
     function setupEventListeners() {
       document.getElementById('searchEmployees').addEventListener('input', function(e) {
         filterEmployees(e.target.value);
+      });
+
+      document.addEventListener('keydown', function(e) {
+        if (e.ctrlKey && e.key === 'n') { e.preventDefault(); openNewEmployeeModal(); }
+        if (e.ctrlKey && e.key === 'f') { e.preventDefault(); document.getElementById('searchEmployees').focus(); }
+        if (e.ctrlKey && e.key === 'e' && currentEmployee) { e.preventDefault(); openEditEmployeeModal(); }
+        if (e.ctrlKey && e.key === 'b') { e.preventDefault(); openBeobachtungAktenModal(); }
+        if (e.ctrlKey && e.key === 's') { e.preventDefault(); openSoldatenModal(); }
+        if (e.ctrlKey && e.key === ',') { e.preventDefault(); openSettingsWithPassword(); }
       });
 
       window.addEventListener('resize', adjustSidebarHeight);
@@ -5552,7 +3540,7 @@ Grund: ${grund || ''}
       filtered.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
       if (filtered.length === 0) {
-        container.innerHTML = '<div class="empty-state">Keine Mitarbeiter</div>';
+        container.innerHTML = '<div class="empty-state"><div class="empty-icon"><i class="fas fa-users"></i></div><div class="empty-title">Keine Mitarbeiter</div></div>';
         countElement.textContent = '0';
         return;
       }
@@ -5653,16 +3641,15 @@ Grund: ${grund || ''}
       updateInductionUI('org', orgCompleted);
 
       const archiveButton = document.getElementById('archiveButton');
-      const archiveButtonText = document.getElementById('archiveButtonText');
       
       if (isArchived) {
         archiveButton.style.display = 'inline-flex';
-        archiveButtonText.textContent = 'Wiederherstellen';
+        archiveButton.innerHTML = '<i class="fas fa-undo"></i> Wiederherstellen';
         document.getElementById('oralInductionToggle').disabled = true;
         document.getElementById('orgInductionToggle').disabled = true;
       } else {
         archiveButton.style.display = 'inline-flex';
-        archiveButtonText.textContent = 'Archivieren';
+        archiveButton.innerHTML = '<i class="fas fa-archive"></i> Archivieren';
         document.getElementById('oralInductionToggle').disabled = false;
         document.getElementById('orgInductionToggle').disabled = false;
       }
@@ -5676,6 +3663,7 @@ Grund: ${grund || ''}
       const orgCompleted = currentEmployee.inductions?.org?.completed || false;
       updateInductionUI('oral', oralCompleted);
       updateInductionUI('org', orgCompleted);
+      renderEmployeeList();
     }
 
     function updateEmployeeHeader() {
@@ -5719,6 +3707,11 @@ Grund: ${grund || ''}
         unit: document.getElementById('unitSelect2').value,
         rank: document.getElementById('rankSelect2').value
       };
+
+      const unitSelectValue = document.getElementById('unitSelect').value;
+      const rankSelectValue = document.getElementById('rankSelect').value;
+      if (unitSelectValue) currentEmployee.unit = unitSelectValue;
+      if (rankSelectValue) currentEmployee.rank = rankSelectValue;
     }
 
     async function saveEmployeeData(autoSave = false) {
@@ -5739,6 +3732,7 @@ Grund: ${grund || ''}
         await db.collection('hrEmployees').doc(currentEmployee.id).set(dataToSave, { merge: true });
         return true;
       } catch (error) {
+        console.error('Fehler beim Speichern:', error);
         if (!autoSave) showNotification('Fehler beim Speichern', 'error');
         return false;
       }
@@ -5794,6 +3788,7 @@ Grund: ${grund || ''}
         updateStats();
         showNotification('Mitarbeiter gelöscht');
       } catch (error) {
+        console.error('Fehler beim Löschen:', error);
         showNotification('Fehler', 'error');
       }
     }
@@ -5810,10 +3805,21 @@ Grund: ${grund || ''}
       updateInductionUI(type, completed);
       updateTemplates();
       saveEmployeeData(true);
+      checkBothInductionsCompleted();
       renderEmployeeList();
       updateStats();
 
       showNotification(`${type === 'oral' ? 'Mündliche' : 'Organ.'} Einweisung ${completed ? 'bestanden' : 'ausstehend'}`);
+    }
+
+    function checkBothInductionsCompleted() {
+      if (!currentEmployee) return false;
+      const oralCompleted = currentEmployee.inductions?.oral?.completed || false;
+      const orgCompleted = currentEmployee.inductions?.org?.completed || false;
+      const nowBothCompleted = oralCompleted && orgCompleted;
+      if (nowBothCompleted && !bothInductionsCompleted) bothInductionsCompleted = true;
+      else if (!nowBothCompleted) bothInductionsCompleted = false;
+      return nowBothCompleted;
     }
 
     function updateTemplates() {
@@ -5909,16 +3915,16 @@ Sonstiges: ${notes}
         </div>
         <div style="padding:4px 0;">
           <button onclick="selectEmployee(employees.find(x => x.id === '${emp.id}')); openEditEmployeeModal(); document.getElementById('contextMenu')?.remove();"
-            style="width:100%;text-align:left;padding:8px;background:none;border:none;color:var(--accent-primary);cursor:pointer;">
-            Bearbeiten
+            style="width:100%;text-align:left;padding:8px;background:none;border:none;color:var(--accent-primary);cursor:pointer;display:flex;align-items:center;gap:4px;">
+            <i class="fas fa-edit"></i> Bearbeiten
           </button>
           <button onclick="toggleArchiveEmployeeContext('${emp.id}')"
-            style="width:100%;text-align:left;padding:8px;background:none;border:none;color:${isArchived ? 'var(--accent-success)' : 'var(--accent-warning)'};cursor:pointer;">
-            ${isArchived ? 'Wiederherstellen' : 'Archivieren'}
+            style="width:100%;text-align:left;padding:8px;background:none;border:none;color:${isArchived ? 'var(--accent-success)' : 'var(--accent-warning)'};cursor:pointer;display:flex;align-items:center;gap:4px;">
+            <i class="fas ${isArchived ? 'fa-undo' : 'fa-archive'}"></i> ${isArchived ? 'Wiederherstellen' : 'Archivieren'}
           </button>
           <button onclick="deleteEmployeePermanently('${emp.id}')"
-            style="width:100%;text-align:left;padding:8px;background:none;border:none;color:var(--accent-danger);cursor:pointer;">
-            Löschen
+            style="width:100%;text-align:left;padding:8px;background:none;border:none;color:var(--accent-danger);cursor:pointer;display:flex;align-items:center;gap:4px;">
+            <i class="fas fa-trash"></i> Löschen
           </button>
         </div>
       `;
@@ -5954,6 +3960,7 @@ Sonstiges: ${notes}
         showNotification(newStatus === 'archived' ? 'Archiviert' : 'Wiederhergestellt');
         document.getElementById('contextMenu')?.remove();
       } catch (error) {
+        console.error('Fehler beim Archivieren/Wiederherstellen:', error);
         showNotification('Fehler', 'error');
       }
     }
@@ -5975,6 +3982,7 @@ Sonstiges: ${notes}
         showNotification('Gelöscht');
         document.getElementById('contextMenu')?.remove();
       } catch (error) {
+        console.error('Fehler beim Löschen:', error);
         showNotification('Fehler', 'error');
       }
     }
@@ -6010,15 +4018,6 @@ Sonstiges: ${notes}
       showNotification(success ? 'Kopiert' : 'Fehler');
     }
 
-    function openModal(modalId) {
-      document.getElementById(modalId).classList.add('active');
-    }
-
-    function closeModal(modalId) {
-      const modal = document.getElementById(modalId);
-      if (modal) modal.classList.remove('active');
-    }
-
     function openNewEmployeeModal() {
       openModal('newEmployeeModal');
     }
@@ -6041,8 +4040,8 @@ Sonstiges: ${notes}
         rank: document.getElementById('newEmployeeRank').value || '',
         lastUpdated: new Date().toISOString(),
         inductions: { oral: { completed: false }, org: { completed: false } },
-        oralData: { date: '', timeStart: '16:40', timeEnd: '18:00', person: '', notes: '' },
-        orgData: { date: '', timeStart: '22:10', timeEnd: '23:05', person: '', notes: '' },
+        oralData: { date: '', timeStart: '16:40', timeEnd: '18:00', person: '', notes: '', unit: document.getElementById('newEmployeeUnit').value || '', rank: document.getElementById('newEmployeeRank').value || '' },
+        orgData: { date: '', timeStart: '22:10', timeEnd: '23:05', person: '', notes: '', unit: document.getElementById('newEmployeeUnit').value || '', rank: document.getElementById('newEmployeeRank').value || '' },
         status: 'active'
       };
 
@@ -6057,6 +4056,7 @@ Sonstiges: ${notes}
         document.getElementById('newEmployeeRank').value = '';
         showNotification('Mitarbeiter erstellt');
       } catch (error) {
+        console.error('Fehler beim Erstellen:', error);
         showNotification('Fehler', 'error');
       }
     }
@@ -6110,6 +4110,7 @@ Sonstiges:
 
         showNotification(newStatus === 'archived' ? 'Archiviert' : 'Wiederhergestellt');
       } catch (error) {
+        console.error('Fehler beim Archivieren/Wiederherstellen:', error);
         showNotification('Fehler', 'error');
       }
     }
