@@ -12,15 +12,15 @@
   <title>📋 HR - Einweisungsmanagement v2.0</title>
 
   <!-- Font Awesome -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  ‌<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  ‌<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+  ‌<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  ‌<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  ‌<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
   <style>
     /* -------------------- RESET & VARIABLES -------------------- */
@@ -93,15 +93,22 @@
     }
 
     .login-logo {
-      width: 64px;
-      height: 64px;
-      background: var(--accent-discord);
+      width: 80px;
+      height: 80px;
+      background: transparent;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       margin: 0 auto 20px;
-      font-size: 32px;
+      overflow: hidden;
+      border: 2px solid var(--accent-primary);
+    }
+    
+    .login-logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
     }
 
     .login-title {
@@ -177,11 +184,11 @@
     .brand {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 16px;
     }
     .logo-container {
-      width: 40px;
-      height: 40px;
+      width: 60px;
+      height: 60px;
       border-radius: var(--radius-md);
       overflow: hidden;
       background: rgba(255,255,255,0.05);
@@ -322,6 +329,7 @@
       display: flex;
       gap: 4px;
       margin-bottom: 12px;
+      flex-wrap: wrap;
     }
     .sidebar-filter-btn {
       padding: 6px 0;
@@ -335,6 +343,7 @@
       transition: var(--transition);
       flex: 1;
       text-align: center;
+      min-width: 60px;
     }
     .sidebar-filter-btn:hover { background: rgba(255,255,255,0.1); }
     .sidebar-filter-btn.active { background: var(--accent-primary); color: white; border-color: var(--accent-primary); }
@@ -463,24 +472,25 @@
 
     .quick-actions {
       display: grid;
-      grid-template-columns: 1fr;
+      grid-template-columns: repeat(3, 1fr);
       gap: 6px;
       margin-top: auto;
     }
     .quick-action-btn {
-      padding: 8px;
+      padding: 8px 4px;
       background: rgba(59,130,246,0.1);
       border: 1px solid rgba(59,130,246,0.2);
       border-radius: var(--radius-md);
       color: var(--accent-primary);
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 700;
       cursor: pointer;
       transition: var(--transition);
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 4px;
+      gap: 2px;
+      white-space: nowrap;
     }
     .quick-action-btn:hover {
       background: rgba(59,130,246,0.2);
@@ -495,6 +505,7 @@
       overflow: hidden;
       display: flex;
       flex-direction: column;
+      max-height: calc(100vh - 120px);
     }
 
     .content-header {
@@ -506,6 +517,7 @@
       align-items: center;
       flex-wrap: wrap;
       gap: 12px;
+      flex-shrink: 0;
     }
     .employee-info h2 {
       font-size: 18px;
@@ -840,7 +852,8 @@
     .beobachtung-akten-modal,
     .settings-modal,
     .edit-item-modal,
-    .modal-overlay {
+    .modal-overlay,
+    .custom-confirm-modal {
       display: none;
       position: fixed;
       inset: 0;
@@ -858,7 +871,8 @@
     .beobachtung-akten-modal.active,
     .settings-modal.active,
     .edit-item-modal.active,
-    .modal-overlay.active {
+    .modal-overlay.active,
+    .custom-confirm-modal.active {
       display: flex;
     }
 
@@ -868,7 +882,8 @@
     .beobachtung-akten-content,
     .settings-content,
     .edit-item-content,
-    .modal {
+    .modal,
+    .custom-confirm-content {
       background: var(--bg-card);
       border-radius: var(--radius-lg);
       padding: 20px;
@@ -884,6 +899,7 @@
 
     .modal { max-width: 500px; }
     .edit-item-content { max-width: 500px; }
+    .custom-confirm-content { max-width: 400px; }
 
     .ankundigungen-header,
     .besprechungen-header,
@@ -891,7 +907,8 @@
     .beobachtung-akten-header,
     .settings-header,
     .edit-item-header,
-    .modal-header {
+    .modal-header,
+    .custom-confirm-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -907,7 +924,8 @@
     .beobachtung-akten-title,
     .settings-title,
     .edit-item-title,
-    .modal-title {
+    .modal-title,
+    .custom-confirm-title {
       font-size: 18px;
       font-weight: 800;
       color: #fff;
@@ -922,7 +940,8 @@
     .beobachtung-akten-close,
     .settings-close,
     .edit-item-close,
-    .modal-close {
+    .modal-close,
+    .custom-confirm-close {
       background: rgba(255,255,255,0.1);
       border: none;
       color: #fff;
@@ -942,7 +961,8 @@
     .beobachtung-akten-close:hover,
     .settings-close:hover,
     .edit-item-close:hover,
-    .modal-close:hover {
+    .modal-close:hover,
+    .custom-confirm-close:hover {
       background: var(--accent-danger);
     }
 
@@ -988,14 +1008,16 @@
       font-size: 14px;
     }
 
-    /* Listen */
+    /* Listen mit Scrollbarkeit */
     .ankundigungen-list-container,
     .besprechungen-list-container,
     .soldaten-liste-container,
-    .beobachtung-akten-liste {
+    .beobachtung-akten-liste,
+    .akten-detail-liste {
       flex: 1;
       overflow-y: auto;
       padding-right: 4px;
+      max-height: 60vh;
     }
 
     .ankundigungen-list,
@@ -1089,13 +1111,14 @@
       margin-bottom: 16px;
       border-bottom: 1px solid var(--border-light);
       flex-shrink: 0;
+      flex-wrap: wrap;
     }
 
     .settings-tab,
     .soldaten-tab,
     .beobachtung-tab,
     .ankundigungen-tab {
-      padding: 8px 16px;
+      padding: 8px 12px;
       background: none;
       border: none;
       color: var(--text-muted);
@@ -1106,6 +1129,7 @@
       display: flex;
       align-items: center;
       gap: 6px;
+      white-space: nowrap;
     }
     .settings-tab:hover,
     .soldaten-tab:hover,
@@ -1119,13 +1143,13 @@
       border-bottom: 2px solid var(--accent-primary);
     }
 
-    /* Formulare */
+    /* Formulare mit verbesserten Abständen */
     .soldaten-form-grid,
     .akte-form-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-      margin-bottom: 16px;
+      gap: 16px;
+      margin-bottom: 20px;
     }
 
     .soldaten-form-group,
@@ -1133,7 +1157,7 @@
     .settings-form-group {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 6px;
     }
 
     .soldaten-label,
@@ -1209,7 +1233,8 @@
     .soldaten-actions,
     .beobachtung-actions,
     .settings-actions,
-    .edit-item-actions {
+    .edit-item-actions,
+    .custom-confirm-actions {
       display: flex;
       justify-content: flex-end;
       gap: 12px;
@@ -1276,6 +1301,7 @@
       display: flex;
       gap: 8px;
       justify-content: flex-end;
+      margin-top: 8px;
     }
 
     /* Empty States */
@@ -1421,7 +1447,7 @@
       gap: 8px;
       max-height: 300px;
       overflow-y: auto;
-      margin-bottom: 12px;
+      margin-bottom: 16px;
     }
     .unit-item, .rank-item, .manage-item {
       display: flex;
@@ -1457,6 +1483,83 @@
       cursor: pointer;
       font-size: 12px;
       width: 100%;
+      margin-top: 8px;
+    }
+
+    /* Verbesserte Abstände in den Settings Tabs */
+    .ankundigungen-tab-content {
+      padding: 8px 0;
+    }
+    
+    .ankundigungen-tab-content input,
+    .ankundigungen-tab-content textarea,
+    .ankundigungen-tab-content .settings-input {
+      margin-bottom: 16px;
+    }
+    
+    .ankundigungen-tab-content .btn {
+      margin-top: 8px;
+    }
+    
+    .manage-items-list {
+      margin-top: 16px;
+    }
+    
+    /* Select Dropdown Hintergrund fix */
+    select.form-input,
+    select.form-select,
+    select.soldaten-input,
+    select.akte-input,
+    select.settings-input,
+    select.edit-item-input {
+      background-color: var(--bg-card-light);
+      color: #fff;
+    }
+    
+    select.form-input option,
+    select.form-select option,
+    select.soldaten-input option,
+    select.akte-input option,
+    select.settings-input option,
+    select.edit-item-input option {
+      background-color: var(--bg-card);
+      color: #fff;
+    }
+    
+    /* Beobachtungs-Akten Buttons kompakter */
+    .beobachtung-akte-actions {
+      margin-top: 4px;
+    }
+    
+    .beobachtung-akte-btn {
+      padding: 2px 8px;
+      font-size: 10px;
+    }
+    
+    /* Soldaten Modal scrollbar */
+    .soldaten-content {
+      max-height: 85vh;
+      overflow: hidden;
+    }
+    
+    .soldaten-body {
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    
+    /* Custom Confirm Modal */
+    .custom-confirm-content {
+      text-align: center;
+    }
+    
+    .custom-confirm-message {
+      margin: 20px 0;
+      font-size: 14px;
+      color: var(--text-primary);
+    }
+    
+    .custom-confirm-actions {
+      justify-content: center;
     }
 
     /* Responsive */
@@ -1474,7 +1577,7 @@
   <div class="login-screen" id="loginScreen">
     <div class="login-card">
       <div class="login-logo">
-        <i class="fab fa-discord"></i>
+        <img src="https://i.ibb.co/HLjKS2Yz/US-Army-Civilian-Human-Resources-Agency-seal.png" alt="HR Logo">
       </div>
       <div class="login-title">HR - Einweisungsmanagement</div>
       <div class="login-subtitle">Melde dich mit Discord an</div>
@@ -1528,6 +1631,25 @@
       <div class="edit-item-actions">
         <button class="btn btn-secondary" onclick="closeEditItemModal()">Abbrechen</button>
         <button class="btn btn-primary" onclick="saveEditedItem()">Speichern</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Confirm Modal -->
+  <div class="custom-confirm-modal" id="customConfirmModal">
+    <div class="custom-confirm-content">
+      <div class="custom-confirm-header">
+        <div class="custom-confirm-title" id="confirmTitle">
+          <i class="fas fa-question-circle"></i> Bestätigen
+        </div>
+        <button class="custom-confirm-close" onclick="closeCustomConfirm()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="custom-confirm-message" id="confirmMessage"></div>
+      <div class="custom-confirm-actions">
+        <button class="btn btn-secondary" onclick="closeCustomConfirm()">Abbrechen</button>
+        <button class="btn btn-danger" id="confirmActionBtn">Löschen</button>
       </div>
     </div>
   </div>
@@ -1633,34 +1755,61 @@
             <button class="ankundigungen-tab" onclick="switchAnkundigungenTab('manage-besprechungen')">Besprechungen</button>
           </div>
           
-          <!-- Neue Ankündigung -->
+          <!-- Neue Ankündigung - mit verbesserten Abständen -->
           <div class="ankundigungen-tab-content" id="ankundigungenNewTab">
-            <input type="text" class="settings-input" id="ankundigungTitle" placeholder="Titel">
-            <textarea class="settings-input" id="ankundigungContent" placeholder="Inhalt..." rows="3"></textarea>
-            <button class="btn btn-primary" onclick="saveAnkundigung()">Speichern</button>
-          </div>
-          
-          <!-- Neue Besprechung -->
-          <div class="ankundigungen-tab-content" id="ankundigungenBesprechungTab" style="display:none;">
-            <input type="text" class="settings-input" id="besprechungThema" placeholder="Thema">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0">
-              <input type="date" class="settings-input" id="besprechungDate">
-              <input type="time" class="settings-input" id="besprechungTime">
+            <div style="margin-bottom: 20px;">
+              <label class="settings-label">Titel</label>
+              <input type="text" class="settings-input" id="ankundigungTitle" placeholder="Titel" style="margin-top: 4px;">
             </div>
-            <input type="text" class="settings-input" id="besprechungOrt" placeholder="Ort">
-            <textarea class="settings-input" id="besprechungContent" placeholder="Inhalt..." rows="3"></textarea>
-            <button class="btn btn-primary" onclick="saveBesprechung()">Speichern</button>
+            <div style="margin-bottom: 16px;">
+              <label class="settings-label">Inhalt *</label>
+              <textarea class="settings-input" id="ankundigungContent" placeholder="Inhalt..." rows="4" style="margin-top: 4px;"></textarea>
+            </div>
+            <button class="btn btn-primary" onclick="saveAnkundigung()" style="width: 100%;">Speichern</button>
           </div>
           
-          <!-- Ankündigungen verwalten -->
+          <!-- Neue Besprechung - mit verbesserten Abständen -->
+          <div class="ankundigungen-tab-content" id="ankundigungenBesprechungTab" style="display:none;">
+            <div style="margin-bottom: 20px;">
+              <label class="settings-label">Thema *</label>
+              <input type="text" class="settings-input" id="besprechungThema" placeholder="Thema" style="margin-top: 4px;">
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom: 20px;">
+              <div>
+                <label class="settings-label">Datum *</label>
+                <input type="date" class="settings-input" id="besprechungDate" style="margin-top: 4px;">
+              </div>
+              <div>
+                <label class="settings-label">Uhrzeit *</label>
+                <input type="time" class="settings-input" id="besprechungTime" style="margin-top: 4px;">
+              </div>
+            </div>
+            <div style="margin-bottom: 20px;">
+              <label class="settings-label">Ort</label>
+              <input type="text" class="settings-input" id="besprechungOrt" placeholder="Ort" style="margin-top: 4px;">
+            </div>
+            <div style="margin-bottom: 16px;">
+              <label class="settings-label">Inhalt *</label>
+              <textarea class="settings-input" id="besprechungContent" placeholder="Inhalt..." rows="4" style="margin-top: 4px;"></textarea>
+            </div>
+            <button class="btn btn-primary" onclick="saveBesprechung()" style="width: 100%;">Speichern</button>
+          </div>
+          
+          <!-- Ankündigungen verwalten - mit verbesserten Abständen -->
           <div class="ankundigungen-tab-content" id="ankundigungenManageAnkundigungenTab" style="display:none;">
-            <input type="text" class="settings-input" id="manageAnkundigungenSearch" placeholder="Suchen..." oninput="searchManageAnkundigungen(this.value)">
+            <div style="margin-bottom: 20px;">
+              <label class="settings-label">Suchen</label>
+              <input type="text" class="settings-input" id="manageAnkundigungenSearch" placeholder="Suchen..." oninput="searchManageAnkundigungen(this.value)" style="margin-top: 4px;">
+            </div>
             <div class="manage-items-list" id="manageAnkundigungenList"></div>
           </div>
           
-          <!-- Besprechungen verwalten -->
+          <!-- Besprechungen verwalten - mit verbesserten Abständen -->
           <div class="ankundigungen-tab-content" id="ankundigungenManageBesprechungenTab" style="display:none;">
-            <input type="text" class="settings-input" id="manageBesprechungenSearch" placeholder="Suchen..." oninput="searchManageBesprechungen(this.value)">
+            <div style="margin-bottom: 20px;">
+              <label class="settings-label">Suchen</label>
+              <input type="text" class="settings-input" id="manageBesprechungenSearch" placeholder="Suchen..." oninput="searchManageBesprechungen(this.value)" style="margin-top: 4px;">
+            </div>
             <div class="manage-items-list" id="manageBesprechungenList"></div>
           </div>
         </div>
@@ -1686,8 +1835,8 @@
           <button class="soldaten-tab" onclick="switchSoldatenTab('list')">Liste</button>
         </div>
         
-        <!-- Neues Gespräch -->
-        <div class="soldaten-tab-content" id="soldatenNewTab">
+        <!-- Neues Gespräch - scrollbar gemacht -->
+        <div class="soldaten-tab-content" id="soldatenNewTab" style="overflow-y: auto; max-height: 65vh; padding-right: 4px;">
           <div class="soldaten-form-grid">
             <input type="text" class="soldaten-input" id="soldatenName" placeholder="Name *">
             <input type="number" class="soldaten-input" id="soldatenDN" placeholder="DN *">
@@ -1710,8 +1859,8 @@
           </div>
         </div>
         
-        <!-- Gesprächsliste -->
-        <div class="soldaten-tab-content" id="soldatenListTab" style="display:none;">
+        <!-- Gesprächsliste - scrollbar gemacht -->
+        <div class="soldaten-tab-content" id="soldatenListTab" style="display:none; overflow-y: auto; max-height: 65vh; padding-right: 4px;">
           <div class="soldaten-search-container">
             <i class="fas fa-search soldaten-search-icon"></i>
             <input type="text" class="soldaten-search-input" id="soldatenSearch" placeholder="Suchen..." oninput="searchSoldaten(this.value)">
@@ -1747,7 +1896,7 @@
           <button class="btn btn-primary" onclick="createNewAkte()">Akte erstellen</button>
         </div>
         
-        <!-- Akten durchsuchen -->
+        <!-- Akten durchsuchen - scrollbar gemacht -->
         <div class="beobachtung-tab-content" id="beobachtungListTab" style="display:none;">
           <div class="akten-search-container">
             <i class="fas fa-search akten-search-icon"></i>
@@ -1807,8 +1956,6 @@
           </div>
           <div class="header-stats">
             <div class="stat-card"><span class="stat-value" id="totalEmployees">0</span><span class="stat-label">Mitarbeiter</span></div>
-            <div class="stat-card"><span class="stat-value" id="totalAkten">0</span><span class="stat-label">Akten</span></div>
-            <div class="stat-card"><span class="stat-value" id="totalArchived">0</span><span class="stat-label">Archiv</span></div>
           </div>
         </div>
       </div>
@@ -1824,6 +1971,9 @@
         <button class="sidebar-filter-btn active" onclick="filterEmployeesByType('all')">Alle</button>
         <button class="sidebar-filter-btn" onclick="filterEmployeesByType('oral')">Mündlich</button>
         <button class="sidebar-filter-btn" onclick="filterEmployeesByType('org')">Organ.</button>
+        <button class="sidebar-filter-btn" onclick="filterEmployeesByType('trainee')">Trainee</button>
+        <button class="sidebar-filter-btn" onclick="filterEmployeesByType('member')">Mitglieder</button>
+        <button class="sidebar-filter-btn" onclick="filterEmployeesByType('archived')">Archiv</button>
       </div>
 
       <div class="search-container">
@@ -1836,8 +1986,9 @@
       </div>
 
       <div class="quick-actions">
-        <button class="quick-action-btn" onclick="openNewEmployeeModal()">+ Mitarbeiter</button>
-        <button class="quick-action-btn" onclick="toggleArchiveView()"><span id="archiveToggleText">Archiv</span></button>
+        <button class="quick-action-btn" onclick="openNewEmployeeModal()"><i class="fas fa-plus"></i> Neu</button>
+        <button class="quick-action-btn" onclick="filterEmployeesByType('trainee')"><i class="fas fa-user-graduate"></i> Trainee</button>
+        <button class="quick-action-btn" onclick="filterEmployeesByType('archived')"><i class="fas fa-archive"></i> Archiv</button>
       </div>
     </aside>
 
@@ -1977,7 +2128,7 @@
         <select class="form-select" id="editEmployeeRank"><option value="">Rang</option></select>
       </div>
       <div style="display:flex;justify-content:space-between;margin-top:16px;">
-        <button class="btn btn-danger" onclick="deleteCurrentEmployee()">Löschen</button>
+        <button class="btn btn-danger" onclick="deleteCurrentEmployeeWithConfirm()">Löschen</button>
         <div style="display:flex;gap:8px;">
           <button class="btn btn-secondary" onclick="closeModal('editEmployeeModal')">Abbrechen</button>
           <button class="btn btn-primary" onclick="saveEditedEmployee()">Speichern</button>
@@ -1999,8 +2150,9 @@
 
     let currentUser = null;
     let accessCheckInterval = null;
-    const TOKEN_VALIDITY_MINUTES = 10;
-    const ACCESS_CHECK_INTERVAL = 30000;
+    const TOKEN_VALIDITY_MINUTES = 60; // Auf 60 Minuten erhöht
+    const ACCESS_CHECK_INTERVAL = 60000; // Auf 60 Sekunden erhöht
+    let logoutTimeout = null;
 
     // ==================== DISCORD LOGIN FUNKTIONEN ====================
     function discordLogin() {
@@ -2012,15 +2164,22 @@
       localStorage.removeItem('discord_user');
       localStorage.removeItem('discord_expires');
       localStorage.removeItem('discord_login_timestamp');
+      localStorage.removeItem('hr_settings_auth_timestamp');
       
       if (accessCheckInterval) {
         clearInterval(accessCheckInterval);
         accessCheckInterval = null;
       }
       
+      if (logoutTimeout) {
+        clearTimeout(logoutTimeout);
+        logoutTimeout = null;
+      }
+      
       document.getElementById('loginScreen').classList.remove('hidden');
       document.getElementById('appContainer').style.display = 'none';
       window.location.hash = '';
+      showNotification('Erfolgreich abgemeldet');
     }
 
     function handleDiscordRedirect() {
@@ -2053,10 +2212,6 @@
       const token = localStorage.getItem('discord_token');
       const expiresAt = localStorage.getItem('discord_expires');
       if (!token || !expiresAt || Date.now() > parseInt(expiresAt)) {
-        localStorage.removeItem('discord_token');
-        localStorage.removeItem('discord_user');
-        localStorage.removeItem('discord_expires');
-        localStorage.removeItem('discord_login_timestamp');
         return false;
       }
       return true;
@@ -2108,7 +2263,15 @@
       
       if (accessCheckInterval) clearInterval(accessCheckInterval);
       accessCheckInterval = setInterval(() => {
-        if (!checkTokenValidity()) logout();
+        if (!checkTokenValidity()) {
+          logout();
+        }
+        
+        // Zusätzlich prüfen, ob die User ID noch in ALLOWED_USERS ist
+        const currentUserId = localStorage.getItem('discord_user') ? JSON.parse(localStorage.getItem('discord_user')).id : null;
+        if (currentUserId && !ALLOWED_USERS.includes(currentUserId)) {
+          logout();
+        }
       }, ACCESS_CHECK_INTERVAL);
       
       initializeApp();
@@ -2139,7 +2302,6 @@
     let bothInductionsCompleted = false;
     let currentFilter = 'all';
     let settings = { units: [], ranks: [] };
-    let showArchived = false;
     let ankundigungen = [];
     let soldatenGespräche = [];
     let akten = [];
@@ -2153,11 +2315,34 @@
     let unsubscribeFunctions = [];
     let currentEditItemId = null;
     let currentEditItemType = null;
+    
+    // Für Custom Confirm
+    let confirmCallback = null;
 
     document.addEventListener('DOMContentLoaded', async function () {
       console.log(`HR App Version ${APP_VERSION} geladen`);
       await authenticateWithDiscord();
     });
+
+    // ==================== CUSTOM CONFIRM FUNKTIONEN ====================
+    function showCustomConfirm(title, message, onConfirm) {
+      document.getElementById('confirmTitle').innerHTML = `<i class="fas fa-question-circle"></i> ${title}`;
+      document.getElementById('confirmMessage').textContent = message;
+      confirmCallback = onConfirm;
+      document.getElementById('customConfirmModal').classList.add('active');
+    }
+
+    function closeCustomConfirm() {
+      document.getElementById('customConfirmModal').classList.remove('active');
+      confirmCallback = null;
+    }
+
+    function executeConfirm() {
+      if (confirmCallback) {
+        confirmCallback();
+      }
+      closeCustomConfirm();
+    }
 
     // ==================== SETTINGS PASSWORT FUNKTIONEN ====================
     function checkSettingsAuth() {
@@ -2212,7 +2397,9 @@
       if (modal) {
         modal.classList.remove('active');
         if (modalId === 'akteDetailModal') {
-          setTimeout(() => modal.remove(), 300);
+          setTimeout(() => {
+            if (modal.parentNode) modal.remove();
+          }, 300);
         }
       }
     }
@@ -2542,19 +2729,19 @@
     }
 
     function removeUnit(index) {
-      if (confirm('Unit wirklich löschen?')) {
+      showCustomConfirm('Unit löschen', 'Möchtest du diese Unit wirklich löschen?', () => {
         settings.units.splice(index, 1);
         populateSettingsUI();
         showNotification('Unit gelöscht');
-      }
+      });
     }
 
     function removeRank(index) {
-      if (confirm('Rang wirklich löschen?')) {
+      showCustomConfirm('Rang löschen', 'Möchtest du diesen Rang wirklich löschen?', () => {
         settings.ranks.splice(index, 1);
         populateSettingsUI();
         showNotification('Rang gelöscht');
-      }
+      });
     }
 
     async function saveSettings() {
@@ -2573,8 +2760,7 @@
       const unitSelects = [
         document.getElementById('unitSelect'), document.getElementById('unitSelect2'),
         document.getElementById('newEmployeeUnit'), document.getElementById('editEmployeeUnit'),
-        document.getElementById('soldatenUnit'), document.getElementById('akteUnit'),
-        document.getElementById('beobachtungUnit')
+        document.getElementById('soldatenUnit'), document.getElementById('akteUnit')
       ];
 
       unitSelects.forEach(select => {
@@ -2594,8 +2780,7 @@
       const rankSelects = [
         document.getElementById('rankSelect'), document.getElementById('rankSelect2'),
         document.getElementById('newEmployeeRank'), document.getElementById('editEmployeeRank'),
-        document.getElementById('soldatenRank'), document.getElementById('akteRank'),
-        document.getElementById('beobachtungRank')
+        document.getElementById('soldatenRank'), document.getElementById('akteRank')
       ];
 
       rankSelects.forEach(select => {
@@ -2618,15 +2803,12 @@
       const unsubscribeEmployees = db.collection('hrEmployees').orderBy('lastUpdated', 'desc')
         .onSnapshot((snapshot) => {
           employees = [];
-          let archivedCount = 0;
           snapshot.forEach(doc => {
             const employee = { id: doc.id, ...doc.data() };
             employees.push(employee);
-            if (employee.status === 'archived') archivedCount++;
           });
           renderEmployeeList();
           updateStats();
-          document.getElementById('totalArchived').textContent = archivedCount;
           if (currentEmployee) {
             const updated = employees.find(e => e.id === currentEmployee.id);
             if (updated) selectEmployee(updated);
@@ -2817,7 +2999,7 @@ Sonstiges: ${sonstiges || ''}
             <div class="soldaten-item-notizen">${escapeHtml(g.notizen)}</div>
             <div class="soldaten-item-actions">
               <button class="soldaten-item-btn soldaten-item-btn-copy" onclick="copySoldatenFromList('${g.id}')">Kopieren</button>
-              <button class="soldaten-item-btn soldaten-item-btn-delete" onclick="deleteSoldatenGespräch('${g.id}')">Löschen</button>
+              <button class="soldaten-item-btn soldaten-item-btn-delete" onclick="deleteSoldatenGesprächWithConfirm('${g.id}')">Löschen</button>
             </div>
           </div>
         `;
@@ -2837,8 +3019,13 @@ Sonstiges: ${sonstiges || ''}
       showNotification(success ? 'Kopiert' : 'Fehler');
     }
 
+    function deleteSoldatenGesprächWithConfirm(id) {
+      showCustomConfirm('Löschen', 'Möchtest du dieses Gespräch wirklich löschen?', () => {
+        deleteSoldatenGespräch(id);
+      });
+    }
+
     async function deleteSoldatenGespräch(id) {
-      if (!confirm('Wirklich löschen?')) return;
       try {
         await db.collection('hrSoldatenGespräche').doc(id).delete();
         showNotification('Gelöscht');
@@ -3023,10 +3210,10 @@ Grund: ${grund || ''}
               <div class="beobachtung-akte-dn">DN ${escapeHtml(akte.dn)}</div>
             </div>
             <div class="beobachtung-akte-date">Erstellt: ${akte.createdFormatted}</div>
-            <div style="margin-bottom:12px;">${count} Beobachtung(en)</div>
+            <div style="margin-bottom:8px;">${count} Beobachtung(en)</div>
             <div class="beobachtung-akte-actions">
               <button class="beobachtung-akte-btn beobachtung-akte-btn-copy" onclick="openAkteDetail('${akte.id}')">Öffnen</button>
-              <button class="beobachtung-akte-btn beobachtung-akte-btn-delete" onclick="deleteAkte('${akte.id}')">Löschen</button>
+              <button class="beobachtung-akte-btn beobachtung-akte-btn-delete" onclick="deleteAkteWithConfirm('${akte.id}')">Löschen</button>
             </div>
           </div>
         `;
@@ -3052,7 +3239,7 @@ Grund: ${grund || ''}
               <div class="beobachtung-akte-grund">${escapeHtml(b.grund)}</div>
               <div class="beobachtung-akte-actions">
                 <button class="beobachtung-akte-btn beobachtung-akte-btn-copy" onclick="copyBeobachtungFromAkte('${akte.id}', '${b.id}')">Kopieren</button>
-                <button class="beobachtung-akte-btn beobachtung-akte-btn-delete" onclick="deleteBeobachtungFromAkte('${akte.id}', '${b.id}')">Löschen</button>
+                <button class="beobachtung-akte-btn beobachtung-akte-btn-delete" onclick="deleteBeobachtungFromAkteWithConfirm('${akte.id}', '${b.id}')">Löschen</button>
               </div>
             </div>
           `;
@@ -3062,15 +3249,15 @@ Grund: ${grund || ''}
       }
 
       const modalHtml = `
-        <div class="beobachtung-akten-modal active" onclick="if(event.target===this)closeModal('akteDetailModal')">
+        <div class="beobachtung-akten-modal active" id="akteDetailModal" onclick="if(event.target===this)closeModal('akteDetailModal')">
           <div class="beobachtung-akten-content">
             <div class="beobachtung-akten-header">
               <div class="beobachtung-akten-title">Akte: ${escapeHtml(akte.name)} (DN ${escapeHtml(akte.dn)})</div>
               <button class="beobachtung-akten-close" onclick="closeModal('akteDetailModal')"><i class="fas fa-times"></i></button>
             </div>
             <div class="beobachtung-akten-body">
-              <div class="beobachtung-akten-liste">${beobachtungenHtml}</div>
-              <div class="beobachtung-actions">
+              <div class="akten-detail-liste" style="max-height: 60vh; overflow-y: auto;">${beobachtungenHtml}</div>
+              <div class="beobachtung-actions" style="margin-top: 16px;">
                 <button class="beobachtung-btn beobachtung-btn-save" onclick="addNewBeobachtungToAkte('${akte.id}')">+ Beobachtung</button>
               </div>
             </div>
@@ -3093,8 +3280,13 @@ Grund: ${grund || ''}
       showNotification(success ? 'Kopiert' : 'Fehler');
     }
 
+    function deleteBeobachtungFromAkteWithConfirm(akteId, beobachtungId) {
+      showCustomConfirm('Beobachtung löschen', 'Möchtest du diese Beobachtung wirklich löschen?', () => {
+        deleteBeobachtungFromAkte(akteId, beobachtungId);
+      });
+    }
+
     async function deleteBeobachtungFromAkte(akteId, beobachtungId) {
-      if (!confirm('Beobachtung löschen?')) return;
       const akte = akten.find(a => a.id === akteId);
       if (!akte || !akte.beobachtungen) return;
 
@@ -3117,11 +3309,17 @@ Grund: ${grund || ''}
       }
     }
 
+    function deleteAkteWithConfirm(akteId) {
+      showCustomConfirm('Akte löschen', 'Möchtest du diese Akte wirklich löschen?', () => {
+        deleteAkte(akteId);
+      });
+    }
+
     async function deleteAkte(akteId) {
-      if (!confirm('Akte wirklich löschen?')) return;
       try {
         await db.collection('hrAkten').doc(akteId).delete();
         showNotification('Akte gelöscht');
+        renderAktenListe();
       } catch (error) {
         console.error('Fehler beim Löschen der Akte:', error);
         showNotification('Fehler', 'error');
@@ -3185,7 +3383,7 @@ Grund: ${grund || ''}
               <div class="manage-item-title">${escapeHtml(item.title || 'Ohne Titel')}</div>
               <div class="manage-item-actions">
                 <button class="manage-item-btn manage-item-btn-edit" onclick="editAnkundigung('${item.id}')">Bearbeiten</button>
-                <button class="manage-item-btn manage-item-btn-delete" onclick="deleteAnkundigung('${item.id}')">Löschen</button>
+                <button class="manage-item-btn manage-item-btn-delete" onclick="deleteAnkundigungWithConfirm('${item.id}')">Löschen</button>
               </div>
             </div>
           `;
@@ -3220,7 +3418,7 @@ Grund: ${grund || ''}
               <div class="manage-item-title">${escapeHtml(item.thema || 'Ohne Thema')}</div>
               <div class="manage-item-actions">
                 <button class="manage-item-btn manage-item-btn-edit" onclick="editBesprechung('${item.id}')">Bearbeiten</button>
-                <button class="manage-item-btn manage-item-btn-delete" onclick="deleteBesprechung('${item.id}')">Löschen</button>
+                <button class="manage-item-btn manage-item-btn-delete" onclick="deleteBesprechungWithConfirm('${item.id}')">Löschen</button>
               </div>
             </div>
           `;
@@ -3383,8 +3581,13 @@ Grund: ${grund || ''}
       }
     }
 
+    function deleteAnkundigungWithConfirm(id) {
+      showCustomConfirm('Ankündigung löschen', 'Möchtest du diese Ankündigung wirklich löschen?', () => {
+        deleteAnkundigung(id);
+      });
+    }
+
     async function deleteAnkundigung(id) {
-      if (!confirm('Löschen?')) return;
       try {
         await db.collection('hrAnkundigungen').doc(id).delete();
         showNotification('Gelöscht');
@@ -3395,8 +3598,13 @@ Grund: ${grund || ''}
       }
     }
 
+    function deleteBesprechungWithConfirm(id) {
+      showCustomConfirm('Besprechung löschen', 'Möchtest du diese Besprechung wirklich löschen?', () => {
+        deleteBesprechung(id);
+      });
+    }
+
     async function deleteBesprechung(id) {
-      if (!confirm('Löschen?')) return;
       try {
         await db.collection('hrAnkundigungen').doc(id).delete();
         showNotification('Gelöscht');
@@ -3526,15 +3734,26 @@ Grund: ${grund || ''}
       const container = document.getElementById('employeeList');
       const countElement = document.getElementById('employeeCount');
 
-      let filtered = employees.filter(emp => {
-        if (showArchived) return emp.status === 'archived';
-        return !emp.status || emp.status === 'active';
-      });
+      let filtered = employees;
+
+      if (currentFilter === 'archived') {
+        filtered = employees.filter(emp => emp.status === 'archived');
+      } else {
+        filtered = employees.filter(emp => !emp.status || emp.status === 'active');
+      }
 
       if (currentFilter === 'oral') {
         filtered = filtered.filter(emp => !(emp.inductions?.oral?.completed));
       } else if (currentFilter === 'org') {
         filtered = filtered.filter(emp => !(emp.inductions?.org?.completed));
+      } else if (currentFilter === 'trainee') {
+        filtered = filtered.filter(emp => 
+          !(emp.inductions?.oral?.completed) || !(emp.inductions?.org?.completed)
+        );
+      } else if (currentFilter === 'member') {
+        filtered = filtered.filter(emp => 
+          emp.inductions?.oral?.completed && emp.inductions?.org?.completed
+        );
       }
 
       filtered.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
@@ -3592,9 +3811,14 @@ Grund: ${grund || ''}
     function filterEmployeesByType(type) {
       currentFilter = type;
       document.querySelectorAll('.sidebar-filter-btn').forEach(btn => btn.classList.remove('active'));
-      if (type === 'all') document.querySelectorAll('.sidebar-filter-btn')[0].classList.add('active');
-      if (type === 'oral') document.querySelectorAll('.sidebar-filter-btn')[1].classList.add('active');
-      if (type === 'org') document.querySelectorAll('.sidebar-filter-btn')[2].classList.add('active');
+      
+      if (type === 'all') document.querySelector('.sidebar-filter-btn:nth-child(1)').classList.add('active');
+      if (type === 'oral') document.querySelector('.sidebar-filter-btn:nth-child(2)').classList.add('active');
+      if (type === 'org') document.querySelector('.sidebar-filter-btn:nth-child(3)').classList.add('active');
+      if (type === 'trainee') document.querySelector('.sidebar-filter-btn:nth-child(4)').classList.add('active');
+      if (type === 'member') document.querySelector('.sidebar-filter-btn:nth-child(5)').classList.add('active');
+      if (type === 'archived') document.querySelector('.sidebar-filter-btn:nth-child(6)').classList.add('active');
+      
       renderEmployeeList();
     }
 
@@ -3707,11 +3931,6 @@ Grund: ${grund || ''}
         unit: document.getElementById('unitSelect2').value,
         rank: document.getElementById('rankSelect2').value
       };
-
-      const unitSelectValue = document.getElementById('unitSelect').value;
-      const rankSelectValue = document.getElementById('rankSelect').value;
-      if (unitSelectValue) currentEmployee.unit = unitSelectValue;
-      if (rankSelectValue) currentEmployee.rank = rankSelectValue;
     }
 
     async function saveEmployeeData(autoSave = false) {
@@ -3774,9 +3993,15 @@ Grund: ${grund || ''}
       }
     }
 
+    function deleteCurrentEmployeeWithConfirm() {
+      if (!currentEmployee) return;
+      showCustomConfirm('Mitarbeiter löschen', `Möchtest du "${currentEmployee.name}" wirklich löschen?`, () => {
+        deleteCurrentEmployee();
+      });
+    }
+
     async function deleteCurrentEmployee() {
       if (!currentEmployee) return;
-      if (!confirm(`Mitarbeiter "${currentEmployee.name}" löschen?`)) return;
 
       try {
         await db.collection('hrEmployees').doc(currentEmployee.id).delete();
@@ -3848,8 +4073,8 @@ Grund: ${grund || ''}
 
       const name = currentEmployee.name || '';
       const dn = currentEmployee.dn || '';
-      const unit = isOral ? document.getElementById('unitSelect').value : document.getElementById('unitSelect2').value;
-      const rank = isOral ? document.getElementById('rankSelect').value : document.getElementById('rankSelect2').value;
+      const unit = currentEmployee.unit || '';
+      const rank = currentEmployee.rank || '';
       const date = data?.date ? new Date(data.date).toLocaleDateString('de-DE') : '';
       const timeStart = data?.timeStart || '';
       const timeEnd = data?.timeEnd || '';
@@ -3880,11 +4105,7 @@ Sonstiges: ${notes}
 
     function updateStats() {
       const totalEmployees = employees.filter(emp => !emp.status || emp.status === 'active').length;
-      const totalArchived = employees.filter(emp => emp.status === 'archived').length;
-      
       document.getElementById('totalEmployees').textContent = totalEmployees;
-      document.getElementById('totalArchived').textContent = totalArchived;
-      document.getElementById('totalAkten').textContent = akten.length;
     }
 
     function showEmployeeContextMenu(e, emp) {
@@ -3922,7 +4143,7 @@ Sonstiges: ${notes}
             style="width:100%;text-align:left;padding:8px;background:none;border:none;color:${isArchived ? 'var(--accent-success)' : 'var(--accent-warning)'};cursor:pointer;display:flex;align-items:center;gap:4px;">
             <i class="fas ${isArchived ? 'fa-undo' : 'fa-archive'}"></i> ${isArchived ? 'Wiederherstellen' : 'Archivieren'}
           </button>
-          <button onclick="deleteEmployeePermanently('${emp.id}')"
+          <button onclick="deleteEmployeePermanentlyWithConfirm('${emp.id}')"
             style="width:100%;text-align:left;padding:8px;background:none;border:none;color:var(--accent-danger);cursor:pointer;display:flex;align-items:center;gap:4px;">
             <i class="fas fa-trash"></i> Löschen
           </button>
@@ -3965,10 +4186,17 @@ Sonstiges: ${notes}
       }
     }
 
+    function deleteEmployeePermanentlyWithConfirm(employeeId) {
+      const emp = employees.find(e => e.id === employeeId);
+      if (!emp) return;
+      showCustomConfirm('Mitarbeiter löschen', `Möchtest du "${emp.name}" endgültig löschen?`, () => {
+        deleteEmployeePermanently(employeeId);
+      });
+    }
+
     async function deleteEmployeePermanently(employeeId) {
       const emp = employees.find(e => e.id === employeeId);
       if (!emp) return;
-      if (!confirm(`Mitarbeiter "${emp.name}" endgültig löschen?`)) return;
 
       try {
         await db.collection('hrEmployees').doc(employeeId).delete();
@@ -4115,12 +4343,6 @@ Sonstiges:
       }
     }
 
-    function toggleArchiveView() {
-      showArchived = !showArchived;
-      document.getElementById('archiveToggleText').textContent = showArchived ? 'Aktive' : 'Archiv';
-      renderEmployeeList();
-    }
-
     function handleFormChange() {
       if (currentEmployee) {
         saveFormData();
@@ -4128,6 +4350,81 @@ Sonstiges:
         saveEmployeeData(true);
       }
     }
+
+    // Global verfügbar machen
+    window.discordLogin = discordLogin;
+    window.logout = logout;
+    window.openSettingsPasswordModal = openSettingsPasswordModal;
+    window.closeSettingsPasswordModal = closeSettingsPasswordModal;
+    window.checkSettingsPassword = checkSettingsPassword;
+    window.openSettingsWithPassword = openSettingsWithPassword;
+    window.openAnkundigungenModal = openAnkundigungenModal;
+    window.openBesprechungenModal = openBesprechungenModal;
+    window.openSoldatenModal = openSoldatenModal;
+    window.openBeobachtungAktenModal = openBeobachtungAktenModal;
+    window.closeModal = closeModal;
+    window.switchSettingsTab = switchSettingsTab;
+    window.switchAnkundigungenTab = switchAnkundigungenTab;
+    window.switchSoldatenTab = switchSoldatenTab;
+    window.switchBeobachtungTab = switchBeobachtungTab;
+    window.searchAnkundigungen = searchAnkundigungen;
+    window.searchBesprechungen = searchBesprechungen;
+    window.saveAnkundigung = saveAnkundigung;
+    window.saveBesprechung = saveBesprechung;
+    window.searchManageAnkundigungen = searchManageAnkundigungen;
+    window.searchManageBesprechungen = searchManageBesprechungen;
+    window.editAnkundigung = editAnkundigung;
+    window.editBesprechung = editBesprechung;
+    window.deleteAnkundigung = deleteAnkundigung;
+    window.deleteBesprechung = deleteBesprechung;
+    window.closeEditItemModal = closeEditItemModal;
+    window.saveEditedItem = saveEditedItem;
+    window.copySoldatenTemplate = copySoldatenTemplate;
+    window.saveSoldatenGespräch = saveSoldatenGespräch;
+    window.searchSoldaten = searchSoldaten;
+    window.copySoldatenFromList = copySoldatenFromList;
+    window.deleteSoldatenGespräch = deleteSoldatenGespräch;
+    window.copyBeobachtungTemplate = copyBeobachtungTemplate;
+    window.saveBeobachtungToAkte = saveBeobachtungToAkte;
+    window.createNewAkte = createNewAkte;
+    window.searchAkten = searchAkten;
+    window.openAkteDetail = openAkteDetail;
+    window.copyBeobachtungFromAkte = copyBeobachtungFromAkte;
+    window.deleteBeobachtungFromAkte = deleteBeobachtungFromAkte;
+    window.deleteAkte = deleteAkte;
+    window.addNewBeobachtungToAkte = addNewBeobachtungToAkte;
+    window.filterEmployeesByType = filterEmployeesByType;
+    window.openNewEmployeeModal = openNewEmployeeModal;
+    window.createNewEmployee = createNewEmployee;
+    window.openEditEmployeeModal = openEditEmployeeModal;
+    window.saveEditedEmployee = saveEditedEmployee;
+    window.deleteCurrentEmployee = deleteCurrentEmployee;
+    window.toggleInduction = toggleInduction;
+    window.copyOralTemplate = copyOralTemplate;
+    window.copyOrgTemplate = copyOrgTemplate;
+    window.toggleArchiveEmployee = toggleArchiveEmployee;
+    window.selectEmployee = selectEmployee;
+    window.showEmployeeContextMenu = showEmployeeContextMenu;
+    window.toggleArchiveEmployeeContext = toggleArchiveEmployeeContext;
+    window.deleteEmployeePermanently = deleteEmployeePermanently;
+    window.closeBanner = closeBanner;
+    window.addNewUnit = addNewUnit;
+    window.addNewRank = addNewRank;
+    window.updateUnitDiscordId = updateUnitDiscordId;
+    window.updateRankDiscordId = updateRankDiscordId;
+    window.removeUnit = removeUnit;
+    window.removeRank = removeRank;
+    window.saveSettings = saveSettings;
+    window.showCustomConfirm = showCustomConfirm;
+    window.closeCustomConfirm = closeCustomConfirm;
+    window.executeConfirm = executeConfirm;
+    window.deleteAnkundigungWithConfirm = deleteAnkundigungWithConfirm;
+    window.deleteBesprechungWithConfirm = deleteBesprechungWithConfirm;
+    window.deleteAkteWithConfirm = deleteAkteWithConfirm;
+    window.deleteBeobachtungFromAkteWithConfirm = deleteBeobachtungFromAkteWithConfirm;
+    window.deleteSoldatenGesprächWithConfirm = deleteSoldatenGesprächWithConfirm;
+    window.deleteCurrentEmployeeWithConfirm = deleteCurrentEmployeeWithConfirm;
+    window.deleteEmployeePermanentlyWithConfirm = deleteEmployeePermanentlyWithConfirm;
   </script>
 </body>
 </html>
