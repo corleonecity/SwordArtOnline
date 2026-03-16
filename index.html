@@ -12,15 +12,15 @@
   <title>📋 HR - Einweisungsmanagement v2.0</title>
 
   <!-- Font Awesome -->
-  ‌<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <!-- Google Fonts -->
-  ‌<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <!-- Firebase -->
-  ‌<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-  ‌<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-  ‌<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
   <style>
     /* -------------------- RESET & VARIABLES -------------------- */
@@ -470,32 +470,7 @@
     .badge-org.pending { background: rgba(234,179,8,0.12); color: #fde047; }
     .badge-org.completed { background: rgba(34,197,94,0.12); color: #86efac; }
 
-    .quick-actions {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 6px;
-      margin-top: auto;
-    }
-    .quick-action-btn {
-      padding: 8px 4px;
-      background: rgba(59,130,246,0.1);
-      border: 1px solid rgba(59,130,246,0.2);
-      border-radius: var(--radius-md);
-      color: var(--accent-primary);
-      font-size: 10px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: var(--transition);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 2px;
-      white-space: nowrap;
-    }
-    .quick-action-btn:hover {
-      background: rgba(59,130,246,0.2);
-      color: #fff;
-    }
+    /* Quick Actions komplett entfernt */
 
     /* -------------------- MAIN CONTENT -------------------- */
     .main-content {
@@ -575,6 +550,73 @@
       display: none;
     }
 
+    /* Vorlagen untereinander statt nebeneinander */
+    .templates-section {
+      background: rgba(0,0,0,0.2);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      margin-top: 16px;
+    }
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .section-title {
+      font-size: 14px;
+      font-weight: 800;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .template-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .template-card {
+      background: var(--bg-card-light);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      border: 1px solid var(--border-light);
+    }
+    .template-card.completed { border-color: var(--accent-success); }
+    .template-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .template-card-title {
+      font-weight: 700;
+      color: #fff;
+      font-size: 12px;
+    }
+    .template-badge {
+      font-size: 9px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 30px;
+      background: rgba(255,255,255,0.08);
+      color: var(--text-secondary);
+    }
+    .template-card.completed .template-badge { background: rgba(34,197,94,0.15); color: var(--accent-success); }
+    .template-content {
+      background: rgba(0,0,0,0.3);
+      padding: 12px;
+      border-radius: var(--radius-sm);
+      border-left: 2px solid var(--accent-primary);
+      font-family: 'Consolas', monospace;
+      font-size: 10px;
+      line-height: 1.4;
+      color: var(--text-secondary);
+      max-height: 150px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+
     .induction-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -648,12 +690,17 @@
       color: #fff;
       font-size: 12px;
       width: 100%;
+      height: 34px; /* Feste Höhe für alle Inputs */
+    }
+    .form-textarea { 
+      height: auto; 
+      min-height: 60px; 
+      resize: vertical;
     }
     .form-input:focus, .form-select:focus, .form-textarea:focus {
       outline: none;
       border-color: var(--accent-primary);
     }
-    .form-textarea { resize: vertical; min-height: 60px; }
 
     .time-container {
       display: grid;
@@ -692,69 +739,74 @@
     input:checked + .toggle-slider { background-color: var(--accent-success); }
     input:checked + .toggle-slider:before { transform: translateX(18px); }
 
-    .templates-section {
-      background: rgba(0,0,0,0.2);
-      border-radius: var(--radius-lg);
-      padding: 16px;
+    /* Verbesserte Abstände für Ankündigungen */
+    .ankundigungen-tab-content {
+      padding: 8px 0;
     }
-    .section-header {
+    
+    .ankundigungen-tab-content input,
+    .ankundigungen-tab-content textarea {
+      margin-bottom: 16px;
+    }
+    
+    /* Suchleisten Abstand optimiert */
+    .ankundigungen-search-container,
+    .besprechungen-search-container,
+    .soldaten-search-container,
+    .akten-search-container {
+      position: relative;
+      margin-bottom: 8px; /* Reduziert von 16px */
+      flex-shrink: 0;
+    }
+
+    /* Manage Items Listen */
+    .manage-items-list {
+      margin-top: 8px;
+    }
+    
+    .manage-item {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      margin-bottom: 12px;
-    }
-    .section-title {
-      font-size: 14px;
-      font-weight: 800;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .template-cards {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-    }
-    .template-card {
-      background: var(--bg-card-light);
+      gap: 8px;
+      padding: 8px;
+      background: rgba(255,255,255,0.03);
       border-radius: var(--radius-md);
-      padding: 12px;
       border: 1px solid var(--border-light);
+      margin-bottom: 4px;
     }
-    .template-card.completed { border-color: var(--accent-success); }
-    .template-card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
-    }
-    .template-card-title {
-      font-weight: 700;
+    
+    .manage-item-title {
+      flex: 1;
+      font-weight: 600;
       color: #fff;
       font-size: 12px;
     }
-    .template-badge {
-      font-size: 9px;
-      font-weight: 700;
-      padding: 2px 8px;
-      border-radius: 30px;
-      background: rgba(255,255,255,0.08);
-      color: var(--text-secondary);
+    
+    .manage-item-actions {
+      display: flex;
+      gap: 4px;
     }
-    .template-card.completed .template-badge { background: rgba(34,197,94,0.15); color: var(--accent-success); }
-    .template-content {
-      background: rgba(0,0,0,0.3);
-      padding: 12px;
+    
+    .manage-item-btn {
+      padding: 4px 8px;
+      border: none;
       border-radius: var(--radius-sm);
-      border-left: 2px solid var(--accent-primary);
-      font-family: 'Consolas', monospace;
+      font-weight: 600;
+      cursor: pointer;
       font-size: 10px;
-      line-height: 1.4;
-      color: var(--text-secondary);
-      max-height: 150px;
-      overflow-y: auto;
-      white-space: pre-wrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    
+    .manage-item-btn-edit {
+      background: rgba(59,130,246,0.15);
+      color: var(--accent-primary);
+    }
+    
+    .manage-item-btn-delete {
+      background: rgba(239,68,68,0.15);
+      color: var(--accent-danger);
     }
 
     /* -------------------- VERBESSERTES PASSWORT MODAL -------------------- */
@@ -764,7 +816,7 @@
       inset: 0;
       background: rgba(0, 0, 0, 0.85);
       backdrop-filter: blur(4px);
-      z-index: 2000;
+      z-index: 10000;
       align-items: center;
       justify-content: center;
       padding: 16px;
@@ -859,7 +911,7 @@
       inset: 0;
       background: rgba(0, 0, 0, 0.85);
       backdrop-filter: blur(4px);
-      z-index: 2000;
+      z-index: 9000;
       align-items: center;
       justify-content: center;
       padding: 16px;
@@ -874,6 +926,11 @@
     .modal-overlay.active,
     .custom-confirm-modal.active {
       display: flex;
+    }
+
+    /* Custom Confirm Modal mit höchstem z-index */
+    .custom-confirm-modal {
+      z-index: 11000;
     }
 
     .ankundigungen-content,
@@ -972,7 +1029,7 @@
     .soldaten-search-container,
     .akten-search-container {
       position: relative;
-      margin-bottom: 16px;
+      margin-bottom: 8px;
       flex-shrink: 0;
     }
 
@@ -1096,6 +1153,7 @@
       margin-bottom: 12px;
       max-height: 150px;
       overflow-y: auto;
+      white-space: pre-wrap;
     }
 
     .besprechungen-item-content { border-left-color: var(--accent-success); }
@@ -1143,7 +1201,7 @@
       border-bottom: 2px solid var(--accent-primary);
     }
 
-    /* Formulare mit verbesserten Abständen */
+    /* Formulare */
     .soldaten-form-grid,
     .akte-form-grid {
       display: grid;
@@ -1180,20 +1238,23 @@
       color: #fff;
       font-size: 13px;
       width: 100%;
+      height: 38px;
     }
+    
+    .soldaten-input.soldaten-textarea,
+    .akte-input.akte-textarea,
+    .edit-item-textarea {
+      height: auto;
+      min-height: 80px;
+      resize: vertical;
+    }
+    
     .soldaten-input:focus,
     .akte-input:focus,
     .settings-input:focus,
     .edit-item-input:focus {
       outline: none;
       border-color: var(--accent-primary);
-    }
-
-    .soldaten-textarea,
-    .akte-textarea,
-    .edit-item-textarea {
-      min-height: 80px;
-      resize: vertical;
     }
 
     /* Preview */
@@ -1245,8 +1306,7 @@
     }
 
     .soldaten-btn,
-    .beobachtung-btn,
-    .manage-item-btn {
+    .beobachtung-btn {
       padding: 8px 16px;
       border: none;
       border-radius: var(--radius-md);
@@ -1260,15 +1320,13 @@
     }
 
     .soldaten-btn-copy,
-    .beobachtung-btn-copy,
-    .manage-item-btn-edit {
+    .beobachtung-btn-copy {
       background: rgba(59,130,246,0.15);
       color: var(--accent-primary);
       border: 1px solid rgba(59,130,246,0.25);
     }
     .soldaten-btn-copy:hover,
-    .beobachtung-btn-copy:hover,
-    .manage-item-btn-edit:hover {
+    .beobachtung-btn-copy:hover {
       background: rgba(59,130,246,0.25);
     }
 
@@ -1282,9 +1340,47 @@
       background: var(--accent-success-dark);
     }
 
-    .soldaten-item-btn,
+    /* Beobachtungs-Akten Buttons - gleiche Höhe */
+    .beobachtung-akte-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    
     .beobachtung-akte-btn {
-      padding: 4px 10px;
+      padding: 6px 12px;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 11px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      height: 28px;
+      min-width: 60px;
+    }
+    
+    .beobachtung-akte-btn-copy {
+      background: rgba(59,130,246,0.15);
+      color: var(--accent-primary);
+    }
+    
+    .beobachtung-akte-btn-delete {
+      background: rgba(239,68,68,0.15);
+      color: var(--accent-danger);
+    }
+
+    .soldaten-item-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      margin-top: 8px;
+    }
+    
+    .soldaten-item-btn {
+      padding: 6px 12px;
       border: none;
       border-radius: var(--radius-sm);
       font-weight: 700;
@@ -1293,15 +1389,17 @@
       display: inline-flex;
       align-items: center;
       gap: 4px;
+      height: 28px;
     }
-
-    .soldaten-item-actions,
-    .beobachtung-akte-actions,
-    .manage-item-actions {
-      display: flex;
-      gap: 8px;
-      justify-content: flex-end;
-      margin-top: 8px;
+    
+    .soldaten-item-btn-copy {
+      background: rgba(59,130,246,0.15);
+      color: var(--accent-primary);
+    }
+    
+    .soldaten-item-btn-delete {
+      background: rgba(239,68,68,0.15);
+      color: var(--accent-danger);
     }
 
     /* Empty States */
@@ -1341,7 +1439,7 @@
       display: flex;
       flex-direction: column;
       gap: 8px;
-      z-index: 1000;
+      z-index: 8000;
     }
     .floating-button {
       width: 44px;
@@ -1377,7 +1475,7 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      z-index: 2001;
+      z-index: 12000;
       transform: translateY(100px);
       opacity: 0;
       transition: all 0.2s ease;
@@ -1416,7 +1514,7 @@
       border: 1px solid var(--accent-primary);
       border-radius: var(--radius-lg);
       padding: 16px 20px;
-      z-index: 1900;
+      z-index: 9500;
       max-width: 500px;
       width: 90%;
       box-shadow: var(--shadow-lg);
@@ -1432,7 +1530,7 @@
     .banner-title { font-size: 15px; font-weight: 800; color: #fff; }
     .banner-close { background: rgba(255,255,255,0.1); border: none; color: #fff; cursor: pointer; width: 24px; height: 24px; border-radius: 50%; }
     .banner-close:hover { background: var(--accent-danger); }
-    .banner-content { color: var(--text-secondary); font-size: 13px; line-height: 1.5; }
+    .banner-content { color: var(--text-secondary); font-size: 13px; line-height: 1.5; white-space: pre-wrap; }
     .banner-meta { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-top: 8px; }
 
     /* Scrollbar */
@@ -1441,7 +1539,7 @@
     ::-webkit-scrollbar-thumb { background: var(--accent-primary); border-radius: 2px; }
 
     /* Unit/Rank Items */
-    .unit-list, .rank-list, .manage-items-list {
+    .unit-list, .rank-list {
       display: flex;
       flex-direction: column;
       gap: 8px;
@@ -1449,7 +1547,7 @@
       overflow-y: auto;
       margin-bottom: 16px;
     }
-    .unit-item, .rank-item, .manage-item {
+    .unit-item, .rank-item {
       display: flex;
       align-items: center;
       gap: 8px;
@@ -1458,7 +1556,7 @@
       border-radius: var(--radius-md);
       border: 1px solid var(--border-light);
     }
-    .unit-name, .rank-name, .manage-item-title {
+    .unit-name, .rank-name {
       flex: 1;
       font-weight: 600;
       color: #fff;
@@ -1486,25 +1584,6 @@
       margin-top: 8px;
     }
 
-    /* Verbesserte Abstände in den Settings Tabs */
-    .ankundigungen-tab-content {
-      padding: 8px 0;
-    }
-    
-    .ankundigungen-tab-content input,
-    .ankundigungen-tab-content textarea,
-    .ankundigungen-tab-content .settings-input {
-      margin-bottom: 16px;
-    }
-    
-    .ankundigungen-tab-content .btn {
-      margin-top: 8px;
-    }
-    
-    .manage-items-list {
-      margin-top: 16px;
-    }
-    
     /* Select Dropdown Hintergrund fix */
     select.form-input,
     select.form-select,
@@ -1514,6 +1593,7 @@
     select.edit-item-input {
       background-color: var(--bg-card-light);
       color: #fff;
+      height: 34px;
     }
     
     select.form-input option,
@@ -1525,49 +1605,12 @@
       background-color: var(--bg-card);
       color: #fff;
     }
-    
-    /* Beobachtungs-Akten Buttons kompakter */
-    .beobachtung-akte-actions {
-      margin-top: 4px;
-    }
-    
-    .beobachtung-akte-btn {
-      padding: 2px 8px;
-      font-size: 10px;
-    }
-    
-    /* Soldaten Modal scrollbar */
-    .soldaten-content {
-      max-height: 85vh;
-      overflow: hidden;
-    }
-    
-    .soldaten-body {
-      overflow-y: auto;
-      padding-right: 4px;
-    }
-    
-    /* Custom Confirm Modal */
-    .custom-confirm-content {
-      text-align: center;
-    }
-    
-    .custom-confirm-message {
-      margin: 20px 0;
-      font-size: 14px;
-      color: var(--text-primary);
-    }
-    
-    .custom-confirm-actions {
-      justify-content: center;
-    }
 
     /* Responsive */
     @media (max-width: 1000px) {
       .app-container { grid-template-columns: 1fr; }
       .sidebar { position: static; height: auto; max-height: 400px; }
       .induction-grid { grid-template-columns: 1fr; }
-      .template-cards { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -1635,7 +1678,7 @@
     </div>
   </div>
 
-  <!-- Custom Confirm Modal -->
+  <!-- Custom Confirm Modal (höchster z-index) -->
   <div class="custom-confirm-modal" id="customConfirmModal">
     <div class="custom-confirm-content">
       <div class="custom-confirm-header">
@@ -1649,7 +1692,7 @@
       <div class="custom-confirm-message" id="confirmMessage"></div>
       <div class="custom-confirm-actions">
         <button class="btn btn-secondary" onclick="closeCustomConfirm()">Abbrechen</button>
-        <button class="btn btn-danger" id="confirmActionBtn">Löschen</button>
+        <button class="btn btn-danger" id="confirmActionBtn" onclick="executeConfirm()">Löschen</button>
       </div>
     </div>
   </div>
@@ -1755,60 +1798,60 @@
             <button class="ankundigungen-tab" onclick="switchAnkundigungenTab('manage-besprechungen')">Besprechungen</button>
           </div>
           
-          <!-- Neue Ankündigung - mit verbesserten Abständen -->
+          <!-- Neue Ankündigung - Abstände optimiert wie bei Besprechung -->
           <div class="ankundigungen-tab-content" id="ankundigungenNewTab">
-            <div style="margin-bottom: 20px;">
+            <div style="margin-bottom: 16px;">
               <label class="settings-label">Titel</label>
-              <input type="text" class="settings-input" id="ankundigungTitle" placeholder="Titel" style="margin-top: 4px;">
+              <input type="text" class="settings-input" id="ankundigungTitle" placeholder="Titel">
             </div>
             <div style="margin-bottom: 16px;">
               <label class="settings-label">Inhalt *</label>
-              <textarea class="settings-input" id="ankundigungContent" placeholder="Inhalt..." rows="4" style="margin-top: 4px;"></textarea>
+              <textarea class="settings-input" id="ankundigungContent" placeholder="Inhalt..." rows="4"></textarea>
             </div>
             <button class="btn btn-primary" onclick="saveAnkundigung()" style="width: 100%;">Speichern</button>
           </div>
           
-          <!-- Neue Besprechung - mit verbesserten Abständen -->
+          <!-- Neue Besprechung -->
           <div class="ankundigungen-tab-content" id="ankundigungenBesprechungTab" style="display:none;">
-            <div style="margin-bottom: 20px;">
+            <div style="margin-bottom: 16px;">
               <label class="settings-label">Thema *</label>
-              <input type="text" class="settings-input" id="besprechungThema" placeholder="Thema" style="margin-top: 4px;">
+              <input type="text" class="settings-input" id="besprechungThema" placeholder="Thema">
             </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom: 20px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom: 16px;">
               <div>
                 <label class="settings-label">Datum *</label>
-                <input type="date" class="settings-input" id="besprechungDate" style="margin-top: 4px;">
+                <input type="date" class="settings-input" id="besprechungDate">
               </div>
               <div>
                 <label class="settings-label">Uhrzeit *</label>
-                <input type="time" class="settings-input" id="besprechungTime" style="margin-top: 4px;">
+                <input type="time" class="settings-input" id="besprechungTime">
               </div>
             </div>
-            <div style="margin-bottom: 20px;">
+            <div style="margin-bottom: 16px;">
               <label class="settings-label">Ort</label>
-              <input type="text" class="settings-input" id="besprechungOrt" placeholder="Ort" style="margin-top: 4px;">
+              <input type="text" class="settings-input" id="besprechungOrt" placeholder="Ort">
             </div>
             <div style="margin-bottom: 16px;">
               <label class="settings-label">Inhalt *</label>
-              <textarea class="settings-input" id="besprechungContent" placeholder="Inhalt..." rows="4" style="margin-top: 4px;"></textarea>
+              <textarea class="settings-input" id="besprechungContent" placeholder="Inhalt..." rows="4"></textarea>
             </div>
             <button class="btn btn-primary" onclick="saveBesprechung()" style="width: 100%;">Speichern</button>
           </div>
           
-          <!-- Ankündigungen verwalten - mit verbesserten Abständen -->
+          <!-- Ankündigungen verwalten -->
           <div class="ankundigungen-tab-content" id="ankundigungenManageAnkundigungenTab" style="display:none;">
-            <div style="margin-bottom: 20px;">
+            <div style="margin-bottom: 8px;">
               <label class="settings-label">Suchen</label>
-              <input type="text" class="settings-input" id="manageAnkundigungenSearch" placeholder="Suchen..." oninput="searchManageAnkundigungen(this.value)" style="margin-top: 4px;">
+              <input type="text" class="settings-input" id="manageAnkundigungenSearch" placeholder="Suchen..." oninput="searchManageAnkundigungen(this.value)">
             </div>
             <div class="manage-items-list" id="manageAnkundigungenList"></div>
           </div>
           
-          <!-- Besprechungen verwalten - mit verbesserten Abständen -->
+          <!-- Besprechungen verwalten -->
           <div class="ankundigungen-tab-content" id="ankundigungenManageBesprechungenTab" style="display:none;">
-            <div style="margin-bottom: 20px;">
+            <div style="margin-bottom: 8px;">
               <label class="settings-label">Suchen</label>
-              <input type="text" class="settings-input" id="manageBesprechungenSearch" placeholder="Suchen..." oninput="searchManageBesprechungen(this.value)" style="margin-top: 4px;">
+              <input type="text" class="settings-input" id="manageBesprechungenSearch" placeholder="Suchen..." oninput="searchManageBesprechungen(this.value)">
             </div>
             <div class="manage-items-list" id="manageBesprechungenList"></div>
           </div>
@@ -1835,7 +1878,7 @@
           <button class="soldaten-tab" onclick="switchSoldatenTab('list')">Liste</button>
         </div>
         
-        <!-- Neues Gespräch - scrollbar gemacht -->
+        <!-- Neues Gespräch -->
         <div class="soldaten-tab-content" id="soldatenNewTab" style="overflow-y: auto; max-height: 65vh; padding-right: 4px;">
           <div class="soldaten-form-grid">
             <input type="text" class="soldaten-input" id="soldatenName" placeholder="Name *">
@@ -1859,7 +1902,7 @@
           </div>
         </div>
         
-        <!-- Gesprächsliste - scrollbar gemacht -->
+        <!-- Gesprächsliste -->
         <div class="soldaten-tab-content" id="soldatenListTab" style="display:none; overflow-y: auto; max-height: 65vh; padding-right: 4px;">
           <div class="soldaten-search-container">
             <i class="fas fa-search soldaten-search-icon"></i>
@@ -1896,7 +1939,7 @@
           <button class="btn btn-primary" onclick="createNewAkte()">Akte erstellen</button>
         </div>
         
-        <!-- Akten durchsuchen - scrollbar gemacht -->
+        <!-- Akten durchsuchen -->
         <div class="beobachtung-tab-content" id="beobachtungListTab" style="display:none;">
           <div class="akten-search-container">
             <i class="fas fa-search akten-search-icon"></i>
@@ -1985,11 +2028,7 @@
         <div class="employee-list" id="employeeList"></div>
       </div>
 
-      <div class="quick-actions">
-        <button class="quick-action-btn" onclick="openNewEmployeeModal()"><i class="fas fa-plus"></i> Neu</button>
-        <button class="quick-action-btn" onclick="filterEmployeesByType('trainee')"><i class="fas fa-user-graduate"></i> Trainee</button>
-        <button class="quick-action-btn" onclick="filterEmployeesByType('archived')"><i class="fas fa-archive"></i> Archiv</button>
-      </div>
+      <!-- Quick Actions komplett entfernt -->
     </aside>
 
     <main class="main-content">
@@ -2150,8 +2189,8 @@
 
     let currentUser = null;
     let accessCheckInterval = null;
-    const TOKEN_VALIDITY_MINUTES = 60; // Auf 60 Minuten erhöht
-    const ACCESS_CHECK_INTERVAL = 60000; // Auf 60 Sekunden erhöht
+    const TOKEN_VALIDITY_MINUTES = 60;
+    const ACCESS_CHECK_INTERVAL = 60000;
     let logoutTimeout = null;
 
     // ==================== DISCORD LOGIN FUNKTIONEN ====================
@@ -2267,7 +2306,6 @@
           logout();
         }
         
-        // Zusätzlich prüfen, ob die User ID noch in ALLOWED_USERS ist
         const currentUserId = localStorage.getItem('discord_user') ? JSON.parse(localStorage.getItem('discord_user')).id : null;
         if (currentUserId && !ALLOWED_USERS.includes(currentUserId)) {
           logout();
@@ -2504,6 +2542,9 @@
           const date = item.date ? new Date(item.date).toLocaleDateString('de-DE') : '';
           const content = item.content || '';
           
+          // Formatierter Inhalt für bessere Darstellung
+          const formattedContent = content.replace(/-/g, '\n-');
+          
           html += `
             <div class="besprechungen-item">
               <div class="besprechungen-item-header">
@@ -2513,7 +2554,7 @@
               <div class="besprechungen-item-date">
                 ${date} ${item.time ? ` • ${item.time}` : ''} ${item.ort ? ` • ${item.ort}` : ''}
               </div>
-              <div class="besprechungen-item-content">${escapeHtml(content)}</div>
+              <div class="besprechungen-item-content">${escapeHtml(formattedContent)}</div>
             </div>
           `;
         });
@@ -3233,6 +3274,13 @@ Grund: ${grund || ''}
       let beobachtungenHtml = '';
       if (akte.beobachtungen && akte.beobachtungen.length > 0) {
         akte.beobachtungen.forEach(b => {
+          // Rang aus der Akte für die Beobachtung holen
+          const rankSetting = settings.ranks.find(r => r.name === akte.rank);
+          const rankDisplay = rankSetting?.discordId ? `<@&${rankSetting.discordId}>` : akte.rank || '';
+          
+          // Template mit Rang aktualisieren
+          const templateWithRank = b.template.replace(/(Rang:.*\n)/, `Rang: ${rankDisplay}\n`);
+          
           beobachtungenHtml += `
             <div class="beobachtung-akte-item">
               <div class="beobachtung-akte-date">${b.dateFormatted}</div>
@@ -3266,9 +3314,8 @@ Grund: ${grund || ''}
       `;
 
       const modalContainer = document.createElement('div');
-      modalContainer.id = 'akteDetailModal';
       modalContainer.innerHTML = modalHtml;
-      document.body.appendChild(modalContainer);
+      document.body.appendChild(modalContainer.firstElementChild);
     }
 
     async function copyBeobachtungFromAkte(akteId, beobachtungId) {
@@ -3276,7 +3323,15 @@ Grund: ${grund || ''}
       if (!akte || !akte.beobachtungen) return;
       const b = akte.beobachtungen.find(b => b.id === beobachtungId);
       if (!b) return;
-      const success = await copyToClipboard(b.template);
+      
+      // Rang aus der Akte für die Beobachtung holen
+      const rankSetting = settings.ranks.find(r => r.name === akte.rank);
+      const rankDisplay = rankSetting?.discordId ? `<@&${rankSetting.discordId}>` : akte.rank || '';
+      
+      // Template mit Rang aktualisieren
+      const templateWithRank = b.template.replace(/(Rang:.*\n)/, `Rang: ${rankDisplay}\n`);
+      
+      const success = await copyToClipboard(templateWithRank);
       showNotification(success ? 'Kopiert' : 'Fehler');
     }
 
@@ -3435,7 +3490,7 @@ Grund: ${grund || ''}
       const items = document.querySelectorAll('#manageAnkundigungenList .manage-item');
       const term = searchTerm.toLowerCase().trim();
       items.forEach(item => {
-        item.style.display = item.textContent.toLowerCase().includes(term) ? 'block' : 'none';
+        item.style.display = item.textContent.toLowerCase().includes(term) ? 'flex' : 'none';
       });
     }
 
@@ -3443,7 +3498,7 @@ Grund: ${grund || ''}
       const items = document.querySelectorAll('#manageBesprechungenList .manage-item');
       const term = searchTerm.toLowerCase().trim();
       items.forEach(item => {
-        item.style.display = item.textContent.toLowerCase().includes(term) ? 'block' : 'none';
+        item.style.display = item.textContent.toLowerCase().includes(term) ? 'flex' : 'none';
       });
     }
 
@@ -4375,30 +4430,30 @@ Sonstiges:
     window.searchManageBesprechungen = searchManageBesprechungen;
     window.editAnkundigung = editAnkundigung;
     window.editBesprechung = editBesprechung;
-    window.deleteAnkundigung = deleteAnkundigung;
-    window.deleteBesprechung = deleteBesprechung;
+    window.deleteAnkundigungWithConfirm = deleteAnkundigungWithConfirm;
+    window.deleteBesprechungWithConfirm = deleteBesprechungWithConfirm;
     window.closeEditItemModal = closeEditItemModal;
     window.saveEditedItem = saveEditedItem;
     window.copySoldatenTemplate = copySoldatenTemplate;
     window.saveSoldatenGespräch = saveSoldatenGespräch;
     window.searchSoldaten = searchSoldaten;
     window.copySoldatenFromList = copySoldatenFromList;
-    window.deleteSoldatenGespräch = deleteSoldatenGespräch;
+    window.deleteSoldatenGesprächWithConfirm = deleteSoldatenGesprächWithConfirm;
     window.copyBeobachtungTemplate = copyBeobachtungTemplate;
     window.saveBeobachtungToAkte = saveBeobachtungToAkte;
     window.createNewAkte = createNewAkte;
     window.searchAkten = searchAkten;
     window.openAkteDetail = openAkteDetail;
     window.copyBeobachtungFromAkte = copyBeobachtungFromAkte;
-    window.deleteBeobachtungFromAkte = deleteBeobachtungFromAkte;
-    window.deleteAkte = deleteAkte;
+    window.deleteBeobachtungFromAkteWithConfirm = deleteBeobachtungFromAkteWithConfirm;
+    window.deleteAkteWithConfirm = deleteAkteWithConfirm;
     window.addNewBeobachtungToAkte = addNewBeobachtungToAkte;
     window.filterEmployeesByType = filterEmployeesByType;
     window.openNewEmployeeModal = openNewEmployeeModal;
     window.createNewEmployee = createNewEmployee;
     window.openEditEmployeeModal = openEditEmployeeModal;
     window.saveEditedEmployee = saveEditedEmployee;
-    window.deleteCurrentEmployee = deleteCurrentEmployee;
+    window.deleteCurrentEmployeeWithConfirm = deleteCurrentEmployeeWithConfirm;
     window.toggleInduction = toggleInduction;
     window.copyOralTemplate = copyOralTemplate;
     window.copyOrgTemplate = copyOrgTemplate;
@@ -4406,7 +4461,7 @@ Sonstiges:
     window.selectEmployee = selectEmployee;
     window.showEmployeeContextMenu = showEmployeeContextMenu;
     window.toggleArchiveEmployeeContext = toggleArchiveEmployeeContext;
-    window.deleteEmployeePermanently = deleteEmployeePermanently;
+    window.deleteEmployeePermanentlyWithConfirm = deleteEmployeePermanentlyWithConfirm;
     window.closeBanner = closeBanner;
     window.addNewUnit = addNewUnit;
     window.addNewRank = addNewRank;
@@ -4418,13 +4473,6 @@ Sonstiges:
     window.showCustomConfirm = showCustomConfirm;
     window.closeCustomConfirm = closeCustomConfirm;
     window.executeConfirm = executeConfirm;
-    window.deleteAnkundigungWithConfirm = deleteAnkundigungWithConfirm;
-    window.deleteBesprechungWithConfirm = deleteBesprechungWithConfirm;
-    window.deleteAkteWithConfirm = deleteAkteWithConfirm;
-    window.deleteBeobachtungFromAkteWithConfirm = deleteBeobachtungFromAkteWithConfirm;
-    window.deleteSoldatenGesprächWithConfirm = deleteSoldatenGesprächWithConfirm;
-    window.deleteCurrentEmployeeWithConfirm = deleteCurrentEmployeeWithConfirm;
-    window.deleteEmployeePermanentlyWithConfirm = deleteEmployeePermanentlyWithConfirm;
   </script>
 </body>
 </html>
