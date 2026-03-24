@@ -12,15 +12,15 @@
   <title>📋 HR - Einweisungsmanagement v2.0</title>
 
   <!-- Font Awesome -->
-  ‌<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <!-- Google Fonts -->
-  ‌<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <!-- Firebase -->
-  ‌<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-  ‌<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-  ‌<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
   <style>
     /* -------------------- RESET & VARIABLES -------------------- */
@@ -757,95 +757,8 @@
       white-space: pre-wrap;
     }
 
-    /* -------------------- VERBESSERTES PASSWORT MODAL -------------------- */
-    .settings-password-modal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.85);
-      backdrop-filter: blur(4px);
-      z-index: 2000;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-    }
-    .settings-password-modal.active { display: flex; }
-
-    .settings-password-content {
-      background: var(--bg-card);
-      border-radius: var(--radius-lg);
-      padding: 24px;
-      width: 100%;
-      max-width: 340px;
-      border: 1px solid var(--border-light);
-      box-shadow: var(--shadow-lg);
-    }
-
-    .settings-password-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid var(--border-light);
-    }
-
-    .settings-password-title {
-      font-size: 16px;
-      font-weight: 800;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .settings-password-close {
-      background: rgba(255,255,255,0.1);
-      border: none;
-      color: #fff;
-      font-size: 16px;
-      cursor: pointer;
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: var(--transition);
-    }
-    .settings-password-close:hover {
-      background: var(--accent-danger);
-    }
-
-    .settings-password-form {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .settings-password-input {
-      padding: 10px 12px;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid var(--border-light);
-      border-radius: var(--radius-md);
-      color: #fff;
-      font-size: 13px;
-      width: 100%;
-    }
-    .settings-password-input:focus {
-      outline: none;
-      border-color: var(--accent-primary);
-    }
-
-    .settings-password-error {
-      color: var(--accent-danger);
-      font-size: 12px;
-      display: none;
-      text-align: center;
-    }
-    .settings-password-error.show { display: block; }
-
-    /* -------------------- MODALS -------------------- */
+    /* -------------------- ALL MODALS MIT HOHEM Z-INDEX -------------------- */
+    .settings-password-modal,
     .ankundigungen-modal,
     .besprechungen-modal,
     .soldaten-modal,
@@ -859,7 +772,7 @@
       inset: 0;
       background: rgba(0, 0, 0, 0.85);
       backdrop-filter: blur(4px);
-      z-index: 2000;
+      z-index: 20000;
       align-items: center;
       justify-content: center;
       padding: 16px;
@@ -1377,7 +1290,7 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      z-index: 2001;
+      z-index: 20001;
       transform: translateY(100px);
       opacity: 0;
       transition: all 0.2s ease;
@@ -1649,7 +1562,7 @@
       <div class="custom-confirm-message" id="confirmMessage"></div>
       <div class="custom-confirm-actions">
         <button class="btn btn-secondary" onclick="closeCustomConfirm()">Abbrechen</button>
-        <button class="btn btn-danger" id="confirmActionBtn">Löschen</button>
+        <button class="btn btn-danger" id="confirmActionBtn" onclick="executeConfirm()">Löschen</button>
       </div>
     </div>
   </div>
@@ -1755,7 +1668,7 @@
             <button class="ankundigungen-tab" onclick="switchAnkundigungenTab('manage-besprechungen')">Besprechungen</button>
           </div>
           
-          <!-- Neue Ankündigung - mit verbesserten Abständen -->
+          <!-- Neue Ankündigung -->
           <div class="ankundigungen-tab-content" id="ankundigungenNewTab">
             <div style="margin-bottom: 20px;">
               <label class="settings-label">Titel</label>
@@ -1768,7 +1681,7 @@
             <button class="btn btn-primary" onclick="saveAnkundigung()" style="width: 100%;">Speichern</button>
           </div>
           
-          <!-- Neue Besprechung - mit verbesserten Abständen -->
+          <!-- Neue Besprechung -->
           <div class="ankundigungen-tab-content" id="ankundigungenBesprechungTab" style="display:none;">
             <div style="margin-bottom: 20px;">
               <label class="settings-label">Thema *</label>
@@ -1795,7 +1708,7 @@
             <button class="btn btn-primary" onclick="saveBesprechung()" style="width: 100%;">Speichern</button>
           </div>
           
-          <!-- Ankündigungen verwalten - mit verbesserten Abständen -->
+          <!-- Ankündigungen verwalten -->
           <div class="ankundigungen-tab-content" id="ankundigungenManageAnkundigungenTab" style="display:none;">
             <div style="margin-bottom: 20px;">
               <label class="settings-label">Suchen</label>
@@ -1804,7 +1717,7 @@
             <div class="manage-items-list" id="manageAnkundigungenList"></div>
           </div>
           
-          <!-- Besprechungen verwalten - mit verbesserten Abständen -->
+          <!-- Besprechungen verwalten -->
           <div class="ankundigungen-tab-content" id="ankundigungenManageBesprechungenTab" style="display:none;">
             <div style="margin-bottom: 20px;">
               <label class="settings-label">Suchen</label>
@@ -1835,7 +1748,7 @@
           <button class="soldaten-tab" onclick="switchSoldatenTab('list')">Liste</button>
         </div>
         
-        <!-- Neues Gespräch - scrollbar gemacht -->
+        <!-- Neues Gespräch -->
         <div class="soldaten-tab-content" id="soldatenNewTab" style="overflow-y: auto; max-height: 65vh; padding-right: 4px;">
           <div class="soldaten-form-grid">
             <input type="text" class="soldaten-input" id="soldatenName" placeholder="Name *">
@@ -1859,7 +1772,7 @@
           </div>
         </div>
         
-        <!-- Gesprächsliste - scrollbar gemacht -->
+        <!-- Gesprächsliste -->
         <div class="soldaten-tab-content" id="soldatenListTab" style="display:none; overflow-y: auto; max-height: 65vh; padding-right: 4px;">
           <div class="soldaten-search-container">
             <i class="fas fa-search soldaten-search-icon"></i>
@@ -1896,7 +1809,7 @@
           <button class="btn btn-primary" onclick="createNewAkte()">Akte erstellen</button>
         </div>
         
-        <!-- Akten durchsuchen - scrollbar gemacht -->
+        <!-- Akten durchsuchen -->
         <div class="beobachtung-tab-content" id="beobachtungListTab" style="display:none;">
           <div class="akten-search-container">
             <i class="fas fa-search akten-search-icon"></i>
@@ -2150,8 +2063,8 @@
 
     let currentUser = null;
     let accessCheckInterval = null;
-    const TOKEN_VALIDITY_MINUTES = 60; // Auf 60 Minuten erhöht
-    const ACCESS_CHECK_INTERVAL = 60000; // Auf 60 Sekunden erhöht
+    const TOKEN_VALIDITY_MINUTES = 60;
+    const ACCESS_CHECK_INTERVAL = 60000;
     let logoutTimeout = null;
 
     // ==================== DISCORD LOGIN FUNKTIONEN ====================
@@ -2267,7 +2180,6 @@
           logout();
         }
         
-        // Zusätzlich prüfen, ob die User ID noch in ALLOWED_USERS ist
         const currentUserId = localStorage.getItem('discord_user') ? JSON.parse(localStorage.getItem('discord_user')).id : null;
         if (currentUserId && !ALLOWED_USERS.includes(currentUserId)) {
           logout();
@@ -4122,7 +4034,7 @@ Sonstiges: ${notes}
         border: 1px solid var(--border-light);
         border-radius: 8px;
         padding: 8px;
-        z-index: 1000;
+        z-index: 10000;
         min-width: 150px;
         box-shadow: var(--shadow-md);
       `;
