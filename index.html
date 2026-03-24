@@ -765,14 +765,26 @@
     .beobachtung-akten-modal,
     .settings-modal,
     .edit-item-modal,
-    .modal-overlay,
-    .custom-confirm-modal {
+    .modal-overlay {
       display: none;
       position: fixed;
       inset: 0;
       background: rgba(0, 0, 0, 0.85);
       backdrop-filter: blur(4px);
       z-index: 20000;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    
+    /* CUSTOM CONFIRM MODAL - Höchster z-index, immer im Vordergrund */
+    .custom-confirm-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.9);
+      backdrop-filter: blur(8px);
+      z-index: 99999 !important;
       align-items: center;
       justify-content: center;
       padding: 16px;
@@ -1290,7 +1302,7 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      z-index: 20001;
+      z-index: 100000 !important;
       transform: translateY(100px);
       opacity: 0;
       transition: all 0.2s ease;
@@ -1548,7 +1560,7 @@
     </div>
   </div>
 
-  <!-- Custom Confirm Modal -->
+  <!-- Custom Confirm Modal - Höchster z-index -->
   <div class="custom-confirm-modal" id="customConfirmModal">
     <div class="custom-confirm-content">
       <div class="custom-confirm-header">
