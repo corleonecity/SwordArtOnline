@@ -279,6 +279,7 @@
         let currentUser = null;
         let selectedFiles = []; 
         let allUsersData = {}; 
+        let liveCheckInterval = null; // NEU: Live-Check Interval Variable
 
         function playLoginMusic() {
             const ac = document.getElementById('audioPlayerContainer');
@@ -306,7 +307,6 @@
             if (state === 'discord') handleDiscordLogin(code);
             else if (state === 'roblox') handleRobloxLogin(code);
         } else {
-            // Geändert auf sessionStorage: User wird bei Tab-Schließen ausgeloggt und muss neu prüfen
             const saved = sessionStorage.getItem('pn_session');
             if (saved) { 
                 try {
@@ -323,11 +323,9 @@
         }
 
         async function sendLoginWebhook(userData) {
-            // SICHERHEIT: Prüft in Firebase, ob dieser User jemals schon einen Webhook getriggert hat
             const userRef = ref(db, `users/${userData.id}`);
             const snap = await get(userRef);
             
-            // Wenn der Webhook schon mal gesendet wurde -> Abbrechen
             if (snap.exists() && snap.val().webhookSent === true) {
                 return;
             }
@@ -337,7 +335,7 @@
             const payload = {
                 content: `<@${userData.id}>`, 
                 embeds: [{
-                    title: "New Account Linked", // Typo gefixt
+                    title: "New Account Linked", 
                     color: 0x5865F2,
                     fields: [
                         { name: "Discord Username", value: `<@${userData.id}>`, inline: true },
@@ -354,7 +352,6 @@
                     body: JSON.stringify(payload)
                 });
                 
-                // Trage in Firebase ein, dass der Webhook für diesen User erfolgreich gesendet wurde
                 await update(userRef, { webhookSent: true });
                 
             } catch(e) { console.error("Login Webhook Error:", e); }
@@ -374,7 +371,7 @@
                     }
 
                     currentUser = data.user;
-                    sessionStorage.setItem('pn_session', JSON.stringify(currentUser)); // sessionSpeicher genutzt
+                    sessionStorage.setItem('pn_session', JSON.stringify(currentUser)); 
                     
                     window.history.replaceState({}, '', REDIRECT_URI);
                     checkRobloxLink();
@@ -400,7 +397,6 @@
                     const snap = await get(userRef);
                     let currentGP = snap.exists() && snap.val().totalGP ? snap.val().totalGP : 0;
                     
-                    // Wir überschreiben das webhookSent Flag NICHT, falls es schon existiert
                     await update(userRef, { 
                         discordName: dDisplayName, discordUsername: currentUser.username,
                         robloxName: rDisplayName, robloxUsername: rUsername,
@@ -423,11 +419,43 @@
                     const userData = snap.val();
                     showDashboard();
                     sendLoginWebhook(userData);
+                    startLiveMemberCheck(); // NEU: Startet den Hintergrund-Check
                 } else {
                     document.getElementById('robloxPage').classList.remove('hidden');
                     playLoginMusic();
                 }
             } catch (err) { console.error(err); }
+        }
+
+        // 🔴 NEU: DIE LIVE-CHECK FUNKTION
+        function startLiveMemberCheck() {
+            if (liveCheckInterval) clearInterval(liveCheckInterval);
+            
+            liveCheckInterval = setInterval(async () => {
+                if (!currentUser) return;
+                try {
+                    const res = await fetch(`${BACKEND_URL}/check-member`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ userId: currentUser.id })
+                    });
+                    
+                    const data = await res.json();
+                    
+                    // Wenn der Cloudflare Worker meldet "Nicht mehr auf dem Server"
+                    if (data.isMember === false) {
+                        clearInterval(liveCheckInterval); // Check stoppen
+                        sessionStorage.removeItem('pn_session'); // Session löschen
+                        currentUser = null;
+                        
+                        // Alles ausblenden und Sperrbildschirm zeigen
+                        document.getElementById('mainContent').classList.add('hidden');
+                        document.getElementById('noPermissionPage').classList.remove('hidden');
+                    }
+                } catch (e) {
+                    console.error("Live check failed:", e);
+                }
+            }, 30000); // Check wird exakt alle 30 Sekunden ausgeführt
         }
 
         function showDashboard() {
