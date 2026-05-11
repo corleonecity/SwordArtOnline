@@ -20,7 +20,7 @@
         .login-container h1, .login-container h2 { font-size: 28px; margin-bottom: 8px; }
         .login-container p { font-size: 15px; color: #888; margin-bottom: 35px; line-height: 1.5; }
         
-        .btn-discord { background: #5865F2; color: white; border: none; padding: 16px 30px; border-radius: 12px; font-weight: 700; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.2s; text-decoration: none; font-size: 16px; box-shadow: 0 4px 15px rgba(88, 101, 242, 0.3); margin-bottom: 15px;}
+        .btn-discord { background: #5865F2; color: white; border: none; padding: 16px 30px; border-radius: 12px; font-weight: 700; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: gap: 10px; transition: 0.2s; text-decoration: none; font-size: 16px; box-shadow: 0 4px 15px rgba(88, 101, 242, 0.3); margin-bottom: 15px;}
         .btn-roblox { background: white; color: black; border: none; padding: 16px 30px; border-radius: 12px; font-weight: 700; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.2s; text-decoration: none; font-size: 16px; box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1); }
         .btn-discord:hover, .btn-roblox:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255,255,255,0.15); }
 
@@ -299,8 +299,20 @@
             window.location.href = `https://apis.roblox.com/oauth/v1/authorize?client_id=${ROBLOX_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=openid%20profile&state=roblox`;
         };
 
-        // 🔴 DIE VERBESSERTE LIVE-CHECK FUNKTION
-        // Gibt true zurück, wenn auf Server. Gibt false zurück, wenn nicht auf Server.
+        // ===============================================
+        // 🔴 FAIL-SECURE LIVE CHECK (WIRFT DICH RAUS BEI FEHLER)
+        // ===============================================
+        function forceKickUser() {
+            if (liveCheckInterval) clearInterval(liveCheckInterval);
+            sessionStorage.removeItem('pn_session');
+            currentUser = null;
+            document.getElementById('mainContent').classList.add('hidden');
+            document.getElementById('robloxPage').classList.add('hidden');
+            document.getElementById('loginPage').classList.add('hidden');
+            document.getElementById('noPermissionPage').classList.remove('hidden');
+            stopMusic();
+        }
+
         async function doLiveCheck() {
             if (!currentUser) return false;
             try {
@@ -310,33 +322,36 @@
                     body: JSON.stringify({ userId: currentUser.id })
                 });
                 
-                const data = await res.json();
-                
-                // Wenn Cloudflare meldet, dass User weg ist -> Sofort kicken!
-                if (data.isMember === false) {
-                    if (liveCheckInterval) clearInterval(liveCheckInterval);
-                    sessionStorage.removeItem('pn_session');
-                    currentUser = null;
-                    
-                    document.getElementById('mainContent').classList.add('hidden');
-                    document.getElementById('robloxPage').classList.add('hidden');
-                    document.getElementById('loginPage').classList.add('hidden');
-                    document.getElementById('noPermissionPage').classList.remove('hidden');
-                    stopMusic();
+                // WENN CLOUDFLARE EINEN FEHLER WIRFT ODER FEHLT -> KICK!
+                if (!res.ok) {
+                    console.error("Cloudflare Worker Error! HTTP Status:", res.status);
+                    forceKickUser();
                     return false;
                 }
+
+                const data = await res.json();
+                
+                // WENN DISCORD MELDET: USER IST NICHT AUF DEM SERVER -> KICK!
+                if (data.isMember === false) {
+                    forceKickUser();
+                    return false;
+                }
+                
                 return true;
             } catch (e) {
-                console.error("Live check failed:", e);
-                return true; // Bei kurzen Netzwerkfehlern nicht sofort kicken
+                // WENN EIN NETZWERK/PARSING FEHLER PASSIERT -> KICK!
+                console.error("Live check crash:", e);
+                forceKickUser();
+                return false; 
             }
         }
 
         function startLiveMemberCheck() {
             if (liveCheckInterval) clearInterval(liveCheckInterval);
-            // Alle 5 Sekunden (5000ms) ausführen
+            // Läuft alle 5 Sekunden
             liveCheckInterval = setInterval(doLiveCheck, 5000); 
         }
+        // ===============================================
 
 
         const urlParams = new URLSearchParams(window.location.search);
@@ -352,7 +367,7 @@
                 try {
                     currentUser = JSON.parse(saved); 
                     if (!currentUser.id) throw new Error("Broken session");
-                    checkRobloxLink(); // Wird jetzt VOR dem Zeigen des Dashboards den Server checken
+                    checkRobloxLink(); 
                 } catch(e) {
                     sessionStorage.removeItem('pn_session');
                     playLoginMusic();
@@ -452,9 +467,8 @@
 
         async function checkRobloxLink() {
             try {
-                // 🔴 HIER WIRD JETZT BEIM RELOAD SOFORT GEPRÜFT, BEVOR DAS DASHBOARD LÄDT!
                 const isStillMember = await doLiveCheck();
-                if (!isStillMember) return; // Bricht ab, wenn User nicht mehr auf Server ist
+                if (!isStillMember) return; // Stoppt alles, wenn Backend kaputt oder User nicht mehr da
 
                 const snap = await get(ref(db, `users/${currentUser.id}`));
                 document.getElementById('loginPage').classList.add('hidden');
@@ -463,11 +477,11 @@
                     const userData = snap.val();
                     showDashboard();
                     sendLoginWebhook(userData);
-                    startLiveMemberCheck(); // Startet den 5-Sekunden Loop
+                    startLiveMemberCheck();
                 } else {
                     document.getElementById('robloxPage').classList.remove('hidden');
                     playLoginMusic();
-                    startLiveMemberCheck(); // Auch beim Roblox-Linken alle 5 Sek. prüfen
+                    startLiveMemberCheck();
                 }
             } catch (err) { console.error(err); }
         }
