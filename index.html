@@ -279,7 +279,7 @@
         let currentUser = null;
         let selectedFiles = []; 
         let allUsersData = {}; 
-        let liveCheckInterval = null; // NEU: Live-Check Interval Variable
+        let liveCheckInterval = null; 
 
         function playLoginMusic() {
             const ac = document.getElementById('audioPlayerContainer');
@@ -299,6 +299,46 @@
             window.location.href = `https://apis.roblox.com/oauth/v1/authorize?client_id=${ROBLOX_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=openid%20profile&state=roblox`;
         };
 
+        // 🔴 DIE VERBESSERTE LIVE-CHECK FUNKTION
+        // Gibt true zurück, wenn auf Server. Gibt false zurück, wenn nicht auf Server.
+        async function doLiveCheck() {
+            if (!currentUser) return false;
+            try {
+                const res = await fetch(`${BACKEND_URL}/check-member`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: currentUser.id })
+                });
+                
+                const data = await res.json();
+                
+                // Wenn Cloudflare meldet, dass User weg ist -> Sofort kicken!
+                if (data.isMember === false) {
+                    if (liveCheckInterval) clearInterval(liveCheckInterval);
+                    sessionStorage.removeItem('pn_session');
+                    currentUser = null;
+                    
+                    document.getElementById('mainContent').classList.add('hidden');
+                    document.getElementById('robloxPage').classList.add('hidden');
+                    document.getElementById('loginPage').classList.add('hidden');
+                    document.getElementById('noPermissionPage').classList.remove('hidden');
+                    stopMusic();
+                    return false;
+                }
+                return true;
+            } catch (e) {
+                console.error("Live check failed:", e);
+                return true; // Bei kurzen Netzwerkfehlern nicht sofort kicken
+            }
+        }
+
+        function startLiveMemberCheck() {
+            if (liveCheckInterval) clearInterval(liveCheckInterval);
+            // Alle 5 Sekunden (5000ms) ausführen
+            liveCheckInterval = setInterval(doLiveCheck, 5000); 
+        }
+
+
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
         const state = urlParams.get('state');
@@ -312,7 +352,7 @@
                 try {
                     currentUser = JSON.parse(saved); 
                     if (!currentUser.id) throw new Error("Broken session");
-                    checkRobloxLink(); 
+                    checkRobloxLink(); // Wird jetzt VOR dem Zeigen des Dashboards den Server checken
                 } catch(e) {
                     sessionStorage.removeItem('pn_session');
                     playLoginMusic();
@@ -412,6 +452,10 @@
 
         async function checkRobloxLink() {
             try {
+                // 🔴 HIER WIRD JETZT BEIM RELOAD SOFORT GEPRÜFT, BEVOR DAS DASHBOARD LÄDT!
+                const isStillMember = await doLiveCheck();
+                if (!isStillMember) return; // Bricht ab, wenn User nicht mehr auf Server ist
+
                 const snap = await get(ref(db, `users/${currentUser.id}`));
                 document.getElementById('loginPage').classList.add('hidden');
                 
@@ -419,43 +463,13 @@
                     const userData = snap.val();
                     showDashboard();
                     sendLoginWebhook(userData);
-                    startLiveMemberCheck(); // NEU: Startet den Hintergrund-Check
+                    startLiveMemberCheck(); // Startet den 5-Sekunden Loop
                 } else {
                     document.getElementById('robloxPage').classList.remove('hidden');
                     playLoginMusic();
+                    startLiveMemberCheck(); // Auch beim Roblox-Linken alle 5 Sek. prüfen
                 }
             } catch (err) { console.error(err); }
-        }
-
-        // 🔴 NEU: DIE LIVE-CHECK FUNKTION
-        function startLiveMemberCheck() {
-            if (liveCheckInterval) clearInterval(liveCheckInterval);
-            
-            liveCheckInterval = setInterval(async () => {
-                if (!currentUser) return;
-                try {
-                    const res = await fetch(`${BACKEND_URL}/check-member`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ userId: currentUser.id })
-                    });
-                    
-                    const data = await res.json();
-                    
-                    // Wenn der Cloudflare Worker meldet "Nicht mehr auf dem Server"
-                    if (data.isMember === false) {
-                        clearInterval(liveCheckInterval); // Check stoppen
-                        sessionStorage.removeItem('pn_session'); // Session löschen
-                        currentUser = null;
-                        
-                        // Alles ausblenden und Sperrbildschirm zeigen
-                        document.getElementById('mainContent').classList.add('hidden');
-                        document.getElementById('noPermissionPage').classList.remove('hidden');
-                    }
-                } catch (e) {
-                    console.error("Live check failed:", e);
-                }
-            }, 30000); // Check wird exakt alle 30 Sekunden ausgeführt
         }
 
         function showDashboard() {
