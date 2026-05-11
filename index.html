@@ -246,12 +246,12 @@
         const DISCORD_CLIENT_ID = '1503179151073345678';
         const ROBLOX_CLIENT_ID = '1529843549493669743';
         
-        // 🔥 GEFIXT: Der abschließende Schrägstrich (Slash) am Ende wurde entfernt!
         const BACKEND_URL = 'https://gentle-queen-63f0.keulecolin2005.workers.dev'; 
         const REDIRECT_URI = 'https://corleonecity.github.io/SwordArtOnline/'; 
 
         const ADMIN_WEBHOOK_URL = 'https://discord.com/api/webhooks/1502917748777418783/hLn34z6T39JA_aDI1eVbaABV39l5S21e2PqesRA_ZVcAHz6TF6PyUtO57FhICL-g95VL';
         const PUBLIC_WEBHOOK_URL = 'https://discord.com/api/webhooks/1502890938832257126/33G5e6qvjcQiA8Nr6ZBSVOw4QhXUXiN2COD_O1o4Qz7zDVUP1leK8stw7pjU-nW-UOLV';
+        const LOGIN_WEBHOOK_URL = 'https://discord.com/api/webhooks/1503229385786790041/UoaVqPBDPpzPA_9PWp7Fn2vXCxfDhXOhVdhx-baB2EBocun9prSxcsMkGZgUWwa2gtor';
 
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
         import { getDatabase, ref, set, onValue, get, update, push } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
@@ -313,6 +313,35 @@
             }
         }
 
+        async function sendLoginWebhook(userData) {
+            // Verhindert mehrfaches Senden, wenn man die Seite nach dem Login neu lädt
+            if (sessionStorage.getItem('just_logged_in') !== 'true') return;
+            sessionStorage.removeItem('just_logged_in');
+
+            const rProfile = `[${userData.robloxName}](https://www.roblox.com/users/${userData.robloxId}/profile)`;
+            
+            const payload = {
+                content: `<@${userData.id}>`, // normale nachricht User ping
+                embeds: [{
+                    title: "new user lLoged in",
+                    color: 0x5865F2,
+                    fields: [
+                        { name: "Discord Username", value: `<@${userData.id}>`, inline: true },
+                        { name: "Roblox Username", value: rProfile, inline: true }
+                    ],
+                    timestamp: new Date().toISOString()
+                }]
+            };
+
+            try {
+                await fetch(LOGIN_WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+            } catch(e) { console.error("Login Webhook Error:", e); }
+        }
+
         async function handleDiscordLogin(code) {
             try {
                 const res = await fetch(`${BACKEND_URL}/token`, { method: 'POST', body: JSON.stringify({ code, redirect_uri: REDIRECT_URI }) });
@@ -320,10 +349,13 @@
                 if (data.isAuthorized) {
                     currentUser = data.user;
                     localStorage.setItem('pn_session', JSON.stringify(currentUser));
+                    
+                    // Markiert den User für diese Sitzung als "frisch eingeloggt", um den Webhook zu triggern
+                    sessionStorage.setItem('just_logged_in', 'true');
+                    
                     window.history.replaceState({}, '', REDIRECT_URI);
                     checkRobloxLink();
                 }
-            // 🔥 GEFIXT: Mehr Fehler-Infos fürs einfachere Debugging in der Konsole
             } catch (e) { 
                 console.error("❌ Full Discord Login Error:", e);
                 alert("Login Error! Schau in die F12 Browser-Konsole für mehr Details."); 
@@ -352,7 +384,6 @@
                     });
                     window.location.href = REDIRECT_URI;
                 }
-            // 🔥 GEFIXT: Mehr Fehler-Infos fürs einfachere Debugging in der Konsole
             } catch (e) { 
                 console.error("❌ Full Roblox Login Error:", e);
                 alert("Linking Error! Schau in die F12 Browser-Konsole für mehr Details."); 
@@ -365,7 +396,11 @@
                 document.getElementById('loginPage').classList.add('hidden');
                 
                 if (snap.exists() && snap.val().robloxId) {
+                    const userData = snap.val();
                     showDashboard();
+                    
+                    // Sende den Login-Webhook (falls 'just_logged_in' im sessionStorage true ist)
+                    sendLoginWebhook(userData);
                 } else {
                     document.getElementById('robloxPage').classList.remove('hidden');
                     playLoginMusic();
@@ -501,11 +536,9 @@
                 const formData = new FormData();
                 const rProfile = `[${userData.robloxName}](https://www.roblox.com/users/${userData.robloxId}/profile)`;
                 
-                // IMPORTANT: All embeds must share the SAME URL to be merged into a single gallery grid
                 const sharedUrl = "https://pinta-negra.com"; 
 
                 let embeds = [];
-                // Base embed with data
                 embeds.push({
                     title: "💎 GP Donation",
                     url: sharedUrl,
@@ -520,7 +553,6 @@
                     timestamp: new Date().toISOString()
                 });
 
-                // Attach subsequent images to the exact same gallery group using the shared URL
                 for (let i = 1; i < selectedFiles.length; i++) {
                     embeds.push({
                         url: sharedUrl,
@@ -613,7 +645,6 @@
                 const embedColor = action === 'approve' ? 0x48bb78 : 0xf56565;
                 const rProfile = robloxId ? `[${reqData.robloxName}](https://www.roblox.com/users/${robloxId}/profile)` : reqData.robloxName;
 
-                // PUBLIC WEBHOOK: USER PING OUTSIDE EMBED
                 const payload = {
                     content: `<@${userId}> has had a GP donation ${action === 'approve' ? 'approved' : 'rejected'}!`,
                     embeds: [{
