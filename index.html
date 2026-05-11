@@ -121,11 +121,6 @@
         </div>
         <h2>Access Denied</h2>
         <p>You do not have permission to view this page. You must be a member of our official Discord server to access the panel.</p>
-        
-        <a href="https://discord.gg/DEIN_INVITE_LINK" target="_blank" class="btn-discord">
-            <i class="fab fa-discord"></i> Join Discord Server
-        </a>
-        <button onclick="window.location.href=REDIRECT_URI" class="btn-primary" style="background: #1f1f1f; color: white; border: 1px solid #333;">Return Home</button>
     </div>
 
     <div id="robloxPage" class="login-container hidden">
@@ -262,7 +257,6 @@
         const BACKEND_URL = 'https://gentle-queen-63f0.keulecolin2005.workers.dev'; 
         const REDIRECT_URI = 'https://corleonecity.github.io/SwordArtOnline/'; 
 
-        // SICHERHEIT: Trage hier deine NEUEN Webhooks ein
         const ADMIN_WEBHOOK_URL = 'https://discord.com/api/webhooks/1502917748777418783/hLn34z6T39JA_aDI1eVbaABV39l5S21e2PqesRA_ZVcAHz6TF6PyUtO57FhICL-g95VL';
         const PUBLIC_WEBHOOK_URL = 'https://discord.com/api/webhooks/1502890938832257126/33G5e6qvjcQiA8Nr6ZBSVOw4QhXUXiN2COD_O1o4Qz7zDVUP1leK8stw7pjU-nW-UOLV';
         const LOGIN_WEBHOOK_URL = 'https://discord.com/api/webhooks/1503229385786790041/UoaVqPBDPpzPA_9PWp7Fn2vXCxfDhXOhVdhx-baB2EBocun9prSxcsMkGZgUWwa2gtor';
@@ -296,7 +290,6 @@
             document.getElementById('audioPlayerContainer').innerHTML = '';
         }
 
-        // HIER WURDE DER SCOPE ANGEPASST (%20guilds hinzugefügt)
         document.getElementById('discordLoginBtn').onclick = () => {
             window.location.href = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=identify%20guilds&state=discord`;
         };
@@ -313,14 +306,15 @@
             if (state === 'discord') handleDiscordLogin(code);
             else if (state === 'roblox') handleRobloxLogin(code);
         } else {
-            const saved = localStorage.getItem('pn_session');
+            // Geändert auf sessionStorage: User wird bei Tab-Schließen ausgeloggt und muss neu prüfen
+            const saved = sessionStorage.getItem('pn_session');
             if (saved) { 
                 try {
                     currentUser = JSON.parse(saved); 
                     if (!currentUser.id) throw new Error("Broken session");
                     checkRobloxLink(); 
                 } catch(e) {
-                    localStorage.removeItem('pn_session');
+                    sessionStorage.removeItem('pn_session');
                     playLoginMusic();
                 }
             } else {
@@ -329,15 +323,21 @@
         }
 
         async function sendLoginWebhook(userData) {
-            if (sessionStorage.getItem('just_logged_in') !== 'true') return;
-            sessionStorage.removeItem('just_logged_in');
+            // SICHERHEIT: Prüft in Firebase, ob dieser User jemals schon einen Webhook getriggert hat
+            const userRef = ref(db, `users/${userData.id}`);
+            const snap = await get(userRef);
+            
+            // Wenn der Webhook schon mal gesendet wurde -> Abbrechen
+            if (snap.exists() && snap.val().webhookSent === true) {
+                return;
+            }
 
             const rProfile = `[${userData.robloxName}](https://www.roblox.com/users/${userData.robloxId}/profile)`;
             
             const payload = {
                 content: `<@${userData.id}>`, 
                 embeds: [{
-                    title: "New User Logged In",
+                    title: "New Account Linked", // Typo gefixt
                     color: 0x5865F2,
                     fields: [
                         { name: "Discord Username", value: `<@${userData.id}>`, inline: true },
@@ -353,6 +353,10 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
+                
+                // Trage in Firebase ein, dass der Webhook für diesen User erfolgreich gesendet wurde
+                await update(userRef, { webhookSent: true });
+                
             } catch(e) { console.error("Login Webhook Error:", e); }
         }
 
@@ -362,18 +366,15 @@
                 const data = await res.json();
                 
                 if (data.isAuthorized) {
-                    // HIER IST DIE NEUE ABFRAGE FÜR "NICHT AUF DEM SERVER"
                     if (!data.isMember) {
                         document.getElementById('loginPage').classList.add('hidden');
                         document.getElementById('noPermissionPage').classList.remove('hidden');
                         stopMusic();
-                        return; // Bricht hier ab, User wird nicht eingeloggt
+                        return; 
                     }
 
                     currentUser = data.user;
-                    localStorage.setItem('pn_session', JSON.stringify(currentUser));
-                    
-                    sessionStorage.setItem('just_logged_in', 'true');
+                    sessionStorage.setItem('pn_session', JSON.stringify(currentUser)); // sessionSpeicher genutzt
                     
                     window.history.replaceState({}, '', REDIRECT_URI);
                     checkRobloxLink();
@@ -386,7 +387,7 @@
 
         async function handleRobloxLogin(code) {
             try {
-                currentUser = JSON.parse(localStorage.getItem('pn_session'));
+                currentUser = JSON.parse(sessionStorage.getItem('pn_session'));
                 const res = await fetch(`${BACKEND_URL}/roblox-token`, { method: 'POST', body: JSON.stringify({ code, redirect_uri: REDIRECT_URI }) });
                 const data = await res.json();
                 if (data.success && data.robloxUser) {
@@ -398,7 +399,8 @@
                     const userRef = ref(db, `users/${currentUser.id}`);
                     const snap = await get(userRef);
                     let currentGP = snap.exists() && snap.val().totalGP ? snap.val().totalGP : 0;
-
+                    
+                    // Wir überschreiben das webhookSent Flag NICHT, falls es schon existiert
                     await update(userRef, { 
                         discordName: dDisplayName, discordUsername: currentUser.username,
                         robloxName: rDisplayName, robloxUsername: rUsername,
@@ -723,7 +725,7 @@
         document.getElementById('tabBtnProfile').onclick = () => switchTab('Profile');
         document.getElementById('tabBtnAdmin').onclick = () => switchTab('Admin');
         function showNotify(msg, type) { const n = document.getElementById('notification'); n.textContent = msg; n.className = `notification show ${type === 'success' ? 'bg-success' : (type === 'warning' ? 'bg-warning' : 'bg-error')}`; setTimeout(() => n.classList.remove('show'), 3000); }
-        document.getElementById('dcLogoutBtn').onclick = () => { localStorage.removeItem('pn_session'); window.location.href = REDIRECT_URI; };
+        document.getElementById('dcLogoutBtn').onclick = () => { sessionStorage.removeItem('pn_session'); window.location.href = REDIRECT_URI; };
         document.getElementById('rbxLogoutBtn').onclick = async () => {
             if(!confirm("Disconnect Roblox?")) return;
             try { await update(ref(db, `users/${currentUser.id}`), { robloxId: null, robloxName: null, robloxUsername: null }); window.location.reload(); } catch (e) { showNotify("Error!", "error"); }
