@@ -20,7 +20,7 @@
         .login-container h1, .login-container h2 { font-size: 28px; margin-bottom: 8px; }
         .login-container p { font-size: 15px; color: #888; margin-bottom: 35px; line-height: 1.5; }
         
-        .btn-discord { background: #5865F2; color: white; border: none; padding: 16px 30px; border-radius: 12px; font-weight: 700; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.2s; text-decoration: none; font-size: 16px; box-shadow: 0 4px 15px rgba(88, 101, 242, 0.3); }
+        .btn-discord { background: #5865F2; color: white; border: none; padding: 16px 30px; border-radius: 12px; font-weight: 700; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.2s; text-decoration: none; font-size: 16px; box-shadow: 0 4px 15px rgba(88, 101, 242, 0.3); margin-bottom: 15px;}
         .btn-roblox { background: white; color: black; border: none; padding: 16px 30px; border-radius: 12px; font-weight: 700; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.2s; text-decoration: none; font-size: 16px; box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1); }
         .btn-discord:hover, .btn-roblox:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255,255,255,0.15); }
 
@@ -113,6 +113,19 @@
         <button id="discordLoginBtn" class="btn-discord">
             <i class="fab fa-discord"></i> Login with Discord
         </button>
+    </div>
+
+    <div id="noPermissionPage" class="login-container hidden">
+        <div class="logo-main" style="background: #f56565; color: white; font-size: 35px; border: none;">
+            <i class="fas fa-lock"></i>
+        </div>
+        <h2>Access Denied</h2>
+        <p>You do not have permission to view this page. You must be a member of our official Discord server to access the panel.</p>
+        
+        <a href="https://discord.gg/DEIN_INVITE_LINK" target="_blank" class="btn-discord">
+            <i class="fab fa-discord"></i> Join Discord Server
+        </a>
+        <button onclick="window.location.href=REDIRECT_URI" class="btn-primary" style="background: #1f1f1f; color: white; border: 1px solid #333;">Return Home</button>
     </div>
 
     <div id="robloxPage" class="login-container hidden">
@@ -241,7 +254,7 @@
         // ==========================================
         // 1. SETTINGS
         // ==========================================
-        const ADMIN_DISCORD_IDS = ['917426398120005653', 'SECOND_ID_IF_NEEDED']; 
+        const ADMIN_DISCORD_IDS = ['917426398120005653']; 
 
         const DISCORD_CLIENT_ID = '1503179151073345678';
         const ROBLOX_CLIENT_ID = '1529843549493669743';
@@ -249,6 +262,7 @@
         const BACKEND_URL = 'https://gentle-queen-63f0.keulecolin2005.workers.dev'; 
         const REDIRECT_URI = 'https://corleonecity.github.io/SwordArtOnline/'; 
 
+        // SICHERHEIT: Trage hier deine NEUEN Webhooks ein
         const ADMIN_WEBHOOK_URL = 'https://discord.com/api/webhooks/1502917748777418783/hLn34z6T39JA_aDI1eVbaABV39l5S21e2PqesRA_ZVcAHz6TF6PyUtO57FhICL-g95VL';
         const PUBLIC_WEBHOOK_URL = 'https://discord.com/api/webhooks/1502890938832257126/33G5e6qvjcQiA8Nr6ZBSVOw4QhXUXiN2COD_O1o4Qz7zDVUP1leK8stw7pjU-nW-UOLV';
         const LOGIN_WEBHOOK_URL = 'https://discord.com/api/webhooks/1503229385786790041/UoaVqPBDPpzPA_9PWp7Fn2vXCxfDhXOhVdhx-baB2EBocun9prSxcsMkGZgUWwa2gtor';
@@ -282,8 +296,9 @@
             document.getElementById('audioPlayerContainer').innerHTML = '';
         }
 
+        // HIER WURDE DER SCOPE ANGEPASST (%20guilds hinzugefügt)
         document.getElementById('discordLoginBtn').onclick = () => {
-            window.location.href = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=identify&state=discord`;
+            window.location.href = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=identify%20guilds&state=discord`;
         };
 
         document.getElementById('robloxLoginBtn').onclick = () => {
@@ -314,16 +329,15 @@
         }
 
         async function sendLoginWebhook(userData) {
-            // Verhindert mehrfaches Senden, wenn man die Seite nach dem Login neu lädt
             if (sessionStorage.getItem('just_logged_in') !== 'true') return;
             sessionStorage.removeItem('just_logged_in');
 
             const rProfile = `[${userData.robloxName}](https://www.roblox.com/users/${userData.robloxId}/profile)`;
             
             const payload = {
-                content: `<@${userData.id}>`, // normale nachricht User ping
+                content: `<@${userData.id}>`, 
                 embeds: [{
-                    title: "new user lLoged in",
+                    title: "New User Logged In",
                     color: 0x5865F2,
                     fields: [
                         { name: "Discord Username", value: `<@${userData.id}>`, inline: true },
@@ -346,11 +360,19 @@
             try {
                 const res = await fetch(`${BACKEND_URL}/token`, { method: 'POST', body: JSON.stringify({ code, redirect_uri: REDIRECT_URI }) });
                 const data = await res.json();
+                
                 if (data.isAuthorized) {
+                    // HIER IST DIE NEUE ABFRAGE FÜR "NICHT AUF DEM SERVER"
+                    if (!data.isMember) {
+                        document.getElementById('loginPage').classList.add('hidden');
+                        document.getElementById('noPermissionPage').classList.remove('hidden');
+                        stopMusic();
+                        return; // Bricht hier ab, User wird nicht eingeloggt
+                    }
+
                     currentUser = data.user;
                     localStorage.setItem('pn_session', JSON.stringify(currentUser));
                     
-                    // Markiert den User für diese Sitzung als "frisch eingeloggt", um den Webhook zu triggern
                     sessionStorage.setItem('just_logged_in', 'true');
                     
                     window.history.replaceState({}, '', REDIRECT_URI);
@@ -398,8 +420,6 @@
                 if (snap.exists() && snap.val().robloxId) {
                     const userData = snap.val();
                     showDashboard();
-                    
-                    // Sende den Login-Webhook (falls 'just_logged_in' im sessionStorage true ist)
                     sendLoginWebhook(userData);
                 } else {
                     document.getElementById('robloxPage').classList.remove('hidden');
