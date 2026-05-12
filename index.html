@@ -257,10 +257,6 @@
         const BACKEND_URL = 'https://gentle-queen-63f0.keulecolin2005.workers.dev'; 
         const REDIRECT_URI = 'https://corleonecity.github.io/SwordArtOnline/'; 
 
-        const ADMIN_WEBHOOK_URL = 'https://discord.com/api/webhooks/1502917748777418783/hLn34z6T39JA_aDI1eVbaABV39l5S21e2PqesRA_ZVcAHz6TF6PyUtO57FhICL-g95VL';
-        const PUBLIC_WEBHOOK_URL = 'https://discord.com/api/webhooks/1502890938832257126/33G5e6qvjcQiA8Nr6ZBSVOw4QhXUXiN2COD_O1o4Qz7zDVUP1leK8stw7pjU-nW-UOLV';
-        const LOGIN_WEBHOOK_URL = 'https://discord.com/api/webhooks/1503229385786790041/UoaVqPBDPpzPA_9PWp7Fn2vXCxfDhXOhVdhx-baB2EBocun9prSxcsMkGZgUWwa2gtor';
-
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
         import { getDatabase, ref, set, onValue, get, update, push } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
 
@@ -268,7 +264,10 @@
             apiKey: "AIzaSyAjo_0WEf9qBH-EcKPNEY4PtBVGwxdHsbI",
             authDomain: "cc-shop-finanzsystem.firebaseapp.com",
             databaseURL: "https://cc-shop-finanzsystem-default-rtdb.firebaseio.com",
-            projectId: "cc-shop-finanzsystem"
+            projectId: "cc-shop-finanzsystem",
+            storageBucket: "cc-shop-finanzsystem.firebasestorage.app",
+            messagingSenderId: "575918945925",
+            appId: "1:575918945925:web:288a763f1bcbb5ae7e5bec"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -278,7 +277,6 @@
         let allUsersData = {}; 
         let liveCheckInterval = null; 
 
-        // Firebase erlaubt keine Sonderzeichen im Schlüssel, wir wandeln Punkte (.) sicher um
         function getSafeDbKey(username) {
             return username ? username.replace(/[.#$\[\]]/g, '_') : 'unknown_user';
         }
@@ -301,9 +299,6 @@
             window.location.href = `https://apis.roblox.com/oauth/v1/authorize?client_id=${ROBLOX_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=openid%20profile&state=roblox`;
         };
 
-        // ===============================================
-        // 🔴 FAIL-SECURE LIVE CHECK
-        // ===============================================
         function forceKickUser() {
             if (liveCheckInterval) clearInterval(liveCheckInterval);
             sessionStorage.removeItem('pn_session');
@@ -319,26 +314,14 @@
             if (!currentUser) return false;
             try {
                 const res = await fetch(`${BACKEND_URL}/check-member`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userId: currentUser.id })
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: currentUser.id })
                 });
-                
-                if (!res.ok) {
-                    forceKickUser();
-                    return false;
-                }
-
+                if (!res.ok) { forceKickUser(); return false; }
                 const data = await res.json();
-                if (data.isMember === false) {
-                    forceKickUser();
-                    return false;
-                }
-                
+                if (data.isMember === false) { forceKickUser(); return false; }
                 return true;
             } catch (e) {
-                forceKickUser();
-                return false; 
+                forceKickUser(); return false; 
             }
         }
 
@@ -370,16 +353,16 @@
             }
         }
 
+        // ==================================
+        // Senden ans Cloudflare Backend
+        // ==================================
         async function sendLoginWebhook(userData) {
             const dbKey = getSafeDbKey(userData.discordUsername);
             const userRef = ref(db, `users/${dbKey}`);
             const snap = await get(userRef);
             
-            if (snap.exists() && snap.val().webhookSent === true) {
-                return;
-            }
+            if (snap.exists() && snap.val().webhookSent === true) return;
 
-            // Fallback Schutz gegen leere Daten
             const dName = userData.discordName || "Unknown";
             const dUser = userData.discordUsername || "Unknown";
             const dId = userData.id || "1";
@@ -402,20 +385,15 @@
             };
 
             try {
-                const res = await fetch(LOGIN_WEBHOOK_URL, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
-                });
-                if (!res.ok) console.error("Discord rejected Login Webhook: " + await res.text());
+                await fetch(`${BACKEND_URL}/log-login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                 await update(userRef, { webhookSent: true });
-            } catch(e) { console.error("Login Webhook Error:", e); }
+            } catch(e) { console.error("Login Error:", e); }
         }
 
         async function handleDiscordLogin(code) {
             try {
                 const res = await fetch(`${BACKEND_URL}/token`, { 
-                    method: 'POST', 
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ code, redirect_uri: REDIRECT_URI }) 
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code, redirect_uri: REDIRECT_URI }) 
                 });
                 const data = await res.json();
                 
@@ -423,27 +401,21 @@
                     if (!data.isMember) {
                         document.getElementById('loginPage').classList.add('hidden');
                         document.getElementById('noPermissionPage').classList.remove('hidden');
-                        stopMusic();
-                        return; 
+                        stopMusic(); return; 
                     }
-
                     currentUser = data.user;
                     sessionStorage.setItem('pn_session', JSON.stringify(currentUser)); 
                     window.history.replaceState({}, '', REDIRECT_URI);
                     checkRobloxLink();
                 }
-            } catch (e) { 
-                alert("Login Error! Schau in die F12 Browser-Konsole für mehr Details."); 
-            }
+            } catch (e) { alert("Login Error!"); }
         }
 
         async function handleRobloxLogin(code) {
             try {
                 currentUser = JSON.parse(sessionStorage.getItem('pn_session'));
                 const res = await fetch(`${BACKEND_URL}/roblox-token`, { 
-                    method: 'POST', 
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ code, redirect_uri: REDIRECT_URI }) 
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code, redirect_uri: REDIRECT_URI }) 
                 });
                 const data = await res.json();
                 if (data.success && data.robloxUser) {
@@ -457,30 +429,22 @@
                     const snap = await get(userRef);
                     let currentGP = snap.exists() && snap.val().totalGP ? snap.val().totalGP : 0;
                     
-                    // Fallbacks, falls etwas leer ist
                     await update(userRef, { 
                         discordName: dDisplayName || "Unknown", 
                         discordUsername: currentUser.username || "Unknown",
                         robloxName: rDisplayName || "Unknown", 
                         robloxUsername: rUsername || "Unknown",
                         robloxId: rId || "1", 
-                        totalGP: currentGP, 
-                        id: currentUser.id || "1",
-                        hasLeftServer: false
+                        totalGP: currentGP, id: currentUser.id || "1", hasLeftServer: false
                     });
 
-                    // Trigger Role Update im Hintergrund
                     fetch(`${BACKEND_URL}/check-member`, { 
-                        method: 'POST', 
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ userId: currentUser.id, updateRoles: true }) 
+                        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: currentUser.id, updateRoles: true }) 
                     });
 
                     window.location.href = REDIRECT_URI;
                 }
-            } catch (e) { 
-                alert("Linking Error! Schau in die F12 Browser-Konsole für mehr Details."); 
-            }
+            } catch (e) { alert("Linking Error!"); }
         }
 
         async function checkRobloxLink() {
@@ -497,12 +461,7 @@
                     showDashboard();
                     sendLoginWebhook(userData);
                     startLiveMemberCheck();
-
-                    fetch(`${BACKEND_URL}/check-member`, { 
-                        method: 'POST', 
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ userId: currentUser.id, updateRoles: true }) 
-                    });
+                    fetch(`${BACKEND_URL}/check-member`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: currentUser.id, updateRoles: true }) });
                 } else {
                     document.getElementById('robloxPage').classList.remove('hidden');
                     playLoginMusic();
@@ -628,9 +587,8 @@
                 const dbKey = getSafeDbKey(currentUser.username);
                 const userRef = ref(db, `users/${dbKey}`);
                 const snap = await get(userRef);
-                const userData = snap.val() || {}; // Fallback
+                const userData = snap.val() || {}; 
 
-                // Noch mehr Fallback Schutz
                 const dName = userData.discordName || currentUser.global_name || "Unknown";
                 const dUser = userData.discordUsername || currentUser.username || "Unknown";
                 const dId = currentUser.id || "1";
@@ -642,14 +600,8 @@
                 const reqKey = newReqRef.key;
                 
                 await set(newReqRef, {
-                    id: reqKey, 
-                    dbKey: dbKey, 
-                    userId: dId, 
-                    discordName: dName,
-                    discordUsername: dUser,
-                    robloxName: rName, 
-                    robloxUsername: rUser,
-                    amount: amount, status: 'pending', timestamp: Date.now()
+                    id: reqKey, dbKey: dbKey, userId: dId, discordName: dName, discordUsername: dUser,
+                    robloxName: rName, robloxUsername: rUser, amount: amount, status: 'pending', timestamp: Date.now()
                 });
 
                 const formData = new FormData();
@@ -670,10 +622,7 @@
                 });
 
                 for (let i = 1; i < selectedFiles.length; i++) {
-                    embeds.push({
-                        url: sharedUrl,
-                        image: { url: `attachment://image${i}.png` } 
-                    });
+                    embeds.push({ url: sharedUrl, image: { url: `attachment://image${i}.png` } });
                 }
 
                 formData.append('payload_json', JSON.stringify({
@@ -685,12 +634,10 @@
                     formData.append(`file${index}`, file, `image${index}.png`);
                 });
 
-                const webRes = await fetch(ADMIN_WEBHOOK_URL, { method: 'POST', body: formData });
-                if (!webRes.ok) {
-                    alert("Discord Blocked the Webhook! Fehlermeldung: " + await webRes.text());
-                } else {
-                    showNotify(`Request submitted!`, "success");
-                }
+                // An Cloudflare Backend senden!
+                const webRes = await fetch(`${BACKEND_URL}/log-request`, { method: 'POST', body: formData });
+                if (!webRes.ok) { alert("Error Server!"); } 
+                else { showNotify(`Request submitted!`, "success"); }
                 
                 document.getElementById('gpAmount').value = '';
                 selectedFiles = []; updateImagePreviews();
@@ -766,7 +713,6 @@
                 const statusText = action === 'approve' ? 'Approved ✅' : 'Rejected ❌';
                 const embedColor = action === 'approve' ? 0x48bb78 : 0xf56565;
                 
-                // Fallbacks
                 const dName = reqData.discordName || "Unknown";
                 const dUser = reqData.discordUsername || "Unknown";
                 const rName = reqData.robloxName || "Unknown";
@@ -788,12 +734,10 @@
                     }]
                 };
 
-                const webRes = await fetch(PUBLIC_WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                if (!webRes.ok) {
-                    alert("Discord Blocked Webhook! Fehlermeldung: " + await webRes.text());
-                } else {
-                    showNotify(`Request processed!`, "success");
-                }
+                // An Cloudflare Backend senden!
+                const webRes = await fetch(`${BACKEND_URL}/log-processed`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if (!webRes.ok) { alert("Server Error!"); } 
+                else { showNotify(`Request processed!`, "success"); }
             } catch(e) { alert("Error: " + e.message); }
         };
 
