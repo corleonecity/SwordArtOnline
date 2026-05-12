@@ -349,6 +349,7 @@
             if (liveCheckInterval) clearInterval(liveCheckInterval);
             liveCheckInterval = setInterval(doLiveCheck, 5000); 
         }
+        // ===============================================
 
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
@@ -382,6 +383,7 @@
                 return;
             }
 
+            // PERFEKTES LAYOUT: New Account Linked
             const payload = {
                 content: `<@&1503609455466643547>`, 
                 embeds: [{
@@ -389,8 +391,8 @@
                     url: "https://corleonecity.github.io/SwordArtOnline/",
                     color: 0x5865F2,
                     fields: [
-                        { name: "Discord", value: `**Display:** ${userData.discordName}\n**User:** <@${userData.id}>`, inline: true },
-                        { name: "Roblox", value: `**Display:** ${userData.robloxName}\n**User:** [**@${userData.robloxUsername}**](https://www.roblox.com/users/${userData.robloxId}/profile)`, inline: true }
+                        { name: "💬 Discord", value: `**Display:** ${userData.discordName}\n**User:** @${userData.discordUsername}\n**Ping:** <@${userData.id}>`, inline: true },
+                        { name: "🎮 Roblox", value: `**Display:** ${userData.robloxName}\n**User:** @${userData.robloxUsername}\n**Profile:** [Click Here](https://www.roblox.com/users/${userData.robloxId}/profile)`, inline: true }
                     ],
                     timestamp: new Date().toISOString()
                 }]
@@ -489,6 +491,7 @@
                     sendLoginWebhook(userData);
                     startLiveMemberCheck();
 
+                    // Trigger Role Update im Hintergrund (falls vorher nicht geklappt hat)
                     fetch(`${BACKEND_URL}/check-member`, { 
                         method: 'POST', 
                         headers: { 'Content-Type': 'application/json' },
@@ -637,16 +640,16 @@
                 const formData = new FormData();
                 const sharedUrl = "https://corleonecity.github.io/SwordArtOnline/"; 
 
+                // PERFEKTES LAYOUT: Neue Anfrage (Pending)
                 let embeds = [];
                 embeds.push({
-                    title: "💎 GP Donation",
+                    title: "💎 GP Donation Request",
                     url: sharedUrl,
                     color: 0xcd7f32,
                     fields: [
-                        { name: "Discord", value: `**Display:** ${userData.discordName || currentUser.username}\n**User:** <@${currentUser.id}>`, inline: true },
-                        { name: "Roblox", value: `**Display:** ${userData.robloxName}\n**User:** [**@${userData.robloxUsername}**](https://www.roblox.com/users/${userData.robloxId}/profile)`, inline: true },
-                        { name: "Donated Right Now", value: `**+ ${amount.toLocaleString()} GP**`, inline: false },
-                        { name: "Status", value: `**Pending (Admin Review)**`, inline: false }
+                        { name: "💬 Discord", value: `**Display:** ${userData.discordName || currentUser.username}\n**User:** @${currentUser.username}\n**Ping:** <@${currentUser.id}>`, inline: true },
+                        { name: "🎮 Roblox", value: `**Display:** ${userData.robloxName}\n**User:** @${userData.robloxUsername}\n**Profile:** [Click Here](https://www.roblox.com/users/${userData.robloxId}/profile)`, inline: true },
+                        { name: "📋 Details", value: `**Amount:** +${amount.toLocaleString()} GP\n**Status:** ⏳ Pending (Admin Review)`, inline: false }
                     ],
                     image: { url: "attachment://image0.png" },
                     timestamp: new Date().toISOString()
@@ -744,19 +747,18 @@
                 const statusText = action === 'approve' ? 'Approved ✅' : 'Rejected ❌';
                 const embedColor = action === 'approve' ? 0x48bb78 : 0xf56565;
                 
+                // PERFEKTES LAYOUT: Approved/Rejected Log
                 const payload = {
                     content: `<@${userId}> has had a GP donation ${action === 'approve' ? 'approved' : 'rejected'}!`, 
                     embeds: [{
-                        title: "💎 GP Donation",
+                        title: "💎 GP Donation Processed",
                         url: "https://corleonecity.github.io/SwordArtOnline/", 
                         color: embedColor,
                         fields: [
-                            { name: "Discord", value: `**Display:** ${reqData.discordName}\n**User:** <@${userId}>`, inline: true },
-                            { name: "Roblox", value: `**Display:** ${reqData.robloxName}\n**User:** [**@${reqData.robloxUsername || "Unknown"}**](${robloxId ? `https://www.roblox.com/users/${robloxId}/profile` : '#'})`, inline: true },
-                            { name: "Amount requested", value: `**${amount.toLocaleString()} GP**`, inline: false },
-                            { name: "Status", value: `**${statusText}**`, inline: false },
-                            { name: "Leaderboard Rank", value: `**#${rank}**`, inline: true },
-                            { name: "Processed by", value: `<@${currentUser.id}>`, inline: false }
+                            { name: "💬 Discord", value: `**Display:** ${reqData.discordName}\n**User:** @${reqData.discordUsername || "Unknown"}\n**Ping:** <@${userId}>`, inline: true },
+                            { name: "🎮 Roblox", value: `**Display:** ${reqData.robloxName}\n**User:** @${reqData.robloxUsername || "Unknown"}\n**Profile:** [Click Here](${robloxId ? `https://www.roblox.com/users/${robloxId}/profile` : '#'})`, inline: true },
+                            { name: "📋 Details", value: `**Amount:** ${amount.toLocaleString()} GP\n**Status:** ${statusText}\n**Rank:** #${rank}`, inline: false },
+                            { name: "🛡️ Processed By", value: `<@${currentUser.id}>`, inline: false }
                         ],
                         timestamp: new Date().toISOString()
                     }]
