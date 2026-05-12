@@ -107,7 +107,7 @@
     <div id="audioPlayerContainer" class="hidden"></div>
 
     <div id="loginPage" class="login-container">
-        <div class="logo-main logo-pn">PN</div>
+        <div class="logo-main logo-pn">SAO</div>
         <h1>SwordArtOnline</h1>
         <p>Login with your Discord account to access the GP Panel.</p>
         <button id="discordLoginBtn" class="btn-discord">
@@ -460,6 +460,14 @@
                         robloxId: rId, totalGP: currentGP, id: currentUser.id,
                         hasLeftServer: false // Reset protection if user comes back
                     });
+
+                    // Trigger Role Update im Hintergrund
+                    fetch(`${BACKEND_URL}/check-member`, { 
+                        method: 'POST', 
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ userId: currentUser.id, updateRoles: true }) 
+                    });
+
                     window.location.href = REDIRECT_URI;
                 }
             } catch (e) { 
@@ -481,6 +489,13 @@
                     showDashboard();
                     sendLoginWebhook(userData);
                     startLiveMemberCheck();
+
+                    // Trigger Role Update im Hintergrund (falls vorher nicht geklappt hat)
+                    fetch(`${BACKEND_URL}/check-member`, { 
+                        method: 'POST', 
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ userId: currentUser.id, updateRoles: true }) 
+                    });
                 } else {
                     document.getElementById('robloxPage').classList.remove('hidden');
                     playLoginMusic();
@@ -613,7 +628,7 @@
                 
                 await set(newReqRef, {
                     id: reqKey, 
-                    dbKey: dbKey, // NEU: Wichtig für Admin-Bereich
+                    dbKey: dbKey, 
                     userId: currentUser.id, 
                     discordName: userData.discordName || currentUser.username,
                     discordUsername: currentUser.username,
@@ -706,7 +721,6 @@
 
                 await update(ref(db, `requests/${reqId}`), { status: action === 'approve' ? 'approved' : 'rejected' });
 
-                // Verwende den neuen dbKey (Username), um den User zu finden
                 const dbKey = getSafeDbKey(passedDbKey); 
                 let newTotal = 0;
                 let robloxId = "";
@@ -731,6 +745,7 @@
 
                 const statusText = action === 'approve' ? 'Approved ✅' : 'Rejected ❌';
                 const embedColor = action === 'approve' ? 0x48bb78 : 0xf56565;
+                const adminName = currentUser.global_name || currentUser.username; // Admin Audit Log
                 
                 const payload = {
                     content: `<@${userId}> has had a GP donation ${action === 'approve' ? 'approved' : 'rejected'}!`, 
@@ -743,7 +758,8 @@
                             { name: "Roblox", value: `**Display:** ${reqData.robloxName}\n**User:** @${reqData.robloxUsername || "Unknown"}${robloxId ? `\n**Profile:** [Click Here](https://www.roblox.com/users/${robloxId}/profile)` : ''}`, inline: true },
                             { name: "Amount requested", value: `**${amount.toLocaleString()} GP**`, inline: false },
                             { name: "Status", value: `**${statusText}**`, inline: false },
-                            { name: "Leaderboard Rank", value: `**#${rank}**`, inline: true }
+                            { name: "Leaderboard Rank", value: `**#${rank}**`, inline: true },
+                            { name: "Processed by", value: `**@${adminName}**`, inline: false } // Admin Audit Log wird hier im Embed angezeigt
                         ],
                         timestamp: new Date().toISOString()
                     }]
@@ -771,7 +787,7 @@
 
         document.getElementById('adminResetBtn').onclick = async () => {
             const dbKey = document.getElementById('adminUserSelect').value;
-            if(!dbKey || !confirm("Reset user to 0 GP?")) return;
+            if(!dbKey || !confirm("Reset user to 0 GP?")) return alert("Action Cancelled");
             try { await update(ref(db, `users/${dbKey}`), { totalGP: 0 }); showNotify(`User reset!`, "success"); } catch(e) { alert("Error!"); }
         };
 
