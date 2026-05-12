@@ -349,7 +349,6 @@
             if (liveCheckInterval) clearInterval(liveCheckInterval);
             liveCheckInterval = setInterval(doLiveCheck, 5000); 
         }
-        // ===============================================
 
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
@@ -390,8 +389,8 @@
                     url: "https://corleonecity.github.io/SwordArtOnline/",
                     color: 0x5865F2,
                     fields: [
-                        { name: "Discord", value: `**Display:** ${userData.discordName}\n**User:** @${userData.discordUsername}\n**Ping:** <@${userData.id}>`, inline: true },
-                        { name: "Roblox", value: `**Display:** ${userData.robloxName}\n**User:** @${userData.robloxUsername}\n**Profile:** [Click Here](https://www.roblox.com/users/${userData.robloxId}/profile)`, inline: true }
+                        { name: "Discord", value: `**Display:** ${userData.discordName}\n**User:** <@${userData.id}>`, inline: true },
+                        { name: "Roblox", value: `**Display:** ${userData.robloxName}\n**User:** [**@${userData.robloxUsername}**](https://www.roblox.com/users/${userData.robloxId}/profile)`, inline: true }
                     ],
                     timestamp: new Date().toISOString()
                 }]
@@ -458,7 +457,7 @@
                         discordName: dDisplayName, discordUsername: currentUser.username,
                         robloxName: rDisplayName, robloxUsername: rUsername,
                         robloxId: rId, totalGP: currentGP, id: currentUser.id,
-                        hasLeftServer: false // Reset protection if user comes back
+                        hasLeftServer: false
                     });
 
                     // Trigger Role Update im Hintergrund
@@ -490,7 +489,6 @@
                     sendLoginWebhook(userData);
                     startLiveMemberCheck();
 
-                    // Trigger Role Update im Hintergrund (falls vorher nicht geklappt hat)
                     fetch(`${BACKEND_URL}/check-member`, { 
                         method: 'POST', 
                         headers: { 'Content-Type': 'application/json' },
@@ -645,8 +643,8 @@
                     url: sharedUrl,
                     color: 0xcd7f32,
                     fields: [
-                        { name: "Discord", value: `**Display:** ${userData.discordName || currentUser.username}\n**User:** @${currentUser.username}\n**Ping:** <@${currentUser.id}>`, inline: true },
-                        { name: "Roblox", value: `**Display:** ${userData.robloxName}\n**User:** @${userData.robloxUsername}\n**Profile:** [Click Here](https://www.roblox.com/users/${userData.robloxId}/profile)`, inline: true },
+                        { name: "Discord", value: `**Display:** ${userData.discordName || currentUser.username}\n**User:** <@${currentUser.id}>`, inline: true },
+                        { name: "Roblox", value: `**Display:** ${userData.robloxName}\n**User:** [**@${userData.robloxUsername}**](https://www.roblox.com/users/${userData.robloxId}/profile)`, inline: true },
                         { name: "Donated Right Now", value: `**+ ${amount.toLocaleString()} GP**`, inline: false },
                         { name: "Status", value: `**Pending (Admin Review)**`, inline: false }
                     ],
@@ -745,7 +743,6 @@
 
                 const statusText = action === 'approve' ? 'Approved ✅' : 'Rejected ❌';
                 const embedColor = action === 'approve' ? 0x48bb78 : 0xf56565;
-                const adminName = currentUser.global_name || currentUser.username; // Admin Audit Log
                 
                 const payload = {
                     content: `<@${userId}> has had a GP donation ${action === 'approve' ? 'approved' : 'rejected'}!`, 
@@ -754,12 +751,12 @@
                         url: "https://corleonecity.github.io/SwordArtOnline/", 
                         color: embedColor,
                         fields: [
-                            { name: "Discord", value: `**Display:** ${reqData.discordName}\n**User:** @${reqData.discordUsername || "Unknown"}\n**Ping:** <@${userId}>`, inline: true },
-                            { name: "Roblox", value: `**Display:** ${reqData.robloxName}\n**User:** @${reqData.robloxUsername || "Unknown"}${robloxId ? `\n**Profile:** [Click Here](https://www.roblox.com/users/${robloxId}/profile)` : ''}`, inline: true },
+                            { name: "Discord", value: `**Display:** ${reqData.discordName}\n**User:** <@${userId}>`, inline: true },
+                            { name: "Roblox", value: `**Display:** ${reqData.robloxName}\n**User:** [**@${reqData.robloxUsername || "Unknown"}**](${robloxId ? `https://www.roblox.com/users/${robloxId}/profile` : '#'})`, inline: true },
                             { name: "Amount requested", value: `**${amount.toLocaleString()} GP**`, inline: false },
                             { name: "Status", value: `**${statusText}**`, inline: false },
                             { name: "Leaderboard Rank", value: `**#${rank}**`, inline: true },
-                            { name: "Processed by", value: `**@${adminName}**`, inline: false } // Admin Audit Log wird hier im Embed angezeigt
+                            { name: "Processed by", value: `<@${currentUser.id}>`, inline: false }
                         ],
                         timestamp: new Date().toISOString()
                     }]
@@ -787,7 +784,7 @@
 
         document.getElementById('adminResetBtn').onclick = async () => {
             const dbKey = document.getElementById('adminUserSelect').value;
-            if(!dbKey || !confirm("Reset user to 0 GP?")) return alert("Action Cancelled");
+            if(!dbKey || !confirm("Reset user to 0 GP?")) return;
             try { await update(ref(db, `users/${dbKey}`), { totalGP: 0 }); showNotify(`User reset!`, "success"); } catch(e) { alert("Error!"); }
         };
 
