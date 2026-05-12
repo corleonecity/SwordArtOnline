@@ -249,7 +249,7 @@
         // ==========================================
         // 1. SETTINGS
         // ==========================================
-        const ADMIN_DISCORD_IDS = ['917426398120005653']; 
+        const ADMIN_DISCORD_IDS = ['917426398120005653', '1503572666639061074']; 
 
         const DISCORD_CLIENT_ID = '1503179151073345678';
         const ROBLOX_CLIENT_ID = '1529843549493669743';
@@ -380,7 +380,6 @@
                 return;
             }
 
-            // Rolle wird gepingt, Detail-Infos von Discord/Roblox im Embed
             const payload = {
                 content: `<@&1503609455466643547>`, 
                 embeds: [{
@@ -639,7 +638,6 @@
                     });
                 }
 
-                // Rolle wird gepingt anstelle des Users
                 formData.append('payload_json', JSON.stringify({
                     content: `<@&1503609455466643547>\nA new GP donation has been submitted for review! 🎉`,
                     embeds: embeds
@@ -728,7 +726,7 @@
                     content: `<@${userId}> has had a GP donation ${action === 'approve' ? 'approved' : 'rejected'}!`, 
                     embeds: [{
                         title: "💎 GP Donation",
-                        url: "https://corleonecity.github.io/SwordArtOnline/", // Verlinkter Titel
+                        url: "https://corleonecity.github.io/SwordArtOnline/", 
                         color: embedColor,
                         fields: [
                             { name: "Discord", value: `**Display:** ${reqData.discordName}\n**User:** @${reqData.discordUsername || "Unknown"}\n**Ping:** <@${userId}>`, inline: true },
