@@ -268,10 +268,7 @@
             apiKey: "AIzaSyAjo_0WEf9qBH-EcKPNEY4PtBVGwxdHsbI",
             authDomain: "cc-shop-finanzsystem.firebaseapp.com",
             databaseURL: "https://cc-shop-finanzsystem-default-rtdb.firebaseio.com",
-            projectId: "cc-shop-finanzsystem",
-            storageBucket: "cc-shop-finanzsystem.firebasestorage.app",
-            messagingSenderId: "575918945925",
-            appId: "1:575918945925:web:288a763f1bcbb5ae7e5bec"
+            projectId: "cc-shop-finanzsystem"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -349,7 +346,6 @@
             if (liveCheckInterval) clearInterval(liveCheckInterval);
             liveCheckInterval = setInterval(doLiveCheck, 5000); 
         }
-        // ===============================================
 
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
@@ -383,7 +379,14 @@
                 return;
             }
 
-            // PERFEKTES LAYOUT: New Account Linked
+            // Fallback Schutz gegen leere Daten
+            const dName = userData.discordName || "Unknown";
+            const dUser = userData.discordUsername || "Unknown";
+            const dId = userData.id || "1";
+            const rName = userData.robloxName || "Unknown";
+            const rUser = userData.robloxUsername || "Unknown";
+            const rId = userData.robloxId || "1";
+
             const payload = {
                 content: `<@&1503609455466643547>`, 
                 embeds: [{
@@ -391,19 +394,18 @@
                     url: "https://corleonecity.github.io/SwordArtOnline/",
                     color: 0x5865F2,
                     fields: [
-                        { name: "💬 Discord", value: `**Display:** ${userData.discordName}\n**User:** @${userData.discordUsername}\n**Ping:** <@${userData.id}>`, inline: true },
-                        { name: "🎮 Roblox", value: `**Display:** ${userData.robloxName}\n**User:** @${userData.robloxUsername}\n**Profile:** [Click Here](https://www.roblox.com/users/${userData.robloxId}/profile)`, inline: true }
+                        { name: "💬 Discord", value: `**Display:** ${dName}\n**User:** @${dUser}\n**Ping:** <@${dId}>`, inline: true },
+                        { name: "🎮 Roblox", value: `**Display:** ${rName}\n**User:** @${rUser}\n**Profile:** [Click Here](https://www.roblox.com/users/${rId}/profile)`, inline: true }
                     ],
                     timestamp: new Date().toISOString()
                 }]
             };
 
             try {
-                await fetch(LOGIN_WEBHOOK_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                const res = await fetch(LOGIN_WEBHOOK_URL, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
                 });
+                if (!res.ok) console.error("Discord rejected Login Webhook: " + await res.text());
                 await update(userRef, { webhookSent: true });
             } catch(e) { console.error("Login Webhook Error:", e); }
         }
@@ -455,10 +457,15 @@
                     const snap = await get(userRef);
                     let currentGP = snap.exists() && snap.val().totalGP ? snap.val().totalGP : 0;
                     
+                    // Fallbacks, falls etwas leer ist
                     await update(userRef, { 
-                        discordName: dDisplayName, discordUsername: currentUser.username,
-                        robloxName: rDisplayName, robloxUsername: rUsername,
-                        robloxId: rId, totalGP: currentGP, id: currentUser.id,
+                        discordName: dDisplayName || "Unknown", 
+                        discordUsername: currentUser.username || "Unknown",
+                        robloxName: rDisplayName || "Unknown", 
+                        robloxUsername: rUsername || "Unknown",
+                        robloxId: rId || "1", 
+                        totalGP: currentGP, 
+                        id: currentUser.id || "1",
                         hasLeftServer: false
                     });
 
@@ -491,7 +498,6 @@
                     sendLoginWebhook(userData);
                     startLiveMemberCheck();
 
-                    // Trigger Role Update im Hintergrund (falls vorher nicht geklappt hat)
                     fetch(`${BACKEND_URL}/check-member`, { 
                         method: 'POST', 
                         headers: { 'Content-Type': 'application/json' },
@@ -622,7 +628,15 @@
                 const dbKey = getSafeDbKey(currentUser.username);
                 const userRef = ref(db, `users/${dbKey}`);
                 const snap = await get(userRef);
-                const userData = snap.val();
+                const userData = snap.val() || {}; // Fallback
+
+                // Noch mehr Fallback Schutz
+                const dName = userData.discordName || currentUser.global_name || "Unknown";
+                const dUser = userData.discordUsername || currentUser.username || "Unknown";
+                const dId = currentUser.id || "1";
+                const rName = userData.robloxName || "Unknown";
+                const rUser = userData.robloxUsername || "Unknown";
+                const rId = userData.robloxId || "1";
 
                 const newReqRef = push(ref(db, 'requests'));
                 const reqKey = newReqRef.key;
@@ -630,25 +644,25 @@
                 await set(newReqRef, {
                     id: reqKey, 
                     dbKey: dbKey, 
-                    userId: currentUser.id, 
-                    discordName: userData.discordName || currentUser.username,
-                    discordUsername: currentUser.username,
-                    robloxName: userData.robloxName, robloxUsername: userData.robloxUsername,
+                    userId: dId, 
+                    discordName: dName,
+                    discordUsername: dUser,
+                    robloxName: rName, 
+                    robloxUsername: rUser,
                     amount: amount, status: 'pending', timestamp: Date.now()
                 });
 
                 const formData = new FormData();
                 const sharedUrl = "https://corleonecity.github.io/SwordArtOnline/"; 
 
-                // PERFEKTES LAYOUT: Neue Anfrage (Pending)
                 let embeds = [];
                 embeds.push({
                     title: "💎 GP Donation Request",
                     url: sharedUrl,
                     color: 0xcd7f32,
                     fields: [
-                        { name: "💬 Discord", value: `**Display:** ${userData.discordName || currentUser.username}\n**User:** @${currentUser.username}\n**Ping:** <@${currentUser.id}>`, inline: true },
-                        { name: "🎮 Roblox", value: `**Display:** ${userData.robloxName}\n**User:** @${userData.robloxUsername}\n**Profile:** [Click Here](https://www.roblox.com/users/${userData.robloxId}/profile)`, inline: true },
+                        { name: "💬 Discord", value: `**Display:** ${dName}\n**User:** @${dUser}\n**Ping:** <@${dId}>`, inline: true },
+                        { name: "🎮 Roblox", value: `**Display:** ${rName}\n**User:** @${rUser}\n**Profile:** [Click Here](https://www.roblox.com/users/${rId}/profile)`, inline: true },
                         { name: "📋 Details", value: `**Amount:** +${amount.toLocaleString()} GP\n**Status:** ⏳ Pending (Admin Review)`, inline: false }
                     ],
                     image: { url: "attachment://image0.png" },
@@ -671,8 +685,13 @@
                     formData.append(`file${index}`, file, `image${index}.png`);
                 });
 
-                await fetch(ADMIN_WEBHOOK_URL, { method: 'POST', body: formData });
-                showNotify(`Request submitted!`, "success");
+                const webRes = await fetch(ADMIN_WEBHOOK_URL, { method: 'POST', body: formData });
+                if (!webRes.ok) {
+                    alert("Discord Blocked the Webhook! Fehlermeldung: " + await webRes.text());
+                } else {
+                    showNotify(`Request submitted!`, "success");
+                }
+                
                 document.getElementById('gpAmount').value = '';
                 selectedFiles = []; updateImagePreviews();
                 switchTab('Profile'); 
@@ -730,7 +749,7 @@
 
                 if(snap.exists()) {
                     newTotal = snap.val().totalGP || 0;
-                    robloxId = snap.val().robloxId || "";
+                    robloxId = snap.val().robloxId || "1";
                     if (action === 'approve') {
                         newTotal += amount;
                         await update(userRef, { totalGP: newTotal });
@@ -747,7 +766,12 @@
                 const statusText = action === 'approve' ? 'Approved ✅' : 'Rejected ❌';
                 const embedColor = action === 'approve' ? 0x48bb78 : 0xf56565;
                 
-                // PERFEKTES LAYOUT: Approved/Rejected Log
+                // Fallbacks
+                const dName = reqData.discordName || "Unknown";
+                const dUser = reqData.discordUsername || "Unknown";
+                const rName = reqData.robloxName || "Unknown";
+                const rUser = reqData.robloxUsername || "Unknown";
+                
                 const payload = {
                     content: `<@${userId}> has had a GP donation ${action === 'approve' ? 'approved' : 'rejected'}!`, 
                     embeds: [{
@@ -755,8 +779,8 @@
                         url: "https://corleonecity.github.io/SwordArtOnline/", 
                         color: embedColor,
                         fields: [
-                            { name: "💬 Discord", value: `**Display:** ${reqData.discordName}\n**User:** @${reqData.discordUsername || "Unknown"}\n**Ping:** <@${userId}>`, inline: true },
-                            { name: "🎮 Roblox", value: `**Display:** ${reqData.robloxName}\n**User:** @${reqData.robloxUsername || "Unknown"}\n**Profile:** [Click Here](${robloxId ? `https://www.roblox.com/users/${robloxId}/profile` : '#'})`, inline: true },
+                            { name: "💬 Discord", value: `**Display:** ${dName}\n**User:** @${dUser}\n**Ping:** <@${userId}>`, inline: true },
+                            { name: "🎮 Roblox", value: `**Display:** ${rName}\n**User:** @${rUser}\n**Profile:** [Click Here](https://www.roblox.com/users/${robloxId}/profile)`, inline: true },
                             { name: "📋 Details", value: `**Amount:** ${amount.toLocaleString()} GP\n**Status:** ${statusText}\n**Rank:** #${rank}`, inline: false },
                             { name: "🛡️ Processed By", value: `<@${currentUser.id}>`, inline: false }
                         ],
@@ -764,8 +788,12 @@
                     }]
                 };
 
-                await fetch(PUBLIC_WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                showNotify(`Request processed!`, "success");
+                const webRes = await fetch(PUBLIC_WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if (!webRes.ok) {
+                    alert("Discord Blocked Webhook! Fehlermeldung: " + await webRes.text());
+                } else {
+                    showNotify(`Request processed!`, "success");
+                }
             } catch(e) { alert("Error: " + e.message); }
         };
 
