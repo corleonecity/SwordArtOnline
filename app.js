@@ -136,8 +136,8 @@ async function sendGPRequestToDiscord(requestData, images) {
         embeds: [embed]
     }));
     
-    // Bilder anhängen (max 3)
-    const imagesToSend = images.slice(0, 3);
+    // Bilder anhängen (max 1)
+    const imagesToSend = images.slice(0, 1);
     for (let i = 0; i < imagesToSend.length; i++) {
         formData.append(`file${i}`, imagesToSend[i], `proof_${i+1}.png`);
     }
@@ -505,7 +505,7 @@ function loadProfileHistory() {
 }
 
 // ==========================================
-// 6. BILDER-UPLOAD & PREVIEW
+// 6. BILDER-UPLOAD & PREVIEW (NUR 1 BILD)
 // ==========================================
 
 function updateImagePreviews() {
@@ -513,7 +513,7 @@ function updateImagePreviews() {
     const fileCountText = document.getElementById('fileCountText');
     
     previewContainer.innerHTML = '';
-    fileCountText.textContent = `${selectedFiles.length} / 10 images selected`;
+    fileCountText.textContent = `${selectedFiles.length} / 1 image selected`;
     
     selectedFiles.forEach((file, index) => {
         const box = document.createElement('div');
@@ -769,8 +769,9 @@ document.getElementById('leaderboardSearch')?.addEventListener('input', (e) => {
 
 document.getElementById('proofImage')?.addEventListener('change', (e) => {
     const newFiles = Array.from(e.target.files);
-    if (selectedFiles.length + newFiles.length > 10) {
-        alert("Max 10 screenshots allowed!");
+    // Begrenzung auf maximal 1 Bild
+    if (selectedFiles.length + newFiles.length > 1) {
+        alert("Only 1 screenshot is allowed!");
         return;
     }
     selectedFiles = selectedFiles.concat(newFiles);
