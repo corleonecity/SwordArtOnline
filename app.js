@@ -90,7 +90,133 @@ function forceKickUser() {
 }
 
 // ==========================================
-// 3. DISCORD & ROBLOX AUTHENTIFIZIERUNG
+// 3. DISCORD BOT NACHRICHTEN ÜBER CLOUDFLARE
+// ==========================================
+
+async function sendDiscordMessage(endpoint, payload) {
+    try {
+        const response = await fetch(`${BACKEND_URL}${endpoint}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        
+        if (!response.ok) {
+            const error = await response.text();
+            console.error(`Discord message failed (${endpoint}):`, error);
+            return false;
+        }
+        return true;
+    } catch (e) {
+        console.error(`Discord message error (${endpoint}):`, e);
+        return false;
+    }
+}
+
+// GP Request an Discord senden (über Bot)
+async function sendGPRequestToDiscord(requestData, images) {
+    const formData = new FormData();
+    
+    const embed = {
+        title: "💎 New GP Donation Request",
+        color: 0xcd7f32,
+        fields: [
+            { name: "💬 Discord", value: `**Name:** ${requestData.discordName}\n**Tag:** @${requestData.discordUsername}\n**Ping:** <@${requestData.userId}>`, inline: true },
+            { name: "🎮 Roblox", value: `**Name:** ${requestData.robloxName}\n**User:** @${requestData.robloxUsername}\n**Profile:** [Click Here](https://www.roblox.com/users/${requestData.robloxId}/profile)`, inline: true },
+            { name: "💰 Amount", value: `**+${requestData.amount.toLocaleString()} GP**`, inline: false },
+            { name: "📊 Status", value: "⏳ Pending Review", inline: true },
+            { name: "🆔 Request ID", value: `\`${requestData.requestId}\``, inline: true }
+        ],
+        timestamp: new Date().toISOString(),
+        footer: { text: "SwordArtOnline GP System" }
+    };
+
+    formData.append('payload_json', JSON.stringify({
+        content: `<@&1503609455466643547> New GP donation requires review!`,
+        embeds: [embed]
+    }));
+    
+    // Bilder anhängen (max 3)
+    const imagesToSend = images.slice(0, 3);
+    for (let i = 0; i < imagesToSend.length; i++) {
+        formData.append(`file${i}`, imagesToSend[i], `proof_${i+1}.png`);
+    }
+
+    try {
+        const response = await fetch(`${BACKEND_URL}/send-gp-request`, {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (!response.ok) {
+            console.error("GP request send failed:", await response.text());
+            return false;
+        }
+        return true;
+    } catch (e) {
+        console.error("GP request send error:", e);
+        return false;
+    }
+}
+
+// Login Webhook über Bot senden
+async function sendLoginToDiscord(userData) {
+    const embed = {
+        title: "🟢 New User Registered",
+        color: 0x48bb78,
+        fields: [
+            { name: "💬 Discord", value: `**Name:** ${userData.discordName}\n**Tag:** @${userData.discordUsername}\n**ID:** ${userData.userId}`, inline: true },
+            { name: "🎮 Roblox", value: `**Name:** ${userData.robloxName}\n**User:** @${userData.robloxUsername}\n**Profile:** [Click Here](https://www.roblox.com/users/${userData.robloxId}/profile)`, inline: true }
+        ],
+        timestamp: new Date().toISOString(),
+        footer: { text: "SwordArtOnline Panel" }
+    };
+
+    return sendDiscordMessage('/send-login', { embeds: [embed] });
+}
+
+// GP Processed Status über Bot senden
+async function sendProcessedToDiscord(data) {
+    const embed = {
+        title: data.action === 'approve' ? "✅ GP Donation Approved" : "❌ GP Donation Rejected",
+        color: data.action === 'approve' ? 0x48bb78 : 0xf56565,
+        fields: [
+            { name: "💬 Discord", value: `**Name:** ${data.discordName}\n**Tag:** @${data.discordUsername}\n**Ping:** <@${data.userId}>`, inline: true },
+            { name: "🎮 Roblox", value: `**Name:** ${data.robloxName}\n**User:** @${data.robloxUsername}\n**Profile:** [Click Here](https://www.roblox.com/users/${data.robloxId}/profile)`, inline: true },
+            { name: "💰 Amount", value: `**${data.action === 'approve' ? '+' : '-'}${data.amount.toLocaleString()} GP**`, inline: false },
+            { name: "📊 New Total", value: `**${data.newTotal.toLocaleString()} GP**`, inline: true },
+            { name: "🏆 Rank", value: `**#${data.rank}**`, inline: true },
+            { name: "🛡️ Processed By", value: `<@${data.processedBy}>`, inline: false }
+        ],
+        timestamp: new Date().toISOString(),
+        footer: { text: "SwordArtOnline GP System" }
+    };
+
+    return sendDiscordMessage('/send-processed', { embeds: [embed] });
+}
+
+// User Left Server über Bot senden
+async function sendUserLeftToDiscord(userData) {
+    const embed = {
+        title: "🚨 User has left the server!",
+        color: 0xf56565,
+        fields: [
+            { name: "💬 Discord", value: `**Name:** ${userData.discordName}\n**Tag:** @${userData.discordUsername}\n**ID:** ${userData.userId}`, inline: true },
+            { name: "🎮 Roblox", value: `**Name:** ${userData.robloxName || "Unknown"}\n**User:** @${userData.robloxUsername || "Unknown"}`, inline: true },
+            { name: "💰 Total GP", value: `${(userData.totalGP || 0).toLocaleString()} GP`, inline: false }
+        ],
+        timestamp: new Date().toISOString(),
+        footer: { text: "SwordArtOnline Panel" }
+    };
+
+    return sendDiscordMessage('/send-left-user', { 
+        content: `<@&1503609455466643547>`,
+        embeds: [embed] 
+    });
+}
+
+// ==========================================
+// 4. DISCORD & ROBLOX AUTHENTIFIZIERUNG
 // ==========================================
 
 async function doLiveCheck() {
@@ -107,6 +233,21 @@ async function doLiveCheck() {
         }
         const data = await res.json();
         if (data.isMember === false) {
+            // User hat Server verlassen - Discord Benachrichtigung senden
+            const dbKey = getSafeDbKey(currentUser.username);
+            const snap = await get(ref(db, `users/${dbKey}`));
+            if (snap.exists() && !snap.val().hasLeftServer) {
+                const userData = snap.val();
+                await sendUserLeftToDiscord({
+                    discordName: userData.discordName,
+                    discordUsername: userData.discordUsername,
+                    userId: currentUser.id,
+                    robloxName: userData.robloxName,
+                    robloxUsername: userData.robloxUsername,
+                    totalGP: userData.totalGP || 0
+                });
+                await update(ref(db, `users/${dbKey}`), { hasLeftServer: true });
+            }
             forceKickUser();
             return false;
         }
@@ -119,7 +260,7 @@ async function doLiveCheck() {
 
 function startLiveMemberCheck() {
     if (liveCheckInterval) clearInterval(liveCheckInterval);
-    liveCheckInterval = setInterval(doLiveCheck, 5000);
+    liveCheckInterval = setInterval(doLiveCheck, 30000);
 }
 
 async function sendLoginWebhook(userData) {
@@ -129,36 +270,13 @@ async function sendLoginWebhook(userData) {
     
     if (snap.exists() && snap.val().webhookSent === true) return;
 
-    const dName = userData.discordName || "Unknown";
-    const dUser = userData.discordUsername || "Unknown";
-    const dId = userData.id || "1";
-    const rName = userData.robloxName || "Unknown";
-    const rUser = userData.robloxUsername || "Unknown";
-    const rId = userData.robloxId || "1";
-
-    const payload = {
-        content: `<@&1503609455466643547>`,
-        embeds: [{
-            title: "New Account Linked",
-            url: "https://corleonecity.github.io/SwordArtOnline/",
-            color: 0x5865F2,
-            fields: [
-                { name: "💬 Discord", value: `**Display:** ${dName}\n**User:** @${dUser}\n**Ping:** <@${dId}>`, inline: true },
-                { name: "🎮 Roblox", value: `**Display:** ${rName}\n**User:** @${rUser}\n**Profile:** [Click Here](https://www.roblox.com/users/${rId}/profile)`, inline: true }
-            ],
-            timestamp: new Date().toISOString()
-        }]
-    };
-
-    try {
-        await fetch(`${BACKEND_URL}/log-login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
+    const success = await sendLoginToDiscord(userData);
+    
+    if (success) {
         await update(userRef, { webhookSent: true });
-    } catch (e) {
-        console.error("Login Error:", e);
+        console.log("Login notification sent successfully");
+    } else {
+        console.error("Login notification failed");
     }
 }
 
@@ -185,6 +303,7 @@ async function handleDiscordLogin(code) {
         }
     } catch (e) {
         alert("Login Error!");
+        console.error(e);
     }
 }
 
@@ -219,6 +338,16 @@ async function handleRobloxLogin(code) {
                 hasLeftServer: false
             });
 
+            // Login Benachrichtigung senden
+            await sendLoginWebhook({
+                discordName: dDisplayName,
+                discordUsername: currentUser.username,
+                userId: currentUser.id,
+                robloxName: rDisplayName,
+                robloxUsername: rUsername,
+                robloxId: rId
+            });
+
             fetch(`${BACKEND_URL}/check-member`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -229,6 +358,7 @@ async function handleRobloxLogin(code) {
         }
     } catch (e) {
         alert("Linking Error!");
+        console.error(e);
     }
 }
 
@@ -244,7 +374,6 @@ async function checkRobloxLink() {
         if (snap.exists() && snap.val().robloxId) {
             const userData = snap.val();
             showDashboard();
-            sendLoginWebhook(userData);
             startLiveMemberCheck();
             fetch(`${BACKEND_URL}/check-member`, {
                 method: 'POST',
@@ -262,7 +391,7 @@ async function checkRobloxLink() {
 }
 
 // ==========================================
-// 4. DASHBOARD & UI
+// 5. DASHBOARD & UI
 // ==========================================
 
 function showDashboard() {
@@ -287,7 +416,9 @@ function renderLeaderboard(filterText) {
     body.innerHTML = '';
     if (!allUsersData) return;
     
-    let usersArray = Object.values(allUsersData).sort((a, b) => (b.totalGP || 0) - (a.totalGP || 0));
+    let usersArray = Object.values(allUsersData)
+        .filter(u => u.totalGP && u.totalGP > 0)
+        .sort((a, b) => (b.totalGP || 0) - (a.totalGP || 0));
     
     if (filterText) {
         const lowerFilter = filterText.toLowerCase();
@@ -304,10 +435,14 @@ function renderLeaderboard(filterText) {
                 <td>#${i + 1}</td>
                 <td><div class="user-name-cell"><span class="display-name">${u.discordName || "Unknown"}</span><span class="username-handle">@${u.discordUsername || "Unknown"}</span></div></td>
                 <td><div class="user-name-cell"><span class="display-name">${u.robloxName || "Unknown"}</span><span class="username-handle">@${u.robloxUsername || "Unknown"}</span></div></td>
-                <td style="color:#48bb78; font-weight:bold; font-size:16px;">${(u.totalGP || 0).toLocaleString()}</td>
+                <td style="color:#48bb78; font-weight:bold; font-size:16px;">${(u.totalGP || 0).toLocaleString()} GP</td>
             </tr>
         `;
     });
+    
+    if (usersArray.length === 0) {
+        body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No users with GP yet</td></tr>';
+    }
 }
 
 function loadLeaderboard() {
@@ -318,14 +453,12 @@ function loadLeaderboard() {
         
         if (ADMIN_DISCORD_IDS.includes(currentUser?.id)) {
             const select = document.getElementById('adminUserSelect');
-            if (select) {
+            if (select && allUsersData) {
                 select.innerHTML = '<option value="">-- Select a User --</option>';
-                if (allUsersData) {
-                    Object.values(allUsersData).forEach(u => {
-                        const safeKey = getSafeDbKey(u.discordUsername);
-                        select.innerHTML += `<option value="${safeKey}">${u.discordName} (@${u.discordUsername}) - ${u.totalGP || 0} GP</option>`;
-                    });
-                }
+                Object.values(allUsersData).forEach(u => {
+                    const safeKey = getSafeDbKey(u.discordUsername);
+                    select.innerHTML += `<option value="${safeKey}">${u.discordName} (@${u.discordUsername}) - ${u.totalGP || 0} GP</option>`;
+                });
             }
         }
     });
@@ -336,10 +469,10 @@ function loadProfileHistory() {
         const data = snapshot.val();
         const body = document.getElementById('profileHistoryBody');
         body.innerHTML = '';
-        if (!data) return;
+        if (!data || !currentUser) return;
         
         const userRequests = Object.values(data)
-            .filter(r => r.userId === currentUser?.id)
+            .filter(r => r.userId === currentUser.id)
             .sort((a, b) => b.timestamp - a.timestamp);
         
         userRequests.forEach(req => {
@@ -352,9 +485,9 @@ function loadProfileHistory() {
             });
             
             let statusHtml = '';
-            if (req.status === 'pending') statusHtml = '<span class="status-badge status-pending">Pending</span>';
-            else if (req.status === 'approved') statusHtml = '<span class="status-badge status-approved">Approved</span>';
-            else statusHtml = '<span class="status-badge status-rejected">Rejected</span>';
+            if (req.status === 'pending') statusHtml = '<span class="status-badge status-pending">Pending ⏳</span>';
+            else if (req.status === 'approved') statusHtml = '<span class="status-badge status-approved">Approved ✅</span>';
+            else statusHtml = '<span class="status-badge status-rejected">Rejected ❌</span>';
             
             body.innerHTML += `
                 <tr>
@@ -364,11 +497,15 @@ function loadProfileHistory() {
                 </tr>
             `;
         });
+        
+        if (userRequests.length === 0) {
+            body.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#666;">No requests yet</td></tr>';
+        }
     });
 }
 
 // ==========================================
-// 5. BILDER-UPLOAD & PREVIEW
+// 6. BILDER-UPLOAD & PREVIEW
 // ==========================================
 
 function updateImagePreviews() {
@@ -376,7 +513,7 @@ function updateImagePreviews() {
     const fileCountText = document.getElementById('fileCountText');
     
     previewContainer.innerHTML = '';
-    fileCountText.textContent = `${selectedFiles.length} images selected`;
+    fileCountText.textContent = `${selectedFiles.length} / 10 images selected`;
     
     selectedFiles.forEach((file, index) => {
         const box = document.createElement('div');
@@ -397,15 +534,20 @@ function updateImagePreviews() {
 }
 
 // ==========================================
-// 6. GP SUBMIT FUNKTION
+// 7. GP SUBMIT FUNKTION
 // ==========================================
 
 async function submitGPRequest() {
     const amount = parseInt(document.getElementById('gpAmount').value);
     const btn = document.getElementById('addGPBtn');
     
-    if (isNaN(amount) || amount <= 0 || selectedFiles.length === 0) {
-        alert("Please enter amount and add at least 1 screenshot!");
+    if (isNaN(amount) || amount <= 0) {
+        alert("Please enter a valid amount!");
+        return;
+    }
+    
+    if (selectedFiles.length === 0) {
+        alert("Please add at least 1 screenshot as proof!");
         return;
     }
 
@@ -425,6 +567,7 @@ async function submitGPRequest() {
         const rUser = userData.robloxUsername || "Unknown";
         const rId = userData.robloxId || "1";
 
+        // Request in Firebase speichern
         const newReqRef = push(ref(db, 'requests'));
         const reqKey = newReqRef.key;
 
@@ -436,60 +579,36 @@ async function submitGPRequest() {
             discordUsername: dUser,
             robloxName: rName,
             robloxUsername: rUser,
+            robloxId: rId,
             amount: amount,
             status: 'pending',
             timestamp: Date.now()
         });
 
-        const formData = new FormData();
-        const sharedUrl = "https://corleonecity.github.io/SwordArtOnline/";
+        // Discord Benachrichtigung senden (mit Bildern)
+        await sendGPRequestToDiscord({
+            discordName: dName,
+            discordUsername: dUser,
+            userId: dId,
+            robloxName: rName,
+            robloxUsername: rUser,
+            robloxId: rId,
+            amount: amount,
+            requestId: reqKey
+        }, selectedFiles);
 
-        let embeds = [{
-            title: "💎 GP Donation Request",
-            url: sharedUrl,
-            color: 0xcd7f32,
-            fields: [
-                { name: "💬 Discord", value: `**Display:** ${dName}\n**User:** @${dUser}\n**Ping:** <@${dId}>`, inline: true },
-                { name: "🎮 Roblox", value: `**Display:** ${rName}\n**User:** @${rUser}\n**Profile:** [Click Here](https://www.roblox.com/users/${rId}/profile)`, inline: true },
-                { name: "📋 Details", value: `**Amount:** +${amount.toLocaleString()} GP\n**Status:** ⏳ Pending (Admin Review)`, inline: false }
-            ],
-            image: { url: "attachment://image0.png" },
-            timestamp: new Date().toISOString()
-        }];
+        showNotify(`GP Request submitted successfully!`, "success");
 
-        for (let i = 1; i < selectedFiles.length; i++) {
-            embeds.push({
-                url: sharedUrl,
-                image: { url: `attachment://image${i}.png` }
-            });
-        }
-
-        formData.append('payload_json', JSON.stringify({
-            content: `<@&1503609455466643547>\nA new GP donation has been submitted for review! 🎉`,
-            embeds: embeds
-        }));
-
-        selectedFiles.forEach((file, index) => {
-            formData.append(`file${index}`, file, `image${index}.png`);
-        });
-
-        const webRes = await fetch(`${BACKEND_URL}/log-request`, {
-            method: 'POST',
-            body: formData
-        });
-        
-        if (!webRes.ok) {
-            alert("Error Server!");
-        } else {
-            showNotify(`Request submitted!`, "success");
-        }
-
+        // Formular zurücksetzen
         document.getElementById('gpAmount').value = '';
         selectedFiles = [];
         updateImagePreviews();
+        
+        // Zur Profile-Tab wechseln
         switchTab('Profile');
         
     } catch (e) {
+        console.error("Submit error:", e);
         alert("Error: " + e.message);
     } finally {
         btn.disabled = false;
@@ -498,39 +617,53 @@ async function submitGPRequest() {
 }
 
 // ==========================================
-// 7. ADMIN FUNKTIONEN
+// 8. ADMIN FUNKTIONEN
 // ==========================================
 
 function loadAdminData() {
     onValue(ref(db, 'requests'), (snapshot) => {
         const data = snapshot.val();
         const body = document.getElementById('adminPendingBody');
+        if (!body) return;
+        
         body.innerHTML = '';
-        if (!data) return;
+        if (!data) {
+            body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No pending requests</td></tr>';
+            return;
+        }
         
         const pendingRequests = Object.values(data)
             .filter(r => r.status === 'pending')
             .sort((a, b) => a.timestamp - b.timestamp);
+        
+        if (pendingRequests.length === 0) {
+            body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No pending requests</td></tr>';
+            return;
+        }
         
         pendingRequests.forEach(req => {
             body.innerHTML += `
                 <tr>
                     <td>
                         <div class="user-name-cell">
-                            <span class="display-name">${req.discordName}</span>
+                            <span class="display-name">${req.discordName || "Unknown"}</span>
                             <span class="username-handle">@${req.discordUsername || "Unknown"}</span>
                         </div>
                     </td>
                     <td>
                         <div class="user-name-cell">
-                            <span class="display-name">${req.robloxName}</span>
+                            <span class="display-name">${req.robloxName || "Unknown"}</span>
                             <span class="username-handle">@${req.robloxUsername || "Unknown"}</span>
                         </div>
                     </td>
-                    <td style="color:#cd7f32; font-weight:bold;">+${req.amount.toLocaleString()}</td>
+                    <td style="color:#cd7f32; font-weight:bold;">+${req.amount.toLocaleString()} GP</td>
                     <td>
-                        <button onclick="window.handleAdminAction('${req.id}', '${req.userId}', ${req.amount}, 'approve', '${req.dbKey || req.discordUsername}')" class="btn-small btn-approve"><i class="fas fa-check"></i></button>
-                        <button onclick="window.handleAdminAction('${req.id}', '${req.userId}', ${req.amount}, 'reject', '${req.dbKey || req.discordUsername}')" class="btn-small btn-deny"><i class="fas fa-times"></i></button>
+                        <button class="btn-small btn-approve" onclick="window.handleAdminAction('${req.id}', '${req.userId}', ${req.amount}, 'approve', '${req.dbKey || req.discordUsername}', '${req.robloxId || ''}', '${req.discordName}', '${req.discordUsername}', '${req.robloxName}', '${req.robloxUsername}')">
+                            <i class="fas fa-check"></i> Approve
+                        </button>
+                        <button class="btn-small btn-deny" onclick="window.handleAdminAction('${req.id}', '${req.userId}', ${req.amount}, 'reject', '${req.dbKey || req.discordUsername}', '${req.robloxId || ''}', '${req.discordName}', '${req.discordUsername}', '${req.robloxName}', '${req.robloxUsername}')">
+                            <i class="fas fa-times"></i> Reject
+                        </button>
                     </td>
                 </tr>
             `;
@@ -538,7 +671,7 @@ function loadAdminData() {
     });
 }
 
-window.handleAdminAction = async (reqId, userId, amount, action, passedDbKey) => {
+window.handleAdminAction = async (reqId, userId, amount, action, passedDbKey, robloxId, discordName, discordUsername, robloxName, robloxUsername) => {
     if (!confirm(`Are you sure you want to ${action === 'approve' ? 'APPROVE' : 'REJECT'} this request?`)) return;
     
     try {
@@ -552,69 +685,53 @@ window.handleAdminAction = async (reqId, userId, amount, action, passedDbKey) =>
 
         const dbKey = getSafeDbKey(passedDbKey);
         let newTotal = 0;
-        let robloxId = "";
         const userRef = ref(db, `users/${dbKey}`);
         const snap = await get(userRef);
 
         if (snap.exists()) {
             newTotal = snap.val().totalGP || 0;
-            robloxId = snap.val().robloxId || "1";
             if (action === 'approve') {
                 newTotal += amount;
                 await update(userRef, { totalGP: newTotal });
             }
         }
 
+        // Leaderboard Rank berechnen
         const allUsersSnap = await get(ref(db, 'users'));
         let rank = "?";
         if (allUsersSnap.exists()) {
-            const sorted = Object.values(allUsersSnap.val()).sort((a, b) => (b.totalGP || 0) - (a.totalGP || 0));
-            rank = sorted.findIndex(u => u.id === userId) + 1;
+            const sorted = Object.values(allUsersSnap.val())
+                .filter(u => u.totalGP && u.totalGP > 0)
+                .sort((a, b) => (b.totalGP || 0) - (a.totalGP || 0));
+            const index = sorted.findIndex(u => u.id === userId);
+            rank = index !== -1 ? (index + 1).toString() : "?";
         }
 
-        const statusText = action === 'approve' ? 'Approved ✅' : 'Rejected ❌';
-        const embedColor = action === 'approve' ? 0x48bb78 : 0xf56565;
-
-        const dName = reqData.discordName || "Unknown";
-        const dUser = reqData.discordUsername || "Unknown";
-        const rName = reqData.robloxName || "Unknown";
-        const rUser = reqData.robloxUsername || "Unknown";
-
-        const payload = {
-            content: `<@${userId}> has had a GP donation ${action === 'approve' ? 'approved' : 'rejected'}!`,
-            embeds: [{
-                title: "💎 GP Donation Processed",
-                url: "https://corleonecity.github.io/SwordArtOnline/",
-                color: embedColor,
-                fields: [
-                    { name: "💬 Discord", value: `**Display:** ${dName}\n**User:** @${dUser}\n**Ping:** <@${userId}>`, inline: true },
-                    { name: "🎮 Roblox", value: `**Display:** ${rName}\n**User:** @${rUser}\n**Profile:** [Click Here](https://www.roblox.com/users/${robloxId}/profile)`, inline: true },
-                    { name: "📋 Details", value: `**Amount:** ${amount.toLocaleString()} GP\n**Status:** ${statusText}\n**Rank:** #${rank}`, inline: false },
-                    { name: "🛡️ Processed By", value: `<@${currentUser.id}>`, inline: false }
-                ],
-                timestamp: new Date().toISOString()
-            }]
-        };
-
-        const webRes = await fetch(`${BACKEND_URL}/log-processed`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+        // Discord Benachrichtigung senden
+        await sendProcessedToDiscord({
+            action: action,
+            discordName: discordName || reqData.discordName,
+            discordUsername: discordUsername || reqData.discordUsername,
+            userId: userId,
+            robloxName: robloxName || reqData.robloxName,
+            robloxUsername: robloxUsername || reqData.robloxUsername,
+            robloxId: robloxId || reqData.robloxId,
+            amount: amount,
+            newTotal: newTotal,
+            rank: rank,
+            processedBy: currentUser.id
         });
-        
-        if (!webRes.ok) {
-            alert("Server Error!");
-        } else {
-            showNotify(`Request processed!`, "success");
-        }
+
+        showNotify(`Request ${action === 'approve' ? 'approved' : 'rejected'}!`, "success");
         
     } catch (e) {
+        console.error("Admin action error:", e);
         alert("Error: " + e.message);
     }
 };
 
 // ==========================================
-// 8. EVENT LISTENER & INITIALISIERUNG
+// 9. EVENT LISTENER & INITIALISIERUNG
 // ==========================================
 
 // Event Listener für Buttons
@@ -673,7 +790,7 @@ document.getElementById('adminDeductBtn')?.addEventListener('click', async () =>
         if (snap.exists()) {
             let newGP = (snap.val().totalGP || 0) - amount;
             await update(userRef, { totalGP: newGP < 0 ? 0 : newGP });
-            showNotify(`Deducted GP!`, "success");
+            showNotify(`Deducted ${amount.toLocaleString()} GP!`, "success");
         }
     } catch (e) {
         alert("Error!");
@@ -685,7 +802,7 @@ document.getElementById('adminResetBtn')?.addEventListener('click', async () => 
     if (!dbKey || !confirm("Reset user to 0 GP?")) return;
     try {
         await update(ref(db, `users/${dbKey}`), { totalGP: 0 });
-        showNotify(`User reset!`, "success");
+        showNotify(`User reset to 0 GP!`, "success");
     } catch (e) {
         alert("Error!");
     }
@@ -697,7 +814,7 @@ document.getElementById('tabBtnProfile')?.addEventListener('click', () => switch
 document.getElementById('tabBtnAdmin')?.addEventListener('click', () => switchTab('Admin'));
 
 // ==========================================
-// 9. APP START (AUTH CHECK)
+// 10. APP START (AUTH CHECK)
 // ==========================================
 
 const urlParams = new URLSearchParams(window.location.search);
