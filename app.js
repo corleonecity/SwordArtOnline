@@ -4,6 +4,9 @@
 
 const ADMIN_DISCORD_IDS = ['917426398120005653', '1503572666639061074'];
 
+// Die Rolle, die zum Einreichen von GP Requests berechtigt ist
+const REQUIRED_GP_SUBMIT_ROLE = "1503193408280330400";
+
 const DISCORD_CLIENT_ID = '1503179151073345678';
 const ROBLOX_CLIENT_ID = '1529843549493669743';
 
@@ -34,6 +37,7 @@ let currentUser = null;
 let selectedFiles = [];
 let allUsersData = {};
 let liveCheckInterval = null;
+let userGuildRoles = []; // Speichert die Rollen des Users
 
 // ==========================================
 // 2. HELPER FUNKTIONEN
@@ -89,6 +93,63 @@ function forceKickUser() {
     stopMusic();
 }
 
+// Prüft ob der User die benötigte Rolle für GP-Submit hat
+function hasGpSubmitPermission() {
+    return userGuildRoles.includes(REQUIRED_GP_SUBMIT_ROLE);
+}
+
+// Zeigt oder versteckt den GP-Submit Bereich basierend auf Rollen
+function updateGpSubmitVisibility() {
+    const gpSubmitCard = document.getElementById('gpSubmitCard');
+    const noPermissionCard = document.getElementById('noPermissionCard');
+    const tabBtnSpenden = document.getElementById('tabBtnSpenden');
+    
+    if (hasGpSubmitPermission()) {
+        // User hat Berechtigung -> Zeige Submit Form
+        if (gpSubmitCard) gpSubmitCard.classList.remove('hidden');
+        if (noPermissionCard) noPermissionCard.classList.add('hidden');
+        if (tabBtnSpenden) tabBtnSpenden.style.display = 'block';
+    } else {
+        // User hat KEINE Berechtigung -> Zeige "No Permission" Nachricht
+        if (gpSubmitCard) gpSubmitCard.classList.add('hidden');
+        if (noPermissionCard) noPermissionCard.classList.remove('hidden');
+        if (tabBtnSpenden) tabBtnSpenden.style.display = 'none';
+        
+        // Wenn der User gerade auf dem Spenden-Tab ist, wechsle zu Leaderboard
+        const spendenContent = document.getElementById('content-spenden');
+        if (spendenContent && !spendenContent.classList.contains('hidden')) {
+            switchTab('Leaderboard');
+        }
+    }
+}
+
+// Holt die Discord-Rollen des Users vom Backend
+async function fetchUserRoles(userId) {
+    try {
+        const response = await fetch(`${BACKEND_URL}/user-roles`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: userId })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            userGuildRoles = data.roles || [];
+            console.log("User roles loaded:", userGuildRoles);
+            updateGpSubmitVisibility();
+            return userGuildRoles;
+        } else {
+            console.error("Failed to fetch user roles:", response.status);
+            userGuildRoles = [];
+            return [];
+        }
+    } catch (e) {
+        console.error("Error fetching user roles:", e);
+        userGuildRoles = [];
+        return [];
+    }
+}
+
 // ==========================================
 // 3. DISCORD BOT NACHRICHTEN ÜBER CLOUDFLARE
 // ==========================================
@@ -97,7 +158,7 @@ async function sendDiscordMessage(endpoint, payload) {
     try {
         const response = await fetch(`${BACKEND_URL}${endpoint}`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type':application/json' },
             body: JSON.stringify(payload)
         });
         
@@ -373,6 +434,8 @@ async function checkRobloxLink() {
         
         if (snap.exists() && snap.val().robloxId) {
             const userData = snap.val();
+            // Lade die Rollen des Users bevor das Dashboard angezeigt wird
+            await fetchUserRoles(currentUser.id);
             showDashboard();
             startLiveMemberCheck();
             fetch(`${BACKEND_URL}/check-member`, {
@@ -407,6 +470,10 @@ function showDashboard() {
         document.getElementById('tabBtnAdmin').style.display = 'block';
         loadAdminData();
     }
+    
+    // WICHTIG: Rollen-basierte Sichtbarkeit des GP-Submit Bereichs
+    updateGpSubmitVisibility();
+    
     loadLeaderboard();
     loadProfileHistory();
 }
@@ -534,10 +601,16 @@ function updateImagePreviews() {
 }
 
 // ==========================================
-// 7. GP SUBMIT FUNKTION
+// 7. GP SUBMIT FUNKTION (mit Rollenprüfung)
 // ==========================================
 
 async function submitGPRequest() {
+    // Zusätzliche Sicherheitsprüfung auf Client-Seite
+    if (!hasGpSubmitPermission()) {
+        showNotify("You don't have permission to submit GP requests!", "error");
+        return;
+    }
+    
     const amount = parseInt(document.getElementById('gpAmount').value);
     const btn = document.getElementById('addGPBtn');
     
