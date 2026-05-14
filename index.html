@@ -6,8 +6,6 @@
     <title>SwordArtOnline | GP Panel</title>
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Hier wird die CSS Datei geladen --->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -67,8 +65,9 @@
                 </div>
             </div>
 
+            <!-- Restricted GP Submit Section - nur sichtbar für User mit Rolle -->
             <div id="content-spenden">
-                <div class="system-card">
+                <div class="system-card" id="gpSubmitCard">
                     <h3>Submit GP Donation</h3>
                     <p style="color:#888; margin-bottom: 25px; margin-top: 5px;">Enter your amount and select images as proof. (Admin will verify)</p>
                     
@@ -85,6 +84,12 @@
                     <div id="imagePreviewContainer"></div>
                     
                     <button id="addGPBtn" class="btn-primary">SUBMIT PROOF FOR REVIEW</button>
+                </div>
+                <div id="noPermissionCard" class="system-card hidden" style="text-align: center; border-color: #f56565;">
+                    <i class="fas fa-lock" style="font-size: 48px; color: #f56565; margin-bottom: 15px;"></i>
+                    <h3 style="color: #f56565;">No Permission</h3>
+                    <p>You need the required Discord role to submit GP donation requests.</p>
+                    <p style="color: #888; font-size: 14px; margin-top: 10px;">Please contact an admin if you believe this is an error.</p>
                 </div>
             </div>
 
@@ -153,7 +158,6 @@
 
     <div id="notification" class="notification"></div>
 
-    <!-- Hier wird die JS Datei geladen -->
     <script type="module" src="app.js"></script>
 </body>
 </html>
