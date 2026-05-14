@@ -37,7 +37,7 @@ let currentUser = null;
 let selectedFiles = [];
 let allUsersData = {};
 let liveCheckInterval = null;
-let userGuildRoles = []; // Speichert die Rollen des Users
+let userGuildRoles = [];
 
 // ==========================================
 // 2. HELPER FUNKTIONEN
@@ -93,38 +93,36 @@ function forceKickUser() {
     stopMusic();
 }
 
-// Prüft ob der User die benötigte Rolle für GP-Submit hat
 function hasGpSubmitPermission() {
     return userGuildRoles.includes(REQUIRED_GP_SUBMIT_ROLE);
 }
 
-// Zeigt oder versteckt den GP-Submit Bereich basierend auf Rollen
 function updateGpSubmitVisibility() {
     const gpSubmitCard = document.getElementById('gpSubmitCard');
     const noPermissionCard = document.getElementById('noPermissionCard');
     const tabBtnSpenden = document.getElementById('tabBtnSpenden');
+    const spendenContent = document.getElementById('content-spenden');
     
     if (hasGpSubmitPermission()) {
-        // User hat Berechtigung -> Zeige Submit Form
         if (gpSubmitCard) gpSubmitCard.classList.remove('hidden');
         if (noPermissionCard) noPermissionCard.classList.add('hidden');
         if (tabBtnSpenden) tabBtnSpenden.style.display = 'block';
     } else {
-        // User hat KEINE Berechtigung -> Zeige "No Permission" Nachricht
         if (gpSubmitCard) gpSubmitCard.classList.add('hidden');
         if (noPermissionCard) noPermissionCard.classList.remove('hidden');
         if (tabBtnSpenden) tabBtnSpenden.style.display = 'none';
-        
-        // Wenn der User gerade auf dem Spenden-Tab ist, wechsle zu Leaderboard
-        const spendenContent = document.getElementById('content-spenden');
         if (spendenContent && !spendenContent.classList.contains('hidden')) {
             switchTab('Leaderboard');
         }
     }
 }
 
-// Holt die Discord-Rollen des Users vom Backend
 async function fetchUserRoles(userId) {
+    if (!userId || !BACKEND_URL) {
+        userGuildRoles = [];
+        return [];
+    }
+    
     try {
         const response = await fetch(`${BACKEND_URL}/user-roles`, {
             method: 'POST',
@@ -136,18 +134,16 @@ async function fetchUserRoles(userId) {
             const data = await response.json();
             userGuildRoles = data.roles || [];
             console.log("User roles loaded:", userGuildRoles);
-            updateGpSubmitVisibility();
-            return userGuildRoles;
         } else {
-            console.error("Failed to fetch user roles:", response.status);
             userGuildRoles = [];
-            return [];
         }
     } catch (e) {
-        console.error("Error fetching user roles:", e);
+        console.warn("Error fetching user roles:", e);
         userGuildRoles = [];
-        return [];
     }
+    
+    updateGpSubmitVisibility();
+    return userGuildRoles;
 }
 
 // ==========================================
@@ -158,7 +154,7 @@ async function sendDiscordMessage(endpoint, payload) {
     try {
         const response = await fetch(`${BACKEND_URL}${endpoint}`, {
             method: 'POST',
-            headers: { 'Content-Type':application/json' },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
         
@@ -174,7 +170,6 @@ async function sendDiscordMessage(endpoint, payload) {
     }
 }
 
-// GP Request an Discord senden (über Bot)
 async function sendGPRequestToDiscord(requestData, images) {
     const formData = new FormData();
     
@@ -197,7 +192,6 @@ async function sendGPRequestToDiscord(requestData, images) {
         embeds: [embed]
     }));
     
-    // Bilder anhängen (max 1)
     const imagesToSend = images.slice(0, 1);
     for (let i = 0; i < imagesToSend.length; i++) {
         formData.append(`file${i}`, imagesToSend[i], `proof_${i+1}.png`);
@@ -220,7 +214,6 @@ async function sendGPRequestToDiscord(requestData, images) {
     }
 }
 
-// Login Webhook über Bot senden
 async function sendLoginToDiscord(userData) {
     const embed = {
         title: "🟢 New User Registered",
@@ -236,7 +229,6 @@ async function sendLoginToDiscord(userData) {
     return sendDiscordMessage('/send-login', { embeds: [embed] });
 }
 
-// GP Processed Status über Bot senden
 async function sendProcessedToDiscord(data) {
     const embed = {
         title: data.action === 'approve' ? "✅ GP Donation Approved" : "❌ GP Donation Rejected",
@@ -256,7 +248,6 @@ async function sendProcessedToDiscord(data) {
     return sendDiscordMessage('/send-processed', { embeds: [embed] });
 }
 
-// User Left Server über Bot senden
 async function sendUserLeftToDiscord(userData) {
     const embed = {
         title: "🚨 User has left the server!",
@@ -294,7 +285,6 @@ async function doLiveCheck() {
         }
         const data = await res.json();
         if (data.isMember === false) {
-            // User hat Server verlassen - Discord Benachrichtigung senden
             const dbKey = getSafeDbKey(currentUser.username);
             const snap = await get(ref(db, `users/${dbKey}`));
             if (snap.exists() && !snap.val().hasLeftServer) {
@@ -399,7 +389,6 @@ async function handleRobloxLogin(code) {
                 hasLeftServer: false
             });
 
-            // Login Benachrichtigung senden
             await sendLoginWebhook({
                 discordName: dDisplayName,
                 discordUsername: currentUser.username,
@@ -433,9 +422,9 @@ async function checkRobloxLink() {
         document.getElementById('loginPage').classList.add('hidden');
         
         if (snap.exists() && snap.val().robloxId) {
-            const userData = snap.val();
-            // Lade die Rollen des Users bevor das Dashboard angezeigt wird
-            await fetchUserRoles(currentUser.id);
+            if (currentUser && currentUser.id) {
+                await fetchUserRoles(currentUser.id);
+            }
             showDashboard();
             startLiveMemberCheck();
             fetch(`${BACKEND_URL}/check-member`, {
@@ -449,7 +438,10 @@ async function checkRobloxLink() {
             startLiveMemberCheck();
         }
     } catch (err) {
-        console.error(err);
+        console.error("checkRobloxLink error:", err);
+        if (currentUser) {
+            showDashboard();
+        }
     }
 }
 
@@ -471,7 +463,6 @@ function showDashboard() {
         loadAdminData();
     }
     
-    // WICHTIG: Rollen-basierte Sichtbarkeit des GP-Submit Bereichs
     updateGpSubmitVisibility();
     
     loadLeaderboard();
@@ -572,7 +563,7 @@ function loadProfileHistory() {
 }
 
 // ==========================================
-// 6. BILDER-UPLOAD & PREVIEW (NUR 1 BILD)
+// 6. BILDER-UPLOAD & PREVIEW
 // ==========================================
 
 function updateImagePreviews() {
@@ -601,11 +592,10 @@ function updateImagePreviews() {
 }
 
 // ==========================================
-// 7. GP SUBMIT FUNKTION (mit Rollenprüfung)
+// 7. GP SUBMIT FUNKTION
 // ==========================================
 
 async function submitGPRequest() {
-    // Zusätzliche Sicherheitsprüfung auf Client-Seite
     if (!hasGpSubmitPermission()) {
         showNotify("You don't have permission to submit GP requests!", "error");
         return;
@@ -640,7 +630,6 @@ async function submitGPRequest() {
         const rUser = userData.robloxUsername || "Unknown";
         const rId = userData.robloxId || "1";
 
-        // Request in Firebase speichern
         const newReqRef = push(ref(db, 'requests'));
         const reqKey = newReqRef.key;
 
@@ -658,7 +647,6 @@ async function submitGPRequest() {
             timestamp: Date.now()
         });
 
-        // Discord Benachrichtigung senden (mit Bildern)
         await sendGPRequestToDiscord({
             discordName: dName,
             discordUsername: dUser,
@@ -672,12 +660,10 @@ async function submitGPRequest() {
 
         showNotify(`GP Request submitted successfully!`, "success");
 
-        // Formular zurücksetzen
         document.getElementById('gpAmount').value = '';
         selectedFiles = [];
         updateImagePreviews();
         
-        // Zur Profile-Tab wechseln
         switchTab('Profile');
         
     } catch (e) {
@@ -769,7 +755,6 @@ window.handleAdminAction = async (reqId, userId, amount, action, passedDbKey, ro
             }
         }
 
-        // Leaderboard Rank berechnen
         const allUsersSnap = await get(ref(db, 'users'));
         let rank = "?";
         if (allUsersSnap.exists()) {
@@ -780,7 +765,6 @@ window.handleAdminAction = async (reqId, userId, amount, action, passedDbKey, ro
             rank = index !== -1 ? (index + 1).toString() : "?";
         }
 
-        // Discord Benachrichtigung senden
         await sendProcessedToDiscord({
             action: action,
             discordName: discordName || reqData.discordName,
@@ -807,7 +791,6 @@ window.handleAdminAction = async (reqId, userId, amount, action, passedDbKey, ro
 // 9. EVENT LISTENER & INITIALISIERUNG
 // ==========================================
 
-// Event Listener für Buttons
 document.getElementById('discordLoginBtn')?.addEventListener('click', () => {
     window.location.href = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=identify%20guilds&state=discord`;
 });
@@ -842,7 +825,6 @@ document.getElementById('leaderboardSearch')?.addEventListener('input', (e) => {
 
 document.getElementById('proofImage')?.addEventListener('change', (e) => {
     const newFiles = Array.from(e.target.files);
-    // Begrenzung auf maximal 1 Bild
     if (selectedFiles.length + newFiles.length > 1) {
         alert("Only 1 screenshot is allowed!");
         return;
