@@ -21,14 +21,7 @@ let systemConfig = {
         leaderboard: '#ffd700'
     },
     limits: {
-        minGpAmount: 100,
-        maxGpAmount: 100000,
-        maxImagesPerRequest: 1,
-        leaderboardTopCount: 10,
-        rateLimitPerMinute: 5,
-        rateLimitPerHour: 20,
-        rateLimitPerDay: 50,
-        cooldownSeconds: 300
+        maxImagesPerRequest: 1
     },
     musicUrl: 'https://www.youtube.com/embed/BtEkzZoUCpw?autoplay=1&loop=1',
     updateInterval: 60
@@ -36,10 +29,6 @@ let systemConfig = {
 
 // Test mode
 let testModeEnabled = false;
-
-// Request cooldown tracking
-let userLastRequestTime = {};
-let userRequestCounts = {};
 
 // Role name cache
 let roleNameCache = {};
@@ -91,6 +80,17 @@ async function loadRoleConfig() {
     }
 }
 
+async function getChannelConfig() {
+    try {
+        const configRef = ref(db, 'config/channels');
+        const snap = await get(configRef);
+        return snap.val() || {};
+    } catch (e) {
+        console.error("Error loading channel config:", e);
+        return {};
+    }
+}
+
 async function loadSystemConfig() {
     const configRef = ref(db, 'config/system');
     const snap = await get(configRef);
@@ -113,17 +113,6 @@ async function loadTestMode() {
     }
 }
 
-async function loadChannelConfig() {
-    try {
-        const configRef = ref(db, 'config/channels');
-        const snap = await get(configRef);
-        return snap.val() || {};
-    } catch (e) {
-        console.error("Error loading channel config:", e);
-        return {};
-    }
-}
-
 async function loadMaintenanceStatus() {
     const maintenanceRef = ref(db, 'config/maintenance');
     const snap = await get(maintenanceRef);
@@ -142,7 +131,7 @@ function updateTestModeIndicator() {
     if (testModeEnabled) {
         indicator.classList.remove('hidden');
         if (statusText) statusText.textContent = 'Enabled';
-        showNotify('⚠️ TEST MODE ENABLED - No real changes will be made', 'warning');
+        showNotify(' TEST MODE ENABLED - No real changes will be made', 'warning');
     } else {
         indicator.classList.add('hidden');
         if (statusText) statusText.textContent = 'Disabled';
@@ -669,102 +658,11 @@ function showDashboard() {
         loadKickLogs();
         loadSavedMessages();
         loadSystemConfigUI();
-        loadStatistics();
+        loadRegisteredUsersCount();
     }
     
-    // Update bot status periodically
     updateBotStatus();
     setInterval(updateBotStatus, 60000);
-}
-
-function loadSystemConfigUI() {
-    document.getElementById('colorApprove').value = systemConfig.embedColors.approve;
-    document.getElementById('colorReject').value = systemConfig.embedColors.reject;
-    document.getElementById('colorPending').value = systemConfig.embedColors.pending;
-    document.getElementById('colorInfo').value = systemConfig.embedColors.info;
-    document.getElementById('colorLeaderboard').value = systemConfig.embedColors.leaderboard;
-    document.getElementById('minGpAmount').value = systemConfig.limits.minGpAmount;
-    document.getElementById('maxGpAmount').value = systemConfig.limits.maxGpAmount;
-    document.getElementById('maxImagesPerRequest').value = systemConfig.limits.maxImagesPerRequest;
-    document.getElementById('leaderboardTopCount').value = systemConfig.limits.leaderboardTopCount;
-    document.getElementById('rateLimitPerMinute').value = systemConfig.limits.rateLimitPerMinute;
-    document.getElementById('rateLimitPerHour').value = systemConfig.limits.rateLimitPerHour;
-    document.getElementById('rateLimitPerDay').value = systemConfig.limits.rateLimitPerDay;
-    document.getElementById('cooldownSeconds').value = systemConfig.limits.cooldownSeconds;
-    document.getElementById('loginMusicUrl').value = systemConfig.musicUrl;
-    document.getElementById('updateInterval').value = systemConfig.updateInterval;
-    document.getElementById('gpSubmitRoleId').value = GP_SUBMIT_ROLE;
-}
-
-async function saveSystemConfig() {
-    const newConfig = {
-        embedColors: {
-            approve: document.getElementById('colorApprove').value,
-            reject: document.getElementById('colorReject').value,
-            pending: document.getElementById('colorPending').value,
-            info: document.getElementById('colorInfo').value,
-            leaderboard: document.getElementById('colorLeaderboard').value
-        },
-        limits: {
-            minGpAmount: parseInt(document.getElementById('minGpAmount').value),
-            maxGpAmount: parseInt(document.getElementById('maxGpAmount').value),
-            maxImagesPerRequest: parseInt(document.getElementById('maxImagesPerRequest').value),
-            leaderboardTopCount: parseInt(document.getElementById('leaderboardTopCount').value),
-            rateLimitPerMinute: parseInt(document.getElementById('rateLimitPerMinute').value),
-            rateLimitPerHour: parseInt(document.getElementById('rateLimitPerHour').value),
-            rateLimitPerDay: parseInt(document.getElementById('rateLimitPerDay').value),
-            cooldownSeconds: parseInt(document.getElementById('cooldownSeconds').value)
-        },
-        musicUrl: document.getElementById('loginMusicUrl').value,
-        updateInterval: parseInt(document.getElementById('updateInterval').value),
-        gpSubmitRole: document.getElementById('gpSubmitRoleId').value
-    };
-    
-    try {
-        await set(ref(db, 'config/system'), newConfig);
-        systemConfig = { ...systemConfig, ...newConfig };
-        GP_SUBMIT_ROLE = newConfig.gpSubmitRole;
-        showNotify("System configuration saved!", "success");
-        updatePermissions();
-    } catch (e) {
-        showNotify("Error saving configuration!", "error");
-    }
-}
-
-async function loadStatistics() {
-    try {
-        const usersSnap = await get(ref(db, 'users'));
-        const requestsSnap = await get(ref(db, 'requests'));
-        
-        const users = usersSnap.val() || {};
-        const requests = requestsSnap.val() || {};
-        
-        let totalGP = 0;
-        let totalUsers = 0;
-        let approvedCount = 0;
-        let rejectedCount = 0;
-        let pendingCount = 0;
-        
-        for (const [key, user] of Object.entries(users)) {
-            if (user.totalGP) totalGP += user.totalGP;
-            totalUsers++;
-        }
-        
-        for (const [key, req] of Object.entries(requests)) {
-            if (req.status === 'approved') approvedCount++;
-            else if (req.status === 'rejected') rejectedCount++;
-            else if (req.status === 'pending') pendingCount++;
-        }
-        
-        document.getElementById('statTotalGP').textContent = totalGP.toLocaleString();
-        document.getElementById('statTotalApproved').textContent = approvedCount;
-        document.getElementById('statTotalRejected').textContent = rejectedCount;
-        document.getElementById('statTotalUsers').textContent = totalUsers;
-        document.getElementById('statPendingRequests').textContent = pendingCount;
-        document.getElementById('statTotalRequests').textContent = approvedCount + rejectedCount + pendingCount;
-    } catch (e) {
-        console.error("Error loading statistics:", e);
-    }
 }
 
 function renderLeaderboard(filterText) {
@@ -774,8 +672,7 @@ function renderLeaderboard(filterText) {
     
     let usersArray = Object.values(allUsersData)
         .filter(u => u.totalGP && u.totalGP > 0)
-        .sort((a, b) => (b.totalGP || 0) - (a.totalGP || 0))
-        .slice(0, systemConfig.limits.leaderboardTopCount);
+        .sort((a, b) => (b.totalGP || 0) - (a.totalGP || 0));
     
     if (filterText) {
         const lowerFilter = filterText.toLowerCase();
@@ -798,8 +695,12 @@ function renderLeaderboard(filterText) {
     });
     
     if (usersArray.length === 0) {
-        body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No users with GP yet</span></td></tr>';
+        body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No users with GP yet</span><tr></tr>';
     }
+    
+    const totalGP = Object.values(allUsersData).reduce((sum, u) => sum + (u.totalGP || 0), 0);
+    const totalGpStat = document.getElementById('totalGpStat');
+    if (totalGpStat) totalGpStat.textContent = totalGP.toLocaleString();
 }
 
 function loadLeaderboard() {
@@ -882,54 +783,12 @@ function updateImagePreviews() {
 }
 
 // ==========================================
-// 8. GP SUBMIT FUNCTION with rate limiting
+// 8. GP SUBMIT FUNCTION
 // ==========================================
-
-async function checkRateLimit(userId) {
-    const now = Date.now();
-    const minuteAgo = now - 60000;
-    const hourAgo = now - 3600000;
-    const dayAgo = now - 86400000;
-    
-    if (!userRequestCounts[userId]) {
-        userRequestCounts[userId] = { minute: [], hour: [], day: [] };
-    }
-    
-    // Clean old entries
-    userRequestCounts[userId].minute = userRequestCounts[userId].minute.filter(t => t > minuteAgo);
-    userRequestCounts[userId].hour = userRequestCounts[userId].hour.filter(t => t > hourAgo);
-    userRequestCounts[userId].day = userRequestCounts[userId].day.filter(t => t > dayAgo);
-    
-    if (userRequestCounts[userId].minute.length >= systemConfig.limits.rateLimitPerMinute) {
-        return { allowed: false, reason: `Too many requests per minute (max ${systemConfig.limits.rateLimitPerMinute})` };
-    }
-    if (userRequestCounts[userId].hour.length >= systemConfig.limits.rateLimitPerHour) {
-        return { allowed: false, reason: `Too many requests per hour (max ${systemConfig.limits.rateLimitPerHour})` };
-    }
-    if (userRequestCounts[userId].day.length >= systemConfig.limits.rateLimitPerDay) {
-        return { allowed: false, reason: `Too many requests per day (max ${systemConfig.limits.rateLimitPerDay})` };
-    }
-    
-    // Cooldown check
-    const lastRequest = userLastRequestTime[userId] || 0;
-    if (now - lastRequest < systemConfig.limits.cooldownSeconds * 1000) {
-        const remaining = Math.ceil((systemConfig.limits.cooldownSeconds * 1000 - (now - lastRequest)) / 1000);
-        return { allowed: false, reason: `Please wait ${remaining} seconds between requests` };
-    }
-    
-    return { allowed: true };
-}
 
 async function submitGPRequest() {
     if (!hasGpSubmitPermission()) {
         showNotify("You don't have permission to submit GP requests!", "error");
-        return;
-    }
-    
-    // Rate limiting
-    const rateLimit = await checkRateLimit(currentUser.id);
-    if (!rateLimit.allowed) {
-        showNotify(rateLimit.reason, "error");
         return;
     }
     
@@ -938,16 +797,6 @@ async function submitGPRequest() {
     
     if (isNaN(amount) || amount <= 0) {
         alert("Please enter a valid amount!");
-        return;
-    }
-    
-    if (amount < systemConfig.limits.minGpAmount) {
-        alert(`Minimum GP amount is ${systemConfig.limits.minGpAmount}!`);
-        return;
-    }
-    
-    if (amount > systemConfig.limits.maxGpAmount) {
-        alert(`Maximum GP amount is ${systemConfig.limits.maxGpAmount}!`);
         return;
     }
     
@@ -965,13 +814,6 @@ async function submitGPRequest() {
     btn.textContent = "SENDING...";
 
     try {
-        // Update rate limit counters
-        const now = Date.now();
-        userLastRequestTime[currentUser.id] = now;
-        userRequestCounts[currentUser.id].minute.push(now);
-        userRequestCounts[currentUser.id].hour.push(now);
-        userRequestCounts[currentUser.id].day.push(now);
-        
         const dbKey = getSafeDbKey(currentUser.username);
         const userRef = ref(db, `users/${dbKey}`);
         const snap = await get(userRef);
@@ -1030,7 +872,7 @@ async function submitGPRequest() {
 }
 
 // ==========================================
-// 9. ADMIN FUNCTIONS with comments and test mode
+// 9. ADMIN FUNCTIONS with comments
 // ==========================================
 
 function loadAdminData() {
@@ -1041,7 +883,7 @@ function loadAdminData() {
         
         body.innerHTML = '';
         if (!data) {
-            body.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#666;">No pending requests</span></td></tr>';
+            body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No pending requests</span></td></tr>';
             return;
         }
         
@@ -1050,12 +892,11 @@ function loadAdminData() {
             .sort((a, b) => a.timestamp - b.timestamp);
         
         if (pendingRequests.length === 0) {
-            body.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#666;">No pending requests</span></td></tr>';
+            body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No pending requests</span></td></tr>';
             return;
         }
         
         pendingRequests.forEach(req => {
-            const hasImages = req.images && req.images.length > 0;
             body.innerHTML += `
                 <tr>
                     <td>
@@ -1063,17 +904,14 @@ function loadAdminData() {
                             <span class="display-name">${escapeHtml(req.discordName || "Unknown")}</span>
                             <span class="username-handle">@${escapeHtml(req.discordUsername || "Unknown")}</span>
                         </div>
-                    </span>。
+                    </span>
                     <td>
                         <div class="user-name-cell">
                             <span class="display-name">${escapeHtml(req.robloxName || "Unknown")}</span>
                             <span class="username-handle">@${escapeHtml(req.robloxUsername || "Unknown")}</span>
                         </div>
-                    </span>。
-                    <td style="color:#cd7f32; font-weight:bold;">+${req.amount.toLocaleString()} GP</span>。</span>
-                    <td>
-                        ${hasImages ? '<i class="fas fa-image" style="color:#48bb78;"></i> Has Proof' : '<i class="fas fa-times" style="color:#f56565;"></i> No Proof'}
-                    </span>。
+                    </span>
+                    <td style="color:#cd7f32; font-weight:bold;">+${req.amount.toLocaleString()} GP</span>
                     <td>
                         <div style="display: flex; flex-direction: column; gap: 8px;">
                             <input type="text" id="comment_${req.id}" placeholder="Admin comment (optional)" style="padding: 6px; font-size: 12px; margin-bottom: 5px;">
@@ -1086,8 +924,8 @@ function loadAdminData() {
                                 </button>
                             </div>
                         </div>
-                    </span>。
-                </table>
+                    </span>
+                </tr>
             `;
         });
     });
@@ -1102,7 +940,6 @@ window.handleAdminActionWithComment = async (reqId, userId, amount, action, pass
     if (testModeEnabled) {
         showNotify(`🔬 TEST MODE: ${action === 'approve' ? 'Approved' : 'Rejected'} request ${reqId} (simulated)`, "warning");
         
-        // Just mark as processed in test mode without changing GP
         await update(ref(db, `requests/${reqId}`), {
             status: action === 'approve' ? 'approved' : 'rejected',
             adminComment: adminComment,
@@ -1181,7 +1018,6 @@ window.handleAdminActionWithComment = async (reqId, userId, amount, action, pass
         }
 
         showNotify(`Request ${action === 'approve' ? 'approved' : 'rejected'}!`, "success");
-        loadStatistics();
         
     } catch (e) {
         console.error("Admin action error:", e);
@@ -1190,7 +1026,7 @@ window.handleAdminActionWithComment = async (reqId, userId, amount, action, pass
 };
 
 // ==========================================
-// 10. OWNER PANEL FUNCTIONS (same as before, plus new ones)
+// 10. OWNER PANEL FUNCTIONS
 // ==========================================
 
 async function loadAdminRolesList() {
@@ -1200,21 +1036,16 @@ async function loadAdminRolesList() {
     try {
         await loadRoleConfig();
         
-        if (ADMIN_ROLES.length === 0 && OWNER_ROLES.length === 0) {
-            container.innerHTML = '<p style="color: #666; text-align: center;">No admin/owner roles configured.</p>';
-            return;
-        }
-        
         let html = '<table class="table"><thead><tr><th>Role Name</th><th>Role ID</th><th>Type</th><th>Action</th></tr></thead><tbody>';
         
         for (const role of ADMIN_ROLES) {
             const roleName = await fetchRoleName(role);
-            html += `<tr><td><span class="status-badge status-approved">${escapeHtml(roleName)}</span></span>。</span><td><code>${escapeHtml(role)}</code></span>。</span><td>Admin</span>。</span><td><button class="btn-small btn-remove-role" onclick="removeAdminRole('${role}')">Remove</button></span>。</span></tr>`;
+            html += `<tr><td class="role-name">${escapeHtml(roleName)}</span><td><td class="role-id">${escapeHtml(role)}</span><td><span class="status-badge status-approved">Admin</span></td><td><button class="btn-small btn-remove-role" onclick="removeAdminRole('${role}')">Remove</button></span></tr>`;
         }
         
         for (const role of OWNER_ROLES) {
             const roleName = await fetchRoleName(role);
-            html += `<tr><td><span class="status-badge status-pending">${escapeHtml(roleName)}</span></span>。</span><td><code>${escapeHtml(role)}</code></span>。</span><td>Owner</span>。</span><td><button class="btn-small btn-remove-role" onclick="removeOwnerRole('${role}')">Remove</button></span>。</span></tr>`;
+            html += `<tr><td class="role-name">${escapeHtml(roleName)}</span><td><td class="role-id">${escapeHtml(role)}</span><td><span class="status-badge status-pending">Owner</span></span><td><button class="btn-small btn-remove-role" onclick="removeOwnerRole('${role}')">Remove</button></span></tr>`;
         }
         
         html += '</tbody></table>';
@@ -1423,6 +1254,78 @@ async function setTestMode(enabled) {
     }
 }
 
+async function loadRegisteredUsersCount() {
+    try {
+        const usersSnap = await get(ref(db, 'users'));
+        const users = usersSnap.val() || {};
+        let totalUsers = 0;
+        for (const [key, user] of Object.entries(users)) {
+            if (user.robloxId && user.robloxId !== '1') totalUsers++;
+        }
+        const statTotalUsers = document.getElementById('statTotalUsers');
+        if (statTotalUsers) statTotalUsers.textContent = totalUsers;
+    } catch (e) {
+        console.error("Error loading users count:", e);
+    }
+}
+
+function loadSystemConfigUI() {
+    document.getElementById('colorApprove').value = systemConfig.embedColors.approve;
+    document.getElementById('colorReject').value = systemConfig.embedColors.reject;
+    document.getElementById('colorPending').value = systemConfig.embedColors.pending;
+    document.getElementById('colorInfo').value = systemConfig.embedColors.info;
+    document.getElementById('colorLeaderboard').value = systemConfig.embedColors.leaderboard;
+    document.getElementById('maxImagesPerRequest').value = systemConfig.limits.maxImagesPerRequest;
+    document.getElementById('loginMusicUrl').value = systemConfig.musicUrl;
+    document.getElementById('updateInterval').value = systemConfig.updateInterval;
+    document.getElementById('gpSubmitRoleId').value = GP_SUBMIT_ROLE;
+}
+
+async function saveSystemConfig() {
+    const newConfig = {
+        embedColors: {
+            approve: document.getElementById('colorApprove').value,
+            reject: document.getElementById('colorReject').value,
+            pending: document.getElementById('colorPending').value,
+            info: document.getElementById('colorInfo').value,
+            leaderboard: document.getElementById('colorLeaderboard').value
+        },
+        limits: {
+            maxImagesPerRequest: parseInt(document.getElementById('maxImagesPerRequest').value)
+        },
+        musicUrl: document.getElementById('loginMusicUrl').value,
+        updateInterval: parseInt(document.getElementById('updateInterval').value)
+    };
+    
+    try {
+        await set(ref(db, 'config/system'), newConfig);
+        systemConfig.embedColors = newConfig.embedColors;
+        systemConfig.limits.maxImagesPerRequest = newConfig.limits.maxImagesPerRequest;
+        systemConfig.musicUrl = newConfig.musicUrl;
+        systemConfig.updateInterval = newConfig.updateInterval;
+        showNotify("System configuration saved!", "success");
+    } catch (e) {
+        showNotify("Error saving configuration!", "error");
+    }
+}
+
+async function saveGpSubmitRole() {
+    const newRoleId = document.getElementById('gpSubmitRoleId').value.trim();
+    if (!newRoleId) {
+        showNotify("Please enter a role ID!", "error");
+        return;
+    }
+    
+    try {
+        await set(ref(db, 'config/system/gpSubmitRole'), newRoleId);
+        GP_SUBMIT_ROLE = newRoleId;
+        showNotify(`GP Submit Role updated to ${newRoleId}!`, "success");
+        updatePermissions();
+    } catch (e) {
+        showNotify("Error saving GP Submit Role!", "error");
+    }
+}
+
 // ==========================================
 // 11. SAVED MESSAGES FUNCTIONS
 // ==========================================
@@ -1443,7 +1346,7 @@ async function loadSavedMessages() {
         container.innerHTML = '';
         Object.entries(data).forEach(([id, msg]) => {
             const previewContent = msg.content ? (msg.content.substring(0, 100) + (msg.content.length > 100 ? '...' : '')) : 'No content';
-            const messageIdDisplay = msg.discordMessageId ? `✅ Message ID: ${msg.discordMessageId.substring(0, 8)}...` : '⚠️ Not sent yet';
+            const messageIdDisplay = msg.discordMessageId ? `✅ Message ID: ${msg.discordMessageId.substring(0, 8)}...` : ' Not sent yet';
             
             container.innerHTML += `
                 <div class="saved-message-item" data-id="${id}">
@@ -1738,7 +1641,7 @@ document.getElementById('tabBtnOwner')?.addEventListener('click', () => {
         loadKickLogs();
         loadSavedMessages();
         loadSystemConfigUI();
-        loadStatistics();
+        loadRegisteredUsersCount();
     } else {
         showNotify("You don't have permission to access Owner Panel!", "error");
     }
@@ -1747,7 +1650,8 @@ document.getElementById('tabBtnOwner')?.addEventListener('click', () => {
 document.getElementById('addRoleBtn')?.addEventListener('click', window.addAdminRole);
 document.getElementById('saveChannelConfigBtn')?.addEventListener('click', saveChannelConfig);
 document.getElementById('saveSystemConfigBtn')?.addEventListener('click', saveSystemConfig);
-document.getElementById('refreshStatsBtn')?.addEventListener('click', loadStatistics);
+document.getElementById('saveGpSubmitRoleBtn')?.addEventListener('click', saveGpSubmitRole);
+document.getElementById('refreshUsersBtn')?.addEventListener('click', loadRegisteredUsersCount);
 document.getElementById('enableTestModeBtn')?.addEventListener('click', () => setTestMode(true));
 document.getElementById('disableTestModeBtn')?.addEventListener('click', () => setTestMode(false));
 document.getElementById('saveMessageBtn')?.addEventListener('click', saveMessage);
