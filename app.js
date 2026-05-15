@@ -233,7 +233,7 @@ async function fetchRoleName(roleId) {
 }
 
 // ==========================================
-// 4. DISCORD BOT MESSAGES & NICKNAME UPDATE
+// 4. DISCORD BOT MESSAGES
 // ==========================================
 
 async function sendDiscordMessage(channelId, content, embeds = null) {
@@ -302,13 +302,19 @@ async function sendLoginToDiscord(userData) {
         return false;
     }
     
-    const message = `🟢 New User Registered\n\n` +
-        `**💬 Discord**\nName: ${userData.discordName}\nTag: @${userData.discordUsername}\nID: <@${userData.userId}>\n\n` +
-        `**🎮 Roblox**\nName: ${userData.robloxName}\nUser: @${userData.robloxUsername}\nProfile: [Click Here](https://www.roblox.com/users/${userData.robloxId}/profile)\n\n` +
-        `**📝 Nickname Updated**\n${userData.robloxName} (@${userData.robloxUsername})\n\n` +
-        `SwordArtOnline Panel • ${new Date().toLocaleString()}`;
+    const embed = {
+        title: "🟢 New User Registered",
+        color: 0x48bb78,
+        fields: [
+            { name: "💬 Discord", value: `**Name:** ${userData.discordName}\n**Tag:** @${userData.discordUsername}\n**ID:** <@${userData.userId}>`, inline: true },
+            { name: "🎮 Roblox", value: `**Name:** ${userData.robloxName}\n**User:** @${userData.robloxUsername}\n**Profile:** [Click Here](https://www.roblox.com/users/${userData.robloxId}/profile)`, inline: true },
+            { name: "📝 Nickname Updated", value: `${userData.robloxName} (@${userData.robloxUsername})`, inline: false }
+        ],
+        timestamp: new Date().toISOString(),
+        footer: { text: "SwordArtOnline Panel" }
+    };
     
-    return sendDiscordMessage(loginLogsChannel, message, null);
+    return sendDiscordMessage(loginLogsChannel, null, [embed]);
 }
 
 async function sendLeftUserToDiscord(userData) {
@@ -327,18 +333,27 @@ async function sendLeftUserToDiscord(userData) {
         ? `https://www.roblox.com/user.aspx?username=${userData.robloxUsername}`
         : "";
     
+    const embed = {
+        title: "🚨 User has left the server!",
+        color: 0xf56565,
+        fields: [
+            { name: "💬 Discord", value: `**Display:** ${userData.discordName || "Unknown"}\n**User:** @${userData.discordUsername || "Unknown"}\n**Ping:** <@${userData.id}>`, inline: true },
+            { name: "🎮 Roblox", value: `**Display:** ${userData.robloxName || "Unknown"}\n**User:** @${userData.robloxUsername || "Unknown"}\n**Profile:** [Click Here](${robloxProfileLink})`, inline: true }
+        ],
+        timestamp: new Date().toISOString(),
+        footer: { text: "SwordArtOnline Panel" }
+    };
+    
+    // Send admin ping first
     await sendDiscordMessage(leaveLogsChannel, `<@&${adminRoleId}>`, null);
-    
-    const message = `🚨 User has left the server!\n\n` +
-        `**💬 Discord**\nDisplay: ${userData.discordName || "Unknown"}\nUser: @${userData.discordUsername || "Unknown"}\nPing: <@${userData.id}>\n\n` +
-        `**🎮 Roblox**\nDisplay: ${userData.robloxName || "Unknown"}\nUser: @${userData.robloxUsername || "Unknown"}\n${robloxProfileLink ? `Profile: [Click Here](${robloxProfileLink})` : ''}\n\n` +
-        `SwordArtOnline Panel • ${new Date().toLocaleString()}`;
-    
-    return sendDiscordMessage(leaveLogsChannel, message, null);
+    // Then send the embed
+    return sendDiscordMessage(leaveLogsChannel, null, [embed]);
 }
 
 async function sendGPRequestToDiscord(requestData, images) {
     const formData = new FormData();
+    
+    const adminRoleId = ADMIN_ROLES[0] || '1503609455466643547';
     
     const embed = {
         title: "💎 New GP Donation Request",
@@ -354,8 +369,6 @@ async function sendGPRequestToDiscord(requestData, images) {
         footer: { text: "SwordArtOnline GP System" }
     };
 
-    const adminRoleId = ADMIN_ROLES[0] || '1503609455466643547';
-    
     formData.append('payload_json', JSON.stringify({
         content: `<@&${adminRoleId}> New GP donation requires review!`,
         embeds: [embed]
@@ -600,13 +613,13 @@ function renderLeaderboard(filterText) {
                 <td>#${i + 1}</td>
                 <td><div class="user-name-cell"><span class="display-name">${escapeHtml(u.discordName || "Unknown")}</span><span class="username-handle">@${escapeHtml(u.discordUsername || "Unknown")}</span></div></td>
                 <td><div class="user-name-cell"><span class="display-name">${escapeHtml(u.robloxName || "Unknown")}</span><span class="username-handle">@${escapeHtml(u.robloxUsername || "Unknown")}</span></div></td>
-                <td style="color:#48bb78; font-weight:bold; font-size:16px;">${(u.totalGP || 0).toLocaleString()} GP</td>
+                <td style="color:#48bb78; font-weight:bold; font-size:16px;">${(u.totalGP || 0).toLocaleString()} GP</span></td>
             </tr>
         `;
     });
     
     if (usersArray.length === 0) {
-        body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No users with GP yet</td></tr>';
+        body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No users with GP yet</span></td></tr>';
     }
 }
 
@@ -645,15 +658,15 @@ function loadProfileHistory() {
             
             body.innerHTML += `
                 <tr>
-                    <td style="font-size:14px; color:#aaa;">${dateStr}</td>
-                    <td style="font-weight:bold;">+${req.amount.toLocaleString()} GP</td>
-                    <td>${statusHtml}</td>
+                    <td style="font-size:14px; color:#aaa;">${dateStr}</span>。</span>
+                    <td style="font-weight:bold;">+${req.amount.toLocaleString()} GP</span>。</span>
+                    <td>${statusHtml}</span>。</span>
                 </tr>
             `;
         });
         
         if (userRequests.length === 0) {
-            body.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#666;">No requests yet</td></tr>';
+            body.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#666;">No requests yet</span>。</span></tr>';
         }
     });
 }
@@ -783,7 +796,7 @@ function loadAdminData() {
         
         body.innerHTML = '';
         if (!data) {
-            body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No pending requests</td></tr>';
+            body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No pending requests</span></td></tr>';
             return;
         }
         
@@ -792,7 +805,7 @@ function loadAdminData() {
             .sort((a, b) => a.timestamp - b.timestamp);
         
         if (pendingRequests.length === 0) {
-            body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No pending requests</td></tr>';
+            body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No pending requests</span></td></tr>';
             return;
         }
         
@@ -804,14 +817,14 @@ function loadAdminData() {
                             <span class="display-name">${escapeHtml(req.discordName || "Unknown")}</span>
                             <span class="username-handle">@${escapeHtml(req.discordUsername || "Unknown")}</span>
                         </div>
-                    </td>
+                    </span>。
                     <td>
                         <div class="user-name-cell">
                             <span class="display-name">${escapeHtml(req.robloxName || "Unknown")}</span>
                             <span class="username-handle">@${escapeHtml(req.robloxUsername || "Unknown")}</span>
                         </div>
-                    </td>
-                    <td style="color:#cd7f32; font-weight:bold;">+${req.amount.toLocaleString()} GP</td>
+                    </span>。
+                    <td style="color:#cd7f32; font-weight:bold;">+${req.amount.toLocaleString()} GP</span>。</span>
                     <td>
                         <button class="btn-small btn-approve" onclick="window.handleAdminAction('${req.id}', '${req.userId}', ${req.amount}, 'approve', '${req.dbKey || req.discordUsername}', '${req.robloxId || ''}', '${escapeHtml(req.discordName)}', '${escapeHtml(req.discordUsername)}', '${escapeHtml(req.robloxName)}', '${escapeHtml(req.robloxUsername)}')">
                             <i class="fas fa-check"></i> Approve
@@ -819,7 +832,7 @@ function loadAdminData() {
                         <button class="btn-small btn-deny" onclick="window.handleAdminAction('${req.id}', '${req.userId}', ${req.amount}, 'reject', '${req.dbKey || req.discordUsername}', '${req.robloxId || ''}', '${escapeHtml(req.discordName)}', '${escapeHtml(req.discordUsername)}', '${escapeHtml(req.robloxName)}', '${escapeHtml(req.robloxUsername)}')">
                             <i class="fas fa-times"></i> Reject
                         </button>
-                    </td>
+                    </span>。
                 </tr>
             `;
         });
@@ -868,16 +881,26 @@ window.handleAdminAction = async (reqId, userId, amount, action, passedDbKey, ro
             const actionText = action === 'approve' ? '✅ GP Donation Approved' : '❌ GP Donation Rejected';
             const amountText = action === 'approve' ? `+${amount.toLocaleString()} GP` : `-${amount.toLocaleString()} GP`;
             
-            const message = `${actionText}\n\n` +
-                `**💬 Discord**\nName: ${discordName}\nTag: @${discordUsername}\nPing: <@${userId}>\n\n` +
-                `**🎮 Roblox**\nName: ${robloxName}\nUser: @${robloxUsername}\nProfile: https://www.roblox.com/users/${robloxId}/profile\n\n` +
-                `**💰 Amount**\n${amountText}\n\n` +
-                `**📊 New Total**\n${newTotal.toLocaleString()} GP\n\n` +
-                `**🏆 Rank**\n#${rank}\n\n` +
-                `**🛡️ Processed By**\n<@${currentUser.id}>\n\n` +
-                `SwordArtOnline GP System • ${new Date().toLocaleString()}`;
+            // Send mention to the user who requested the donation
+            await sendDiscordMessage(processedChannel, `<@${userId}>`, null);
             
-            await sendDiscordMessage(processedChannel, message, null);
+            // Send embed with details
+            const embed = {
+                title: actionText,
+                color: action === 'approve' ? 0x48bb78 : 0xf56565,
+                fields: [
+                    { name: "💬 Discord", value: `**Name:** ${discordName}\n**Tag:** @${discordUsername}\n**Ping:** <@${userId}>`, inline: true },
+                    { name: "🎮 Roblox", value: `**Name:** ${robloxName}\n**User:** @${robloxUsername}\n**Profile:** [Click Here](https://www.roblox.com/users/${robloxId}/profile)`, inline: true },
+                    { name: "💰 Amount", value: amountText, inline: false },
+                    { name: "📊 New Total", value: `${newTotal.toLocaleString()} GP`, inline: true },
+                    { name: "🏆 Rank", value: `#${rank}`, inline: true },
+                    { name: "🛡️ Processed By", value: `<@${currentUser.id}>`, inline: false }
+                ],
+                timestamp: new Date().toISOString(),
+                footer: { text: "SwordArtOnline GP System" }
+            };
+            
+            await sendDiscordMessage(processedChannel, null, [embed]);
         }
 
         showNotify(`Request ${action === 'approve' ? 'approved' : 'rejected'}!`, "success");
@@ -904,16 +927,16 @@ async function loadAdminRolesList() {
             return;
         }
         
-        let html = '<table class="table"><thead><tr><th>Role Name</th><th>Role ID</th><th>Type</th><th>Action</th></tr></thead><tbody>';
+        let html = '<table class="table"><thead><tr><th>Role Name</th><th>Role ID</th><th>Type</th><th>Action</th><tr></thead><tbody>';
         
         for (const role of ADMIN_ROLES) {
             const roleName = await fetchRoleName(role);
-            html += `<tr><td><span class="status-badge status-approved">${escapeHtml(roleName)}</span></td><td><code>${escapeHtml(role)}</code></td><td>Admin</span></td>。<button class="btn-small btn-remove-role" onclick="removeAdminRole('${role}')">Remove</button></td></tr>`;
+            html += `<tr><td><span class="status-badge status-approved">${escapeHtml(roleName)}</span></span>。</span><td><code>${escapeHtml(role)}</code></span>。</span><td>Admin</span>。</span><td><button class="btn-small btn-remove-role" onclick="removeAdminRole('${role}')">Remove</button></span>。</span></tr>`;
         }
         
         for (const role of OWNER_ROLES) {
             const roleName = await fetchRoleName(role);
-            html += `<tr>。<span class="status-badge status-pending">${escapeHtml(roleName)}</span></span>。</code>${escapeHtml(role)}</code></span>。Owner</span>。<button class="btn-small btn-remove-role" onclick="removeOwnerRole('${role}')">Remove</button></span></tr>`;
+            html += `<tr><td><span class="status-badge status-pending">${escapeHtml(roleName)}</span></span>。</span><td><code>${escapeHtml(role)}</code></span>。</span><td>Owner</span>。</span><td><button class="btn-small btn-remove-role" onclick="removeOwnerRole('${role}')">Remove</button></span>。</span></tr>`;
         }
         
         html += '</tbody></table>';
@@ -1073,7 +1096,7 @@ async function loadKickLogs() {
         
         body.innerHTML = '';
         if (!data) {
-            body.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#666;">No kick logs found</span>。</span>';
+            body.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#666;">No kick logs found</span>。</span></tr>';
             return;
         }
         
@@ -1288,47 +1311,6 @@ function clearMessageForm() {
     showNotify("Form cleared!", "success");
 }
 
-async function sendTempMessage() {
-    const channelId = document.getElementById('tempChannelId').value.trim();
-    const content = document.getElementById('tempMessageContent').value;
-    const embedTitle = document.getElementById('tempEmbedTitle').value;
-    const embedDesc = document.getElementById('tempEmbedDesc').value;
-    const embedColor = document.getElementById('tempEmbedColor').value;
-    
-    if (!channelId) {
-        alert("Please enter a channel ID!");
-        return;
-    }
-    
-    if (!content && !embedTitle && !embedDesc) {
-        alert("Please enter a message or embed content!");
-        return;
-    }
-    
-    let embeds = null;
-    if (embedTitle || embedDesc) {
-        embeds = [{
-            title: embedTitle || undefined,
-            description: embedDesc || undefined,
-            color: parseInt(embedColor.replace('#', ''), 16),
-            timestamp: new Date().toISOString()
-        }];
-    }
-    
-    showNotify("Sending message...", "warning");
-    
-    const success = await sendDiscordMessage(channelId, content, embeds);
-    
-    if (success) {
-        showNotify("Message sent successfully!", "success");
-        document.getElementById('tempMessageContent').value = '';
-        document.getElementById('tempEmbedTitle').value = '';
-        document.getElementById('tempEmbedDesc').value = '';
-    } else {
-        showNotify("Failed to send message! Check channel ID.", "error");
-    }
-}
-
 function escapeHtml(text) {
     if (!text) return '';
     const div = document.createElement('div');
@@ -1424,7 +1406,6 @@ document.getElementById('sendMessageBtn')?.addEventListener('click', () => {
     }
 });
 document.getElementById('clearMessageFormBtn')?.addEventListener('click', clearMessageForm);
-document.getElementById('sendTempMessageBtn')?.addEventListener('click', sendTempMessage);
 document.getElementById('enableMaintenanceBtn')?.addEventListener('click', () => setMaintenanceMode(true));
 document.getElementById('disableMaintenanceBtn')?.addEventListener('click', () => setMaintenanceMode(false));
 
