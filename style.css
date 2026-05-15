@@ -626,21 +626,74 @@ input[type="file"] {
     font-size: 12px;
 }
 
-/* ========== PLACEHOLDER TIP ========== */
-.placeholder-tip {
-    background: #1a1a1a;
-    border-left: 3px solid #ffd700;
-    padding: 10px;
-    margin-top: 10px;
-    border-radius: 6px;
-    font-size: 12px;
+/* ========== SAVED MESSAGE STYLES ========== */
+.saved-message-item {
+    background: #0a0a0a;
+    border: 1px solid #222;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 12px;
+    transition: 0.2s;
 }
 
-.placeholder-tip code {
-    background: #0a0a0a;
-    padding: 2px 6px;
-    border-radius: 4px;
+.saved-message-item:hover {
+    border-color: #ffd70040;
+}
+
+.message-name {
+    font-size: 18px;
+    font-weight: bold;
     color: #ffd700;
+    margin-bottom: 8px;
+}
+
+.message-channel {
+    font-size: 12px;
+    color: #5865F2;
+    font-family: monospace;
+    margin-bottom: 8px;
+}
+
+.message-preview {
+    background: #0f0f0f;
+    border-radius: 8px;
+    padding: 10px;
+    margin: 10px 0;
+    font-size: 13px;
+    color: #aaa;
+    max-height: 80px;
+    overflow-y: auto;
+}
+
+.message-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+
+.message-actions button {
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.btn-edit-message {
+    background: #5865F2;
+    color: white;
+}
+
+.btn-send-message {
+    background: #48bb78;
+    color: white;
+}
+
+.btn-delete-message {
+    background: #f56565;
+    color: white;
 }
 
 /* ========== RESPONSIVE ========== */
@@ -687,5 +740,9 @@ input[type="file"] {
     
     .channel-config-input input {
         margin-bottom: 8px;
+    }
+    
+    .message-actions button {
+        flex: 1;
     }
 }
