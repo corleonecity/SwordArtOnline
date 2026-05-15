@@ -293,7 +293,6 @@ async function updateDiscordNickname(userId, robloxName, robloxUsername) {
     }
 }
 
-// LOGIN NOTIFICATION - Single message with ping + embed
 async function sendLoginToDiscord(userData) {
     const channels = await getChannelConfig();
     const loginLogsChannel = channels.CH_LOGIN_LOGS;
@@ -316,11 +315,9 @@ async function sendLoginToDiscord(userData) {
         footer: { text: "SwordArtOnline Panel" }
     };
     
-    // Send ONE message with ping (user mention) + embed
-    return sendDiscordMessage(loginLogsChannel, `<@${userData.userId}>`, [embed]);
+    return sendDiscordMessage(loginLogsChannel, null, [embed]);
 }
 
-// LEAVE NOTIFICATION - Single message with admin ping + embed
 async function sendLeftUserToDiscord(userData) {
     const channels = await getChannelConfig();
     const leaveLogsChannel = channels.CH_LEAVE_LOGS;
@@ -349,11 +346,9 @@ async function sendLeftUserToDiscord(userData) {
         footer: { text: "SwordArtOnline Panel" }
     };
     
-    // Send ONE message with admin ping + embed
     return sendDiscordMessage(leaveLogsChannel, `<@&${adminRoleId}>`, [embed]);
 }
 
-// GP REQUEST NOTIFICATION - Single message with admin ping + embed + images
 async function sendGPRequestToDiscord(requestData, images) {
     const formData = new FormData();
     
@@ -374,7 +369,6 @@ async function sendGPRequestToDiscord(requestData, images) {
         footer: { text: "SwordArtOnline GP System" }
     };
 
-    // Send ONE message with admin ping + embed + images
     formData.append('payload_json', JSON.stringify({
         content: `<@&${adminRoleId}>`,
         embeds: [embed]
@@ -801,7 +795,7 @@ function loadAdminData() {
         
         body.innerHTML = '';
         if (!data) {
-            body.innerHTML = '</table><td colspan="4" style="text-align:center; color:#666;">No pending requests</span></td></tr>';
+            body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No pending requests</span></td></tr>';
             return;
         }
         
@@ -902,7 +896,6 @@ window.handleAdminAction = async (reqId, userId, amount, action, passedDbKey, ro
                 footer: { text: "SwordArtOnline GP System" }
             };
             
-            // Send ONE message with user ping + embed
             await sendDiscordMessage(processedChannel, `<@${userId}>`, [embed]);
         }
 
@@ -930,7 +923,7 @@ async function loadAdminRolesList() {
             return;
         }
         
-        let html = '<table class="table"><thead><tr><th>Role Name</th><th>Role ID</th><th>Type</th><th>Action</th></tr></thead><tbody>';
+        let html = '<table class="table"><thead><tr><th>Role Name</th><th>Role ID</th><th>Type</th><th>Action</th></table></thead><tbody>';
         
         for (const role of ADMIN_ROLES) {
             const roleName = await fetchRoleName(role);
@@ -1138,7 +1131,7 @@ async function setMaintenanceMode(enabled) {
 }
 
 // ==========================================
-// 11. SAVED MESSAGES FUNCTIONS
+// 11. SAVED MESSAGES FUNCTIONS (with Message ID storage)
 // ==========================================
 
 async function loadSavedMessages() {
@@ -1157,18 +1150,22 @@ async function loadSavedMessages() {
         container.innerHTML = '';
         Object.entries(data).forEach(([id, msg]) => {
             const previewContent = msg.content ? (msg.content.substring(0, 100) + (msg.content.length > 100 ? '...' : '')) : 'No content';
+            const messageIdDisplay = msg.discordMessageId ? `✅ Message ID: ${msg.discordMessageId.substring(0, 8)}...` : '⚠️ Not sent yet';
             
             container.innerHTML += `
                 <div class="saved-message-item" data-id="${id}">
                     <div class="message-name">📝 ${escapeHtml(msg.name)}</div>
                     <div class="message-channel">📡 Channel ID: ${escapeHtml(msg.channelId || 'Not set')}</div>
+                    <div class="message-id" style="font-size: 11px; color: ${msg.discordMessageId ? '#48bb78' : '#f56565'}; margin-bottom: 5px;">
+                        ${messageIdDisplay}
+                    </div>
                     <div class="message-preview">
                         <strong>Message:</strong> ${escapeHtml(previewContent)}
                         ${msg.embedTitle ? `<br><strong>Embed:</strong> ${escapeHtml(msg.embedTitle)}` : ''}
                     </div>
                     <div class="message-actions">
                         <button class="btn-edit-message" onclick="editSavedMessage('${id}')">✏️ Edit</button>
-                        <button class="btn-send-message" onclick="sendSavedMessage('${id}')">📤 Send Now</button>
+                        <button class="btn-send-message" onclick="sendSavedMessage('${id}')">📤 Send / Update</button>
                         <button class="btn-delete-message" onclick="deleteSavedMessage('${id}')">🗑️ Delete</button>
                     </div>
                 </div>
@@ -1229,6 +1226,12 @@ async function saveMessage() {
     
     try {
         if (currentEditingMessageId) {
+            // Keep existing discordMessageId if it exists
+            const existingSnap = await get(ref(db, `saved_messages/${currentEditingMessageId}`));
+            const existing = existingSnap.val();
+            if (existing && existing.discordMessageId) {
+                messageData.discordMessageId = existing.discordMessageId;
+            }
             await update(ref(db, `saved_messages/${currentEditingMessageId}`), messageData);
             showNotify(`Message "${name}" updated successfully!`, "success");
             currentEditingMessageId = null;
@@ -1242,6 +1245,7 @@ async function saveMessage() {
             showNotify(`Message "${name}" saved successfully!`, "success");
         }
         
+        // Clear form
         document.getElementById('messageName').value = '';
         document.getElementById('messageChannelId').value = '';
         document.getElementById('messageContent').value = '';
@@ -1277,13 +1281,76 @@ window.sendSavedMessage = async (id) => {
     
     showNotify(`Sending "${msg.name}"...`, "warning");
     
-    const success = await sendDiscordMessage(msg.channelId, msg.content, embeds);
+    // Check if we have a stored message ID
+    let storedMessageId = msg.discordMessageId;
+    let success = false;
     
-    if (success) {
-        showNotify(`Message "${msg.name}" sent successfully!`, "success");
-    } else {
+    if (storedMessageId) {
+        // Try to UPDATE existing message
+        try {
+            const response = await fetch(`${BACKEND_URL}/update-message`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    channelId: msg.channelId, 
+                    messageId: storedMessageId, 
+                    content: msg.content, 
+                    embeds: embeds 
+                })
+            });
+            
+            if (response.ok) {
+                success = true;
+                showNotify(`Message "${msg.name}" updated successfully!`, "success");
+            } else if (response.status === 404) {
+                // Message not found (maybe deleted), send new one
+                console.log("Message not found, sending new one");
+                storedMessageId = null;
+            } else {
+                const error = await response.json();
+                console.error("Update failed:", error);
+                storedMessageId = null;
+            }
+        } catch (e) {
+            console.error("Update failed, sending new message:", e);
+            storedMessageId = null;
+        }
+    }
+    
+    if (!storedMessageId) {
+        // Send NEW message
+        const newMsgResponse = await fetch(`${BACKEND_URL}/send-channel-message`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ channelId: msg.channelId, content: msg.content, embeds: embeds })
+        });
+        
+        if (newMsgResponse.ok) {
+            const newMsgData = await newMsgResponse.json();
+            success = true;
+            
+            // Save the new message ID to Firebase
+            if (newMsgData.messageId) {
+                await update(ref(db, `saved_messages/${id}`), { 
+                    discordMessageId: newMsgData.messageId,
+                    lastSentAt: Date.now()
+                });
+                showNotify(`Message "${msg.name}" sent successfully! Message ID saved.`, "success");
+            } else {
+                showNotify(`Message "${msg.name}" sent successfully!`, "success");
+            }
+        } else {
+            const error = await newMsgResponse.text();
+            console.error("Send failed:", error);
+            success = false;
+        }
+    }
+    
+    if (!success) {
         showNotify(`Failed to send "${msg.name}"!`, "error");
     }
+    
+    loadSavedMessages();
 };
 
 window.deleteSavedMessage = async (id) => {
