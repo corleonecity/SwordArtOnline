@@ -124,6 +124,11 @@
                             <tbody id="leaderboardBody"></tbody>
                         </table>
                     </div>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: #0f0f0f; border-radius: 12px; text-align: center;">
+                        <div style="font-size: 14px; color: #888;">Total GP in System</div>
+                        <div style="font-size: 28px; color: #ffd700; font-weight: bold;" id="totalGpStat">0</div>
+                    </div>
                 </div>
             </div>
 
@@ -146,7 +151,7 @@
                     <p style="color:#888; margin-bottom: 15px; font-size:14px;">Please check proof photos before approving.</p>
                     <div class="table-responsive">
                         <table class="table">
-                            <thead><tr><th>User (Discord)</th><th>Roblox</th><th>Amount</th><th>Images</th><th>Action</th></tr></thead>
+                            <thead><tr><th>User (Discord)</th><th>Roblox</th><th>Amount</th><th>Action</th></tr></thead>
                             <tbody id="adminPendingBody"></tbody>
                         </table>
                     </div>
@@ -154,10 +159,10 @@
             </div>
 
             <div id="content-owner" class="hidden">
-                <!-- Role Management Section -->
+                <!-- Role & Channel Management Section -->
                 <div class="system-card" style="border-color: #ffd700; margin-bottom: 20px;">
-                    <h3 style="color: #ffd700;"><i class="fas fa-user-shield"></i> Role Management</h3>
-                    <p style="color:#888; margin-bottom: 15px; font-size:14px;">Manage admin roles and permissions dynamically.</p>
+                    <h3 style="color: #ffd700;"><i class="fas fa-user-shield"></i> Role & Channel Management</h3>
+                    <p style="color:#888; margin-bottom: 15px; font-size:14px;">Manage admin roles, GP submit role, and server channels.</p>
                     
                     <div style="background: #0f0f0f; border-radius: 12px; padding: 20px; margin-bottom: 25px;">
                         <h4 style="margin-bottom: 15px;">➕ Add Admin Role</h4>
@@ -172,10 +177,17 @@
                     </div>
 
                     <div style="background: #0f0f0f; border-radius: 12px; padding: 20px; margin-bottom: 25px;">
-                        <h4 style="margin-bottom: 15px;">📋 Current Admin Roles</h4>
+                        <h4 style="margin-bottom: 15px;">📋 Current Roles</h4>
                         <div id="adminRolesList" class="table-responsive">
                             <p style="color: #666;">Loading roles...</p>
                         </div>
+                    </div>
+
+                    <div style="background: #0f0f0f; border-radius: 12px; padding: 20px; margin-bottom: 25px;">
+                        <h4 style="margin-bottom: 15px;">🎮 GP Submit Role (User permission)</h4>
+                        <div><label>GP Submit Role ID:</label><input type="text" id="gpSubmitRoleId" value="1503193408280330400" style="width: 100%;" placeholder="Role ID required to submit GP"></div>
+                        <p style="color: #888; font-size: 12px; margin-top: 8px;">Users need this Discord role to submit GP donation requests.</p>
+                        <button id="saveGpSubmitRoleBtn" class="btn-primary" style="background: #ffd700; color: black; margin-top: 10px; width: auto;">Save GP Submit Role</button>
                     </div>
 
                     <div style="background: #0f0f0f; border-radius: 12px; padding: 20px;">
@@ -191,7 +203,7 @@
                 <!-- System Configuration Section -->
                 <div class="system-card" style="border-color: #ffd700; margin-bottom: 20px;">
                     <h3 style="color: #ffd700;"><i class="fas fa-sliders-h"></i> System Configuration</h3>
-                    <p style="color:#888; margin-bottom: 15px; font-size:14px;">Configure system limits, colors, and behavior.</p>
+                    <p style="color:#888; margin-bottom: 15px; font-size:14px;">Configure embed colors, music, and update interval.</p>
                     
                     <div style="background: #0f0f0f; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
                         <h4 style="margin-bottom: 15px;">🎨 Embed Colors</h4>
@@ -205,20 +217,6 @@
                     </div>
 
                     <div style="background: #0f0f0f; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
-                        <h4 style="margin-bottom: 15px;">📊 Limits & Settings</h4>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px;">
-                            <div><label>Min GP Amount:</label><input type="number" id="minGpAmount" value="100" style="width: 100%;"></div>
-                            <div><label>Max GP Amount:</label><input type="number" id="maxGpAmount" value="100000" style="width: 100%;"></div>
-                            <div><label>Max Images per Request:</label><input type="number" id="maxImagesPerRequest" value="1" style="width: 100%;"></div>
-                            <div><label>Leaderboard Top Count:</label><input type="number" id="leaderboardTopCount" value="10" style="width: 100%;"></div>
-                            <div><label>Rate Limit (requests per minute):</label><input type="number" id="rateLimitPerMinute" value="5" style="width: 100%;"></div>
-                            <div><label>Rate Limit (requests per hour):</label><input type="number" id="rateLimitPerHour" value="20" style="width: 100%;"></div>
-                            <div><label>Rate Limit (requests per day):</label><input type="number" id="rateLimitPerDay" value="50" style="width: 100%;"></div>
-                            <div><label>Cooldown (seconds between requests):</label><input type="number" id="cooldownSeconds" value="300" style="width: 100%;"></div>
-                        </div>
-                    </div>
-
-                    <div style="background: #0f0f0f; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
                         <h4 style="margin-bottom: 15px;">🎵 Music Settings</h4>
                         <div><label>Login Music URL:</label><input type="text" id="loginMusicUrl" value="https://www.youtube.com/embed/BtEkzZoUCpw?autoplay=1&loop=1" style="width: 100%;"></div>
                     </div>
@@ -228,63 +226,23 @@
                         <div><label>Update Interval (seconds):</label><input type="number" id="updateInterval" value="60" style="width: 100%;"></div>
                     </div>
 
-                    <div style="background: #0f0f0f; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
-                        <h4 style="margin-bottom: 15px;">🎮 GP Submit Role (User permission)</h4>
-                        <div><label>GP Submit Role ID:</label><input type="text" id="gpSubmitRoleId" value="1503193408280330400" style="width: 100%;" placeholder="Role ID required to submit GP"></div>
-                        <p style="color: #888; font-size: 12px; margin-top: 8px;">Users need this Discord role to submit GP donation requests.</p>
-                    </div>
-
-                    <button id="saveSystemConfigBtn" class="btn-primary" style="background: #ffd700; color: black; margin-top: 10px;">Save System Configuration</button>
-                </div>
-
-                <!-- Admin Statistics Section -->
-                <div class="system-card" style="border-color: #ffd700; margin-bottom: 20px;">
-                    <h3 style="color: #ffd700;"><i class="fas fa-chart-line"></i> Admin Statistics</h3>
-                    <p style="color:#888; margin-bottom: 15px; font-size:14px;">Overview of system usage and performance.</p>
-                    
-                    <div style="background: #0f0f0f; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
-                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
-                            <div style="background: #1a1a1a; padding: 15px; border-radius: 10px; text-align: center;">
-                                <div style="font-size: 28px; color: #ffd700;" id="statTotalGP">0</div>
-                                <div style="color: #888;">Total GP Given</div>
-                            </div>
-                            <div style="background: #1a1a1a; padding: 15px; border-radius: 10px; text-align: center;">
-                                <div style="font-size: 28px; color: #48bb78;" id="statTotalApproved">0</div>
-                                <div style="color: #888;">Approved Requests</div>
-                            </div>
-                            <div style="background: #1a1a1a; padding: 15px; border-radius: 10px; text-align: center;">
-                                <div style="font-size: 28px; color: #f56565;" id="statTotalRejected">0</div>
-                                <div style="color: #888;">Rejected Requests</div>
-                            </div>
-                            <div style="background: #1a1a1a; padding: 15px; border-radius: 10px; text-align: center;">
-                                <div style="font-size: 28px; color: #5865F2;" id="statTotalUsers">0</div>
-                                <div style="color: #888;">Registered Users</div>
-                            </div>
-                            <div style="background: #1a1a1a; padding: 15px; border-radius: 10px; text-align: center;">
-                                <div style="font-size: 28px; color: #cd7f32;" id="statPendingRequests">0</div>
-                                <div style="color: #888;">Pending Requests</div>
-                            </div>
-                            <div style="background: #1a1a1a; padding: 15px; border-radius: 10px; text-align: center;">
-                                <div style="font-size: 28px; color: #ffd700;" id="statTotalRequests">0</div>
-                                <div style="color: #888;">Total Requests</div>
-                            </div>
-                        </div>
-                        <button id="refreshStatsBtn" class="btn-primary" style="background: #5865F2; width: auto;">🔄 Refresh Statistics</button>
-                    </div>
-                </div>
-
-                <!-- Test Mode Section -->
-                <div class="system-card" style="border-color: #ffd700; margin-bottom: 20px;">
-                    <h3 style="color: #ffd700;"><i class="fas fa-flask"></i> Test Mode</h3>
-                    <p style="color:#888; margin-bottom: 15px; font-size:14px;">Test mode simulates GP changes without affecting real data.</p>
-                    
                     <div style="background: #0f0f0f; border-radius: 12px; padding: 20px;">
-                        <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
-                            <button id="enableTestModeBtn" class="btn-primary" style="background: #f56565; color: white; width: auto;">Enable Test Mode</button>
-                            <button id="disableTestModeBtn" class="btn-primary" style="background: #48bb78; color: white; width: auto;">Disable Test Mode</button>
-                            <span id="testModeStatus" style="color: #888;">Status: <span id="testModeStatusText">Disabled</span></span>
-                        </div>
-                        <p style="color: #ffd700; font-size: 12px; margin-top: 15px;">⚠️ When Test Mode is enabled, all GP approvals/rejections will be simulated without changing actual GP balances.</p>
+                        <h4 style="margin-bottom: 15px;">🖼️ Image Settings</h4>
+                        <div><label>Max Images per Request:</label><input type="number" id="maxImagesPerRequest" value="1" style="width: 100%;"></div>
+                        <p style="color: #888; font-size: 12px; margin-top: 8px;">Maximum number of screenshots allowed per GP request.</p>
+                    </div>
+
+                    <button id="saveSystemConfigBtn" class="btn-primary" style="background: #ffd700; color: black; margin-top: 20px;">Save System Configuration</button>
+                </div>
+
+                <!-- Registered Users Count (Simple) -->
+                <div class="system-card" style="border-color: #ffd700; margin-bottom: 20px;">
+                    <h3 style="color: #ffd700;"><i class="fas fa-users"></i> Registered Users</h3>
+                    <p style="color:#888; margin-bottom: 15px; font-size:14px;">Total users registered in the system.</p>
+                    <div style="background: #0f0f0f; border-radius: 12px; padding: 20px; text-align: center;">
+                        <div style="font-size: 48px; color: #ffd700; font-weight: bold;" id="statTotalUsers">0</div>
+                        <div style="color: #888;">Registered Users</div>
+                        <button id="refreshUsersBtn" class="btn-primary" style="background: #5865F2; margin-top: 15px; width: auto;">🔄 Refresh</button>
                     </div>
                 </div>
 
@@ -348,6 +306,18 @@
                         <button id="disableMaintenanceBtn" class="btn-primary" style="background: #48bb78; color: white; width: auto;">Disable Maintenance</button>
                         <span id="maintenanceStatus" style="color: #888;">Status: <span id="maintenanceStatusText">Disabled</span></span>
                     </div>
+                </div>
+
+                <!-- Test Mode Toggle -->
+                <div class="system-card" style="border-color: #ffd700;">
+                    <h3 style="color: #ffd700;"><i class="fas fa-flask"></i> Test Mode</h3>
+                    <p style="color:#888; margin-bottom: 15px; font-size:14px;">Test mode simulates GP changes without affecting real data.</p>
+                    <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                        <button id="enableTestModeBtn" class="btn-primary" style="background: #f56565; color: white; width: auto;">Enable Test Mode</button>
+                        <button id="disableTestModeBtn" class="btn-primary" style="background: #48bb78; color: white; width: auto;">Disable Test Mode</button>
+                        <span id="testModeStatus" style="color: #888;">Status: <span id="testModeStatusText">Disabled</span></span>
+                    </div>
+                    <p style="color: #ffd700; font-size: 12px; margin-top: 15px;">⚠️ When Test Mode is enabled, all GP approvals/rejections will be simulated without changing actual GP balances.</p>
                 </div>
             </div>
         </div>
