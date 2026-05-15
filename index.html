@@ -12,6 +12,16 @@
 
     <div id="audioPlayerContainer" class="hidden"></div>
 
+    <!-- Maintenance Mode Overlay -->
+    <div id="maintenanceOverlay" class="maintenance-overlay hidden">
+        <div class="maintenance-content">
+            <i class="fas fa-tools"></i>
+            <h2>Maintenance Mode</h2>
+            <p>The system is currently being updated. Please check back soon!</p>
+            <div class="loader"></div>
+        </div>
+    </div>
+
     <div id="loginPage" class="login-container">
         <div class="logo-main logo-pn">SAO</div>
         <h1>SwordArtOnline</h1>
@@ -139,54 +149,86 @@
             </div>
 
             <div id="content-owner" class="hidden">
-                <div class="system-card" style="border-color: #ffd700;">
-                    <h3 style="color: #ffd700;"><i class="fas fa-crown"></i> Emblem / Webhook Manager</h3>
-                    <p style="color:#888; margin-bottom: 15px; font-size:14px;">Create and manage webhook messages like discohook.org</p>
+                <!-- Role Management Section -->
+                <div class="system-card" style="border-color: #ffd700; margin-bottom: 20px;">
+                    <h3 style="color: #ffd700;"><i class="fas fa-user-shield"></i> Role Management</h3>
+                    <p style="color:#888; margin-bottom: 15px; font-size:14px;">Manage admin roles and permissions dynamically.</p>
                     
-                    <!-- Webhook erstellen -->
                     <div style="background: #0f0f0f; border-radius: 12px; padding: 20px; margin-bottom: 25px;">
-                        <h4 style="margin-bottom: 15px;">📝 Create New Webhook Message</h4>
-                        
-                        <div class="webhook-form">
-                            <input type="text" id="whName" placeholder="Webhook Name (e.g., Welcome Message)" style="margin-bottom: 10px;">
-                            <input type="text" id="whUrl" placeholder="Discord Webhook URL" style="margin-bottom: 10px;">
-                            
-                            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                                <select id="whChannelSelect" style="flex: 1;">
-                                    <option value="">-- Or select saved channel --</option>
-                                </select>
-                                <input type="text" id="whCustomChannel" placeholder="Or enter Channel ID" style="flex: 1;">
-                            </div>
-                            
-                            <div style="background: #111; border-radius: 8px; padding: 15px; margin-bottom: 15px;">
-                                <label style="display: block; margin-bottom: 8px; color: #aaa;">Message Content</label>
-                                <textarea id="whContent" rows="3" style="width: 100%; background: #0a0a0a; border: 1px solid #222; border-radius: 8px; padding: 12px; color: white;" placeholder="Your message here... Supports @mentions and #channels"></textarea>
-                            </div>
-                            
-                            <div style="background: #111; border-radius: 8px; padding: 15px; margin-bottom: 15px;">
-                                <label style="display: block; margin-bottom: 8px; color: #aaa;">Embed Title (optional)</label>
-                                <input type="text" id="whEmbedTitle" style="margin-bottom: 10px;">
-                                <label style="display: block; margin-bottom: 8px; color: #aaa;">Embed Description</label>
-                                <textarea id="whEmbedDesc" rows="3" style="width: 100%; background: #0a0a0a; border: 1px solid #222; border-radius: 8px; padding: 12px; color: white;"></textarea>
-                                <label style="display: block; margin-bottom: 8px; color: #aaa;">Embed Color (Hex)</label>
-                                <input type="color" id="whEmbedColor" value="#5865F2" style="width: 60px; height: 40px; background: #0a0a0a; border: 1px solid #222; border-radius: 8px;">
-                                <label style="display: block; margin-bottom: 8px; color: #aaa; margin-top: 10px;">Footer Text</label>
-                                <input type="text" id="whFooter" placeholder="Footer text">
-                            </div>
-                            
-                            <div style="display: flex; gap: 10px;">
-                                <button id="sendWebhookBtn" class="btn-primary" style="background: #5865F2; color: white; width: auto;">Send Now</button>
-                                <button id="saveWebhookBtn" class="btn-primary" style="background: #48bb78; color: white; width: auto;">Save Webhook</button>
-                            </div>
+                        <h4 style="margin-bottom: 15px;">➕ Add Admin Role</h4>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <input type="text" id="newRoleId" placeholder="Discord Role ID" style="flex: 2;">
+                            <select id="rolePermissionLevel" style="flex: 1;">
+                                <option value="admin">Admin</option>
+                                <option value="owner">Owner</option>
+                            </select>
+                            <button id="addRoleBtn" class="btn-primary" style="background: #48bb78; color: white; width: auto;">Add Role</button>
                         </div>
                     </div>
-                    
-                    <!-- Gespeicherte Webhooks -->
-                    <div style="background: #0f0f0f; border-radius: 12px; padding: 20px;">
-                        <h4 style="margin-bottom: 15px;">💾 Saved Webhooks</h4>
-                        <div id="savedWebhooksList" style="max-height: 400px; overflow-y: auto;">
-                            <p style="color: #666; text-align: center;">Loading saved webhooks...</p>
+
+                    <div style="background: #0f0f0f; border-radius: 12px; padding: 20px; margin-bottom: 25px;">
+                        <h4 style="margin-bottom: 15px;">📋 Current Admin Roles</h4>
+                        <div id="adminRolesList" class="table-responsive">
+                            <p style="color: #666;">Loading roles...</p>
                         </div>
+                    </div>
+
+                    <div style="background: #0f0f0f; border-radius: 12px; padding: 20px;">
+                        <h4 style="margin-bottom: 15px;">👥 Manage Server Channels</h4>
+                        <p style="color:#888; margin-bottom: 15px;">Configure which channels the bot uses for notifications.</p>
+                        <div id="channelConfigList">
+                            <p style="color: #666;">Loading channel configuration...</p>
+                        </div>
+                        <button id="saveChannelConfigBtn" class="btn-primary" style="background: #5865F2; margin-top: 15px;">Save Channel Configuration</button>
+                    </div>
+                </div>
+
+                <!-- Channel Message Sender (Webhook removed - now uses bot via channel ID) -->
+                <div class="system-card" style="border-color: #ffd700;">
+                    <h3 style="color: #ffd700;"><i class="fas fa-paper-plane"></i> Send Message via Bot</h3>
+                    <p style="color:#888; margin-bottom: 15px; font-size:14px;">Send messages to any channel using the bot (just provide Channel ID).</p>
+                    
+                    <div style="background: #0f0f0f; border-radius: 12px; padding: 20px;">
+                        <input type="text" id="targetChannelId" placeholder="Channel ID (e.g., 1503650249208496238)" style="margin-bottom: 10px;">
+                        
+                        <div style="background: #111; border-radius: 8px; padding: 15px; margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 8px; color: #aaa;">Message Content</label>
+                            <textarea id="botMessageContent" rows="3" style="width: 100%; background: #0a0a0a; border: 1px solid #222; border-radius: 8px; padding: 12px; color: white;" placeholder="Your message here... Supports @mentions and #channels"></textarea>
+                        </div>
+                        
+                        <div style="background: #111; border-radius: 8px; padding: 15px; margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 8px; color: #aaa;">Embed Title (optional)</label>
+                            <input type="text" id="botEmbedTitle" style="margin-bottom: 10px;">
+                            <label style="display: block; margin-bottom: 8px; color: #aaa;">Embed Description</label>
+                            <textarea id="botEmbedDesc" rows="3" style="width: 100%; background: #0a0a0a; border: 1px solid #222; border-radius: 8px; padding: 12px; color: white;"></textarea>
+                            <label style="display: block; margin-bottom: 8px; color: #aaa;">Embed Color (Hex)</label>
+                            <input type="color" id="botEmbedColor" value="#5865F2" style="width: 60px; height: 40px; background: #0a0a0a; border: 1px solid #222; border-radius: 8px;">
+                        </div>
+                        
+                        <button id="sendBotMessageBtn" class="btn-primary" style="background: #5865F2;">Send Message via Bot</button>
+                    </div>
+                </div>
+
+                <!-- Kick Logs Viewer -->
+                <div class="system-card" style="border-color: #ffd700; margin-top: 20px;">
+                    <h3 style="color: #ffd700;"><i class="fas fa-history"></i> Kick History</h3>
+                    <p style="color:#888; margin-bottom: 15px; font-size:14px;">All user kicks are logged here.</p>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead><tr><th>Date</th><th>Kicked User</th><th>Kicked By</th><th>Reason</th><th>DM Sent</th></tr></thead>
+                            <tbody id="kickLogsBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Maintenance Mode Toggle -->
+                <div class="system-card" style="border-color: #ffd700; margin-top: 20px;">
+                    <h3 style="color: #ffd700;"><i class="fas fa-wrench"></i> Maintenance Mode</h3>
+                    <p style="color:#888; margin-bottom: 15px; font-size:14px;">Toggle maintenance mode when updating the system.</p>
+                    <div style="display: flex; gap: 15px; align-items: center;">
+                        <button id="enableMaintenanceBtn" class="btn-primary" style="background: #f56565; color: white; width: auto;">Enable Maintenance</button>
+                        <button id="disableMaintenanceBtn" class="btn-primary" style="background: #48bb78; color: white; width: auto;">Disable Maintenance</button>
+                        <span id="maintenanceStatus" style="color: #888;">Status: <span id="maintenanceStatusText">Disabled</span></span>
                     </div>
                 </div>
             </div>
