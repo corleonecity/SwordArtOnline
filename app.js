@@ -233,7 +233,7 @@ async function fetchRoleName(roleId) {
 }
 
 // ==========================================
-// 4. DISCORD BOT MESSAGES
+// 4. DISCORD BOT MESSAGES & NICKNAME UPDATE
 // ==========================================
 
 async function sendDiscordMessage(channelId, content, embeds = null) {
@@ -263,6 +263,78 @@ async function sendDiscordMessage(channelId, content, embeds = null) {
         console.error(`Discord message error:`, e);
         return false;
     }
+}
+
+async function updateDiscordNickname(userId, robloxName, robloxUsername) {
+    try {
+        const newNickname = `${robloxName} (@${robloxUsername})`;
+        
+        const response = await fetch(`${BACKEND_URL}/update-nickname`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                userId: userId, 
+                nickname: newNickname,
+                guildId: '1439377447630930084'
+            })
+        });
+        
+        if (response.ok) {
+            console.log(`Nickname updated to: ${newNickname}`);
+            return true;
+        } else {
+            const error = await response.text();
+            console.error(`Failed to update nickname: ${error}`);
+            return false;
+        }
+    } catch (e) {
+        console.error(`Nickname update error:`, e);
+        return false;
+    }
+}
+
+async function sendLoginToDiscord(userData) {
+    const channels = await getChannelConfig();
+    const loginLogsChannel = channels.CH_LOGIN_LOGS;
+    
+    if (!loginLogsChannel) {
+        console.warn("CH_LOGIN_LOGS not configured - skipping login notification");
+        return false;
+    }
+    
+    const message = `🟢 New User Registered\n\n` +
+        `**💬 Discord**\nName: ${userData.discordName}\nTag: @${userData.discordUsername}\nID: <@${userData.userId}>\n\n` +
+        `**🎮 Roblox**\nName: ${userData.robloxName}\nUser: @${userData.robloxUsername}\nProfile: [Click Here](https://www.roblox.com/users/${userData.robloxId}/profile)\n\n` +
+        `**📝 Nickname Updated**\n${userData.robloxName} (@${userData.robloxUsername})\n\n` +
+        `SwordArtOnline Panel • ${new Date().toLocaleString()}`;
+    
+    return sendDiscordMessage(loginLogsChannel, message, null);
+}
+
+async function sendLeftUserToDiscord(userData) {
+    const channels = await getChannelConfig();
+    const leaveLogsChannel = channels.CH_LEAVE_LOGS;
+    
+    if (!leaveLogsChannel) {
+        console.warn("CH_LEAVE_LOGS not configured - skipping leave notification");
+        return false;
+    }
+    
+    const { adminRoles } = await getAdminRoles();
+    const adminRoleId = adminRoles[0] || '1503609455466643547';
+    
+    const robloxProfileLink = userData.robloxUsername 
+        ? `https://www.roblox.com/user.aspx?username=${userData.robloxUsername}`
+        : "";
+    
+    await sendDiscordMessage(leaveLogsChannel, `<@&${adminRoleId}>`, null);
+    
+    const message = `🚨 User has left the server!\n\n` +
+        `**💬 Discord**\nDisplay: ${userData.discordName || "Unknown"}\nUser: @${userData.discordUsername || "Unknown"}\nPing: <@${userData.id}>\n\n` +
+        `**🎮 Roblox**\nDisplay: ${userData.robloxName || "Unknown"}\nUser: @${userData.robloxUsername || "Unknown"}\n${robloxProfileLink ? `Profile: [Click Here](${robloxProfileLink})` : ''}\n\n` +
+        `SwordArtOnline Panel • ${new Date().toLocaleString()}`;
+    
+    return sendDiscordMessage(leaveLogsChannel, message, null);
 }
 
 async function sendGPRequestToDiscord(requestData, images) {
@@ -339,6 +411,21 @@ function startLiveMemberCheck() {
     liveCheckInterval = setInterval(doLiveCheck, 30000);
 }
 
+async function sendLoginWebhook(userData) {
+    const dbKey = getSafeDbKey(userData.discordUsername);
+    const userRef = ref(db, `users/${dbKey}`);
+    const snap = await get(userRef);
+    
+    if (snap.exists() && snap.val().loginNotified === true) return;
+
+    const success = await sendLoginToDiscord(userData);
+    
+    if (success) {
+        await update(userRef, { loginNotified: true });
+        console.log("Login notification sent successfully");
+    }
+}
+
 async function handleDiscordLogin(code) {
     try {
         const res = await fetch(`${BACKEND_URL}/token`, {
@@ -395,6 +482,18 @@ async function handleRobloxLogin(code) {
                 totalGP: currentGP,
                 id: currentUser.id || "1",
                 hasLeftServer: false
+            });
+
+            // Update Discord nickname
+            await updateDiscordNickname(currentUser.id, rDisplayName, rUsername);
+
+            await sendLoginWebhook({
+                discordName: dDisplayName,
+                discordUsername: currentUser.username,
+                userId: currentUser.id,
+                robloxName: rDisplayName,
+                robloxUsername: rUsername,
+                robloxId: rId
             });
 
             fetch(`${BACKEND_URL}/check-member`, {
@@ -766,7 +865,6 @@ window.handleAdminAction = async (reqId, userId, amount, action, passedDbKey, ro
         const processedChannel = channels.CH_GP_PROCESSED;
         
         if (processedChannel) {
-            // Normal text message (not embed)
             const actionText = action === 'approve' ? '✅ GP Donation Approved' : '❌ GP Donation Rejected';
             const amountText = action === 'approve' ? `+${amount.toLocaleString()} GP` : `-${amount.toLocaleString()} GP`;
             
@@ -810,12 +908,12 @@ async function loadAdminRolesList() {
         
         for (const role of ADMIN_ROLES) {
             const roleName = await fetchRoleName(role);
-            html += `<tr><td><span class="status-badge status-approved">${escapeHtml(roleName)}</span></td><td><code>${escapeHtml(role)}</code></td><td>Admin</td><td><button class="btn-small btn-remove-role" onclick="removeAdminRole('${role}')">Remove</button></td></tr>`;
+            html += `<tr><td><span class="status-badge status-approved">${escapeHtml(roleName)}</span></td><td><code>${escapeHtml(role)}</code></td><td>Admin</span></td>。<button class="btn-small btn-remove-role" onclick="removeAdminRole('${role}')">Remove</button></td></tr>`;
         }
         
         for (const role of OWNER_ROLES) {
             const roleName = await fetchRoleName(role);
-            html += `<tr><td><span class="status-badge status-pending">${escapeHtml(roleName)}</span></td><td><code>${escapeHtml(role)}</code></td><td>Owner</td><td><button class="btn-small btn-remove-role" onclick="removeOwnerRole('${role}')">Remove</button></td></tr>`;
+            html += `<tr>。<span class="status-badge status-pending">${escapeHtml(roleName)}</span></span>。</code>${escapeHtml(role)}</code></span>。Owner</span>。<button class="btn-small btn-remove-role" onclick="removeOwnerRole('${role}')">Remove</button></span></tr>`;
         }
         
         html += '</tbody></table>';
@@ -975,7 +1073,7 @@ async function loadKickLogs() {
         
         body.innerHTML = '';
         if (!data) {
-            body.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#666;">No kick logs found</td></tr>';
+            body.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#666;">No kick logs found</span>。</span>';
             return;
         }
         
@@ -985,11 +1083,11 @@ async function loadKickLogs() {
             const dateStr = new Date(log.timestamp).toLocaleString();
             body.innerHTML += `
                 <tr>
-                    <td style="font-size:12px;">${dateStr}</td>
-                    <td><code>${escapeHtml(log.kickedUserId || '?')}</code><br>${escapeHtml(log.kickedUserName || '')}</td>
-                    <td><code>${escapeHtml(log.kickedByUserId || '?')}</code><br>${escapeHtml(log.kickedByUserName || '')}</td>
-                    <td>${escapeHtml(log.reason || 'No reason')}</td>
-                    <td>${log.dmSent ? '✅ Yes' : '❌ No'}</td>
+                    <td style="font-size:12px;">${dateStr}</span>。</span>
+                    <td><code>${escapeHtml(log.kickedUserId || '?')}</code><br>${escapeHtml(log.kickedUserName || '')}</span>。</span>
+                    <td><code>${escapeHtml(log.kickedByUserId || '?')}</code><br>${escapeHtml(log.kickedByUserName || '')}</span>。</span>
+                    <td>${escapeHtml(log.reason || 'No reason')}</span>。</span>
+                    <td>${log.dmSent ? '✅ Yes' : '❌ No'}</span>。</span>
                 </tr>
             `;
         });
