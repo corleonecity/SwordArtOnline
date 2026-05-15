@@ -424,6 +424,15 @@ async function sendGPRequestToDiscord(requestData, images) {
     
     const adminRoleId = ADMIN_ROLES[0] || '1503609455466643547';
     
+    // Get channel config
+    const channels = await getChannelConfig();
+    const gpRequestsChannel = channels.CH_GP_REQUESTS;
+    
+    if (!gpRequestsChannel) {
+        console.error("GP Requests channel not configured!");
+        return false;
+    }
+    
     const embed = {
         title: "💎 New GP Donation Request",
         url: "https://corleonecity.github.io/SwordArtOnline/",
@@ -438,6 +447,11 @@ async function sendGPRequestToDiscord(requestData, images) {
         timestamp: new Date().toISOString(),
         footer: { text: "SwordArtOnline GP System" }
     };
+    
+    // Add image to embed if exists
+    if (images && images.length > 0) {
+        embed.image = { url: "attachment://proof_1.png" };
+    }
 
     // Create buttons for interaction
     const components = [{
@@ -479,14 +493,17 @@ async function sendGPRequestToDiscord(requestData, images) {
         
         if (response.ok) {
             const data = await response.json();
+            console.log("Discord response:", data);
             if (data.messageId) {
                 await update(ref(db, `requests/${requestData.requestId}`), {
                     discordMessageId: data.messageId
                 });
+                console.log("Saved discordMessageId:", data.messageId);
             }
             return true;
         } else {
-            console.error("GP request send failed:", await response.text());
+            const errorText = await response.text();
+            console.error("GP request send failed:", errorText);
             return false;
         }
     } catch (e) {
@@ -729,7 +746,7 @@ function renderLeaderboard(filterText) {
     });
     
     if (usersArray.length === 0) {
-        body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No users with GP yet</span></td></tr>';
+        body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No users with GP yet</span></tr></tr>';
     }
     
     const totalGP = Object.values(allUsersData).reduce((sum, u) => sum + (u.totalGP || 0), 0);
@@ -774,7 +791,7 @@ function loadProfileHistory() {
             body.innerHTML += `
                 <tr>
                     <td style="font-size:14px; color:#aaa;">${dateStr}</td>
-                    <td style="font-weight:bold;">+${req.amount.toLocaleString()} GP</td>
+                    <td style="font-weight:bold;">+${req.amount.toLocaleString()} GP</span></td>
                     <td>${statusHtml}</td>
                     <td style="font-size:12px; color:#888;">${escapeHtml(req.adminComment || '-')}</td>
                 </tr>
@@ -782,7 +799,7 @@ function loadProfileHistory() {
         });
         
         if (userRequests.length === 0) {
-            body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No requests yet</td></tr>';
+            body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No requests yet</span></tr></table>';
         }
     });
 }
@@ -924,7 +941,7 @@ function loadAdminData() {
         
         body.innerHTML = '';
         if (!data) {
-            body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No pending requests</td></tr>';
+            body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No pending requests</span></td></tr>';
             return;
         }
         
@@ -933,7 +950,7 @@ function loadAdminData() {
             .sort((a, b) => a.timestamp - b.timestamp);
         
         if (pendingRequests.length === 0) {
-            body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No pending requests</td></tr>';
+            body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No pending requests</span></td></tr>';
             return;
         }
         
@@ -945,14 +962,14 @@ function loadAdminData() {
                             <span class="display-name">${escapeHtml(req.discordName || "Unknown")}</span>
                             <span class="username-handle">@${escapeHtml(req.discordUsername || "Unknown")}</span>
                         </div>
-                    </td>
+                    </span>
                     <td>
                         <div class="user-name-cell">
                             <span class="display-name">${escapeHtml(req.robloxName || "Unknown")}</span>
                             <span class="username-handle">@${escapeHtml(req.robloxUsername || "Unknown")}</span>
                         </div>
-                    </td>
-                    <td style="color:#cd7f32; font-weight:bold;">+${req.amount.toLocaleString()} GP</td>
+                    </span>
+                    <td style="color:#cd7f32; font-weight:bold;">+${req.amount.toLocaleString()} GP</span>
                     <td>
                         <div style="display: flex; flex-direction: column; gap: 8px;">
                             <input type="text" id="comment_${req.id}" placeholder="Admin comment (optional)" style="padding: 6px; font-size: 12px; margin-bottom: 5px;">
@@ -965,7 +982,7 @@ function loadAdminData() {
                                 </button>
                             </div>
                         </div>
-                    </td>
+                    </span>
                 </tr>
             `;
         });
@@ -1081,12 +1098,12 @@ async function loadAdminRolesList() {
         
         for (const role of ADMIN_ROLES) {
             const roleName = await fetchRoleName(role);
-            html += `<tr><td class="role-name">${escapeHtml(roleName)}</td><td class="role-id">${escapeHtml(role)}</td><td><span class="status-badge status-approved">Admin</span></td><td><button class="btn-small btn-remove-role" onclick="removeAdminRole('${role}')">Remove</button></td></tr>`;
+            html += `<tr><td class="role-name">${escapeHtml(roleName)}</span><td><td class="role-id">${escapeHtml(role)}</span><td><span class="status-badge status-approved">Admin</span></span><td><button class="btn-small btn-remove-role" onclick="removeAdminRole('${role}')">Remove</button></span></tr>`;
         }
         
         for (const role of OWNER_ROLES) {
             const roleName = await fetchRoleName(role);
-            html += `<tr><td class="role-name">${escapeHtml(roleName)}</td><td class="role-id">${escapeHtml(role)}</td><td><span class="status-badge status-pending">Owner</span></td><td><button class="btn-small btn-remove-role" onclick="removeOwnerRole('${role}')">Remove</button></td></tr>`;
+            html += `<tr><td class="role-name">${escapeHtml(roleName)}</span><td><td class="role-id">${escapeHtml(role)}</span><td><span class="status-badge status-pending">Owner</span></span><td><button class="btn-small btn-remove-role" onclick="removeOwnerRole('${role}')">Remove</button></span></tr>`;
         }
         
         html += '</tbody></table>';
@@ -1246,7 +1263,7 @@ async function loadKickLogs() {
         
         body.innerHTML = '';
         if (!data) {
-            body.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#666;">No kick logs found</td></tr>';
+            body.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#666;">No kick logs found</span></td></tr>';
             return;
         }
         
@@ -1260,7 +1277,7 @@ async function loadKickLogs() {
                     <td><code>${escapeHtml(log.kickedUserId || '?')}</code><br>${escapeHtml(log.kickedUserName || '')}</td>
                     <td><code>${escapeHtml(log.kickedByUserId || '?')}</code><br>${escapeHtml(log.kickedByUserName || '')}</td>
                     <td>${escapeHtml(log.reason || 'No reason')}</td>
-                    <td>${log.dmSent ? '✅ Yes' : '❌ No'}</td>
+                    <td>${log.dmSent ? '✅ Yes' : '❌ No'}</span></td>
                 </tr>
             `;
         });
