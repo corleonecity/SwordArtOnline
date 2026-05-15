@@ -4,8 +4,10 @@
 
 const ADMIN_DISCORD_IDS = ['917426398120005653', '1503572666639061074'];
 
-// Die Rolle, die zum Einreichen von GP Requests berechtigt ist
+// Rollen für Zugriffssteuerung
 const REQUIRED_GP_SUBMIT_ROLE = "1503193408280330400";
+const REQUIRED_ADMIN_ROLE = "1503609455466643547";      // Admin Panel Zugriff
+const REQUIRED_OWNER_ROLE = "1504646932243546152";      // Owner Panel Zugriff
 
 const DISCORD_CLIENT_ID = '1503179151073345678';
 const ROBLOX_CLIENT_ID = '1529843549493669743';
@@ -15,7 +17,7 @@ const REDIRECT_URI = 'https://corleonecity.github.io/SwordArtOnline/';
 
 // Firebase Imports
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
-import { getDatabase, ref, set, onValue, get, update, push } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
+import { getDatabase, ref, set, onValue, get, update, push, remove } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
 
 // Firebase Konfiguration
 const firebaseConfig = {
@@ -66,7 +68,7 @@ function showNotify(msg, type) {
 }
 
 function switchTab(tabName) {
-    const tabs = ['Spenden', 'Leaderboard', 'Profile', 'Admin'];
+    const tabs = ['Spenden', 'Leaderboard', 'Profile', 'Admin', 'Owner'];
     tabs.forEach(name => {
         const btn = document.getElementById(`tabBtn${name}`);
         const content = document.getElementById(`content-${name.toLowerCase()}`);
@@ -93,8 +95,17 @@ function forceKickUser() {
     stopMusic();
 }
 
+// Rollen-Prüfungen
 function hasGpSubmitPermission() {
     return userGuildRoles.includes(REQUIRED_GP_SUBMIT_ROLE);
+}
+
+function hasAdminPermission() {
+    return userGuildRoles.includes(REQUIRED_ADMIN_ROLE);
+}
+
+function hasOwnerPermission() {
+    return userGuildRoles.includes(REQUIRED_OWNER_ROLE);
 }
 
 function updateGpSubmitVisibility() {
@@ -113,6 +124,28 @@ function updateGpSubmitVisibility() {
         if (tabBtnSpenden) tabBtnSpenden.style.display = 'none';
         if (spendenContent && !spendenContent.classList.contains('hidden')) {
             switchTab('Leaderboard');
+        }
+    }
+}
+
+function updateAdminPanelVisibility() {
+    const tabBtnAdmin = document.getElementById('tabBtnAdmin');
+    if (tabBtnAdmin) {
+        if (hasAdminPermission()) {
+            tabBtnAdmin.style.display = 'block';
+        } else {
+            tabBtnAdmin.style.display = 'none';
+        }
+    }
+}
+
+function updateOwnerPanelVisibility() {
+    const tabBtnOwner = document.getElementById('tabBtnOwner');
+    if (tabBtnOwner) {
+        if (hasOwnerPermission()) {
+            tabBtnOwner.style.display = 'block';
+        } else {
+            tabBtnOwner.style.display = 'none';
         }
     }
 }
@@ -143,11 +176,13 @@ async function fetchUserRoles(userId) {
     }
     
     updateGpSubmitVisibility();
+    updateAdminPanelVisibility();
+    updateOwnerPanelVisibility();
     return userGuildRoles;
 }
 
 // ==========================================
-// 3. DISCORD BOT NACHRICHTEN ÜBER CLOUDFLARE
+// 3. DISCORD BOT NACHRICHTEN
 // ==========================================
 
 async function sendDiscordMessage(endpoint, payload) {
@@ -166,6 +201,33 @@ async function sendDiscordMessage(endpoint, payload) {
         return true;
     } catch (e) {
         console.error(`Discord message error (${endpoint}):`, e);
+        return false;
+    }
+}
+
+async function sendWebhookMessage(webhookUrl, content, embedData = null) {
+    try {
+        const body = {};
+        if (content) body.content = content;
+        if (embedData && (embedData.title || embedData.description)) {
+            body.embeds = [{
+                title: embedData.title || undefined,
+                description: embedData.description || undefined,
+                color: embedData.color ? parseInt(embedData.color.replace('#', ''), 16) : 0x5865F2,
+                footer: embedData.footer ? { text: embedData.footer } : undefined,
+                timestamp: new Date().toISOString()
+            }];
+        }
+        
+        const response = await fetch(webhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+        
+        return response.ok;
+    } catch (e) {
+        console.error("Webhook send error:", e);
         return false;
     }
 }
@@ -202,12 +264,7 @@ async function sendGPRequestToDiscord(requestData, images) {
             method: 'POST',
             body: formData
         });
-        
-        if (!response.ok) {
-            console.error("GP request send failed:", await response.text());
-            return false;
-        }
-        return true;
+        return response.ok;
     } catch (e) {
         console.error("GP request send error:", e);
         return false;
@@ -248,25 +305,6 @@ async function sendProcessedToDiscord(data) {
     return sendDiscordMessage('/send-processed', { embeds: [embed] });
 }
 
-async function sendUserLeftToDiscord(userData) {
-    const embed = {
-        title: "🚨 User has left the server!",
-        color: 0xf56565,
-        fields: [
-            { name: "💬 Discord", value: `**Name:** ${userData.discordName}\n**Tag:** @${userData.discordUsername}\n**ID:** ${userData.userId}`, inline: true },
-            { name: "🎮 Roblox", value: `**Name:** ${userData.robloxName || "Unknown"}\n**User:** @${userData.robloxUsername || "Unknown"}`, inline: true },
-            { name: "💰 Total GP", value: `${(userData.totalGP || 0).toLocaleString()} GP`, inline: false }
-        ],
-        timestamp: new Date().toISOString(),
-        footer: { text: "SwordArtOnline Panel" }
-    };
-
-    return sendDiscordMessage('/send-left-user', { 
-        content: `<@&1503609455466643547>`,
-        embeds: [embed] 
-    });
-}
-
 // ==========================================
 // 4. DISCORD & ROBLOX AUTHENTIFIZIERUNG
 // ==========================================
@@ -285,20 +323,6 @@ async function doLiveCheck() {
         }
         const data = await res.json();
         if (data.isMember === false) {
-            const dbKey = getSafeDbKey(currentUser.username);
-            const snap = await get(ref(db, `users/${dbKey}`));
-            if (snap.exists() && !snap.val().hasLeftServer) {
-                const userData = snap.val();
-                await sendUserLeftToDiscord({
-                    discordName: userData.discordName,
-                    discordUsername: userData.discordUsername,
-                    userId: currentUser.id,
-                    robloxName: userData.robloxName,
-                    robloxUsername: userData.robloxUsername,
-                    totalGP: userData.totalGP || 0
-                });
-                await update(ref(db, `users/${dbKey}`), { hasLeftServer: true });
-            }
             forceKickUser();
             return false;
         }
@@ -326,8 +350,6 @@ async function sendLoginWebhook(userData) {
     if (success) {
         await update(userRef, { webhookSent: true });
         console.log("Login notification sent successfully");
-    } else {
-        console.error("Login notification failed");
     }
 }
 
@@ -458,15 +480,21 @@ function showDashboard() {
         document.getElementById('userAvatar').src = `https://cdn.discordapp.com/avatars/${currentUser.id}/${currentUser.avatar}.png`;
     }
     
-    if (ADMIN_DISCORD_IDS.includes(currentUser.id)) {
-        document.getElementById('tabBtnAdmin').style.display = 'block';
-        loadAdminData();
-    }
-    
     updateGpSubmitVisibility();
+    updateAdminPanelVisibility();
+    updateOwnerPanelVisibility();
     
     loadLeaderboard();
     loadProfileHistory();
+    
+    if (hasAdminPermission()) {
+        loadAdminData();
+    }
+    
+    if (hasOwnerPermission()) {
+        loadSavedWebhooks();
+        loadChannelSelect();
+    }
 }
 
 function renderLeaderboard(filterText) {
@@ -508,17 +536,6 @@ function loadLeaderboard() {
         allUsersData = snapshot.val();
         const searchValue = document.getElementById('leaderboardSearch')?.value || "";
         renderLeaderboard(searchValue);
-        
-        if (ADMIN_DISCORD_IDS.includes(currentUser?.id)) {
-            const select = document.getElementById('adminUserSelect');
-            if (select && allUsersData) {
-                select.innerHTML = '<option value="">-- Select a User --</option>';
-                Object.values(allUsersData).forEach(u => {
-                    const safeKey = getSafeDbKey(u.discordUsername);
-                    select.innerHTML += `<option value="${safeKey}">${u.discordName} (@${u.discordUsername}) - ${u.totalGP || 0} GP</option>`;
-                });
-            }
-        }
     });
 }
 
@@ -676,7 +693,7 @@ async function submitGPRequest() {
 }
 
 // ==========================================
-// 8. ADMIN FUNKTIONEN
+// 8. ADMIN FUNKTIONEN (Nur Pending Requests)
 // ==========================================
 
 function loadAdminData() {
@@ -788,7 +805,298 @@ window.handleAdminAction = async (reqId, userId, amount, action, passedDbKey, ro
 };
 
 // ==========================================
-// 9. EVENT LISTENER & INITIALISIERUNG
+// 9. OWNER PANEL FUNKTIONEN (Webhook Manager)
+// ==========================================
+
+async function loadSavedWebhooks() {
+    const webhooksRef = ref(db, 'webhooks');
+    onValue(webhooksRef, (snapshot) => {
+        const data = snapshot.val();
+        const container = document.getElementById('savedWebhooksList');
+        
+        if (!container) return;
+        
+        if (!data || Object.keys(data).length === 0) {
+            container.innerHTML = '<p style="color: #666; text-align: center;">No saved webhooks yet.</p>';
+            return;
+        }
+        
+        container.innerHTML = '';
+        Object.entries(data).forEach(([id, webhook]) => {
+            const previewContent = webhook.content ? webhook.content.substring(0, 100) + (webhook.content.length > 100 ? '...' : '') : 'No content';
+            const previewEmbed = webhook.embedTitle || webhook.embedDesc ? `📎 Embed: ${webhook.embedTitle || 'No title'}` : '';
+            
+            container.innerHTML += `
+                <div class="saved-webhook-item" data-id="${id}">
+                    <div class="webhook-name">${escapeHtml(webhook.name)}</div>
+                    <div class="webhook-url">🔗 ${escapeHtml(webhook.webhookUrl || 'Channel ID: ' + webhook.channelId)}</div>
+                    <div class="webhook-preview">
+                        <strong>Message:</strong> ${escapeHtml(previewContent)}<br>
+                        ${previewEmbed ? `<strong>${previewEmbed}</strong>` : ''}
+                    </div>
+                    <div class="webhook-actions">
+                        <button class="btn-edit-webhook" onclick="editWebhook('${id}')">✏️ Edit</button>
+                        <button class="btn-test-webhook" onclick="testWebhook('${id}')">📤 Test</button>
+                        <button class="btn-delete-webhook" onclick="deleteWebhook('${id}')">🗑️ Delete</button>
+                    </div>
+                </div>
+            `;
+        });
+    });
+}
+
+async function loadChannelSelect() {
+    try {
+        const guildChannels = await fetch(`${BACKEND_URL}/guild-channels`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ guildId: REQUIRED_GUILD_ID })
+        });
+        
+        if (guildChannels.ok) {
+            const data = await guildChannels.json();
+            const select = document.getElementById('whChannelSelect');
+            if (select && data.channels) {
+                select.innerHTML = '<option value="">-- Select a channel --</option>';
+                data.channels.forEach(channel => {
+                    select.innerHTML += `<option value="${channel.id}">#${channel.name} (${channel.id})</option>`;
+                });
+            }
+        }
+    } catch (e) {
+        console.error("Failed to load channels:", e);
+    }
+}
+
+window.editWebhook = async (id) => {
+    const snap = await get(ref(db, `webhooks/${id}`));
+    const webhook = snap.val();
+    if (!webhook) return;
+    
+    document.getElementById('whName').value = webhook.name || '';
+    document.getElementById('whUrl').value = webhook.webhookUrl || '';
+    document.getElementById('whContent').value = webhook.content || '';
+    document.getElementById('whEmbedTitle').value = webhook.embedTitle || '';
+    document.getElementById('whEmbedDesc').value = webhook.embedDesc || '';
+    if (webhook.embedColor) document.getElementById('whEmbedColor').value = webhook.embedColor;
+    document.getElementById('whFooter').value = webhook.footer || '';
+    
+    showNotify(`Loaded webhook "${webhook.name}" for editing`, "success");
+    
+    // Temporarily change save button to update
+    const saveBtn = document.getElementById('saveWebhookBtn');
+    const originalText = saveBtn.innerHTML;
+    saveBtn.innerHTML = '✏️ Update Webhook';
+    saveBtn.onclick = () => updateWebhook(id);
+    
+    setTimeout(() => {
+        saveBtn.innerHTML = originalText;
+        saveBtn.onclick = () => saveWebhook();
+    }, 5000);
+};
+
+window.testWebhook = async (id) => {
+    const snap = await get(ref(db, `webhooks/${id}`));
+    const webhook = snap.val();
+    if (!webhook) return;
+    
+    showNotify("Sending test message...", "warning");
+    
+    let webhookUrl = webhook.webhookUrl;
+    if (!webhookUrl && webhook.channelId) {
+        webhookUrl = `https://discord.com/api/v10/channels/${webhook.channelId}/messages`;
+    }
+    
+    if (!webhookUrl) {
+        showNotify("No webhook URL or channel ID configured!", "error");
+        return;
+    }
+    
+    const embedData = (webhook.embedTitle || webhook.embedDesc) ? {
+        title: webhook.embedTitle,
+        description: webhook.embedDesc,
+        color: webhook.embedColor,
+        footer: webhook.footer
+    } : null;
+    
+    const success = await sendWebhookMessage(webhookUrl, "🧪 Test message from Owner Panel", embedData);
+    
+    if (success) {
+        showNotify("Test message sent successfully!", "success");
+    } else {
+        showNotify("Failed to send test message!", "error");
+    }
+};
+
+window.deleteWebhook = async (id) => {
+    if (!confirm("Are you sure you want to delete this webhook?")) return;
+    try {
+        await remove(ref(db, `webhooks/${id}`));
+        showNotify("Webhook deleted!", "success");
+        loadSavedWebhooks();
+    } catch (e) {
+        showNotify("Error deleting webhook!", "error");
+    }
+};
+
+async function saveWebhook() {
+    const name = document.getElementById('whName').value;
+    const webhookUrl = document.getElementById('whUrl').value;
+    const channelSelect = document.getElementById('whChannelSelect').value;
+    const customChannel = document.getElementById('whCustomChannel').value;
+    const content = document.getElementById('whContent').value;
+    const embedTitle = document.getElementById('whEmbedTitle').value;
+    const embedDesc = document.getElementById('whEmbedDesc').value;
+    const embedColor = document.getElementById('whEmbedColor').value;
+    const footer = document.getElementById('whFooter').value;
+    
+    if (!name) {
+        alert("Please enter a webhook name!");
+        return;
+    }
+    
+    const channelId = customChannel || channelSelect;
+    
+    const webhookData = {
+        name: name,
+        webhookUrl: webhookUrl || null,
+        channelId: channelId || null,
+        content: content,
+        embedTitle: embedTitle,
+        embedDesc: embedDesc,
+        embedColor: embedColor,
+        footer: footer,
+        createdAt: Date.now(),
+        createdBy: currentUser?.id
+    };
+    
+    try {
+        const newRef = push(ref(db, 'webhooks'));
+        await set(newRef, webhookData);
+        showNotify(`Webhook "${name}" saved successfully!`, "success");
+        
+        // Clear form
+        document.getElementById('whName').value = '';
+        document.getElementById('whUrl').value = '';
+        document.getElementById('whChannelSelect').value = '';
+        document.getElementById('whCustomChannel').value = '';
+        document.getElementById('whContent').value = '';
+        document.getElementById('whEmbedTitle').value = '';
+        document.getElementById('whEmbedDesc').value = '';
+        document.getElementById('whEmbedColor').value = '#5865F2';
+        document.getElementById('whFooter').value = '';
+        
+        loadSavedWebhooks();
+    } catch (e) {
+        showNotify("Error saving webhook!", "error");
+    }
+}
+
+async function updateWebhook(id) {
+    const name = document.getElementById('whName').value;
+    const webhookUrl = document.getElementById('whUrl').value;
+    const channelSelect = document.getElementById('whChannelSelect').value;
+    const customChannel = document.getElementById('whCustomChannel').value;
+    const content = document.getElementById('whContent').value;
+    const embedTitle = document.getElementById('whEmbedTitle').value;
+    const embedDesc = document.getElementById('whEmbedDesc').value;
+    const embedColor = document.getElementById('whEmbedColor').value;
+    const footer = document.getElementById('whFooter').value;
+    
+    const channelId = customChannel || channelSelect;
+    
+    const webhookData = {
+        name: name,
+        webhookUrl: webhookUrl || null,
+        channelId: channelId || null,
+        content: content,
+        embedTitle: embedTitle,
+        embedDesc: embedDesc,
+        embedColor: embedColor,
+        footer: footer,
+        updatedAt: Date.now(),
+        updatedBy: currentUser?.id
+    };
+    
+    try {
+        await update(ref(db, `webhooks/${id}`), webhookData);
+        showNotify(`Webhook "${name}" updated successfully!`, "success");
+        
+        // Reset save button
+        const saveBtn = document.getElementById('saveWebhookBtn');
+        saveBtn.innerHTML = '💾 Save Webhook';
+        saveBtn.onclick = () => saveWebhook();
+        
+        // Clear form
+        document.getElementById('whName').value = '';
+        document.getElementById('whUrl').value = '';
+        document.getElementById('whChannelSelect').value = '';
+        document.getElementById('whCustomChannel').value = '';
+        document.getElementById('whContent').value = '';
+        document.getElementById('whEmbedTitle').value = '';
+        document.getElementById('whEmbedDesc').value = '';
+        document.getElementById('whEmbedColor').value = '#5865F2';
+        document.getElementById('whFooter').value = '';
+        
+        loadSavedWebhooks();
+    } catch (e) {
+        showNotify("Error updating webhook!", "error");
+    }
+}
+
+async function sendWebhookNow() {
+    const webhookUrl = document.getElementById('whUrl').value;
+    const channelSelect = document.getElementById('whChannelSelect').value;
+    const customChannel = document.getElementById('whCustomChannel').value;
+    const content = document.getElementById('whContent').value;
+    const embedTitle = document.getElementById('whEmbedTitle').value;
+    const embedDesc = document.getElementById('whEmbedDesc').value;
+    const embedColor = document.getElementById('whEmbedColor').value;
+    const footer = document.getElementById('whFooter').value;
+    
+    let targetUrl = webhookUrl;
+    if (!targetUrl && (customChannel || channelSelect)) {
+        const channelId = customChannel || channelSelect;
+        targetUrl = `https://discord.com/api/v10/channels/${channelId}/messages`;
+    }
+    
+    if (!targetUrl) {
+        alert("Please enter a Webhook URL or select a channel!");
+        return;
+    }
+    
+    if (!content && !embedTitle && !embedDesc) {
+        alert("Please enter a message or embed content!");
+        return;
+    }
+    
+    const embedData = (embedTitle || embedDesc) ? {
+        title: embedTitle || undefined,
+        description: embedDesc || undefined,
+        color: parseInt(embedColor.replace('#', ''), 16),
+        footer: footer ? { text: footer } : undefined
+    } : null;
+    
+    showNotify("Sending message...", "warning");
+    
+    const success = await sendWebhookMessage(targetUrl, content, embedData);
+    
+    if (success) {
+        showNotify("Message sent successfully!", "success");
+    } else {
+        showNotify("Failed to send message! Check your webhook/channel.", "error");
+    }
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// ==========================================
+// 10. EVENT LISTENER & INITIALISIERUNG
 // ==========================================
 
 document.getElementById('discordLoginBtn')?.addEventListener('click', () => {
@@ -836,41 +1144,31 @@ document.getElementById('proofImage')?.addEventListener('change', (e) => {
 
 document.getElementById('addGPBtn')?.addEventListener('click', submitGPRequest);
 
-document.getElementById('adminDeductBtn')?.addEventListener('click', async () => {
-    const dbKey = document.getElementById('adminUserSelect')?.value;
-    const amount = parseInt(document.getElementById('adminDeductAmount')?.value);
-    if (!dbKey || isNaN(amount) || amount <= 0) return alert("Invalid selection.");
-    try {
-        const userRef = ref(db, `users/${dbKey}`);
-        const snap = await get(userRef);
-        if (snap.exists()) {
-            let newGP = (snap.val().totalGP || 0) - amount;
-            await update(userRef, { totalGP: newGP < 0 ? 0 : newGP });
-            showNotify(`Deducted ${amount.toLocaleString()} GP!`, "success");
-        }
-    } catch (e) {
-        alert("Error!");
-    }
-});
-
-document.getElementById('adminResetBtn')?.addEventListener('click', async () => {
-    const dbKey = document.getElementById('adminUserSelect')?.value;
-    if (!dbKey || !confirm("Reset user to 0 GP?")) return;
-    try {
-        await update(ref(db, `users/${dbKey}`), { totalGP: 0 });
-        showNotify(`User reset to 0 GP!`, "success");
-    } catch (e) {
-        alert("Error!");
-    }
-});
-
 document.getElementById('tabBtnSpenden')?.addEventListener('click', () => switchTab('Spenden'));
 document.getElementById('tabBtnLeaderboard')?.addEventListener('click', () => switchTab('Leaderboard'));
 document.getElementById('tabBtnProfile')?.addEventListener('click', () => switchTab('Profile'));
-document.getElementById('tabBtnAdmin')?.addEventListener('click', () => switchTab('Admin'));
+document.getElementById('tabBtnAdmin')?.addEventListener('click', () => {
+    if (hasAdminPermission()) {
+        switchTab('Admin');
+        loadAdminData();
+    } else {
+        showNotify("You don't have permission to access Admin Panel!", "error");
+    }
+});
+document.getElementById('tabBtnOwner')?.addEventListener('click', () => {
+    if (hasOwnerPermission()) {
+        switchTab('Owner');
+        loadSavedWebhooks();
+    } else {
+        showNotify("You don't have permission to access Owner Panel!", "error");
+    }
+});
+
+document.getElementById('saveWebhookBtn')?.addEventListener('click', saveWebhook);
+document.getElementById('sendWebhookBtn')?.addEventListener('click', sendWebhookNow);
 
 // ==========================================
-// 10. APP START (AUTH CHECK)
+// 11. APP START (AUTH CHECK)
 // ==========================================
 
 const urlParams = new URLSearchParams(window.location.search);
