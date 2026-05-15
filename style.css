@@ -1,92 +1,77 @@
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: 'Inter', sans-serif; background: #050505; color: #e2e8f0; min-height: 100vh; overflow-x: hidden; }
+/* Owner Panel Styles */
+.owner-tab {
+    background: linear-gradient(135deg, #ffd70020, #ffaa0020);
+    border-color: #ffd70040;
+    color: #ffd700;
+}
+.owner-tab.active {
+    background: #ffd700;
+    color: #000;
+}
+.owner-tab:hover {
+    background: #ffd70030;
+}
 
-.login-container { text-align: center; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #0a0a0a; padding: 50px 40px; border-radius: 25px; border: 1px solid #1f1f1f; width: 90%; max-width: 420px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
-.logo-main { width: 90px; height: 90px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 25px; font-weight: 800; font-size: 26px; letter-spacing: 1px; box-shadow: 0 8px 25px rgba(0,0,0,0.6); }
-.logo-pn { background: linear-gradient(135deg, #2b2b2b, #111); color: #fff; border: 2px solid #333; }
-.logo-rblx { background: linear-gradient(135deg, #111, #000); color: #fff; border: 2px solid #aaa; }
+.webhook-form input, .webhook-form textarea, .webhook-form select {
+    width: 100%;
+}
 
-h1, h2, h3 { letter-spacing: -0.5px; color: #fff; }
-.login-container h1, .login-container h2 { font-size: 28px; margin-bottom: 8px; }
-.login-container p { font-size: 15px; color: #888; margin-bottom: 35px; line-height: 1.5; }
-
-.btn-discord { background: #5865F2; color: white; border: none; padding: 16px 30px; border-radius: 12px; font-weight: 700; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.2s; text-decoration: none; font-size: 16px; box-shadow: 0 4px 15px rgba(88, 101, 242, 0.3); margin-bottom: 15px;}
-.btn-roblox { background: white; color: black; border: none; padding: 16px 30px; border-radius: 12px; font-weight: 700; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.2s; text-decoration: none; font-size: 16px; box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1); }
-.btn-discord:hover, .btn-roblox:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255,255,255,0.15); }
-
-.header { background: #0a0a0a; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1a1a1a; }
-.user-info { display: flex; align-items: center; gap: 15px; }
-.avatar { width: 48px; height: 48px; border-radius: 50%; border: 2px solid #5865F2; background: #1a1a1a; object-fit: cover; }
-
-.header-actions { display: flex; gap: 12px; }
-.btn-logout { padding: 10px 16px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 13px; transition: 0.2s; border: 1px solid transparent; display: flex; align-items: center; gap: 8px; }
-.btn-logout.rbx { background: rgba(255,255,255,0.05); color: #a0aec0; border-color: #2d3748; }
-.btn-logout.rbx:hover { background: #2d3748; color: white; }
-.btn-logout.dc { background: rgba(245, 101, 101, 0.1); color: #f56565; border-color: #f56565; }
-.btn-logout.dc:hover { background: #f56565; color: white; }
-
-.container { max-width: 1000px; margin: 40px auto; padding: 0 20px; }
-
-.nav-tabs-wrapper { overflow-x: auto; margin-bottom: 30px; padding-bottom: 5px; }
-.nav-tabs { display: flex; gap: 10px; min-width: max-content; }
-.nav-tab { background: #111; border: 1px solid #1f1f1f; color: #777; padding: 14px 28px; border-radius: 12px; cursor: pointer; transition: 0.2s; font-weight: 600; white-space: nowrap; }
-.nav-tab.active { background: white; color: black; box-shadow: 0 4px 15px rgba(255,255,255,0.1); }
-.nav-tab.admin-tab { background: #cd7f32; color: white; display: none; } 
-.nav-tab.admin-tab.active { background: #e68a2e; }
-
-.system-card { background: #0a0a0a; border: 1px solid #1f1f1f; border-radius: 20px; padding: 35px; margin-bottom: 20px; box-shadow: 0 8px 30px rgba(0,0,0,0.3); }
-input, select { width: 100%; background: #111; border: 1px solid #222; border-radius: 12px; padding: 16px; color: white; margin-bottom: 20px; outline: none; font-size: 16px; transition: 0.2s; }
-input:focus, select:focus { border-color: #5865F2; }
-
-.file-upload-wrapper { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
-input[type="file"] { display: none; }
-.custom-file-btn { background: #5865F2; color: white; padding: 14px 24px; border-radius: 10px; font-weight: 600; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 8px; border: none; }
-.custom-file-btn:hover { background: #4752c4; transform: translateY(-1px); }
-.file-instruction { color: #777; font-size: 14px; font-weight: 500; }
-
-#imagePreviewContainer { display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 25px; }
-.preview-box { position: relative; display: inline-block; }
-.preview-box img { width: 90px; height: 90px; object-fit: cover; border-radius: 12px; border: 2px solid #222; }
-.remove-img-btn { position: absolute; top: -8px; right: -8px; background: #f56565; color: white; border: none; border-radius: 50%; width: 26px; height: 26px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: 0.2s; }
-
-.btn-primary { background: white; color: black; border: none; padding: 16px 30px; border-radius: 12px; font-weight: 700; font-size: 16px; cursor: pointer; transition: 0.2s; width: 100%; }
-.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255,255,255,0.15); }
-.btn-primary:disabled { background: #333; color: #666; cursor: not-allowed; transform: none; }
-
-.btn-small { padding: 8px 12px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; color: white; }
-.btn-approve { background: #48bb78; }
-.btn-deny { background: #f56565; }
-
-.table-responsive { overflow-x: auto; width: 100%; border-radius: 10px; }
-.table { width: 100%; border-collapse: collapse; margin-top: 10px; min-width: 500px; }
-.table th { text-align: left; padding: 15px; color: #888; border-bottom: 1px solid #1f1f1f; font-weight: 600; white-space: nowrap; }
-.table td { padding: 15px; border-bottom: 1px solid #111; vertical-align: middle; }
-
-.user-name-cell { display: flex; flex-direction: column; }
-.display-name { font-weight: 600; color: #fff; font-size: 15px; }
-.username-handle { font-size: 12px; color: #777; margin-top: 3px; }
-
-.hidden { display: none !important; }
-.notification { position: fixed; top: 20px; right: 20px; padding: 16px 28px; border-radius: 12px; color: white; font-weight: 600; z-index: 1000; transition: 0.3s; transform: translateX(200%); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
-.notification.show { transform: translateX(0); }
-.bg-success { background: #48bb78; }
-.bg-error { background: #f56565; }
-.bg-warning { background: #cd7f32; }
-
-.status-badge { padding: 5px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; display: inline-block;}
-.status-pending { background: rgba(205, 127, 50, 0.2); color: #cd7f32; }
-.status-approved { background: rgba(72, 187, 120, 0.2); color: #48bb78; }
-.status-rejected { background: rgba(245, 101, 101, 0.2); color: #f56565; }
-
-.search-bar { position: relative; margin-bottom: 20px; }
-.search-bar i { position: absolute; left: 15px; top: 18px; color: #777; }
-.search-bar input { padding-left: 45px; margin-bottom: 0; }
-
-@media (max-width: 650px) {
-    .header { flex-direction: column; gap: 15px; padding: 15px 20px; text-align: center; }
-    .header-actions { justify-content: center; width: 100%; }
-    .user-info { flex-direction: column; gap: 10px; }
-    .user-info h2 { font-size: 18px; }
-    .system-card { padding: 20px; }
-    .btn-logout { flex: 1; justify-content: center; }
+.saved-webhook-item {
+    background: #0a0a0a;
+    border: 1px solid #222;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 12px;
+    transition: 0.2s;
+}
+.saved-webhook-item:hover {
+    border-color: #ffd70040;
+}
+.webhook-name {
+    font-size: 18px;
+    font-weight: bold;
+    color: #ffd700;
+    margin-bottom: 8px;
+}
+.webhook-url {
+    font-size: 12px;
+    color: #666;
+    font-family: monospace;
+    word-break: break-all;
+    margin-bottom: 10px;
+}
+.webhook-preview {
+    background: #0f0f0f;
+    border-radius: 8px;
+    padding: 10px;
+    margin: 10px 0;
+    font-size: 13px;
+    color: #aaa;
+    max-height: 100px;
+    overflow-y: auto;
+}
+.webhook-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+.webhook-actions button {
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+}
+.btn-edit-webhook {
+    background: #5865F2;
+    color: white;
+}
+.btn-test-webhook {
+    background: #48bb78;
+    color: white;
+}
+.btn-delete-webhook {
+    background: #f56565;
+    color: white;
 }
