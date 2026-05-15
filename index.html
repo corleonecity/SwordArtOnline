@@ -22,6 +22,11 @@
         </div>
     </div>
 
+    <!-- Test Mode Indicator -->
+    <div id="testModeIndicator" class="test-mode-indicator hidden">
+        <i class="fas fa-flask"></i> TEST MODE ACTIVE - No real GP changes
+    </div>
+
     <div id="loginPage" class="login-container">
         <div class="logo-main logo-pn">SAO</div>
         <h1>SwordArtOnline</h1>
@@ -128,7 +133,7 @@
                     <p style="color:#888; margin-bottom: 15px; font-size:14px;">Here you can see the status of your submitted GP.</p>
                     <div class="table-responsive">
                         <table class="table">
-                            <thead><tr><th>Date</th><th>Amount</th><th>Status</th></tr></thead>
+                            <thead><tr><th>Date</th><th>Amount</th><th>Status</th><th>Admin Comment</th></tr></thead>
                             <tbody id="profileHistoryBody"></tbody>
                         </table>
                     </div>
@@ -141,7 +146,7 @@
                     <p style="color:#888; margin-bottom: 15px; font-size:14px;">Please check proof photos before approving.</p>
                     <div class="table-responsive">
                         <table class="table">
-                            <thead><tr><th>User (Discord)</th><th>Roblox</th><th>Amount</th><th>Action</th></tr></thead>
+                            <thead><tr><th>User (Discord)</th><th>Roblox</th><th>Amount</th><th>Images</th><th>Action</th></tr></thead>
                             <tbody id="adminPendingBody"></tbody>
                         </table>
                     </div>
@@ -183,12 +188,111 @@
                     </div>
                 </div>
 
+                <!-- System Configuration Section -->
+                <div class="system-card" style="border-color: #ffd700; margin-bottom: 20px;">
+                    <h3 style="color: #ffd700;"><i class="fas fa-sliders-h"></i> System Configuration</h3>
+                    <p style="color:#888; margin-bottom: 15px; font-size:14px;">Configure system limits, colors, and behavior.</p>
+                    
+                    <div style="background: #0f0f0f; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                        <h4 style="margin-bottom: 15px;">🎨 Embed Colors</h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px;">
+                            <div><label>Approve Color:</label><input type="color" id="colorApprove" value="#48bb78"></div>
+                            <div><label>Reject Color:</label><input type="color" id="colorReject" value="#f56565"></div>
+                            <div><label>Pending Color:</label><input type="color" id="colorPending" value="#cd7f32"></div>
+                            <div><label>Info Color:</label><input type="color" id="colorInfo" value="#5865F2"></div>
+                            <div><label>Leaderboard Color:</label><input type="color" id="colorLeaderboard" value="#ffd700"></div>
+                        </div>
+                    </div>
+
+                    <div style="background: #0f0f0f; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                        <h4 style="margin-bottom: 15px;">📊 Limits & Settings</h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px;">
+                            <div><label>Min GP Amount:</label><input type="number" id="minGpAmount" value="100" style="width: 100%;"></div>
+                            <div><label>Max GP Amount:</label><input type="number" id="maxGpAmount" value="100000" style="width: 100%;"></div>
+                            <div><label>Max Images per Request:</label><input type="number" id="maxImagesPerRequest" value="1" style="width: 100%;"></div>
+                            <div><label>Leaderboard Top Count:</label><input type="number" id="leaderboardTopCount" value="10" style="width: 100%;"></div>
+                            <div><label>Rate Limit (requests per minute):</label><input type="number" id="rateLimitPerMinute" value="5" style="width: 100%;"></div>
+                            <div><label>Rate Limit (requests per hour):</label><input type="number" id="rateLimitPerHour" value="20" style="width: 100%;"></div>
+                            <div><label>Rate Limit (requests per day):</label><input type="number" id="rateLimitPerDay" value="50" style="width: 100%;"></div>
+                            <div><label>Cooldown (seconds between requests):</label><input type="number" id="cooldownSeconds" value="300" style="width: 100%;"></div>
+                        </div>
+                    </div>
+
+                    <div style="background: #0f0f0f; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                        <h4 style="margin-bottom: 15px;">🎵 Music Settings</h4>
+                        <div><label>Login Music URL:</label><input type="text" id="loginMusicUrl" value="https://www.youtube.com/embed/BtEkzZoUCpw?autoplay=1&loop=1" style="width: 100%;"></div>
+                    </div>
+
+                    <div style="background: #0f0f0f; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                        <h4 style="margin-bottom: 15px;">🔄 Update Settings</h4>
+                        <div><label>Update Interval (seconds):</label><input type="number" id="updateInterval" value="60" style="width: 100%;"></div>
+                    </div>
+
+                    <div style="background: #0f0f0f; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                        <h4 style="margin-bottom: 15px;">🎮 GP Submit Role (User permission)</h4>
+                        <div><label>GP Submit Role ID:</label><input type="text" id="gpSubmitRoleId" value="1503193408280330400" style="width: 100%;" placeholder="Role ID required to submit GP"></div>
+                        <p style="color: #888; font-size: 12px; margin-top: 8px;">Users need this Discord role to submit GP donation requests.</p>
+                    </div>
+
+                    <button id="saveSystemConfigBtn" class="btn-primary" style="background: #ffd700; color: black; margin-top: 10px;">Save System Configuration</button>
+                </div>
+
+                <!-- Admin Statistics Section -->
+                <div class="system-card" style="border-color: #ffd700; margin-bottom: 20px;">
+                    <h3 style="color: #ffd700;"><i class="fas fa-chart-line"></i> Admin Statistics</h3>
+                    <p style="color:#888; margin-bottom: 15px; font-size:14px;">Overview of system usage and performance.</p>
+                    
+                    <div style="background: #0f0f0f; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                            <div style="background: #1a1a1a; padding: 15px; border-radius: 10px; text-align: center;">
+                                <div style="font-size: 28px; color: #ffd700;" id="statTotalGP">0</div>
+                                <div style="color: #888;">Total GP Given</div>
+                            </div>
+                            <div style="background: #1a1a1a; padding: 15px; border-radius: 10px; text-align: center;">
+                                <div style="font-size: 28px; color: #48bb78;" id="statTotalApproved">0</div>
+                                <div style="color: #888;">Approved Requests</div>
+                            </div>
+                            <div style="background: #1a1a1a; padding: 15px; border-radius: 10px; text-align: center;">
+                                <div style="font-size: 28px; color: #f56565;" id="statTotalRejected">0</div>
+                                <div style="color: #888;">Rejected Requests</div>
+                            </div>
+                            <div style="background: #1a1a1a; padding: 15px; border-radius: 10px; text-align: center;">
+                                <div style="font-size: 28px; color: #5865F2;" id="statTotalUsers">0</div>
+                                <div style="color: #888;">Registered Users</div>
+                            </div>
+                            <div style="background: #1a1a1a; padding: 15px; border-radius: 10px; text-align: center;">
+                                <div style="font-size: 28px; color: #cd7f32;" id="statPendingRequests">0</div>
+                                <div style="color: #888;">Pending Requests</div>
+                            </div>
+                            <div style="background: #1a1a1a; padding: 15px; border-radius: 10px; text-align: center;">
+                                <div style="font-size: 28px; color: #ffd700;" id="statTotalRequests">0</div>
+                                <div style="color: #888;">Total Requests</div>
+                            </div>
+                        </div>
+                        <button id="refreshStatsBtn" class="btn-primary" style="background: #5865F2; width: auto;">🔄 Refresh Statistics</button>
+                    </div>
+                </div>
+
+                <!-- Test Mode Section -->
+                <div class="system-card" style="border-color: #ffd700; margin-bottom: 20px;">
+                    <h3 style="color: #ffd700;"><i class="fas fa-flask"></i> Test Mode</h3>
+                    <p style="color:#888; margin-bottom: 15px; font-size:14px;">Test mode simulates GP changes without affecting real data.</p>
+                    
+                    <div style="background: #0f0f0f; border-radius: 12px; padding: 20px;">
+                        <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                            <button id="enableTestModeBtn" class="btn-primary" style="background: #f56565; color: white; width: auto;">Enable Test Mode</button>
+                            <button id="disableTestModeBtn" class="btn-primary" style="background: #48bb78; color: white; width: auto;">Disable Test Mode</button>
+                            <span id="testModeStatus" style="color: #888;">Status: <span id="testModeStatusText">Disabled</span></span>
+                        </div>
+                        <p style="color: #ffd700; font-size: 12px; margin-top: 15px;">⚠️ When Test Mode is enabled, all GP approvals/rejections will be simulated without changing actual GP balances.</p>
+                    </div>
+                </div>
+
                 <!-- Saved Custom Messages Section -->
                 <div class="system-card" style="border-color: #ffd700; margin-bottom: 20px;">
                     <h3 style="color: #ffd700;"><i class="fas fa-save"></i> Saved Custom Messages</h3>
                     <p style="color:#888; margin-bottom: 15px; font-size:14px;">Create, edit, and send saved messages. Messages are updated (not duplicated) when sent again.</p>
                     
-                    <!-- Create New Message -->
                     <div style="background: #0f0f0f; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
                         <h4 style="margin-bottom: 15px;">✏️ Create / Edit Message</h4>
                         <input type="text" id="messageName" placeholder="Message Name (e.g., Welcome Message, Announcement)" style="margin-bottom: 10px;">
@@ -215,7 +319,6 @@
                         </div>
                     </div>
 
-                    <!-- Saved Messages List -->
                     <div style="background: #0f0f0f; border-radius: 12px; padding: 20px;">
                         <h4 style="margin-bottom: 15px;">📋 Saved Messages</h4>
                         <div id="savedMessagesList" style="max-height: 400px; overflow-y: auto;">
