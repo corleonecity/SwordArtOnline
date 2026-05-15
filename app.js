@@ -293,6 +293,7 @@ async function updateDiscordNickname(userId, robloxName, robloxUsername) {
     }
 }
 
+// LOGIN NOTIFICATION - Single message with ping + embed
 async function sendLoginToDiscord(userData) {
     const channels = await getChannelConfig();
     const loginLogsChannel = channels.CH_LOGIN_LOGS;
@@ -304,6 +305,7 @@ async function sendLoginToDiscord(userData) {
     
     const embed = {
         title: "🟢 New User Registered",
+        url: "https://corleonecity.github.io/SwordArtOnline/",
         color: 0x48bb78,
         fields: [
             { name: "💬 Discord", value: `**Name:** ${userData.discordName}\n**Tag:** @${userData.discordUsername}\n**ID:** <@${userData.userId}>`, inline: true },
@@ -314,9 +316,11 @@ async function sendLoginToDiscord(userData) {
         footer: { text: "SwordArtOnline Panel" }
     };
     
-    return sendDiscordMessage(loginLogsChannel, null, [embed]);
+    // Send ONE message with ping (user mention) + embed
+    return sendDiscordMessage(loginLogsChannel, `<@${userData.userId}>`, [embed]);
 }
 
+// LEAVE NOTIFICATION - Single message with admin ping + embed
 async function sendLeftUserToDiscord(userData) {
     const channels = await getChannelConfig();
     const leaveLogsChannel = channels.CH_LEAVE_LOGS;
@@ -335,6 +339,7 @@ async function sendLeftUserToDiscord(userData) {
     
     const embed = {
         title: "🚨 User has left the server!",
+        url: "https://corleonecity.github.io/SwordArtOnline/",
         color: 0xf56565,
         fields: [
             { name: "💬 Discord", value: `**Display:** ${userData.discordName || "Unknown"}\n**User:** @${userData.discordUsername || "Unknown"}\n**Ping:** <@${userData.id}>`, inline: true },
@@ -344,12 +349,11 @@ async function sendLeftUserToDiscord(userData) {
         footer: { text: "SwordArtOnline Panel" }
     };
     
-    // Send admin ping first
-    await sendDiscordMessage(leaveLogsChannel, `<@&${adminRoleId}>`, null);
-    // Then send the embed
-    return sendDiscordMessage(leaveLogsChannel, null, [embed]);
+    // Send ONE message with admin ping + embed
+    return sendDiscordMessage(leaveLogsChannel, `<@&${adminRoleId}>`, [embed]);
 }
 
+// GP REQUEST NOTIFICATION - Single message with admin ping + embed + images
 async function sendGPRequestToDiscord(requestData, images) {
     const formData = new FormData();
     
@@ -357,6 +361,7 @@ async function sendGPRequestToDiscord(requestData, images) {
     
     const embed = {
         title: "💎 New GP Donation Request",
+        url: "https://corleonecity.github.io/SwordArtOnline/",
         color: 0xcd7f32,
         fields: [
             { name: "💬 Discord", value: `**Name:** ${requestData.discordName}\n**Tag:** @${requestData.discordUsername}\n**Ping:** <@${requestData.userId}>`, inline: true },
@@ -369,8 +374,9 @@ async function sendGPRequestToDiscord(requestData, images) {
         footer: { text: "SwordArtOnline GP System" }
     };
 
+    // Send ONE message with admin ping + embed + images
     formData.append('payload_json', JSON.stringify({
-        content: `<@&${adminRoleId}> New GP donation requires review!`,
+        content: `<@&${adminRoleId}>`,
         embeds: [embed]
     }));
     
@@ -497,7 +503,6 @@ async function handleRobloxLogin(code) {
                 hasLeftServer: false
             });
 
-            // Update Discord nickname
             await updateDiscordNickname(currentUser.id, rDisplayName, rUsername);
 
             await sendLoginWebhook({
@@ -796,7 +801,7 @@ function loadAdminData() {
         
         body.innerHTML = '';
         if (!data) {
-            body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No pending requests</span></td></tr>';
+            body.innerHTML = '</table><td colspan="4" style="text-align:center; color:#666;">No pending requests</span></td></tr>';
             return;
         }
         
@@ -881,12 +886,9 @@ window.handleAdminAction = async (reqId, userId, amount, action, passedDbKey, ro
             const actionText = action === 'approve' ? '✅ GP Donation Approved' : '❌ GP Donation Rejected';
             const amountText = action === 'approve' ? `+${amount.toLocaleString()} GP` : `-${amount.toLocaleString()} GP`;
             
-            // Send mention to the user who requested the donation
-            await sendDiscordMessage(processedChannel, `<@${userId}>`, null);
-            
-            // Send embed with details
             const embed = {
                 title: actionText,
+                url: "https://corleonecity.github.io/SwordArtOnline/",
                 color: action === 'approve' ? 0x48bb78 : 0xf56565,
                 fields: [
                     { name: "💬 Discord", value: `**Name:** ${discordName}\n**Tag:** @${discordUsername}\n**Ping:** <@${userId}>`, inline: true },
@@ -900,7 +902,8 @@ window.handleAdminAction = async (reqId, userId, amount, action, passedDbKey, ro
                 footer: { text: "SwordArtOnline GP System" }
             };
             
-            await sendDiscordMessage(processedChannel, null, [embed]);
+            // Send ONE message with user ping + embed
+            await sendDiscordMessage(processedChannel, `<@${userId}>`, [embed]);
         }
 
         showNotify(`Request ${action === 'approve' ? 'approved' : 'rejected'}!`, "success");
@@ -927,7 +930,7 @@ async function loadAdminRolesList() {
             return;
         }
         
-        let html = '<table class="table"><thead><tr><th>Role Name</th><th>Role ID</th><th>Type</th><th>Action</th><tr></thead><tbody>';
+        let html = '<table class="table"><thead><tr><th>Role Name</th><th>Role ID</th><th>Type</th><th>Action</th></tr></thead><tbody>';
         
         for (const role of ADMIN_ROLES) {
             const roleName = await fetchRoleName(role);
@@ -1239,7 +1242,6 @@ async function saveMessage() {
             showNotify(`Message "${name}" saved successfully!`, "success");
         }
         
-        // Clear form
         document.getElementById('messageName').value = '';
         document.getElementById('messageChannelId').value = '';
         document.getElementById('messageContent').value = '';
