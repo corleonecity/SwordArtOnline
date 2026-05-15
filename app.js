@@ -8,6 +8,9 @@ const OWNER_USER_ID = '917426398120005653';
 let ADMIN_ROLES = ['1503609455466643547'];
 let OWNER_ROLES = ['1504646932243546152'];
 
+// Role name cache
+let roleNameCache = {};
+
 const DISCORD_CLIENT_ID = '1503179151073345678';
 const ROBLOX_CLIENT_ID = '1529843549493669743';
 
@@ -39,6 +42,7 @@ let selectedFiles = [];
 let allUsersData = {};
 let liveCheckInterval = null;
 let userGuildRoles = [];
+let currentEditingMessageId = null;
 
 // ==========================================
 // 2. LOAD CONFIGURATIONS FROM FIREBASE
@@ -207,6 +211,27 @@ async function fetchUserRoles(userId) {
     return userGuildRoles;
 }
 
+async function fetchRoleName(roleId) {
+    if (roleNameCache[roleId]) return roleNameCache[roleId];
+    
+    try {
+        const response = await fetch(`${BACKEND_URL}/role-name`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ roleId: roleId, guildId: '1439377447630930084' })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            roleNameCache[roleId] = data.name || roleId;
+            return roleNameCache[roleId];
+        }
+    } catch (e) {
+        console.warn("Error fetching role name:", e);
+    }
+    return roleId;
+}
+
 // ==========================================
 // 4. DISCORD BOT MESSAGES
 // ==========================================
@@ -218,6 +243,10 @@ async function sendDiscordMessage(channelId, content, embeds = null) {
     }
     
     try {
+        const body = {};
+        if (content) body.content = content;
+        if (embeds && embeds.length > 0) body.embeds = embeds;
+        
         const response = await fetch(`${BACKEND_URL}/send-channel-message`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -444,7 +473,7 @@ function showDashboard() {
         loadAdminRolesList();
         loadChannelConfigUI();
         loadKickLogs();
-        loadEditableBoards();
+        loadSavedMessages();
     }
 }
 
@@ -737,21 +766,20 @@ window.handleAdminAction = async (reqId, userId, amount, action, passedDbKey, ro
         const processedChannel = channels.CH_GP_PROCESSED;
         
         if (processedChannel) {
-            const embed = {
-                title: action === 'approve' ? "✅ GP Donation Approved" : "❌ GP Donation Rejected",
-                color: action === 'approve' ? 0x48bb78 : 0xf56565,
-                fields: [
-                    { name: "💬 Discord", value: `**Name:** ${discordName}\n**Tag:** @${discordUsername}\n**Ping:** <@${userId}>`, inline: true },
-                    { name: "🎮 Roblox", value: `**Name:** ${robloxName}\n**User:** @${robloxUsername}\n**Profile:** [Click Here](https://www.roblox.com/users/${robloxId}/profile)`, inline: true },
-                    { name: "💰 Amount", value: `**${action === 'approve' ? '+' : '-'}${amount.toLocaleString()} GP**`, inline: false },
-                    { name: "📊 New Total", value: `**${newTotal.toLocaleString()} GP**`, inline: true },
-                    { name: "🏆 Rank", value: `**#${rank}**`, inline: true },
-                    { name: "🛡️ Processed By", value: `<@${currentUser.id}>`, inline: false }
-                ],
-                timestamp: new Date().toISOString(),
-                footer: { text: "SwordArtOnline GP System" }
-            };
-            await sendDiscordMessage(processedChannel, null, [embed]);
+            // Normal text message (not embed)
+            const actionText = action === 'approve' ? '✅ GP Donation Approved' : '❌ GP Donation Rejected';
+            const amountText = action === 'approve' ? `+${amount.toLocaleString()} GP` : `-${amount.toLocaleString()} GP`;
+            
+            const message = `${actionText}\n\n` +
+                `**💬 Discord**\nName: ${discordName}\nTag: @${discordUsername}\nPing: <@${userId}>\n\n` +
+                `**🎮 Roblox**\nName: ${robloxName}\nUser: @${robloxUsername}\nProfile: https://www.roblox.com/users/${robloxId}/profile\n\n` +
+                `**💰 Amount**\n${amountText}\n\n` +
+                `**📊 New Total**\n${newTotal.toLocaleString()} GP\n\n` +
+                `**🏆 Rank**\n#${rank}\n\n` +
+                `**🛡️ Processed By**\n<@${currentUser.id}>\n\n` +
+                `SwordArtOnline GP System • ${new Date().toLocaleString()}`;
+            
+            await sendDiscordMessage(processedChannel, message, null);
         }
 
         showNotify(`Request ${action === 'approve' ? 'approved' : 'rejected'}!`, "success");
@@ -778,15 +806,17 @@ async function loadAdminRolesList() {
             return;
         }
         
-        let html = '<table class="table"><thead><tr><th>Role ID</th><th>Type</th><th>Action</th></tr></thead><tbody>';
+        let html = '<table class="table"><thead><tr><th>Role Name</th><th>Role ID</th><th>Type</th><th>Action</th></tr></thead><tbody>';
         
-        ADMIN_ROLES.forEach(role => {
-            html += `<tr><td><code>${escapeHtml(role)}</code></td><td><span class="status-badge status-approved">Admin</span></td><td><button class="btn-small btn-remove-role" onclick="removeAdminRole('${role}')">Remove</button></td></tr>`;
-        });
+        for (const role of ADMIN_ROLES) {
+            const roleName = await fetchRoleName(role);
+            html += `<tr><td><span class="status-badge status-approved">${escapeHtml(roleName)}</span></td><td><code>${escapeHtml(role)}</code></td><td>Admin</td><td><button class="btn-small btn-remove-role" onclick="removeAdminRole('${role}')">Remove</button></td></tr>`;
+        }
         
-        OWNER_ROLES.forEach(role => {
-            html += `<tr><td><code>${escapeHtml(role)}</code></td><td><span class="status-badge status-pending">Owner</span></td><td><button class="btn-small btn-remove-role" onclick="removeOwnerRole('${role}')">Remove</button></td></tr>`;
-        });
+        for (const role of OWNER_ROLES) {
+            const roleName = await fetchRoleName(role);
+            html += `<tr><td><span class="status-badge status-pending">${escapeHtml(roleName)}</span></td><td><code>${escapeHtml(role)}</code></td><td>Owner</td><td><button class="btn-small btn-remove-role" onclick="removeOwnerRole('${role}')">Remove</button></td></tr>`;
+        }
         
         html += '</tbody></table>';
         container.innerHTML = html;
@@ -821,7 +851,7 @@ window.addAdminRole = async () => {
             ownerRoles: OWNER_ROLES
         });
         
-        showNotify(`Role ${roleId} added as ${permissionLevel}!`, "success");
+        showNotify(`Role added as ${permissionLevel}!`, "success");
         document.getElementById('newRoleId').value = '';
         await loadAdminRolesList();
         await fetchUserRoles(currentUser.id);
@@ -838,7 +868,7 @@ window.removeAdminRole = async (roleId) => {
             adminRoles: ADMIN_ROLES,
             ownerRoles: OWNER_ROLES
         });
-        showNotify(`Role ${roleId} removed from admin!`, "success");
+        showNotify(`Role removed from admin!`, "success");
         await loadAdminRolesList();
         await fetchUserRoles(currentUser.id);
     }
@@ -852,7 +882,7 @@ window.removeOwnerRole = async (roleId) => {
             adminRoles: ADMIN_ROLES,
             ownerRoles: OWNER_ROLES
         });
-        showNotify(`Role ${roleId} removed from owner!`, "success");
+        showNotify(`Role removed from owner!`, "success");
         await loadAdminRolesList();
         await fetchUserRoles(currentUser.id);
     }
@@ -930,7 +960,6 @@ async function saveChannelConfig() {
         }
         
         await loadChannelConfigUI();
-        await loadEditableBoards();
     } catch (e) {
         console.error("Error saving config:", e);
         showNotify("Error saving configuration!", "error");
@@ -985,252 +1014,188 @@ async function setMaintenanceMode(enabled) {
 }
 
 // ==========================================
-// 11. EDITABLE BOARDS FUNCTIONS
+// 11. SAVED MESSAGES FUNCTIONS
 // ==========================================
 
-async function loadEditableBoards() {
-    const channels = await getChannelConfig();
-    
-    const chUserInfoDisplay = document.getElementById('chUserInfoDisplay');
-    const chPanelInfoDisplay = document.getElementById('chPanelInfoDisplay');
-    const chLeaderboardDisplay = document.getElementById('chLeaderboardDisplay');
-    
-    if (chUserInfoDisplay) chUserInfoDisplay.textContent = channels.CH_USER_INFO || 'Not configured';
-    if (chPanelInfoDisplay) chPanelInfoDisplay.textContent = channels.CH_PANEL_INFO || 'Not configured';
-    if (chLeaderboardDisplay) chLeaderboardDisplay.textContent = channels.CH_LEADERBOARD || 'Not configured';
-    
-    const boardsRef = ref(db, 'config/boards');
-    const snap = await get(boardsRef);
-    const boards = snap.val() || {};
-    
-    const userInfoTextarea = document.getElementById('editUserInfoBoard');
-    if (userInfoTextarea) {
-        userInfoTextarea.value = boards.userInfoContent || '🛡️ **Guild User Info**\n\nWelcome to the SwordArtOnline server!\n\n**Guild Members:**\n{USER_LIST}\n\n**Last Updated:** {TIMESTAMP}';
-    }
-    
-    const panelInfoTextarea = document.getElementById('editPanelInfoBoard');
-    if (panelInfoTextarea) {
-        panelInfoTextarea.value = boards.panelInfoContent || '💻 **Panel Registration Info**\n\n**Registered Users:**\n{REGISTERED_LIST}\n\n**Unregistered Users:**\n{UNREGISTERED_LIST}\n\n**Last Updated:** {TIMESTAMP}';
-    }
-    
-    const leaderboardTextarea = document.getElementById('editLeaderboardBoard');
-    if (leaderboardTextarea) {
-        leaderboardTextarea.value = boards.leaderboardContent || '🏆 **Top 10 GP Donators**\n\n{TOP_USERS}\n\n**Last Updated:** {TIMESTAMP}\n\n🔗 [View Full Leaderboard](https://corleonecity.github.io/SwordArtOnline/)';
-    }
-}
-
-async function fetchGuildMembers() {
-    try {
-        const response = await fetch(`${BACKEND_URL}/guild-members`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ guildId: '1439377447630930084' })
-        });
-        const data = await response.json();
-        return data.members || [];
-    } catch (e) {
-        console.error("Failed to fetch guild members:", e);
-        return [];
-    }
-}
-
-async function fetchRegisteredUsers() {
-    const usersRef = ref(db, 'users');
-    const snap = await get(usersRef);
-    const users = snap.val() || {};
-    
-    const registered = [];
-    const unregistered = [];
-    
-    for (const [key, user] of Object.entries(users)) {
-        if (user.robloxId && user.robloxId !== '1') {
-            registered.push(`<@${user.id}> - ${user.robloxName || 'Unknown'}`);
-        } else if (user.id) {
-            unregistered.push(`<@${user.id}>`);
+async function loadSavedMessages() {
+    const messagesRef = ref(db, 'saved_messages');
+    onValue(messagesRef, (snapshot) => {
+        const data = snapshot.val();
+        const container = document.getElementById('savedMessagesList');
+        
+        if (!container) return;
+        
+        if (!data || Object.keys(data).length === 0) {
+            container.innerHTML = '<p style="color: #666; text-align: center;">No saved messages yet. Create one above!</p>';
+            return;
         }
-    }
-    
-    return { registered, unregistered };
-}
-
-async function fetchTopUsers() {
-    const usersRef = ref(db, 'users');
-    const snap = await get(usersRef);
-    const users = snap.val() || {};
-    
-    const topUsers = Object.values(users)
-        .filter(u => u.totalGP && u.totalGP > 0)
-        .sort((a, b) => (b.totalGP || 0) - (a.totalGP || 0))
-        .slice(0, 10);
-    
-    let leaderboardText = '';
-    topUsers.forEach((u, i) => {
-        let rankEmoji = '🏅';
-        if (i === 0) rankEmoji = '🥇';
-        else if (i === 1) rankEmoji = '🥈';
-        else if (i === 2) rankEmoji = '🥉';
-        leaderboardText += `${rankEmoji} **${i + 1}.** <@${u.id}> | **${(u.totalGP || 0).toLocaleString()} GP**\n`;
+        
+        container.innerHTML = '';
+        Object.entries(data).forEach(([id, msg]) => {
+            const previewContent = msg.content ? (msg.content.substring(0, 100) + (msg.content.length > 100 ? '...' : '')) : 'No content';
+            
+            container.innerHTML += `
+                <div class="saved-message-item" data-id="${id}">
+                    <div class="message-name">📝 ${escapeHtml(msg.name)}</div>
+                    <div class="message-channel">📡 Channel ID: ${escapeHtml(msg.channelId || 'Not set')}</div>
+                    <div class="message-preview">
+                        <strong>Message:</strong> ${escapeHtml(previewContent)}
+                        ${msg.embedTitle ? `<br><strong>Embed:</strong> ${escapeHtml(msg.embedTitle)}` : ''}
+                    </div>
+                    <div class="message-actions">
+                        <button class="btn-edit-message" onclick="editSavedMessage('${id}')">✏️ Edit</button>
+                        <button class="btn-send-message" onclick="sendSavedMessage('${id}')">📤 Send Now</button>
+                        <button class="btn-delete-message" onclick="deleteSavedMessage('${id}')">🗑️ Delete</button>
+                    </div>
+                </div>
+            `;
+        });
     });
-    
-    if (topUsers.length === 0) {
-        leaderboardText = '*No verified donations yet.*';
-    }
-    
-    return leaderboardText;
 }
 
-function replacePlaceholders(content, replacements) {
-    let result = content;
-    for (const [placeholder, value] of Object.entries(replacements)) {
-        result = result.replace(new RegExp(`\\{${placeholder}\\}`, 'g'), value);
-    }
-    return result;
-}
+window.editSavedMessage = async (id) => {
+    const snap = await get(ref(db, `saved_messages/${id}`));
+    const msg = snap.val();
+    if (!msg) return;
+    
+    currentEditingMessageId = id;
+    
+    document.getElementById('messageName').value = msg.name || '';
+    document.getElementById('messageChannelId').value = msg.channelId || '';
+    document.getElementById('messageContent').value = msg.content || '';
+    document.getElementById('messageEmbedTitle').value = msg.embedTitle || '';
+    document.getElementById('messageEmbedDesc').value = msg.embedDesc || '';
+    if (msg.embedColor) document.getElementById('messageEmbedColor').value = msg.embedColor;
+    
+    const saveBtn = document.getElementById('saveMessageBtn');
+    saveBtn.textContent = '✏️ Update Message';
+    saveBtn.style.background = '#ffd700';
+    
+    showNotify(`Editing "${msg.name}" - Click Update to save changes`, "success");
+};
 
-async function updateUserInfoBoard() {
-    const content = document.getElementById('editUserInfoBoard').value;
-    if (!content) {
-        showNotify("Please enter content for the board!", "error");
+async function saveMessage() {
+    const name = document.getElementById('messageName').value.trim();
+    const channelId = document.getElementById('messageChannelId').value.trim();
+    const content = document.getElementById('messageContent').value;
+    const embedTitle = document.getElementById('messageEmbedTitle').value;
+    const embedDesc = document.getElementById('messageEmbedDesc').value;
+    const embedColor = document.getElementById('messageEmbedColor').value;
+    
+    if (!name) {
+        showNotify("Please enter a message name!", "error");
         return;
     }
-    
-    const boardsRef = ref(db, 'config/boards');
-    await update(boardsRef, { userInfoContent: content });
-    
-    const members = await fetchGuildMembers();
-    const userList = members.map(m => `<@${m.user.id}>`).join('\n') || '*None*';
-    
-    const finalContent = replacePlaceholders(content, {
-        USER_LIST: userList,
-        TIMESTAMP: new Date().toLocaleString()
-    });
-    
-    const channels = await getChannelConfig();
-    const channelId = channels.CH_USER_INFO;
     
     if (!channelId) {
-        showNotify("Channel ID not configured! Please configure CH_USER_INFO first.", "error");
+        showNotify("Please enter a channel ID!", "error");
         return;
     }
     
-    showNotify("Updating User Info Board...", "warning");
+    const messageData = {
+        name: name,
+        channelId: channelId,
+        content: content,
+        embedTitle: embedTitle,
+        embedDesc: embedDesc,
+        embedColor: embedColor,
+        updatedAt: Date.now(),
+        updatedBy: currentUser?.id
+    };
     
-    const success = await sendDiscordMessage(channelId, finalContent, null);
+    try {
+        if (currentEditingMessageId) {
+            await update(ref(db, `saved_messages/${currentEditingMessageId}`), messageData);
+            showNotify(`Message "${name}" updated successfully!`, "success");
+            currentEditingMessageId = null;
+            
+            const saveBtn = document.getElementById('saveMessageBtn');
+            saveBtn.textContent = '💾 Save Message';
+            saveBtn.style.background = '#48bb78';
+        } else {
+            const newRef = push(ref(db, 'saved_messages'));
+            await set(newRef, { ...messageData, createdAt: Date.now(), createdBy: currentUser?.id });
+            showNotify(`Message "${name}" saved successfully!`, "success");
+        }
+        
+        // Clear form
+        document.getElementById('messageName').value = '';
+        document.getElementById('messageChannelId').value = '';
+        document.getElementById('messageContent').value = '';
+        document.getElementById('messageEmbedTitle').value = '';
+        document.getElementById('messageEmbedDesc').value = '';
+        document.getElementById('messageEmbedColor').value = '#5865F2';
+        
+        loadSavedMessages();
+    } catch (e) {
+        showNotify("Error saving message!", "error");
+    }
+}
+
+window.sendSavedMessage = async (id) => {
+    const snap = await get(ref(db, `saved_messages/${id}`));
+    const msg = snap.val();
+    if (!msg) return;
+    
+    if (!msg.channelId) {
+        showNotify("No channel ID configured for this message!", "error");
+        return;
+    }
+    
+    let embeds = null;
+    if (msg.embedTitle || msg.embedDesc) {
+        embeds = [{
+            title: msg.embedTitle || undefined,
+            description: msg.embedDesc || undefined,
+            color: msg.embedColor ? parseInt(msg.embedColor.replace('#', ''), 16) : 0x5865F2,
+            timestamp: new Date().toISOString()
+        }];
+    }
+    
+    showNotify(`Sending "${msg.name}"...`, "warning");
+    
+    const success = await sendDiscordMessage(msg.channelId, msg.content, embeds);
     
     if (success) {
-        showNotify("User Info Board updated successfully!", "success");
+        showNotify(`Message "${msg.name}" sent successfully!`, "success");
     } else {
-        showNotify("Failed to update board!", "error");
+        showNotify(`Failed to send "${msg.name}"!`, "error");
     }
+};
+
+window.deleteSavedMessage = async (id) => {
+    if (!confirm("Are you sure you want to delete this message?")) return;
+    try {
+        await remove(ref(db, `saved_messages/${id}`));
+        showNotify("Message deleted!", "success");
+        loadSavedMessages();
+    } catch (e) {
+        showNotify("Error deleting message!", "error");
+    }
+};
+
+function clearMessageForm() {
+    currentEditingMessageId = null;
+    document.getElementById('messageName').value = '';
+    document.getElementById('messageChannelId').value = '';
+    document.getElementById('messageContent').value = '';
+    document.getElementById('messageEmbedTitle').value = '';
+    document.getElementById('messageEmbedDesc').value = '';
+    document.getElementById('messageEmbedColor').value = '#5865F2';
+    
+    const saveBtn = document.getElementById('saveMessageBtn');
+    saveBtn.textContent = '💾 Save Message';
+    saveBtn.style.background = '#48bb78';
+    
+    showNotify("Form cleared!", "success");
 }
 
-async function updatePanelInfoBoard() {
-    const content = document.getElementById('editPanelInfoBoard').value;
-    if (!content) {
-        showNotify("Please enter content for the board!", "error");
-        return;
-    }
-    
-    const boardsRef = ref(db, 'config/boards');
-    await update(boardsRef, { panelInfoContent: content });
-    
-    const { registered, unregistered } = await fetchRegisteredUsers();
-    
-    const finalContent = replacePlaceholders(content, {
-        REGISTERED_LIST: registered.join('\n') || '*None*',
-        UNREGISTERED_LIST: unregistered.join('\n') || '*None*',
-        TIMESTAMP: new Date().toLocaleString()
-    });
-    
-    const channels = await getChannelConfig();
-    const channelId = channels.CH_PANEL_INFO;
-    
-    if (!channelId) {
-        showNotify("Channel ID not configured! Please configure CH_PANEL_INFO first.", "error");
-        return;
-    }
-    
-    showNotify("Updating Panel Info Board...", "warning");
-    
-    const success = await sendDiscordMessage(channelId, finalContent, null);
-    
-    if (success) {
-        showNotify("Panel Info Board updated successfully!", "success");
-    } else {
-        showNotify("Failed to update board!", "error");
-    }
-}
-
-async function updateLeaderboardBoard() {
-    const content = document.getElementById('editLeaderboardBoard').value;
-    if (!content) {
-        showNotify("Please enter content for the board!", "error");
-        return;
-    }
-    
-    const boardsRef = ref(db, 'config/boards');
-    await update(boardsRef, { leaderboardContent: content });
-    
-    const topUsersList = await fetchTopUsers();
-    
-    const finalContent = replacePlaceholders(content, {
-        TOP_USERS: topUsersList,
-        TIMESTAMP: new Date().toLocaleString()
-    });
-    
-    const channels = await getChannelConfig();
-    const channelId = channels.CH_LEADERBOARD;
-    
-    if (!channelId) {
-        showNotify("Channel ID not configured! Please configure CH_LEADERBOARD first.", "error");
-        return;
-    }
-    
-    showNotify("Updating Leaderboard Board...", "warning");
-    
-    const success = await sendDiscordMessage(channelId, finalContent, null);
-    
-    if (success) {
-        showNotify("Leaderboard Board updated successfully!", "success");
-    } else {
-        showNotify("Failed to update board!", "error");
-    }
-}
-
-async function refreshBoardContent(boardType) {
-    const boardsRef = ref(db, 'config/boards');
-    const snap = await get(boardsRef);
-    const boards = snap.val() || {};
-    
-    switch(boardType) {
-        case 'userInfo':
-            const userInfoTextarea = document.getElementById('editUserInfoBoard');
-            if (userInfoTextarea && boards.userInfoContent) {
-                userInfoTextarea.value = boards.userInfoContent;
-            }
-            break;
-        case 'panelInfo':
-            const panelInfoTextarea = document.getElementById('editPanelInfoBoard');
-            if (panelInfoTextarea && boards.panelInfoContent) {
-                panelInfoTextarea.value = boards.panelInfoContent;
-            }
-            break;
-        case 'leaderboard':
-            const leaderboardTextarea = document.getElementById('editLeaderboardBoard');
-            if (leaderboardTextarea && boards.leaderboardContent) {
-                leaderboardTextarea.value = boards.leaderboardContent;
-            }
-            break;
-    }
-    showNotify(`Content refreshed!`, "success");
-}
-
-async function sendBotMessage() {
-    const channelId = document.getElementById('targetChannelId').value.trim();
-    const content = document.getElementById('botMessageContent').value;
-    const embedTitle = document.getElementById('botEmbedTitle').value;
-    const embedDesc = document.getElementById('botEmbedDesc').value;
-    const embedColor = document.getElementById('botEmbedColor').value;
+async function sendTempMessage() {
+    const channelId = document.getElementById('tempChannelId').value.trim();
+    const content = document.getElementById('tempMessageContent').value;
+    const embedTitle = document.getElementById('tempEmbedTitle').value;
+    const embedDesc = document.getElementById('tempEmbedDesc').value;
+    const embedColor = document.getElementById('tempEmbedColor').value;
     
     if (!channelId) {
         alert("Please enter a channel ID!");
@@ -1258,9 +1223,9 @@ async function sendBotMessage() {
     
     if (success) {
         showNotify("Message sent successfully!", "success");
-        document.getElementById('botMessageContent').value = '';
-        document.getElementById('botEmbedTitle').value = '';
-        document.getElementById('botEmbedDesc').value = '';
+        document.getElementById('tempMessageContent').value = '';
+        document.getElementById('tempEmbedTitle').value = '';
+        document.getElementById('tempEmbedDesc').value = '';
     } else {
         showNotify("Failed to send message! Check channel ID.", "error");
     }
@@ -1339,7 +1304,7 @@ document.getElementById('tabBtnOwner')?.addEventListener('click', () => {
         loadAdminRolesList();
         loadChannelConfigUI();
         loadKickLogs();
-        loadEditableBoards();
+        loadSavedMessages();
     } else {
         showNotify("You don't have permission to access Owner Panel!", "error");
     }
@@ -1347,16 +1312,23 @@ document.getElementById('tabBtnOwner')?.addEventListener('click', () => {
 
 document.getElementById('addRoleBtn')?.addEventListener('click', window.addAdminRole);
 document.getElementById('saveChannelConfigBtn')?.addEventListener('click', saveChannelConfig);
-document.getElementById('sendBotMessageBtn')?.addEventListener('click', sendBotMessage);
+document.getElementById('saveMessageBtn')?.addEventListener('click', saveMessage);
+document.getElementById('sendMessageBtn')?.addEventListener('click', () => {
+    if (currentEditingMessageId) {
+        sendSavedMessage(currentEditingMessageId);
+    } else {
+        const name = document.getElementById('messageName').value.trim();
+        if (!name) {
+            showNotify("Please save the message first or load an existing one!", "error");
+            return;
+        }
+        saveMessage();
+    }
+});
+document.getElementById('clearMessageFormBtn')?.addEventListener('click', clearMessageForm);
+document.getElementById('sendTempMessageBtn')?.addEventListener('click', sendTempMessage);
 document.getElementById('enableMaintenanceBtn')?.addEventListener('click', () => setMaintenanceMode(true));
 document.getElementById('disableMaintenanceBtn')?.addEventListener('click', () => setMaintenanceMode(false));
-
-document.getElementById('updateUserInfoBtn')?.addEventListener('click', updateUserInfoBoard);
-document.getElementById('updatePanelInfoBtn')?.addEventListener('click', updatePanelInfoBoard);
-document.getElementById('updateLeaderboardBtn')?.addEventListener('click', updateLeaderboardBoard);
-document.getElementById('refreshUserInfoBtn')?.addEventListener('click', () => refreshBoardContent('userInfo'));
-document.getElementById('refreshPanelInfoBtn')?.addEventListener('click', () => refreshBoardContent('panelInfo'));
-document.getElementById('refreshLeaderboardBtn')?.addEventListener('click', () => refreshBoardContent('leaderboard'));
 
 // ==========================================
 // 13. APP START (AUTH CHECK)
