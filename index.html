@@ -183,17 +183,56 @@
                     </div>
                 </div>
 
-                <!-- Channel Message Sender (Webhook removed - now uses bot via channel ID) -->
-                <div class="system-card" style="border-color: #ffd700;">
-                    <h3 style="color: #ffd700;"><i class="fas fa-paper-plane"></i> Send Message via Bot</h3>
-                    <p style="color:#888; margin-bottom: 15px; font-size:14px;">Send messages to any channel using the bot (just provide Channel ID).</p>
+                <!-- Editable Info Boards Section -->
+                <div class="system-card" style="border-color: #ffd700; margin-bottom: 20px;">
+                    <h3 style="color: #ffd700;"><i class="fas fa-edit"></i> Editable Info Boards</h3>
+                    <p style="color:#888; margin-bottom: 15px; font-size:14px;">Edit the content of automated info boards. Click "Update Board" to send changes to Discord.</p>
+                    
+                    <div style="background: #0f0f0f; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                        <h4 style="margin-bottom: 10px;">🛡️ Guild User Info Board</h4>
+                        <p style="color: #888; font-size: 12px; margin-bottom: 15px;">Channel: <code id="chUserInfoDisplay">Not configured</code></p>
+                        <textarea id="editUserInfoBoard" rows="8" style="width: 100%; background: #0a0a0a; border: 1px solid #222; border-radius: 8px; padding: 12px; color: white; font-family: monospace; font-size: 13px;" placeholder="Edit the message content here..."></textarea>
+                        <div style="display: flex; gap: 10px; margin-top: 15px;">
+                            <button id="updateUserInfoBtn" class="btn-primary" style="background: #5865F2; width: auto;">📤 Update Guild User Info Board</button>
+                            <button id="refreshUserInfoBtn" class="btn-primary" style="background: #48bb78; width: auto;">🔄 Refresh Content</button>
+                        </div>
+                        <p class="placeholder-tip" style="color: #ffd700; font-size: 12px; margin-top: 10px;">💡 Placeholders: <code>{USER_LIST}</code> - All guild members | <code>{TIMESTAMP}</code> - Current date/time</p>
+                    </div>
+
+                    <div style="background: #0f0f0f; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                        <h4 style="margin-bottom: 10px;">💻 Panel Registration Info Board</h4>
+                        <p style="color: #888; font-size: 12px; margin-bottom: 15px;">Channel: <code id="chPanelInfoDisplay">Not configured</code></p>
+                        <textarea id="editPanelInfoBoard" rows="8" style="width: 100%; background: #0a0a0a; border: 1px solid #222; border-radius: 8px; padding: 12px; color: white; font-family: monospace; font-size: 13px;" placeholder="Edit the message content here..."></textarea>
+                        <div style="display: flex; gap: 10px; margin-top: 15px;">
+                            <button id="updatePanelInfoBtn" class="btn-primary" style="background: #5865F2; width: auto;">📤 Update Panel Info Board</button>
+                            <button id="refreshPanelInfoBtn" class="btn-primary" style="background: #48bb78; width: auto;">🔄 Refresh Content</button>
+                        </div>
+                        <p class="placeholder-tip" style="color: #ffd700; font-size: 12px; margin-top: 10px;">💡 Placeholders: <code>{REGISTERED_LIST}</code> - Registered users | <code>{UNREGISTERED_LIST}</code> - Unregistered users | <code>{TIMESTAMP}</code></p>
+                    </div>
+
+                    <div style="background: #0f0f0f; border-radius: 12px; padding: 20px;">
+                        <h4 style="margin-bottom: 10px;">🏆 Leaderboard Board</h4>
+                        <p style="color: #888; font-size: 12px; margin-bottom: 15px;">Channel: <code id="chLeaderboardDisplay">Not configured</code></p>
+                        <textarea id="editLeaderboardBoard" rows="8" style="width: 100%; background: #0a0a0a; border: 1px solid #222; border-radius: 8px; padding: 12px; color: white; font-family: monospace; font-size: 13px;" placeholder="Edit the message content here..."></textarea>
+                        <div style="display: flex; gap: 10px; margin-top: 15px;">
+                            <button id="updateLeaderboardBtn" class="btn-primary" style="background: #5865F2; width: auto;">📤 Update Leaderboard Board</button>
+                            <button id="refreshLeaderboardBtn" class="btn-primary" style="background: #48bb78; width: auto;">🔄 Refresh Content</button>
+                        </div>
+                        <p class="placeholder-tip" style="color: #ffd700; font-size: 12px; margin-top: 10px;">💡 Tip: Use <code>{TOP_USERS}</code> to insert the dynamic leaderboard list. Use <code>{TIMESTAMP}</code> for current date/time.</p>
+                    </div>
+                </div>
+
+                <!-- Send Custom Message via Bot -->
+                <div class="system-card" style="border-color: #ffd700; margin-bottom: 20px;">
+                    <h3 style="color: #ffd700;"><i class="fas fa-paper-plane"></i> Send Custom Message via Bot</h3>
+                    <p style="color:#888; margin-bottom: 15px; font-size:14px;">Send a one-time message to any channel using the bot.</p>
                     
                     <div style="background: #0f0f0f; border-radius: 12px; padding: 20px;">
                         <input type="text" id="targetChannelId" placeholder="Channel ID (e.g., 1503650249208496238)" style="margin-bottom: 10px;">
                         
                         <div style="background: #111; border-radius: 8px; padding: 15px; margin-bottom: 15px;">
                             <label style="display: block; margin-bottom: 8px; color: #aaa;">Message Content</label>
-                            <textarea id="botMessageContent" rows="3" style="width: 100%; background: #0a0a0a; border: 1px solid #222; border-radius: 8px; padding: 12px; color: white;" placeholder="Your message here... Supports @mentions and #channels"></textarea>
+                            <textarea id="botMessageContent" rows="4" style="width: 100%; background: #0a0a0a; border: 1px solid #222; border-radius: 8px; padding: 12px; color: white;" placeholder="Your message here... Supports @mentions and #channels"></textarea>
                         </div>
                         
                         <div style="background: #111; border-radius: 8px; padding: 15px; margin-bottom: 15px;">
@@ -210,7 +249,7 @@
                 </div>
 
                 <!-- Kick Logs Viewer -->
-                <div class="system-card" style="border-color: #ffd700; margin-top: 20px;">
+                <div class="system-card" style="border-color: #ffd700; margin-bottom: 20px;">
                     <h3 style="color: #ffd700;"><i class="fas fa-history"></i> Kick History</h3>
                     <p style="color:#888; margin-bottom: 15px; font-size:14px;">All user kicks are logged here.</p>
                     <div class="table-responsive">
@@ -222,7 +261,7 @@
                 </div>
 
                 <!-- Maintenance Mode Toggle -->
-                <div class="system-card" style="border-color: #ffd700; margin-top: 20px;">
+                <div class="system-card" style="border-color: #ffd700;">
                     <h3 style="color: #ffd700;"><i class="fas fa-wrench"></i> Maintenance Mode</h3>
                     <p style="color:#888; margin-bottom: 15px; font-size:14px;">Toggle maintenance mode when updating the system.</p>
                     <div style="display: flex; gap: 15px; align-items: center;">
