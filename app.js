@@ -2,30 +2,17 @@
 // 1. SETTINGS & CONFIGURATION
 // ==========================================
 
-const OWNER_USER_ID = '917426398120005653'; // Owner has all permissions
+const OWNER_USER_ID = '917426398120005653';
 
-// Roles for access control - now stored in Firebase and editable via Owner Panel
-let ADMIN_ROLES = ['1503609455466643547']; // Default admin role
-let OWNER_ROLES = ['1504646932243546152']; // Default owner role
+// Roles for access control - stored in Firebase
+let ADMIN_ROLES = ['1503609455466643547'];
+let OWNER_ROLES = ['1504646932243546152'];
 
 const DISCORD_CLIENT_ID = '1503179151073345678';
 const ROBLOX_CLIENT_ID = '1529843549493669743';
 
 const BACKEND_URL = 'https://gentle-queen-63f0.keulecolin2005.workers.dev';
 const REDIRECT_URI = 'https://corleonecity.github.io/SwordArtOnline/';
-
-// Channel configurations - stored in Firebase
-let CHANNEL_CONFIG = {
-    CH_LEAVE_LOGS: '1503613675137663057',
-    CH_USER_INFO: '1503650249208496238',
-    CH_PANEL_INFO: '1503650210826682469',
-    CH_LEADERBOARD: '1503653454550401085',
-    CH_TRIGGER_BTN: '1503922622013112472',
-    CH_GP_REQUESTS: '1502869797011067040',
-    CH_GP_PROCESSED: '1502869824227770471',
-    CH_LOGIN_LOGS: '1503226301434036314',
-    CH_BOT_DM_LOGS: '1504385583336919111'
-};
 
 // Firebase Imports
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
@@ -67,11 +54,14 @@ async function loadRoleConfig() {
     }
 }
 
-async function loadChannelConfig() {
-    const configRef = ref(db, 'config/channels');
-    const snap = await get(configRef);
-    if (snap.exists()) {
-        CHANNEL_CONFIG = { ...CHANNEL_CONFIG, ...snap.val() };
+async function getChannelConfig() {
+    try {
+        const configRef = ref(db, 'config/channels');
+        const snap = await get(configRef);
+        return snap.val() || {};
+    } catch (e) {
+        console.error("Error loading channel config:", e);
+        return {};
     }
 }
 
@@ -141,7 +131,6 @@ function forceKickUser() {
     stopMusic();
 }
 
-// Dynamic permission checks based on Firebase config
 function hasAdminPermission() {
     if (!currentUser) return false;
     if (currentUser.id === OWNER_USER_ID) return true;
@@ -155,7 +144,6 @@ function hasOwnerPermission() {
 }
 
 function hasGpSubmitPermission() {
-    // GP submit requires being a guild member (has the GUILD_MEMBER role from server)
     return userGuildRoles.includes('1503193408280330400');
 }
 
@@ -167,7 +155,6 @@ function updatePermissions() {
     const tabBtnOwner = document.getElementById('tabBtnOwner');
     const spendenContent = document.getElementById('content-spenden');
     
-    // Update GP submit visibility
     if (hasGpSubmitPermission()) {
         if (gpSubmitCard) gpSubmitCard.classList.remove('hidden');
         if (noPermissionCard) noPermissionCard.classList.add('hidden');
@@ -181,12 +168,10 @@ function updatePermissions() {
         }
     }
     
-    // Update admin panel visibility
     if (tabBtnAdmin) {
         tabBtnAdmin.style.display = hasAdminPermission() ? 'block' : 'none';
     }
     
-    // Update owner panel visibility
     if (tabBtnOwner) {
         tabBtnOwner.style.display = hasOwnerPermission() ? 'block' : 'none';
     }
@@ -227,6 +212,11 @@ async function fetchUserRoles(userId) {
 // ==========================================
 
 async function sendDiscordMessage(channelId, content, embeds = null) {
+    if (!channelId) {
+        console.warn("No channel ID provided");
+        return false;
+    }
+    
     try {
         const response = await fetch(`${BACKEND_URL}/send-channel-message`, {
             method: 'POST',
@@ -263,8 +253,10 @@ async function sendGPRequestToDiscord(requestData, images) {
         footer: { text: "SwordArtOnline GP System" }
     };
 
+    const adminRoleId = ADMIN_ROLES[0] || '1503609455466643547';
+    
     formData.append('payload_json', JSON.stringify({
-        content: `<@&${ADMIN_ROLES[0]}> New GP donation requires review!`,
+        content: `<@&${adminRoleId}> New GP donation requires review!`,
         embeds: [embed]
     }));
     
@@ -283,40 +275,6 @@ async function sendGPRequestToDiscord(requestData, images) {
         console.error("GP request send error:", e);
         return false;
     }
-}
-
-async function sendLoginToDiscord(userData) {
-    const embed = {
-        title: "🟢 New User Registered",
-        color: 0x48bb78,
-        fields: [
-            { name: "💬 Discord", value: `**Name:** ${userData.discordName}\n**Tag:** @${userData.discordUsername}\n**ID:** ${userData.userId}`, inline: true },
-            { name: "🎮 Roblox", value: `**Name:** ${userData.robloxName}\n**User:** @${userData.robloxUsername}\n**Profile:** [Click Here](https://www.roblox.com/users/${userData.robloxId}/profile)`, inline: true }
-        ],
-        timestamp: new Date().toISOString(),
-        footer: { text: "SwordArtOnline Panel" }
-    };
-
-    return sendDiscordMessage(CHANNEL_CONFIG.CH_LOGIN_LOGS, null, [embed]);
-}
-
-async function sendProcessedToDiscord(data) {
-    const embed = {
-        title: data.action === 'approve' ? "✅ GP Donation Approved" : "❌ GP Donation Rejected",
-        color: data.action === 'approve' ? 0x48bb78 : 0xf56565,
-        fields: [
-            { name: "💬 Discord", value: `**Name:** ${data.discordName}\n**Tag:** @${data.discordUsername}\n**Ping:** <@${data.userId}>`, inline: true },
-            { name: "🎮 Roblox", value: `**Name:** ${data.robloxName}\n**User:** @${data.robloxUsername}\n**Profile:** [Click Here](https://www.roblox.com/users/${data.robloxId}/profile)`, inline: true },
-            { name: "💰 Amount", value: `**${data.action === 'approve' ? '+' : '-'}${data.amount.toLocaleString()} GP**`, inline: false },
-            { name: "📊 New Total", value: `**${data.newTotal.toLocaleString()} GP**`, inline: true },
-            { name: "🏆 Rank", value: `**#${data.rank}**`, inline: true },
-            { name: "🛡️ Processed By", value: `<@${data.processedBy}>`, inline: false }
-        ],
-        timestamp: new Date().toISOString(),
-        footer: { text: "SwordArtOnline GP System" }
-    };
-
-    return sendDiscordMessage(CHANNEL_CONFIG.CH_GP_PROCESSED, null, [embed]);
 }
 
 // ==========================================
@@ -350,21 +308,6 @@ async function doLiveCheck() {
 function startLiveMemberCheck() {
     if (liveCheckInterval) clearInterval(liveCheckInterval);
     liveCheckInterval = setInterval(doLiveCheck, 30000);
-}
-
-async function sendLoginWebhook(userData) {
-    const dbKey = getSafeDbKey(userData.discordUsername);
-    const userRef = ref(db, `users/${dbKey}`);
-    const snap = await get(userRef);
-    
-    if (snap.exists() && snap.val().webhookSent === true) return;
-
-    const success = await sendLoginToDiscord(userData);
-    
-    if (success) {
-        await update(userRef, { webhookSent: true });
-        console.log("Login notification sent successfully");
-    }
 }
 
 async function handleDiscordLogin(code) {
@@ -425,15 +368,6 @@ async function handleRobloxLogin(code) {
                 hasLeftServer: false
             });
 
-            await sendLoginWebhook({
-                discordName: dDisplayName,
-                discordUsername: currentUser.username,
-                userId: currentUser.id,
-                robloxName: rDisplayName,
-                robloxUsername: rUsername,
-                robloxId: rId
-            });
-
             fetch(`${BACKEND_URL}/check-member`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -455,7 +389,6 @@ async function checkRobloxLink() {
 
         await loadMaintenanceStatus();
         await loadRoleConfig();
-        await loadChannelConfig();
         
         const dbKey = getSafeDbKey(currentUser.username);
         const snap = await get(ref(db, `users/${dbKey}`));
@@ -511,6 +444,7 @@ function showDashboard() {
         loadAdminRolesList();
         loadChannelConfigUI();
         loadKickLogs();
+        loadEditableBoards();
     }
 }
 
@@ -536,8 +470,8 @@ function renderLeaderboard(filterText) {
         body.innerHTML += `
             <tr>
                 <td>#${i + 1}</td>
-                <td><div class="user-name-cell"><span class="display-name">${u.discordName || "Unknown"}</span><span class="username-handle">@${u.discordUsername || "Unknown"}</span></div></td>
-                <td><div class="user-name-cell"><span class="display-name">${u.robloxName || "Unknown"}</span><span class="username-handle">@${u.robloxUsername || "Unknown"}</span></div></td>
+                <td><div class="user-name-cell"><span class="display-name">${escapeHtml(u.discordName || "Unknown")}</span><span class="username-handle">@${escapeHtml(u.discordUsername || "Unknown")}</span></div></td>
+                <td><div class="user-name-cell"><span class="display-name">${escapeHtml(u.robloxName || "Unknown")}</span><span class="username-handle">@${escapeHtml(u.robloxUsername || "Unknown")}</span></div></td>
                 <td style="color:#48bb78; font-weight:bold; font-size:16px;">${(u.totalGP || 0).toLocaleString()} GP</td>
             </tr>
         `;
@@ -739,22 +673,22 @@ function loadAdminData() {
                 <tr>
                     <td>
                         <div class="user-name-cell">
-                            <span class="display-name">${req.discordName || "Unknown"}</span>
-                            <span class="username-handle">@${req.discordUsername || "Unknown"}</span>
+                            <span class="display-name">${escapeHtml(req.discordName || "Unknown")}</span>
+                            <span class="username-handle">@${escapeHtml(req.discordUsername || "Unknown")}</span>
                         </div>
                     </td>
                     <td>
                         <div class="user-name-cell">
-                            <span class="display-name">${req.robloxName || "Unknown"}</span>
-                            <span class="username-handle">@${req.robloxUsername || "Unknown"}</span>
+                            <span class="display-name">${escapeHtml(req.robloxName || "Unknown")}</span>
+                            <span class="username-handle">@${escapeHtml(req.robloxUsername || "Unknown")}</span>
                         </div>
                     </td>
                     <td style="color:#cd7f32; font-weight:bold;">+${req.amount.toLocaleString()} GP</td>
                     <td>
-                        <button class="btn-small btn-approve" onclick="window.handleAdminAction('${req.id}', '${req.userId}', ${req.amount}, 'approve', '${req.dbKey || req.discordUsername}', '${req.robloxId || ''}', '${req.discordName}', '${req.discordUsername}', '${req.robloxName}', '${req.robloxUsername}')">
+                        <button class="btn-small btn-approve" onclick="window.handleAdminAction('${req.id}', '${req.userId}', ${req.amount}, 'approve', '${req.dbKey || req.discordUsername}', '${req.robloxId || ''}', '${escapeHtml(req.discordName)}', '${escapeHtml(req.discordUsername)}', '${escapeHtml(req.robloxName)}', '${escapeHtml(req.robloxUsername)}')">
                             <i class="fas fa-check"></i> Approve
                         </button>
-                        <button class="btn-small btn-deny" onclick="window.handleAdminAction('${req.id}', '${req.userId}', ${req.amount}, 'reject', '${req.dbKey || req.discordUsername}', '${req.robloxId || ''}', '${req.discordName}', '${req.discordUsername}', '${req.robloxName}', '${req.robloxUsername}')">
+                        <button class="btn-small btn-deny" onclick="window.handleAdminAction('${req.id}', '${req.userId}', ${req.amount}, 'reject', '${req.dbKey || req.discordUsername}', '${req.robloxId || ''}', '${escapeHtml(req.discordName)}', '${escapeHtml(req.discordUsername)}', '${escapeHtml(req.robloxName)}', '${escapeHtml(req.robloxUsername)}')">
                             <i class="fas fa-times"></i> Reject
                         </button>
                     </td>
@@ -799,19 +733,26 @@ window.handleAdminAction = async (reqId, userId, amount, action, passedDbKey, ro
             rank = index !== -1 ? (index + 1).toString() : "?";
         }
 
-        await sendProcessedToDiscord({
-            action: action,
-            discordName: discordName || reqData.discordName,
-            discordUsername: discordUsername || reqData.discordUsername,
-            userId: userId,
-            robloxName: robloxName || reqData.robloxName,
-            robloxUsername: robloxUsername || reqData.robloxUsername,
-            robloxId: robloxId || reqData.robloxId,
-            amount: amount,
-            newTotal: newTotal,
-            rank: rank,
-            processedBy: currentUser.id
-        });
+        const channels = await getChannelConfig();
+        const processedChannel = channels.CH_GP_PROCESSED;
+        
+        if (processedChannel) {
+            const embed = {
+                title: action === 'approve' ? "✅ GP Donation Approved" : "❌ GP Donation Rejected",
+                color: action === 'approve' ? 0x48bb78 : 0xf56565,
+                fields: [
+                    { name: "💬 Discord", value: `**Name:** ${discordName}\n**Tag:** @${discordUsername}\n**Ping:** <@${userId}>`, inline: true },
+                    { name: "🎮 Roblox", value: `**Name:** ${robloxName}\n**User:** @${robloxUsername}\n**Profile:** [Click Here](https://www.roblox.com/users/${robloxId}/profile)`, inline: true },
+                    { name: "💰 Amount", value: `**${action === 'approve' ? '+' : '-'}${amount.toLocaleString()} GP**`, inline: false },
+                    { name: "📊 New Total", value: `**${newTotal.toLocaleString()} GP**`, inline: true },
+                    { name: "🏆 Rank", value: `**#${rank}**`, inline: true },
+                    { name: "🛡️ Processed By", value: `<@${currentUser.id}>`, inline: false }
+                ],
+                timestamp: new Date().toISOString(),
+                footer: { text: "SwordArtOnline GP System" }
+            };
+            await sendDiscordMessage(processedChannel, null, [embed]);
+        }
 
         showNotify(`Request ${action === 'approve' ? 'approved' : 'rejected'}!`, "success");
         
@@ -832,33 +773,23 @@ async function loadAdminRolesList() {
     try {
         await loadRoleConfig();
         
-        container.innerHTML = `
-            <table class="table">
-                <thead>
-                    <tr><th>Role ID</th><th>Type</th><th>Action</th></tr>
-                </thead>
-                <tbody>
-                    ${ADMIN_ROLES.map(role => `
-                        <tr>
-                            <td><code>${role}</code></td>
-                            <td><span class="status-badge status-approved">Admin</span></td>
-                            <td><button class="btn-small btn-remove-role" onclick="removeAdminRole('${role}')">Remove</button></td>
-                        </tr>
-                    `).join('')}
-                    ${OWNER_ROLES.map(role => `
-                        <tr>
-                            <td><code>${role}</code></td>
-                            <td><span class="status-badge status-pending">Owner</span></td>
-                            <td><button class="btn-small btn-remove-role" onclick="removeOwnerRole('${role}')">Remove</button></td>
-                        </tr>
-                    `).join('')}
-                </tbody>
-            </table>
-        `;
-        
         if (ADMIN_ROLES.length === 0 && OWNER_ROLES.length === 0) {
             container.innerHTML = '<p style="color: #666; text-align: center;">No admin/owner roles configured.</p>';
+            return;
         }
+        
+        let html = '<table class="table"><thead><tr><th>Role ID</th><th>Type</th><th>Action</th></tr></thead><tbody>';
+        
+        ADMIN_ROLES.forEach(role => {
+            html += `<tr><td><code>${escapeHtml(role)}</code></td><td><span class="status-badge status-approved">Admin</span></td><td><button class="btn-small btn-remove-role" onclick="removeAdminRole('${role}')">Remove</button></td></tr>`;
+        });
+        
+        OWNER_ROLES.forEach(role => {
+            html += `<tr><td><code>${escapeHtml(role)}</code></td><td><span class="status-badge status-pending">Owner</span></td><td><button class="btn-small btn-remove-role" onclick="removeOwnerRole('${role}')">Remove</button></td></tr>`;
+        });
+        
+        html += '</tbody></table>';
+        container.innerHTML = html;
     } catch (e) {
         console.error("Error loading roles:", e);
         container.innerHTML = '<p style="color: #f56565;">Error loading roles</p>';
@@ -927,28 +858,31 @@ window.removeOwnerRole = async (roleId) => {
     }
 };
 
-function loadChannelConfigUI() {
+async function loadChannelConfigUI() {
     const container = document.getElementById('channelConfigList');
     if (!container) return;
     
+    const channelConfig = await getChannelConfig();
+    
     const channels = [
-        { key: 'CH_LEAVE_LOGS', name: 'Leave Logs Channel', default: '1503613675137663057' },
-        { key: 'CH_USER_INFO', name: 'User Info Board', default: '1503650249208496238' },
-        { key: 'CH_PANEL_INFO', name: 'Panel Info Board', default: '1503650210826682469' },
-        { key: 'CH_LEADERBOARD', name: 'Leaderboard Channel', default: '1503653454550401085' },
-        { key: 'CH_TRIGGER_BTN', name: 'Trigger Button Channel', default: '1503922622013112472' },
-        { key: 'CH_GP_REQUESTS', name: 'GP Requests Channel', default: '1502869797011067040' },
-        { key: 'CH_GP_PROCESSED', name: 'GP Processed Channel', default: '1502869824227770471' },
-        { key: 'CH_LOGIN_LOGS', name: 'Login Logs Channel', default: '1503226301434036314' },
-        { key: 'CH_BOT_DM_LOGS', name: 'Bot DM Logs Channel', default: '1504385583336919111' }
+        { key: 'CH_LEAVE_LOGS', name: '📤 Leave Logs Channel', description: 'Channel for user leave notifications' },
+        { key: 'CH_USER_INFO', name: '🛡️ User Info Board', description: 'Channel for Guild User Info board' },
+        { key: 'CH_PANEL_INFO', name: '💻 Panel Info Board', description: 'Channel for Panel Registration Info board' },
+        { key: 'CH_LEADERBOARD', name: '🏆 Leaderboard Channel', description: 'Channel for GP Leaderboard' },
+        { key: 'CH_TRIGGER_BTN', name: '🔄 Trigger Button Channel', description: 'Channel with manual update button' },
+        { key: 'CH_GP_REQUESTS', name: '💎 GP Requests Channel', description: 'Channel for new GP donation requests' },
+        { key: 'CH_GP_PROCESSED', name: '✅ GP Processed Channel', description: 'Channel for approved/rejected GP requests' },
+        { key: 'CH_LOGIN_LOGS', name: '🔐 Login Logs Channel', description: 'Channel for user login notifications' },
+        { key: 'CH_BOT_DM_LOGS', name: '📨 Bot DM Logs Channel', description: 'Channel for /admin command messages' }
     ];
     
     container.innerHTML = channels.map(ch => `
         <div class="channel-config-item">
             <div class="channel-config-name">${ch.name}</div>
+            <div class="channel-config-description">${ch.description}</div>
             <div class="channel-config-input">
-                <input type="text" id="cfg_${ch.key}" value="${CHANNEL_CONFIG[ch.key] || ch.default}" placeholder="Channel ID">
-                <span>Default: ${ch.default}</span>
+                <input type="text" id="cfg_${ch.key}" value="${channelConfig[ch.key] || ''}" placeholder="Enter Discord Channel ID">
+                <span>Channel ID</span>
             </div>
         </div>
     `).join('');
@@ -961,20 +895,334 @@ async function saveChannelConfig() {
     ];
     
     const newConfig = {};
+    let hasChanges = false;
+    
     for (const ch of channels) {
         const input = document.getElementById(`cfg_${ch}`);
         if (input && input.value.trim()) {
             newConfig[ch] = input.value.trim();
+            hasChanges = true;
+        } else if (input && input.value === '') {
+            newConfig[ch] = null;
+            hasChanges = true;
         }
     }
     
+    if (!hasChanges) {
+        showNotify("No changes to save!", "warning");
+        return;
+    }
+    
     try {
-        await set(ref(db, 'config/channels'), newConfig);
-        Object.assign(CHANNEL_CONFIG, newConfig);
-        showNotify("Channel configuration saved!", "success");
+        const configToSave = {};
+        for (const [key, value] of Object.entries(newConfig)) {
+            if (value !== null && value !== '') {
+                configToSave[key] = value;
+            }
+        }
+        
+        if (Object.keys(configToSave).length === 0) {
+            await set(ref(db, 'config/channels'), null);
+            showNotify("All channel configurations cleared!", "success");
+        } else {
+            await set(ref(db, 'config/channels'), configToSave);
+            showNotify("Channel configuration saved!", "success");
+        }
+        
+        await loadChannelConfigUI();
+        await loadEditableBoards();
     } catch (e) {
+        console.error("Error saving config:", e);
         showNotify("Error saving configuration!", "error");
     }
+}
+
+async function loadKickLogs() {
+    const logsRef = ref(db, 'logs/kicks');
+    onValue(logsRef, (snapshot) => {
+        const data = snapshot.val();
+        const body = document.getElementById('kickLogsBody');
+        if (!body) return;
+        
+        body.innerHTML = '';
+        if (!data) {
+            body.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#666;">No kick logs found</td></tr>';
+            return;
+        }
+        
+        const logs = Object.values(data).sort((a, b) => b.timestamp - a.timestamp);
+        
+        logs.forEach(log => {
+            const dateStr = new Date(log.timestamp).toLocaleString();
+            body.innerHTML += `
+                <tr>
+                    <td style="font-size:12px;">${dateStr}</td>
+                    <td><code>${escapeHtml(log.kickedUserId || '?')}</code><br>${escapeHtml(log.kickedUserName || '')}</td>
+                    <td><code>${escapeHtml(log.kickedByUserId || '?')}</code><br>${escapeHtml(log.kickedByUserName || '')}</td>
+                    <td>${escapeHtml(log.reason || 'No reason')}</td>
+                    <td>${log.dmSent ? '✅ Yes' : '❌ No'}</td>
+                </tr>
+            `;
+        });
+    });
+}
+
+async function setMaintenanceMode(enabled) {
+    try {
+        await set(ref(db, 'config/maintenance'), { enabled });
+        if (enabled) {
+            document.getElementById('maintenanceOverlay').classList.remove('hidden');
+            document.getElementById('maintenanceStatusText').textContent = 'Enabled';
+            showNotify("Maintenance mode ENABLED", "warning");
+        } else {
+            document.getElementById('maintenanceOverlay').classList.add('hidden');
+            document.getElementById('maintenanceStatusText').textContent = 'Disabled';
+            showNotify("Maintenance mode DISABLED", "success");
+        }
+    } catch (e) {
+        showNotify("Error toggling maintenance mode!", "error");
+    }
+}
+
+// ==========================================
+// 11. EDITABLE BOARDS FUNCTIONS
+// ==========================================
+
+async function loadEditableBoards() {
+    const channels = await getChannelConfig();
+    
+    const chUserInfoDisplay = document.getElementById('chUserInfoDisplay');
+    const chPanelInfoDisplay = document.getElementById('chPanelInfoDisplay');
+    const chLeaderboardDisplay = document.getElementById('chLeaderboardDisplay');
+    
+    if (chUserInfoDisplay) chUserInfoDisplay.textContent = channels.CH_USER_INFO || 'Not configured';
+    if (chPanelInfoDisplay) chPanelInfoDisplay.textContent = channels.CH_PANEL_INFO || 'Not configured';
+    if (chLeaderboardDisplay) chLeaderboardDisplay.textContent = channels.CH_LEADERBOARD || 'Not configured';
+    
+    const boardsRef = ref(db, 'config/boards');
+    const snap = await get(boardsRef);
+    const boards = snap.val() || {};
+    
+    const userInfoTextarea = document.getElementById('editUserInfoBoard');
+    if (userInfoTextarea) {
+        userInfoTextarea.value = boards.userInfoContent || '🛡️ **Guild User Info**\n\nWelcome to the SwordArtOnline server!\n\n**Guild Members:**\n{USER_LIST}\n\n**Last Updated:** {TIMESTAMP}';
+    }
+    
+    const panelInfoTextarea = document.getElementById('editPanelInfoBoard');
+    if (panelInfoTextarea) {
+        panelInfoTextarea.value = boards.panelInfoContent || '💻 **Panel Registration Info**\n\n**Registered Users:**\n{REGISTERED_LIST}\n\n**Unregistered Users:**\n{UNREGISTERED_LIST}\n\n**Last Updated:** {TIMESTAMP}';
+    }
+    
+    const leaderboardTextarea = document.getElementById('editLeaderboardBoard');
+    if (leaderboardTextarea) {
+        leaderboardTextarea.value = boards.leaderboardContent || '🏆 **Top 10 GP Donators**\n\n{TOP_USERS}\n\n**Last Updated:** {TIMESTAMP}\n\n🔗 [View Full Leaderboard](https://corleonecity.github.io/SwordArtOnline/)';
+    }
+}
+
+async function fetchGuildMembers() {
+    try {
+        const response = await fetch(`${BACKEND_URL}/guild-members`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ guildId: '1439377447630930084' })
+        });
+        const data = await response.json();
+        return data.members || [];
+    } catch (e) {
+        console.error("Failed to fetch guild members:", e);
+        return [];
+    }
+}
+
+async function fetchRegisteredUsers() {
+    const usersRef = ref(db, 'users');
+    const snap = await get(usersRef);
+    const users = snap.val() || {};
+    
+    const registered = [];
+    const unregistered = [];
+    
+    for (const [key, user] of Object.entries(users)) {
+        if (user.robloxId && user.robloxId !== '1') {
+            registered.push(`<@${user.id}> - ${user.robloxName || 'Unknown'}`);
+        } else if (user.id) {
+            unregistered.push(`<@${user.id}>`);
+        }
+    }
+    
+    return { registered, unregistered };
+}
+
+async function fetchTopUsers() {
+    const usersRef = ref(db, 'users');
+    const snap = await get(usersRef);
+    const users = snap.val() || {};
+    
+    const topUsers = Object.values(users)
+        .filter(u => u.totalGP && u.totalGP > 0)
+        .sort((a, b) => (b.totalGP || 0) - (a.totalGP || 0))
+        .slice(0, 10);
+    
+    let leaderboardText = '';
+    topUsers.forEach((u, i) => {
+        let rankEmoji = '🏅';
+        if (i === 0) rankEmoji = '🥇';
+        else if (i === 1) rankEmoji = '🥈';
+        else if (i === 2) rankEmoji = '🥉';
+        leaderboardText += `${rankEmoji} **${i + 1}.** <@${u.id}> | **${(u.totalGP || 0).toLocaleString()} GP**\n`;
+    });
+    
+    if (topUsers.length === 0) {
+        leaderboardText = '*No verified donations yet.*';
+    }
+    
+    return leaderboardText;
+}
+
+function replacePlaceholders(content, replacements) {
+    let result = content;
+    for (const [placeholder, value] of Object.entries(replacements)) {
+        result = result.replace(new RegExp(`\\{${placeholder}\\}`, 'g'), value);
+    }
+    return result;
+}
+
+async function updateUserInfoBoard() {
+    const content = document.getElementById('editUserInfoBoard').value;
+    if (!content) {
+        showNotify("Please enter content for the board!", "error");
+        return;
+    }
+    
+    const boardsRef = ref(db, 'config/boards');
+    await update(boardsRef, { userInfoContent: content });
+    
+    const members = await fetchGuildMembers();
+    const userList = members.map(m => `<@${m.user.id}>`).join('\n') || '*None*';
+    
+    const finalContent = replacePlaceholders(content, {
+        USER_LIST: userList,
+        TIMESTAMP: new Date().toLocaleString()
+    });
+    
+    const channels = await getChannelConfig();
+    const channelId = channels.CH_USER_INFO;
+    
+    if (!channelId) {
+        showNotify("Channel ID not configured! Please configure CH_USER_INFO first.", "error");
+        return;
+    }
+    
+    showNotify("Updating User Info Board...", "warning");
+    
+    const success = await sendDiscordMessage(channelId, finalContent, null);
+    
+    if (success) {
+        showNotify("User Info Board updated successfully!", "success");
+    } else {
+        showNotify("Failed to update board!", "error");
+    }
+}
+
+async function updatePanelInfoBoard() {
+    const content = document.getElementById('editPanelInfoBoard').value;
+    if (!content) {
+        showNotify("Please enter content for the board!", "error");
+        return;
+    }
+    
+    const boardsRef = ref(db, 'config/boards');
+    await update(boardsRef, { panelInfoContent: content });
+    
+    const { registered, unregistered } = await fetchRegisteredUsers();
+    
+    const finalContent = replacePlaceholders(content, {
+        REGISTERED_LIST: registered.join('\n') || '*None*',
+        UNREGISTERED_LIST: unregistered.join('\n') || '*None*',
+        TIMESTAMP: new Date().toLocaleString()
+    });
+    
+    const channels = await getChannelConfig();
+    const channelId = channels.CH_PANEL_INFO;
+    
+    if (!channelId) {
+        showNotify("Channel ID not configured! Please configure CH_PANEL_INFO first.", "error");
+        return;
+    }
+    
+    showNotify("Updating Panel Info Board...", "warning");
+    
+    const success = await sendDiscordMessage(channelId, finalContent, null);
+    
+    if (success) {
+        showNotify("Panel Info Board updated successfully!", "success");
+    } else {
+        showNotify("Failed to update board!", "error");
+    }
+}
+
+async function updateLeaderboardBoard() {
+    const content = document.getElementById('editLeaderboardBoard').value;
+    if (!content) {
+        showNotify("Please enter content for the board!", "error");
+        return;
+    }
+    
+    const boardsRef = ref(db, 'config/boards');
+    await update(boardsRef, { leaderboardContent: content });
+    
+    const topUsersList = await fetchTopUsers();
+    
+    const finalContent = replacePlaceholders(content, {
+        TOP_USERS: topUsersList,
+        TIMESTAMP: new Date().toLocaleString()
+    });
+    
+    const channels = await getChannelConfig();
+    const channelId = channels.CH_LEADERBOARD;
+    
+    if (!channelId) {
+        showNotify("Channel ID not configured! Please configure CH_LEADERBOARD first.", "error");
+        return;
+    }
+    
+    showNotify("Updating Leaderboard Board...", "warning");
+    
+    const success = await sendDiscordMessage(channelId, finalContent, null);
+    
+    if (success) {
+        showNotify("Leaderboard Board updated successfully!", "success");
+    } else {
+        showNotify("Failed to update board!", "error");
+    }
+}
+
+async function refreshBoardContent(boardType) {
+    const boardsRef = ref(db, 'config/boards');
+    const snap = await get(boardsRef);
+    const boards = snap.val() || {};
+    
+    switch(boardType) {
+        case 'userInfo':
+            const userInfoTextarea = document.getElementById('editUserInfoBoard');
+            if (userInfoTextarea && boards.userInfoContent) {
+                userInfoTextarea.value = boards.userInfoContent;
+            }
+            break;
+        case 'panelInfo':
+            const panelInfoTextarea = document.getElementById('editPanelInfoBoard');
+            if (panelInfoTextarea && boards.panelInfoContent) {
+                panelInfoTextarea.value = boards.panelInfoContent;
+            }
+            break;
+        case 'leaderboard':
+            const leaderboardTextarea = document.getElementById('editLeaderboardBoard');
+            if (leaderboardTextarea && boards.leaderboardContent) {
+                leaderboardTextarea.value = boards.leaderboardContent;
+            }
+            break;
+    }
+    showNotify(`Content refreshed!`, "success");
 }
 
 async function sendBotMessage() {
@@ -1018,55 +1266,15 @@ async function sendBotMessage() {
     }
 }
 
-async function loadKickLogs() {
-    const logsRef = ref(db, 'logs/kicks');
-    onValue(logsRef, (snapshot) => {
-        const data = snapshot.val();
-        const body = document.getElementById('kickLogsBody');
-        if (!body) return;
-        
-        body.innerHTML = '';
-        if (!data) {
-            body.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#666;">No kick logs found</td></tr>';
-            return;
-        }
-        
-        const logs = Object.values(data).sort((a, b) => b.timestamp - a.timestamp);
-        
-        logs.forEach(log => {
-            const dateStr = new Date(log.timestamp).toLocaleString();
-            body.innerHTML += `
-                <tr>
-                    <td style="font-size:12px;">${dateStr}</td>
-                    <td><code>${log.kickedUserId}</code><br>${log.kickedUserName || ''}</td>
-                    <td><code>${log.kickedByUserId}</code><br>${log.kickedByUserName || ''}</td>
-                    <td>${log.reason || 'No reason'}</td>
-                    <td>${log.dmSent ? '✅ Yes' : '❌ No'}</td>
-                </tr>
-            `;
-        });
-    });
-}
-
-async function setMaintenanceMode(enabled) {
-    try {
-        await set(ref(db, 'config/maintenance'), { enabled });
-        if (enabled) {
-            document.getElementById('maintenanceOverlay').classList.remove('hidden');
-            document.getElementById('maintenanceStatusText').textContent = 'Enabled';
-            showNotify("Maintenance mode ENABLED", "warning");
-        } else {
-            document.getElementById('maintenanceOverlay').classList.add('hidden');
-            document.getElementById('maintenanceStatusText').textContent = 'Disabled';
-            showNotify("Maintenance mode DISABLED", "success");
-        }
-    } catch (e) {
-        showNotify("Error toggling maintenance mode!", "error");
-    }
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
 // ==========================================
-// 11. EVENT LISTENERS & INITIALIZATION
+// 12. EVENT LISTENERS & INITIALIZATION
 // ==========================================
 
 document.getElementById('discordLoginBtn')?.addEventListener('click', () => {
@@ -1131,6 +1339,7 @@ document.getElementById('tabBtnOwner')?.addEventListener('click', () => {
         loadAdminRolesList();
         loadChannelConfigUI();
         loadKickLogs();
+        loadEditableBoards();
     } else {
         showNotify("You don't have permission to access Owner Panel!", "error");
     }
@@ -1142,8 +1351,15 @@ document.getElementById('sendBotMessageBtn')?.addEventListener('click', sendBotM
 document.getElementById('enableMaintenanceBtn')?.addEventListener('click', () => setMaintenanceMode(true));
 document.getElementById('disableMaintenanceBtn')?.addEventListener('click', () => setMaintenanceMode(false));
 
+document.getElementById('updateUserInfoBtn')?.addEventListener('click', updateUserInfoBoard);
+document.getElementById('updatePanelInfoBtn')?.addEventListener('click', updatePanelInfoBoard);
+document.getElementById('updateLeaderboardBtn')?.addEventListener('click', updateLeaderboardBoard);
+document.getElementById('refreshUserInfoBtn')?.addEventListener('click', () => refreshBoardContent('userInfo'));
+document.getElementById('refreshPanelInfoBtn')?.addEventListener('click', () => refreshBoardContent('panelInfo'));
+document.getElementById('refreshLeaderboardBtn')?.addEventListener('click', () => refreshBoardContent('leaderboard'));
+
 // ==========================================
-// 12. APP START (AUTH CHECK)
+// 13. APP START (AUTH CHECK)
 // ==========================================
 
 const urlParams = new URLSearchParams(window.location.search);
