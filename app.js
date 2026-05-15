@@ -131,7 +131,7 @@ function updateTestModeIndicator() {
     if (testModeEnabled) {
         indicator.classList.remove('hidden');
         if (statusText) statusText.textContent = 'Enabled';
-        showNotify(' TEST MODE ENABLED - No real changes will be made', 'warning');
+        showNotify('⚠️ TEST MODE ENABLED - No real changes will be made', 'warning');
     } else {
         indicator.classList.add('hidden');
         if (statusText) statusText.textContent = 'Disabled';
@@ -439,9 +439,31 @@ async function sendGPRequestToDiscord(requestData, images) {
         footer: { text: "SwordArtOnline GP System" }
     };
 
+    // Create buttons for interaction
+    const components = [{
+        type: 1,
+        components: [
+            {
+                type: 2,
+                style: 3,
+                label: "Approve",
+                custom_id: `approve_${requestData.requestId}`,
+                emoji: { name: "✅" }
+            },
+            {
+                type: 2,
+                style: 4,
+                label: "Reject",
+                custom_id: `reject_${requestData.requestId}`,
+                emoji: { name: "❌" }
+            }
+        ]
+    }];
+
     formData.append('payload_json', JSON.stringify({
         content: `<@&${adminRoleId}>`,
-        embeds: [embed]
+        embeds: [embed],
+        components: components
     }));
     
     const imagesToSend = images.slice(0, systemConfig.limits.maxImagesPerRequest);
@@ -450,11 +472,23 @@ async function sendGPRequestToDiscord(requestData, images) {
     }
 
     try {
-        const response = await fetch(`${BACKEND_URL}/send-gp-request`, {
+        const response = await fetch(`${BACKEND_URL}/send-gp-request-with-buttons`, {
             method: 'POST',
             body: formData
         });
-        return response.ok;
+        
+        if (response.ok) {
+            const data = await response.json();
+            if (data.messageId) {
+                await update(ref(db, `requests/${requestData.requestId}`), {
+                    discordMessageId: data.messageId
+                });
+            }
+            return true;
+        } else {
+            console.error("GP request send failed:", await response.text());
+            return false;
+        }
     } catch (e) {
         console.error("GP request send error:", e);
         return false;
@@ -695,7 +729,7 @@ function renderLeaderboard(filterText) {
     });
     
     if (usersArray.length === 0) {
-        body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No users with GP yet</span><tr></tr>';
+        body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No users with GP yet</span></td></tr>';
     }
     
     const totalGP = Object.values(allUsersData).reduce((sum, u) => sum + (u.totalGP || 0), 0);
@@ -739,16 +773,16 @@ function loadProfileHistory() {
             
             body.innerHTML += `
                 <tr>
-                    <td style="font-size:14px; color:#aaa;">${dateStr}</span>。</span>
-                    <td style="font-weight:bold;">+${req.amount.toLocaleString()} GP</span>。</span>
-                    <td>${statusHtml}</span>。</span>
-                    <td style="font-size:12px; color:#888;">${escapeHtml(req.adminComment || '-')}</span>。</span>
+                    <td style="font-size:14px; color:#aaa;">${dateStr}</td>
+                    <td style="font-weight:bold;">+${req.amount.toLocaleString()} GP</td>
+                    <td>${statusHtml}</td>
+                    <td style="font-size:12px; color:#888;">${escapeHtml(req.adminComment || '-')}</td>
                 </tr>
             `;
         });
         
         if (userRequests.length === 0) {
-            body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No requests yet</span>。</span></tr>';
+            body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No requests yet</td></tr>';
         }
     });
 }
@@ -843,7 +877,8 @@ async function submitGPRequest() {
             timestamp: Date.now()
         });
 
-        await sendGPRequestToDiscord({
+        console.log("Sending to Discord...");
+        const success = await sendGPRequestToDiscord({
             discordName: dName,
             discordUsername: dUser,
             userId: dId,
@@ -853,8 +888,14 @@ async function submitGPRequest() {
             amount: amount,
             requestId: reqKey
         }, selectedFiles);
+        
+        console.log("Discord send result:", success);
 
-        showNotify(`GP Request submitted successfully!`, "success");
+        if (success) {
+            showNotify(`GP Request submitted successfully!`, "success");
+        } else {
+            showNotify(`GP Request saved but Discord notification failed!`, "warning");
+        }
 
         document.getElementById('gpAmount').value = '';
         selectedFiles = [];
@@ -883,7 +924,7 @@ function loadAdminData() {
         
         body.innerHTML = '';
         if (!data) {
-            body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No pending requests</span></td></tr>';
+            body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No pending requests</td></tr>';
             return;
         }
         
@@ -892,7 +933,7 @@ function loadAdminData() {
             .sort((a, b) => a.timestamp - b.timestamp);
         
         if (pendingRequests.length === 0) {
-            body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No pending requests</span></td></tr>';
+            body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No pending requests</td></tr>';
             return;
         }
         
@@ -904,14 +945,14 @@ function loadAdminData() {
                             <span class="display-name">${escapeHtml(req.discordName || "Unknown")}</span>
                             <span class="username-handle">@${escapeHtml(req.discordUsername || "Unknown")}</span>
                         </div>
-                    </span>
+                    </td>
                     <td>
                         <div class="user-name-cell">
                             <span class="display-name">${escapeHtml(req.robloxName || "Unknown")}</span>
                             <span class="username-handle">@${escapeHtml(req.robloxUsername || "Unknown")}</span>
                         </div>
-                    </span>
-                    <td style="color:#cd7f32; font-weight:bold;">+${req.amount.toLocaleString()} GP</span>
+                    </td>
+                    <td style="color:#cd7f32; font-weight:bold;">+${req.amount.toLocaleString()} GP</td>
                     <td>
                         <div style="display: flex; flex-direction: column; gap: 8px;">
                             <input type="text" id="comment_${req.id}" placeholder="Admin comment (optional)" style="padding: 6px; font-size: 12px; margin-bottom: 5px;">
@@ -924,7 +965,7 @@ function loadAdminData() {
                                 </button>
                             </div>
                         </div>
-                    </span>
+                    </td>
                 </tr>
             `;
         });
@@ -1040,12 +1081,12 @@ async function loadAdminRolesList() {
         
         for (const role of ADMIN_ROLES) {
             const roleName = await fetchRoleName(role);
-            html += `<tr><td class="role-name">${escapeHtml(roleName)}</span><td><td class="role-id">${escapeHtml(role)}</span><td><span class="status-badge status-approved">Admin</span></td><td><button class="btn-small btn-remove-role" onclick="removeAdminRole('${role}')">Remove</button></span></tr>`;
+            html += `<tr><td class="role-name">${escapeHtml(roleName)}</td><td class="role-id">${escapeHtml(role)}</td><td><span class="status-badge status-approved">Admin</span></td><td><button class="btn-small btn-remove-role" onclick="removeAdminRole('${role}')">Remove</button></td></tr>`;
         }
         
         for (const role of OWNER_ROLES) {
             const roleName = await fetchRoleName(role);
-            html += `<tr><td class="role-name">${escapeHtml(roleName)}</span><td><td class="role-id">${escapeHtml(role)}</span><td><span class="status-badge status-pending">Owner</span></span><td><button class="btn-small btn-remove-role" onclick="removeOwnerRole('${role}')">Remove</button></span></tr>`;
+            html += `<tr><td class="role-name">${escapeHtml(roleName)}</td><td class="role-id">${escapeHtml(role)}</td><td><span class="status-badge status-pending">Owner</span></td><td><button class="btn-small btn-remove-role" onclick="removeOwnerRole('${role}')">Remove</button></td></tr>`;
         }
         
         html += '</tbody></table>';
@@ -1205,7 +1246,7 @@ async function loadKickLogs() {
         
         body.innerHTML = '';
         if (!data) {
-            body.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#666;">No kick logs found</span>。</span></tr>';
+            body.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#666;">No kick logs found</td></tr>';
             return;
         }
         
@@ -1215,11 +1256,11 @@ async function loadKickLogs() {
             const dateStr = new Date(log.timestamp).toLocaleString();
             body.innerHTML += `
                 <tr>
-                    <td style="font-size:12px;">${dateStr}</span>。</span>
-                    <td><code>${escapeHtml(log.kickedUserId || '?')}</code><br>${escapeHtml(log.kickedUserName || '')}</span>。</span>
-                    <td><code>${escapeHtml(log.kickedByUserId || '?')}</code><br>${escapeHtml(log.kickedByUserName || '')}</span>。</span>
-                    <td>${escapeHtml(log.reason || 'No reason')}</span>。</span>
-                    <td>${log.dmSent ? '✅ Yes' : '❌ No'}</span>。</span>
+                    <td style="font-size:12px;">${dateStr}</td>
+                    <td><code>${escapeHtml(log.kickedUserId || '?')}</code><br>${escapeHtml(log.kickedUserName || '')}</td>
+                    <td><code>${escapeHtml(log.kickedByUserId || '?')}</code><br>${escapeHtml(log.kickedByUserName || '')}</td>
+                    <td>${escapeHtml(log.reason || 'No reason')}</td>
+                    <td>${log.dmSent ? '✅ Yes' : '❌ No'}</td>
                 </tr>
             `;
         });
@@ -1346,7 +1387,7 @@ async function loadSavedMessages() {
         container.innerHTML = '';
         Object.entries(data).forEach(([id, msg]) => {
             const previewContent = msg.content ? (msg.content.substring(0, 100) + (msg.content.length > 100 ? '...' : '')) : 'No content';
-            const messageIdDisplay = msg.discordMessageId ? `✅ Message ID: ${msg.discordMessageId.substring(0, 8)}...` : ' Not sent yet';
+            const messageIdDisplay = msg.discordMessageId ? `✅ Message ID: ${msg.discordMessageId.substring(0, 8)}...` : '⚠️ Not sent yet';
             
             container.innerHTML += `
                 <div class="saved-message-item" data-id="${id}">
