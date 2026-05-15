@@ -654,6 +654,12 @@ input[type="file"] {
     margin-bottom: 8px;
 }
 
+.message-id {
+    font-size: 11px;
+    font-family: monospace;
+    margin-bottom: 5px;
+}
+
 .message-preview {
     background: #0f0f0f;
     border-radius: 8px;
