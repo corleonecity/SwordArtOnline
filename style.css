@@ -737,7 +737,9 @@ input[type="file"] {
 
 /* ========== MODAL ========== */
 .modal {
-    display: none;
+    display: flex; /* <-- GEFIXT: Nicht mehr display none, Flex zentriert den Inhalt perfekt */
+    align-items: center;
+    justify-content: center;
     position: fixed;
     z-index: 10001;
     left: 0;
@@ -750,7 +752,6 @@ input[type="file"] {
 
 .modal-content {
     background-color: #0a0a0a;
-    margin: 10% auto;
     padding: 25px;
     border: 2px solid #ffd700;
     border-radius: 20px;
@@ -758,6 +759,8 @@ input[type="file"] {
     max-width: 500px;
     color: #e2e8f0;
     box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+    max-height: 90vh; /* Verhindert, dass das Modal größer als der Bildschirm wird */
+    overflow-y: auto;
 }
 
 .modal-close {
@@ -896,10 +899,5 @@ input[type="file"] {
     
     .message-actions button {
         flex: 1;
-    }
-    
-    .modal-content {
-        margin: 20% auto;
-        width: 95%;
     }
 }
