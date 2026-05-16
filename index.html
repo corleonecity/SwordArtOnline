@@ -12,7 +12,6 @@
 
     <div id="audioPlayerContainer" class="hidden"></div>
 
-    <!-- Maintenance Mode Overlay -->
     <div id="maintenanceOverlay" class="maintenance-overlay hidden">
         <div class="maintenance-content">
             <i class="fas fa-tools"></i>
@@ -22,7 +21,6 @@
         </div>
     </div>
 
-    <!-- Test Mode Indicator -->
     <div id="testModeIndicator" class="test-mode-indicator hidden">
         <i class="fas fa-flask"></i> TEST MODE ACTIVE - No real GP changes
     </div>
@@ -159,7 +157,6 @@
             </div>
 
             <div id="content-owner" class="hidden">
-                <!-- Role Management Bereich -->
                 <div class="system-card" style="border-color: #ffd700; margin-bottom: 20px;">
                     <h3 style="color: #ffd700;"><i class="fas fa-user-shield"></i> Role Management</h3>
                     <p style="color:#888; margin-bottom: 15px; font-size:14px;">Manage which roles can access which parts of the panel.</p>
@@ -169,7 +166,6 @@
                     </div>
                 </div>
 
-                <!-- Channel Configuration -->
                 <div class="system-card" style="border-color: #ffd700; margin-bottom: 20px;">
                     <h3 style="color: #ffd700;"><i class="fas fa-hashtag"></i> Channel Configuration</h3>
                     <p style="color:#888; margin-bottom: 15px; font-size:14px;">Configure which channels the bot uses for notifications and tickets.</p>
@@ -179,7 +175,6 @@
                     <button id="saveChannelConfigBtn" class="btn-primary" style="background: #5865F2; margin-top: 15px;">Save Channel Configuration</button>
                 </div>
 
-                <!-- Role Configuration (Guild & Tickets) -->
                 <div class="system-card" style="border-color: #ffd700; margin-bottom: 20px;">
                     <h3 style="color: #ffd700;"><i class="fas fa-tags"></i> Role Configuration (Guild & Tickets)</h3>
                     <p style="color:#888; margin-bottom: 15px; font-size:14px;">Set role IDs for member management and ticket system.</p>
@@ -189,7 +184,6 @@
                     <button id="saveRoleConfigBtn" class="btn-primary" style="background: #5865F2; margin-top: 15px;">Save Role Configuration</button>
                 </div>
 
-                <!-- System Configuration Section -->
                 <div class="system-card" style="border-color: #ffd700; margin-bottom: 20px;">
                     <h3 style="color: #ffd700;"><i class="fas fa-sliders-h"></i> System Configuration</h3>
                     <p style="color:#888; margin-bottom: 15px; font-size:14px;">Configure embed colors, music, and update interval.</p>
@@ -224,7 +218,6 @@
                     <button id="saveSystemConfigBtn" class="btn-primary" style="background: #ffd700; color: black; margin-top: 20px;">Save System Configuration</button>
                 </div>
 
-                <!-- Registered Users Count -->
                 <div class="system-card" style="border-color: #ffd700; margin-bottom: 20px;">
                     <h3 style="color: #ffd700;"><i class="fas fa-users"></i> Registered Users</h3>
                     <p style="color:#888; margin-bottom: 15px; font-size:14px;">Total users registered in the system.</p>
@@ -235,7 +228,6 @@
                     </div>
                 </div>
 
-                <!-- Saved Custom Messages Section -->
                 <div class="system-card" style="border-color: #ffd700; margin-bottom: 20px;">
                     <h3 style="color: #ffd700;"><i class="fas fa-save"></i> Saved Custom Messages</h3>
                     <p style="color:#888; margin-bottom: 15px; font-size:14px;">Create, edit, and send saved messages. Messages are updated (not duplicated) when sent again.</p>
@@ -274,7 +266,6 @@
                     </div>
                 </div>
 
-                <!-- Kick Logs Viewer -->
                 <div class="system-card" style="border-color: #ffd700; margin-bottom: 20px;">
                     <h3 style="color: #ffd700;"><i class="fas fa-history"></i> Kick History</h3>
                     <p style="color:#888; margin-bottom: 15px; font-size:14px;">All user kicks are logged here.</p>
@@ -286,7 +277,6 @@
                     </div>
                 </div>
 
-                <!-- Maintenance Mode Toggle -->
                 <div class="system-card" style="border-color: #ffd700;">
                     <h3 style="color: #ffd700;"><i class="fas fa-wrench"></i> Maintenance Mode</h3>
                     <p style="color:#888; margin-bottom: 15px; font-size:14px;">Toggle maintenance mode when updating the system.</p>
@@ -297,7 +287,6 @@
                     </div>
                 </div>
 
-                <!-- Test Mode Toggle -->
                 <div class="system-card" style="border-color: #ffd700;">
                     <h3 style="color: #ffd700;"><i class="fas fa-flask"></i> Test Mode</h3>
                     <p style="color:#888; margin-bottom: 15px; font-size:14px;">Test mode simulates GP changes without affecting real data.</p>
@@ -314,14 +303,12 @@
 
     <div id="notification" class="notification"></div>
 
-    <!-- Modal für Role Permissions -->
     <div id="rolePermissionModal" class="modal hidden">
         <div class="modal-content">
             <span class="modal-close">&times;</span>
             <h3 id="modalRoleTitle">Role Permissions</h3>
             <div id="modalPermissionsList">
-                <!-- Dynamische Checkboxen werden hier eingefügt -->
-            </div>
+                </div>
             <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
                 <button id="modalSaveBtn" class="btn-primary" style="background: #48bb78;">Save</button>
                 <button id="modalCancelBtn" class="btn-primary" style="background: #555;">Cancel</button>
