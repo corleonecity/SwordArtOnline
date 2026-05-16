@@ -209,25 +209,31 @@ async function renderDynamicRoles() {
         return;
     }
     
-    container.innerHTML = '';
-    for (const role of roles) {
-        const roleDiv = document.createElement('div');
-        roleDiv.className = 'role-item';
-        const colorHex = role.color ? `#${role.color.toString(16).padStart(6,'0')}` : '#ffd700';
-        roleDiv.innerHTML = `
-            <span class="role-name" style="color: ${colorHex};">${escapeHtml(role.name)}</span>
-            <button class="role-open-btn" data-role-id="${role.id}" data-role-name="${escapeHtml(role.name)}">Open</button>
-        `;
-        container.appendChild(roleDiv);
-    }
+    // Sortieren nach Position (höhere Position = wichtiger)
+    roles.sort((a, b) => b.position - a.position);
     
-    // Event-Listener für alle Open-Buttons
+    // Begrenzen auf die ersten 20? Aber besser Scroll-Container
+    container.innerHTML = `
+        <div style="max-height: 300px; overflow-y: auto; padding-right: 5px;">
+            ${roles.map(role => `
+                <div class="role-item" style="margin-bottom: 8px;">
+                    <span class="role-name" style="color: ${role.color ? `#${role.color.toString(16).padStart(6,'0')}` : '#ffd700'};">${escapeHtml(role.name)}</span>
+                    <button class="role-open-btn" data-role-id="${role.id}" data-role-name="${escapeHtml(role.name)}">Open</button>
+                </div>
+            `).join('')}
+        </div>
+    `;
+    
+    // Event-Listener für alle Open-Buttons (direkt an Elemente binden)
     document.querySelectorAll('.role-open-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
+        btn.removeEventListener('click', window.roleOpenHandler);
+        const handler = (e) => {
             const roleId = btn.getAttribute('data-role-id');
             const roleName = btn.getAttribute('data-role-name');
             openRolePermissionModal(roleId, roleName);
-        });
+        };
+        btn.addEventListener('click', handler);
+        btn.roleOpenHandler = handler; // speichern für mögliches cleanup
     });
 }
 
@@ -241,7 +247,7 @@ function openRolePermissionModal(roleId, roleName) {
     
     const permissions = rolePermissions[roleId] || {};
     
-    // Hier definieren wir alle möglichen Berechtigungen (anpassbar)
+    // Hier definieren wir alle möglichen Berechtigungen
     const permissionDefs = [
         { key: 'canSubmitGP', label: 'Submit GP Donations', default: false, category: 'GP System' },
         { key: 'canViewLeaderboard', label: 'View Leaderboard', default: true, category: 'GP System' },
@@ -302,12 +308,16 @@ async function saveCurrentRolePermissions() {
     
     // Nach dem Speichern die lokalen Berechtigungen aktualisieren und ggf. UI anpassen
     await loadRolePermissions();
-    // Berechtigungen des aktuellen Users neu laden
     if (currentUser) {
         await fetchUserRoles(currentUser.id);
         updatePermissions();
     }
 }
+
+// Global exportieren für inline onclick (falls nötig)
+window.openRolePermissionModal = openRolePermissionModal;
+window.closeModal = closeModal;
+window.saveCurrentRolePermissions = saveCurrentRolePermissions;
 
 // ==========================================
 // 4. HELPER FUNCTIONS
@@ -376,12 +386,10 @@ function hasPermission(permissionKey) {
 }
 
 function hasAdminPermission() {
-    // Verwende neue Berechtigung für Admin-Panel
     return hasPermission('canViewAdminPanel');
 }
 
 function hasOwnerPermission() {
-    // Owner-Panel darf nur haben, wer canViewOwnerPanel true hat oder Owner selbst
     if (currentUser && currentUser.id === OWNER_USER_ID) return true;
     return hasPermission('canViewOwnerPanel');
 }
@@ -445,7 +453,7 @@ async function fetchUserRoles(userId) {
         userGuildRoles = [];
     }
     
-    await loadRolePermissions(); // Lade auch die Berechtigungen für diese Rollen
+    await loadRolePermissions();
     updatePermissions();
     return userGuildRoles;
 }
@@ -472,7 +480,7 @@ async function fetchRoleName(roleId) {
 }
 
 // ==========================================
-// 5. DISCORD BOT MESSAGES
+// 5. DISCORD BOT MESSAGES (unverändert, bleibt wie gehabt)
 // ==========================================
 
 async function sendDiscordMessage(channelId, content, embeds = null) {
@@ -606,7 +614,6 @@ async function sendGPRequestToDiscord(requestData, images) {
     
     const adminRoleId = ADMIN_ROLES[0] || '1503609455466643547';
     
-    // Get channel config
     const channels = await getChannelConfig();
     const gpRequestsChannel = channels.CH_GP_REQUESTS;
     
@@ -630,12 +637,10 @@ async function sendGPRequestToDiscord(requestData, images) {
         footer: { text: "SwordArtOnline GP System" }
     };
     
-    // Add image to embed if exists
     if (images && images.length > 0) {
         embed.image = { url: "attachment://proof_1.png" };
     }
 
-    // Create buttons for interaction
     const components = [{
         type: 1,
         components: [
@@ -834,7 +839,7 @@ async function checkRobloxLink() {
         await loadRoleConfig();
         await loadSystemConfig();
         await loadTestMode();
-        await loadRolePermissions(); // Lade Rollen-Permissions
+        await loadRolePermissions();
         
         const dbKey = getSafeDbKey(currentUser.username);
         const snap = await get(ref(db, `users/${dbKey}`));
@@ -925,7 +930,7 @@ function renderLeaderboard(filterText) {
                 <td><div class="user-name-cell"><span class="display-name">${escapeHtml(u.discordName || "Unknown")}</span><span class="username-handle">@${escapeHtml(u.discordUsername || "Unknown")}</span></div></span>
                 <td><div class="user-name-cell"><span class="display-name">${escapeHtml(u.robloxName || "Unknown")}</span><span class="username-handle">@${escapeHtml(u.robloxUsername || "Unknown")}</span></div></span>
                 <td style="color:#48bb78; font-weight:bold; font-size:16px;">${(u.totalGP || 0).toLocaleString()} GP</span>
-            </table>
+            </tr>
         `;
     });
     
@@ -974,10 +979,10 @@ function loadProfileHistory() {
             
             body.innerHTML += `
                 <tr>
-                    <td style="font-size:14px; color:#aaa;">${dateStr}</span>
-                    <td style="font-weight:bold;">+${req.amount.toLocaleString()} GP</span>
-                    <td>${statusHtml}</span>
-                    <td style="font-size:12px; color:#888;">${escapeHtml(req.adminComment || '-')}</span>
+                    <td style="font-size:14px; color:#aaa;">${dateStr}</td>
+                    <td style="font-weight:bold;">+${req.amount.toLocaleString()} GP</td>
+                    <td>${statusHtml}</td>
+                    <td style="font-size:12px; color:#888;">${escapeHtml(req.adminComment || '-')}</td>
                 </tr>
             `;
         });
@@ -1114,7 +1119,7 @@ async function submitGPRequest() {
 }
 
 // ==========================================
-// 10. ADMIN FUNCTIONS with comments & Discord message update
+// 10. ADMIN FUNCTIONS
 // ==========================================
 
 function loadAdminData() {
@@ -1146,14 +1151,14 @@ function loadAdminData() {
                             <span class="display-name">${escapeHtml(req.discordName || "Unknown")}</span>
                             <span class="username-handle">@${escapeHtml(req.discordUsername || "Unknown")}</span>
                         </div>
-                    </span>
+                    </td>
                     <td>
                         <div class="user-name-cell">
                             <span class="display-name">${escapeHtml(req.robloxName || "Unknown")}</span>
                             <span class="username-handle">@${escapeHtml(req.robloxUsername || "Unknown")}</span>
                         </div>
-                    </span>
-                    <td style="color:#cd7f32; font-weight:bold;">+${req.amount.toLocaleString()} GP</span>
+                    </td>
+                    <td style="color:#cd7f32; font-weight:bold;">+${req.amount.toLocaleString()} GP</td>
                     <td>
                         <div style="display: flex; flex-direction: column; gap: 8px;">
                             <input type="text" id="comment_${req.id}" placeholder="Admin comment (optional)" style="padding: 6px; font-size: 12px; margin-bottom: 5px;">
@@ -1166,14 +1171,13 @@ function loadAdminData() {
                                 </button>
                             </div>
                         </div>
-                    </span>
+                    </td>
                 </tr>
             `;
         });
     });
 }
 
-// Helper: Aufruf an Worker, um Discord-Nachricht zu aktualisieren
 async function updateDiscordGPRequestMessage(requestId, adminId, adminName) {
     try {
         const response = await fetch(`${BACKEND_URL}/update-gp-message`, {
@@ -1249,7 +1253,6 @@ window.handleAdminActionWithComment = async (reqId, userId, amount, action, pass
             rank = index !== -1 ? (index + 1).toString() : "?";
         }
 
-        // Discord-Nachricht im Request-Channel aktualisieren
         await updateDiscordGPRequestMessage(reqId, currentUser.id, currentUser.global_name || currentUser.username);
 
         const channels = await getChannelConfig();
@@ -1291,10 +1294,9 @@ window.handleAdminActionWithComment = async (reqId, userId, amount, action, pass
 };
 
 // ==========================================
-// 11. OWNER PANEL FUNCTIONS (Channel Config, Role Config, etc.)
+// 11. OWNER PANEL FUNCTIONS
 // ==========================================
 
-// ---------- Channel Configuration (inkl. Ticket-Kanäle) ----------
 async function loadChannelConfigUI() {
     const container = document.getElementById('channelConfigList');
     if (!container) return;
@@ -1311,7 +1313,6 @@ async function loadChannelConfigUI() {
         { key: 'CH_GP_PROCESSED', name: '✅ GP Processed Channel', description: 'Channel for approved/rejected GP requests' },
         { key: 'CH_LOGIN_LOGS', name: '🔐 Login Logs Channel', description: 'Channel for user login notifications' },
         { key: 'CH_BOT_DM_LOGS', name: '📨 Bot DM Logs Channel', description: 'Channel for /admin command messages' },
-        // Ticket-Kanäle
         { key: 'ticketMenuChannel', name: '🎫 Ticket Menu Channel', description: 'Channel where ticket dropdown is posted' },
         { key: 'ticketCatAdmin', name: '👑 Admin Ticket Category', description: 'Category ID for admin tickets' },
         { key: 'ticketCatMod', name: '🛡️ Moderator Ticket Category', description: 'Category ID for moderator tickets' },
@@ -1376,7 +1377,6 @@ async function saveChannelConfig() {
     }
 }
 
-// ---------- Role Configuration (Guild & Ticket Rollen) ----------
 async function loadRoleConfigUI() {
     const container = document.getElementById('roleConfigList');
     if (!container) return;
@@ -1449,7 +1449,6 @@ async function saveRoleConfig() {
     }
 }
 
-// ---------- Kick Logs, System Config, etc. ----------
 async function loadKickLogs() {
     const logsRef = ref(db, 'logs/kicks');
     onValue(logsRef, (snapshot) => {
@@ -1564,7 +1563,6 @@ async function saveSystemConfig() {
 }
 
 async function saveGpSubmitRole() {
-    // Diese Funktion ist veraltet durch das neue Role Management, aber wir behalten sie für Kompatibilität
     const newRoleId = document.getElementById('gpSubmitRoleId').value.trim();
     if (!newRoleId) {
         showNotify("Please enter a role ID!", "error");
@@ -1911,8 +1909,7 @@ window.addEventListener('click', (e) => {
     if (e.target === document.getElementById('rolePermissionModal')) closeModal();
 });
 
-// Alte Rollen-Buttons entfernen (nicht mehr vorhanden)
-// Stattdessen neue für Channel, Role Config etc.
+// Weitere Buttons
 document.getElementById('saveChannelConfigBtn')?.addEventListener('click', saveChannelConfig);
 document.getElementById('saveRoleConfigBtn')?.addEventListener('click', saveRoleConfig);
 document.getElementById('saveSystemConfigBtn')?.addEventListener('click', saveSystemConfig);
