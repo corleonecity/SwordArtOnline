@@ -220,12 +220,10 @@ async function renderDynamicRoles() {
             <button class="role-open-btn">Open</button>
         `;
         
-        // Zuverlässige Zuweisung des Event Listeners direkt am erstellten Button
         const btn = roleDiv.querySelector('.role-open-btn');
         btn.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            console.log("Button clicked:", role.id, role.name);
             openPermissionModal(role.id, role.name);
         });
 
@@ -233,32 +231,20 @@ async function renderDynamicRoles() {
     }
 }
 
-// Variable für die aktuell bearbeitete Rolle
 let currentRoleId = null;
 
-// Öffnet das Modal mit den Berechtigungen
 function openPermissionModal(roleId, roleName) {
-    console.log("openPermissionModal called for:", roleId, roleName);
-    
     currentRoleId = roleId;
     const modal = document.getElementById('rolePermissionModal');
     const title = document.getElementById('modalRoleTitle');
     const listContainer = document.getElementById('modalPermissionsList');
     
-    if (!modal) {
-        console.error("Modal element not found!");
-        alert("Fehler: Modal-Element nicht gefunden!");
-        return;
-    }
+    if (!modal) return;
     
-    // Sicherstellen, dass das Title-Element existiert, um JS-Abstürze zu verhindern
-    if (title) {
-        title.textContent = `Permissions for ${roleName}`;
-    }
+    if (title) title.textContent = `Permissions for ${roleName}`;
     
     const permissions = rolePermissions[roleId] || {};
     
-    // Berechtigungsdefinitionen
     const permissionDefs = [
         { key: 'canSubmitGP', label: 'Submit GP Donations', default: false, category: 'GP System' },
         { key: 'canViewLeaderboard', label: 'View Leaderboard', default: true, category: 'GP System' },
@@ -273,7 +259,6 @@ function openPermissionModal(roleId, roleName) {
         { key: 'canToggleTestMode', label: 'Toggle Test Mode', default: false, category: 'Owner' }
     ];
     
-    // Gruppieren nach Kategorie
     const grouped = {};
     permissionDefs.forEach(def => {
         if (!grouped[def.category]) grouped[def.category] = [];
@@ -295,26 +280,18 @@ function openPermissionModal(roleId, roleName) {
         html += `</div>`;
     }
     
-    if (listContainer) {
-        listContainer.innerHTML = html;
-    }
+    if (listContainer) listContainer.innerHTML = html;
     modal.classList.remove('hidden');
-    console.log("Modal opened, hidden class removed");
 }
 
-// Schließt das Modal
 function closePermissionModal() {
     const modal = document.getElementById('rolePermissionModal');
     if (modal) modal.classList.add('hidden');
     currentRoleId = null;
 }
 
-// Speichert die Berechtigungen
 async function savePermissionChanges() {
-    if (!currentRoleId) {
-        console.warn("No role selected");
-        return;
-    }
+    if (!currentRoleId) return;
     
     const checkboxes = document.querySelectorAll('#modalPermissionsList input[type="checkbox"]');
     const permissions = {};
@@ -326,7 +303,6 @@ async function savePermissionChanges() {
     await saveRolePermission(currentRoleId, permissions);
     closePermissionModal();
     
-    // Berechtigungen neu laden und UI aktualisieren
     await loadRolePermissions();
     if (currentUser) {
         await fetchUserRoles(currentUser.id);
@@ -344,17 +320,19 @@ function getSafeDbKey(username) {
 
 function playLoginMusic() {
     const ac = document.getElementById('audioPlayerContainer');
-    if (ac.innerHTML === '') {
+    if (ac && ac.innerHTML === '') {
         ac.innerHTML = `<iframe width="0" height="0" src="${systemConfig.musicUrl}" frameborder="0" allow="autoplay"></iframe>`;
     }
 }
 
 function stopMusic() {
-    document.getElementById('audioPlayerContainer').innerHTML = '';
+    const ac = document.getElementById('audioPlayerContainer');
+    if (ac) ac.innerHTML = '';
 }
 
 function showNotify(msg, type) {
     const n = document.getElementById('notification');
+    if(!n) return;
     n.textContent = msg;
     n.className = `notification show ${type === 'success' ? 'bg-success' : (type === 'warning' ? 'bg-warning' : 'bg-error')}`;
     setTimeout(() => n.classList.remove('show'), 3000);
@@ -381,14 +359,13 @@ function forceKickUser() {
     if (liveCheckInterval) clearInterval(liveCheckInterval);
     sessionStorage.removeItem('pn_session');
     currentUser = null;
-    document.getElementById('mainContent').classList.add('hidden');
-    document.getElementById('robloxPage').classList.add('hidden');
-    document.getElementById('loginPage').classList.add('hidden');
-    document.getElementById('noPermissionPage').classList.remove('hidden');
+    document.getElementById('mainContent')?.classList.add('hidden');
+    document.getElementById('robloxPage')?.classList.add('hidden');
+    document.getElementById('loginPage')?.classList.add('hidden');
+    document.getElementById('noPermissionPage')?.classList.remove('hidden');
     stopMusic();
 }
 
-// Permission checks
 function hasPermission(permissionKey) {
     if (!currentUser) return false;
     if (currentUser.id === OWNER_USER_ID) return true;
@@ -433,13 +410,8 @@ function updatePermissions() {
         }
     }
     
-    if (tabBtnAdmin) {
-        tabBtnAdmin.style.display = hasAdminPermission() ? 'block' : 'none';
-    }
-    
-    if (tabBtnOwner) {
-        tabBtnOwner.style.display = hasOwnerPermission() ? 'block' : 'none';
-    }
+    if (tabBtnAdmin) tabBtnAdmin.style.display = hasAdminPermission() ? 'block' : 'none';
+    if (tabBtnOwner) tabBtnOwner.style.display = hasOwnerPermission() ? 'block' : 'none';
 }
 
 async function fetchUserRoles(userId) {
@@ -447,54 +419,26 @@ async function fetchUserRoles(userId) {
         userGuildRoles = [];
         return [];
     }
-    
     try {
         const response = await fetch(`${BACKEND_URL}/user-roles`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId: userId })
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: userId })
         });
-        
         if (response.ok) {
             const data = await response.json();
             userGuildRoles = data.roles || [];
-            console.log("User roles loaded:", userGuildRoles);
         } else {
             userGuildRoles = [];
         }
     } catch (e) {
-        console.warn("Error fetching user roles:", e);
         userGuildRoles = [];
     }
-    
     await loadRolePermissions();
     updatePermissions();
     return userGuildRoles;
 }
 
-async function fetchRoleName(roleId) {
-    if (roleNameCache[roleId]) return roleNameCache[roleId];
-    
-    try {
-        const response = await fetch(`${BACKEND_URL}/role-name`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ roleId: roleId, guildId: '1439377447630930084' })
-        });
-        
-        if (response.ok) {
-            const data = await response.json();
-            roleNameCache[roleId] = data.name || roleId;
-            return roleNameCache[roleId];
-        }
-    } catch (e) {
-        console.warn("Error fetching role name:", e);
-    }
-    return roleId;
-}
-
 // ==========================================
-// 5. DISCORD BOT MESSAGES (minimal)
+// 5. DISCORD BOT MESSAGES
 // ==========================================
 
 async function sendDiscordMessage(channelId, content, embeds = null) {
@@ -504,25 +448,17 @@ async function sendDiscordMessage(channelId, content, embeds = null) {
         if (content) body.content = content;
         if (embeds && embeds.length > 0) body.embeds = embeds;
         const response = await fetch(`${BACKEND_URL}/send-channel-message`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ channelId, content, embeds })
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ channelId, content, embeds })
         });
-        if (!response.ok) return false;
-        return true;
-    } catch (e) {
-        console.error("sendDiscordMessage error:", e);
-        return false;
-    }
+        return response.ok;
+    } catch (e) { return false; }
 }
 
 async function updateBotStatus() {
     try {
         const totalGP = Object.values(allUsersData).reduce((sum, u) => sum + (u.totalGP || 0), 0);
         await fetch(`${BACKEND_URL}/update-status`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status: `🎮 Total GP: ${totalGP.toLocaleString()}` })
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: `🎮 Total GP: ${totalGP.toLocaleString()}` })
         });
     } catch (e) {}
 }
@@ -531,9 +467,7 @@ async function updateDiscordNickname(userId, robloxName, robloxUsername) {
     try {
         const newNickname = `${robloxName} (@${robloxUsername})`;
         await fetch(`${BACKEND_URL}/update-nickname`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId, nickname: newNickname, guildId: '1439377447630930084' })
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId, nickname: newNickname, guildId: '1439377447630930084' })
         });
     } catch (e) {}
 }
@@ -592,8 +526,7 @@ async function doLiveCheck() {
     if (!currentUser) return false;
     try {
         const res = await fetch(`${BACKEND_URL}/check-member`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId: currentUser.id })
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: currentUser.id })
         });
         if (!res.ok) { forceKickUser(); return false; }
         const data = await res.json();
@@ -610,8 +543,7 @@ function startLiveMemberCheck() {
 async function handleDiscordLogin(code) {
     try {
         const res = await fetch(`${BACKEND_URL}/token`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ code, redirect_uri: REDIRECT_URI })
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code, redirect_uri: REDIRECT_URI })
         });
         const data = await res.json();
         if (data.isAuthorized) {
@@ -633,8 +565,7 @@ async function handleRobloxLogin(code) {
     try {
         currentUser = JSON.parse(sessionStorage.getItem('pn_session'));
         const res = await fetch(`${BACKEND_URL}/roblox-token`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ code, redirect_uri: REDIRECT_URI })
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code, redirect_uri: REDIRECT_URI })
         });
         const data = await res.json();
         if (data.success && data.robloxUser) {
@@ -674,14 +605,14 @@ async function checkRobloxLink() {
         await loadRolePermissions();
         const dbKey = getSafeDbKey(currentUser.username);
         const snap = await get(ref(db, `users/${dbKey}`));
-        document.getElementById('loginPage').classList.add('hidden');
+        document.getElementById('loginPage')?.classList.add('hidden');
         if (snap.exists() && snap.val().robloxId) {
             if (currentUser && currentUser.id) await fetchUserRoles(currentUser.id);
             showDashboard();
             startLiveMemberCheck();
             fetch(`${BACKEND_URL}/check-member`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: currentUser.id, updateRoles: true }) });
         } else {
-            document.getElementById('robloxPage').classList.remove('hidden');
+            document.getElementById('robloxPage')?.classList.remove('hidden');
             playLoginMusic();
             startLiveMemberCheck();
         }
@@ -694,10 +625,15 @@ async function checkRobloxLink() {
 
 function showDashboard() {
     stopMusic();
-    document.getElementById('robloxPage').classList.add('hidden');
-    document.getElementById('mainContent').classList.remove('hidden');
-    document.getElementById('userWelcome').textContent = `Hi, ${currentUser.global_name || currentUser.username}`;
-    if (currentUser.avatar) document.getElementById('userAvatar').src = `https://cdn.discordapp.com/avatars/${currentUser.id}/${currentUser.avatar}.png`;
+    document.getElementById('robloxPage')?.classList.add('hidden');
+    document.getElementById('mainContent')?.classList.remove('hidden');
+    
+    const userWelcome = document.getElementById('userWelcome');
+    if (userWelcome) userWelcome.textContent = `Hi, ${currentUser.global_name || currentUser.username}`;
+    
+    const userAvatar = document.getElementById('userAvatar');
+    if (currentUser.avatar && userAvatar) userAvatar.src = `https://cdn.discordapp.com/avatars/${currentUser.id}/${currentUser.avatar}.png`;
+    
     updatePermissions();
     loadLeaderboard();
     loadProfileHistory();
@@ -717,6 +653,7 @@ function showDashboard() {
 
 function renderLeaderboard(filterText) {
     const body = document.getElementById('leaderboardBody');
+    if(!body) return;
     body.innerHTML = '';
     if (!allUsersData) return;
     let usersArray = Object.values(allUsersData).filter(u => u.totalGP && u.totalGP > 0).sort((a, b) => (b.totalGP || 0) - (a.totalGP || 0));
@@ -751,6 +688,7 @@ function loadProfileHistory() {
     onValue(ref(db, 'requests'), (snapshot) => {
         const data = snapshot.val();
         const body = document.getElementById('profileHistoryBody');
+        if(!body) return;
         body.innerHTML = '';
         if (!data || !currentUser) return;
         const userRequests = Object.values(data).filter(r => r.userId === currentUser.id).sort((a, b) => b.timestamp - a.timestamp);
@@ -775,6 +713,7 @@ function loadProfileHistory() {
 function updateImagePreviews() {
     const previewContainer = document.getElementById('imagePreviewContainer');
     const fileCountText = document.getElementById('fileCountText');
+    if(!previewContainer || !fileCountText) return;
     previewContainer.innerHTML = '';
     fileCountText.textContent = `${selectedFiles.length} / ${systemConfig.limits.maxImagesPerRequest} image(s) selected`;
     selectedFiles.forEach((file, index) => {
@@ -798,13 +737,15 @@ function updateImagePreviews() {
 
 async function submitGPRequest() {
     if (!hasGpSubmitPermission()) { showNotify("You don't have permission to submit GP requests!", "error"); return; }
-    const amount = parseInt(document.getElementById('gpAmount').value);
+    const amountInput = document.getElementById('gpAmount');
+    if(!amountInput) return;
+    const amount = parseInt(amountInput.value);
     const btn = document.getElementById('addGPBtn');
     if (isNaN(amount) || amount <= 0) { alert("Please enter a valid amount!"); return; }
     if (selectedFiles.length === 0) { alert("Please add at least 1 screenshot as proof!"); return; }
     if (selectedFiles.length > systemConfig.limits.maxImagesPerRequest) { alert(`Maximum ${systemConfig.limits.maxImagesPerRequest} images allowed!`); return; }
-    btn.disabled = true;
-    btn.textContent = "SENDING...";
+    
+    if(btn) { btn.disabled = true; btn.textContent = "SENDING..."; }
     try {
         const dbKey = getSafeDbKey(currentUser.username);
         const userRef = ref(db, `users/${dbKey}`);
@@ -822,11 +763,11 @@ async function submitGPRequest() {
         const success = await sendGPRequestToDiscord({ discordName: dName, discordUsername: dUser, userId: dId, robloxName: rName, robloxUsername: rUser, robloxId: rId, amount, requestId: reqKey }, selectedFiles);
         if (success) showNotify(`GP Request submitted successfully!`, "success");
         else showNotify(`GP Request saved but Discord notification failed!`, "warning");
-        document.getElementById('gpAmount').value = '';
+        amountInput.value = '';
         selectedFiles = [];
         updateImagePreviews();
         switchTab('Profile');
-    } catch (e) { alert("Error: " + e.message); } finally { btn.disabled = false; btn.innerHTML = "SUBMIT PROOF FOR REVIEW"; }
+    } catch (e) { alert("Error: " + e.message); } finally { if(btn) { btn.disabled = false; btn.innerHTML = "SUBMIT PROOF FOR REVIEW"; } }
 }
 
 // ==========================================
@@ -1020,8 +961,17 @@ async function loadKickLogs() {
 async function setMaintenanceMode(enabled) {
     try {
         await set(ref(db, 'config/maintenance'), { enabled });
-        if (enabled) { document.getElementById('maintenanceOverlay').classList.remove('hidden'); document.getElementById('maintenanceStatusText').textContent = 'Enabled'; showNotify("Maintenance mode ENABLED", "warning"); }
-        else { document.getElementById('maintenanceOverlay').classList.add('hidden'); document.getElementById('maintenanceStatusText').textContent = 'Disabled'; showNotify("Maintenance mode DISABLED", "success"); }
+        const overlay = document.getElementById('maintenanceOverlay');
+        const statusText = document.getElementById('maintenanceStatusText');
+        if (enabled) { 
+            if(overlay) overlay.classList.remove('hidden'); 
+            if(statusText) statusText.textContent = 'Enabled'; 
+            showNotify("Maintenance mode ENABLED", "warning"); 
+        } else { 
+            if(overlay) overlay.classList.add('hidden'); 
+            if(statusText) statusText.textContent = 'Disabled'; 
+            showNotify("Maintenance mode DISABLED", "success"); 
+        }
     } catch (e) { showNotify("Error toggling maintenance mode!", "error"); }
 }
 
@@ -1046,19 +996,43 @@ async function loadRegisteredUsersCount() {
 }
 
 function loadSystemConfigUI() {
-    document.getElementById('colorApprove').value = systemConfig.embedColors.approve;
-    document.getElementById('colorReject').value = systemConfig.embedColors.reject;
-    document.getElementById('colorPending').value = systemConfig.embedColors.pending;
-    document.getElementById('colorInfo').value = systemConfig.embedColors.info;
-    document.getElementById('colorLeaderboard').value = systemConfig.embedColors.leaderboard;
-    document.getElementById('maxImagesPerRequest').value = systemConfig.limits.maxImagesPerRequest;
-    document.getElementById('loginMusicUrl').value = systemConfig.musicUrl;
-    document.getElementById('updateInterval').value = systemConfig.updateInterval;
-    document.getElementById('gpSubmitRoleId').value = GP_SUBMIT_ROLE;
+    // NULL-SAFE IMPLEMENTATION - KEIN ABSTURZ MEHR WENN FELDER FEHLEN!
+    const setVal = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.value = val;
+    };
+    
+    setVal('colorApprove', systemConfig.embedColors.approve);
+    setVal('colorReject', systemConfig.embedColors.reject);
+    setVal('colorPending', systemConfig.embedColors.pending);
+    setVal('colorInfo', systemConfig.embedColors.info);
+    setVal('colorLeaderboard', systemConfig.embedColors.leaderboard);
+    setVal('maxImagesPerRequest', systemConfig.limits.maxImagesPerRequest);
+    setVal('loginMusicUrl', systemConfig.musicUrl);
+    setVal('updateInterval', systemConfig.updateInterval);
+    setVal('gpSubmitRoleId', GP_SUBMIT_ROLE); // Stürzt nicht ab, wenn in HTML gelöscht!
 }
 
 async function saveSystemConfig() {
-    const newConfig = { embedColors: { approve: document.getElementById('colorApprove').value, reject: document.getElementById('colorReject').value, pending: document.getElementById('colorPending').value, info: document.getElementById('colorInfo').value, leaderboard: document.getElementById('colorLeaderboard').value }, limits: { maxImagesPerRequest: parseInt(document.getElementById('maxImagesPerRequest').value) }, musicUrl: document.getElementById('loginMusicUrl').value, updateInterval: parseInt(document.getElementById('updateInterval').value) };
+    const getVal = (id, fallback) => {
+        const el = document.getElementById(id);
+        return el ? el.value : fallback;
+    };
+
+    const newConfig = { 
+        embedColors: { 
+            approve: getVal('colorApprove', systemConfig.embedColors.approve), 
+            reject: getVal('colorReject', systemConfig.embedColors.reject), 
+            pending: getVal('colorPending', systemConfig.embedColors.pending), 
+            info: getVal('colorInfo', systemConfig.embedColors.info), 
+            leaderboard: getVal('colorLeaderboard', systemConfig.embedColors.leaderboard) 
+        }, 
+        limits: { 
+            maxImagesPerRequest: parseInt(getVal('maxImagesPerRequest', systemConfig.limits.maxImagesPerRequest)) 
+        }, 
+        musicUrl: getVal('loginMusicUrl', systemConfig.musicUrl), 
+        updateInterval: parseInt(getVal('updateInterval', systemConfig.updateInterval)) 
+    };
     try {
         await set(ref(db, 'config/system'), newConfig);
         systemConfig.embedColors = newConfig.embedColors;
@@ -1070,7 +1044,9 @@ async function saveSystemConfig() {
 }
 
 async function saveGpSubmitRole() {
-    const newRoleId = document.getElementById('gpSubmitRoleId').value.trim();
+    const roleInput = document.getElementById('gpSubmitRoleId');
+    if(!roleInput) return;
+    const newRoleId = roleInput.value.trim();
     if (!newRoleId) { showNotify("Please enter a role ID!", "error"); return; }
     try {
         await set(ref(db, 'config/system/gpSubmitRole'), newRoleId);
@@ -1105,27 +1081,37 @@ window.editSavedMessage = async (id) => {
     const msg = snap.val();
     if (!msg) return;
     currentEditingMessageId = id;
-    document.getElementById('messageName').value = msg.name || '';
-    document.getElementById('messageChannelId').value = msg.channelId || '';
-    document.getElementById('messageContent').value = msg.content || '';
-    document.getElementById('messageEmbedTitle').value = msg.embedTitle || '';
-    document.getElementById('messageEmbedDesc').value = msg.embedDesc || '';
-    if (msg.embedColor) document.getElementById('messageEmbedColor').value = msg.embedColor;
+    
+    const setVal = (elmId, val) => { const el = document.getElementById(elmId); if(el) el.value = val; };
+    
+    setVal('messageName', msg.name || '');
+    setVal('messageChannelId', msg.channelId || '');
+    setVal('messageContent', msg.content || '');
+    setVal('messageEmbedTitle', msg.embedTitle || '');
+    setVal('messageEmbedDesc', msg.embedDesc || '');
+    if (msg.embedColor) setVal('messageEmbedColor', msg.embedColor);
+    
     const saveBtn = document.getElementById('saveMessageBtn');
-    saveBtn.textContent = '✏️ Update Message';
-    saveBtn.style.background = '#ffd700';
+    if(saveBtn) {
+        saveBtn.textContent = '✏️ Update Message';
+        saveBtn.style.background = '#ffd700';
+    }
     showNotify(`Editing "${msg.name}" - Click Update to save changes`, "success");
 };
 
 async function saveMessage() {
-    const name = document.getElementById('messageName').value.trim();
-    const channelId = document.getElementById('messageChannelId').value.trim();
-    const content = document.getElementById('messageContent').value;
-    const embedTitle = document.getElementById('messageEmbedTitle').value;
-    const embedDesc = document.getElementById('messageEmbedDesc').value;
-    const embedColor = document.getElementById('messageEmbedColor').value;
+    const getVal = (id) => { const el = document.getElementById(id); return el ? el.value : ''; };
+    
+    const name = getVal('messageName').trim();
+    const channelId = getVal('messageChannelId').trim();
+    const content = getVal('messageContent');
+    const embedTitle = getVal('messageEmbedTitle');
+    const embedDesc = getVal('messageEmbedDesc');
+    const embedColor = getVal('messageEmbedColor');
+    
     if (!name) { showNotify("Please enter a message name!", "error"); return; }
     if (!channelId) { showNotify("Please enter a channel ID!", "error"); return; }
+    
     const messageData = { name, channelId, content, embedTitle, embedDesc, embedColor, updatedAt: Date.now(), updatedBy: currentUser?.id };
     try {
         if (currentEditingMessageId) {
@@ -1136,19 +1122,16 @@ async function saveMessage() {
             showNotify(`Message "${name}" updated successfully!`, "success");
             currentEditingMessageId = null;
             const saveBtn = document.getElementById('saveMessageBtn');
-            saveBtn.textContent = '💾 Save Message';
-            saveBtn.style.background = '#48bb78';
+            if(saveBtn) {
+                saveBtn.textContent = '💾 Save Message';
+                saveBtn.style.background = '#48bb78';
+            }
         } else {
             const newRef = push(ref(db, 'saved_messages'));
             await set(newRef, { ...messageData, createdAt: Date.now(), createdBy: currentUser?.id });
             showNotify(`Message "${name}" saved successfully!`, "success");
         }
-        document.getElementById('messageName').value = '';
-        document.getElementById('messageChannelId').value = '';
-        document.getElementById('messageContent').value = '';
-        document.getElementById('messageEmbedTitle').value = '';
-        document.getElementById('messageEmbedDesc').value = '';
-        document.getElementById('messageEmbedColor').value = '#5865F2';
+        clearMessageForm();
         loadSavedMessages();
     } catch (e) { showNotify("Error saving message!", "error"); }
 }
@@ -1191,19 +1174,21 @@ window.deleteSavedMessage = async (id) => {
 
 function clearMessageForm() {
     currentEditingMessageId = null;
-    document.getElementById('messageName').value = '';
-    document.getElementById('messageChannelId').value = '';
-    document.getElementById('messageContent').value = '';
-    document.getElementById('messageEmbedTitle').value = '';
-    document.getElementById('messageEmbedDesc').value = '';
-    document.getElementById('messageEmbedColor').value = '#5865F2';
+    const setVal = (id, val) => { const el = document.getElementById(id); if(el) el.value = val; };
+    setVal('messageName', '');
+    setVal('messageChannelId', '');
+    setVal('messageContent', '');
+    setVal('messageEmbedTitle', '');
+    setVal('messageEmbedDesc', '');
+    setVal('messageEmbedColor', '#5865F2');
+    
     const saveBtn = document.getElementById('saveMessageBtn');
-    saveBtn.textContent = '💾 Save Message';
-    saveBtn.style.background = '#48bb78';
-    showNotify("Form cleared!", "success");
+    if(saveBtn) {
+        saveBtn.textContent = '💾 Save Message';
+        saveBtn.style.background = '#48bb78';
+    }
 }
 
-// Bessere HTML-Escaping-Funktion, die auch Anführungszeichen absichert
 function escapeHtml(text) {
     if (!text) return '';
     return text.toString()
@@ -1214,7 +1199,6 @@ function escapeHtml(text) {
         .replace(/'/g, "&#039;");
 }
 
-// Zusätzlich: Eine JS-Escaping-Funktion, um Syntaxfehler bei Admin-Buttons (wie in loadAdminData) zu verhindern
 function escapeJsString(text) {
     if (!text) return '';
     return text.toString()
@@ -1240,7 +1224,7 @@ document.getElementById('tabBtnProfile')?.addEventListener('click', () => switch
 document.getElementById('tabBtnAdmin')?.addEventListener('click', () => { if (hasAdminPermission()) { switchTab('Admin'); loadAdminData(); } else { showNotify("You don't have permission to access Admin Panel!", "error"); } });
 document.getElementById('tabBtnOwner')?.addEventListener('click', () => { if (hasOwnerPermission()) { switchTab('Owner'); renderDynamicRoles(); loadChannelConfigUI(); loadRoleConfigUI(); loadKickLogs(); loadSavedMessages(); loadSystemConfigUI(); loadRegisteredUsersCount(); } else { showNotify("You don't have permission to access Owner Panel!", "error"); } });
 
-// MODAL EVENTS (einfach und direkt)
+// MODAL EVENTS
 document.getElementById('modalSaveBtn')?.addEventListener('click', savePermissionChanges);
 document.getElementById('modalCancelBtn')?.addEventListener('click', closePermissionModal);
 document.querySelector('.modal-close')?.addEventListener('click', closePermissionModal);
@@ -1255,7 +1239,7 @@ document.getElementById('refreshUsersBtn')?.addEventListener('click', loadRegist
 document.getElementById('enableTestModeBtn')?.addEventListener('click', () => setTestMode(true));
 document.getElementById('disableTestModeBtn')?.addEventListener('click', () => setTestMode(false));
 document.getElementById('saveMessageBtn')?.addEventListener('click', saveMessage);
-document.getElementById('sendMessageBtn')?.addEventListener('click', () => { if (currentEditingMessageId) sendSavedMessage(currentEditingMessageId); else { const name = document.getElementById('messageName').value.trim(); if (!name) { showNotify("Please save the message first or load an existing one!", "error"); return; } saveMessage(); } });
+document.getElementById('sendMessageBtn')?.addEventListener('click', () => { if (currentEditingMessageId) sendSavedMessage(currentEditingMessageId); else { const name = document.getElementById('messageName')?.value.trim(); if (!name) { showNotify("Please save the message first or load an existing one!", "error"); return; } saveMessage(); } });
 document.getElementById('clearMessageFormBtn')?.addEventListener('click', clearMessageForm);
 document.getElementById('enableMaintenanceBtn')?.addEventListener('click', () => setMaintenanceMode(true));
 document.getElementById('disableMaintenanceBtn')?.addEventListener('click', () => setMaintenanceMode(false));
