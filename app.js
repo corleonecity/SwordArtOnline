@@ -833,8 +833,8 @@ async function handleRobloxLogin(code) {
         }
         
         if (data.success && data.robloxUser) {
-            // HIER IST DIE KORREKTUR DER NAMEN:
-            const rDisplayName = data.robloxUser.nickname || data.robloxUser.name;
+            // KORREKTUR: Verwende displayName für Anzeigename und preferred_username/name für Benutzername
+            const rDisplayName = data.robloxUser.displayName || data.robloxUser.name;
             const rUsername = data.robloxUser.preferred_username || data.robloxUser.name;
             
             const rId = data.robloxUser.sub;
@@ -1216,7 +1216,7 @@ function loadAdminData() {
         
         body.innerHTML = '';
         if (!data) {
-            body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No pending requests</td></tr>';
+            body.innerHTML = '<td><td colspan="4" style="text-align:center; color:#666;">No pending requests</td></tr>';
             return;
         }
         
