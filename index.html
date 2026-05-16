@@ -63,13 +63,13 @@
                 <div id="currentGuildDisplay" class="current-guild"></div>
             </div>
             <div class="header-actions">
-                <button id="changeGuildBtn" class="btn-logout rbx" title="Change Server">
+                <button id="changeGuildBtn" class="btn-logout change-guild">
                     <i class="fas fa-exchange-alt"></i> Change Server
                 </button>
-                <button id="rbxLogoutBtn" class="btn-logout rbx" title="Change Roblox Account">
+                <button id="rbxLogoutBtn" class="btn-logout rbx-logout">
                     <i class="fas fa-exchange-alt"></i> Change Roblox
                 </button>
-                <button id="dcLogoutBtn" class="btn-logout dc" title="Log out">
+                <button id="dcLogoutBtn" class="btn-logout dc-logout">
                     <i class="fas fa-sign-out-alt"></i> Logout
                 </button>
             </div>
@@ -137,13 +137,13 @@
                 </div>
             </div>
 
-            <!-- Tab 5: Guild Leader (ex Owner) – alle Konfigurationen hier -->
+            <!-- Tab 5: Guild Leader (nur Rollen & Channel Config, ohne System/Maintenance/Test/Registered Users) -->
             <div id="content-guildleader" class="hidden">
                 <div class="system-card">
                     <h3 style="color:#ffd700;">⭐ Guild Leader Panel</h3>
-                    <p style="color:#666; margin-bottom:24px;">Complete server configuration.</p>
+                    <p style="color:#666; margin-bottom:24px;">Role and channel configuration.</p>
 
-                    <!-- Add Admin Role -->
+                    <!-- Add Admin / Guild Leader Role -->
                     <div style="background:#0a0a0a; border-radius:20px; padding:24px; margin-bottom:24px;">
                         <h4>➕ Add Admin / Guild Leader Role</h4>
                         <div style="display:flex; gap:12px; flex-wrap:wrap;">
@@ -162,19 +162,42 @@
                         <div id="adminRolesList">Loading...</div>
                     </div>
 
-                    <!-- GP Submit Role -->
+                    <!-- Role Configuration (GP Submit, Ping Roles) -->
                     <div style="background:#0a0a0a; border-radius:20px; padding:24px; margin-bottom:24px;">
-                        <h4>🎮 GP Submit Role</h4>
-                        <input type="text" id="gpSubmitRoleId" placeholder="Role ID for submitting GP">
-                        <button id="saveGpSubmitRoleBtn" class="btn-primary" style="background:#ffd700; color:#000; width:auto; margin-top:12px;">Save</button>
+                        <h4>🎭 Role Configuration</h4>
+                        <div style="margin-bottom:16px;">
+                            <label>🎮 GP Submit Role ID:</label>
+                            <input type="text" id="gpSubmitRoleId" placeholder="Role ID for submitting GP">
+                        </div>
+                        <div style="margin-bottom:16px;">
+                            <label>🛡️ Admin Ping Role (Ticket):</label>
+                            <input type="text" id="adminPingRoleId" placeholder="Role ID for admin ticket pings">
+                        </div>
+                        <div style="margin-bottom:16px;">
+                            <label>🛡️ Mod Ping Role (Ticket):</label>
+                            <input type="text" id="modPingRoleId" placeholder="Role ID for mod ticket pings">
+                        </div>
+                        <div style="margin-bottom:16px;">
+                            <label>📢 Panel Ping Role (Leave/Join/GP/Bot Mail):</label>
+                            <input type="text" id="panelPingRoleId" placeholder="Role ID for general notifications">
+                        </div>
+                        <button id="saveRoleConfigBtn" class="btn-primary" style="background:#ffd700; color:#000; width:auto;">Save Role Config</button>
                     </div>
 
-                    <!-- Channel Configuration -->
+                    <!-- Channel Configuration (inkl. Ticket-Kanäle) -->
                     <div style="background:#0a0a0a; border-radius:20px; padding:24px; margin-bottom:24px;">
                         <h4>📡 Channel Configuration</h4>
                         <div id="channelConfigList">Loading...</div>
                         <button id="saveChannelConfigBtn" class="btn-primary" style="background:#5865F2; margin-top:16px;">Save Channels</button>
                     </div>
+                </div>
+            </div>
+
+            <!-- Tab 6: Panel Owner (System Config, Registered Users, Maintenance, Test Mode) -->
+            <div id="content-panelowner" class="hidden">
+                <div class="system-card">
+                    <h3 style="color:#ff3366;">👑 Panel Owner Panel</h3>
+                    <p style="color:#666; margin-bottom:24px;">System configuration and maintenance.</p>
 
                     <!-- System Configuration -->
                     <div style="background:#0a0a0a; border-radius:20px; padding:24px; margin-bottom:24px;">
@@ -196,8 +219,36 @@
                         <button id="saveSystemConfigBtn" class="btn-primary" style="background:#ffd700; margin-top:20px;">Save System Config</button>
                     </div>
 
-                    <!-- Saved Messages -->
+                    <!-- Registered Users -->
+                    <div style="background:#0a0a0a; border-radius:20px; padding:24px; margin-bottom:24px; text-align:center;">
+                        <h4>👥 Registered Users</h4>
+                        <div style="font-size:48px; color:#ffd700; font-weight:800;" id="statTotalUsers">0</div>
+                        <button id="refreshUsersBtn" class="btn-primary" style="background:#5865F2; width:auto; margin-top:16px;">Refresh</button>
+                    </div>
+
+                    <!-- Maintenance Mode -->
                     <div style="background:#0a0a0a; border-radius:20px; padding:24px; margin-bottom:24px;">
+                        <h4>🔧 Maintenance Mode</h4>
+                        <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                            <button id="enableMaintenanceBtn" class="btn-primary" style="background:#dc2626; width:auto;">Enable</button>
+                            <button id="disableMaintenanceBtn" class="btn-primary" style="background:#48bb78; width:auto;">Disable</button>
+                            <span>Status: <span id="maintenanceStatusText">Disabled</span></span>
+                        </div>
+                    </div>
+
+                    <!-- Test Mode -->
+                    <div style="background:#0a0a0a; border-radius:20px; padding:24px;">
+                        <h4>🧪 Test Mode</h4>
+                        <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                            <button id="enableTestModeBtn" class="btn-primary" style="background:#dc2626; width:auto;">Enable</button>
+                            <button id="disableTestModeBtn" class="btn-primary" style="background:#48bb78; width:auto;">Disable</button>
+                            <span>Status: <span id="testModeStatusText">Disabled</span></span>
+                        </div>
+                        <p style="color:#ffd700; font-size:12px; margin-top:16px;">Test mode simulates approvals without changing GP.</p>
+                    </div>
+
+                    <!-- Saved Messages -->
+                    <div style="background:#0a0a0a; border-radius:20px; padding:24px; margin-top:24px;">
                         <h4>💾 Saved Messages</h4>
                         <input type="text" id="messageName" placeholder="Message Name">
                         <input type="text" id="messageChannelId" placeholder="Channel ID">
@@ -212,49 +263,6 @@
                         </div>
                         <div id="savedMessagesList" style="margin-top:20px;">Loading...</div>
                     </div>
-
-                    <!-- Registered Users (read-only) -->
-                    <div style="background:#0a0a0a; border-radius:20px; padding:24px; margin-bottom:24px; text-align:center;">
-                        <h4>👥 Registered Users</h4>
-                        <div style="font-size:48px; color:#ffd700; font-weight:800;" id="statTotalUsers">0</div>
-                        <button id="refreshUsersBtn" class="btn-primary" style="background:#5865F2; width:auto; margin-top:16px;">Refresh</button>
-                    </div>
-
-                    <!-- Kick Logs -->
-                    <div style="background:#0a0a0a; border-radius:20px; padding:24px; margin-bottom:24px;">
-                        <h4>📜 Kick History</h4>
-                        <div class="table-responsive"><table class="table"><thead><tr><th>Date</th><th>Kicked User</th><th>Kicked By</th><th>Reason</th><th>DM</th></tr></thead><tbody id="kickLogsBody"></tbody></table></div>
-                    </div>
-
-                    <!-- Maintenance Mode (nur Panel Owner? Laut Wunsch: bei owner) – wir setzen auf Guild Leader -->
-                    <div style="background:#0a0a0a; border-radius:20px; padding:24px; margin-bottom:24px;">
-                        <h4>🔧 Maintenance Mode</h4>
-                        <div style="display:flex; gap:12px; flex-wrap:wrap;">
-                            <button id="enableMaintenanceBtn" class="btn-primary" style="background:#dc2626; width:auto;">Enable</button>
-                            <button id="disableMaintenanceBtn" class="btn-primary" style="background:#48bb78; width:auto;">Disable</button>
-                            <span>Status: <span id="maintenanceStatusText">Disabled</span></span>
-                        </div>
-                    </div>
-
-                    <!-- Test Mode (nur Panel Owner? Auch hier bei Guild Leader) -->
-                    <div style="background:#0a0a0a; border-radius:20px; padding:24px;">
-                        <h4>🧪 Test Mode</h4>
-                        <div style="display:flex; gap:12px; flex-wrap:wrap;">
-                            <button id="enableTestModeBtn" class="btn-primary" style="background:#dc2626; width:auto;">Enable</button>
-                            <button id="disableTestModeBtn" class="btn-primary" style="background:#48bb78; width:auto;">Disable</button>
-                            <span>Status: <span id="testModeStatusText">Disabled</span></span>
-                        </div>
-                        <p style="color:#ffd700; font-size:12px; margin-top:16px;">Test mode simulates approvals without changing GP.</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Tab 6: Panel Owner (nur für User ID 917426398120005653) – hier bleibt nur eine Bestätigung, dass er alle Rechte hat, aber die Einstellungen sind bereits oben -->
-            <div id="content-panelowner" class="hidden">
-                <div class="system-card">
-                    <h3 style="color:#ff3366;">👑 Panel Owner</h3>
-                    <p>You have full access to all guilds. Use the Guild Leader tab to configure each server.</p>
-                    <p style="color:#666;">You can also change server via the "Change Server" button in the header.</p>
                 </div>
             </div>
         </div>
