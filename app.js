@@ -21,7 +21,7 @@ let systemConfig = {
         leaderboard: '#ffd700'
     },
     limits: {
-        maxImagesPerRequest: 3
+        maxImagesPerRequest: 3  // Erhöht auf 3 Bilder
     },
     musicUrl: 'https://www.youtube.com/embed/BtEkzZoUCpw?autoplay=1&loop=1',
     updateInterval: 60
@@ -162,10 +162,8 @@ function updateTestModeIndicator() {
 // 3. HELPER FUNCTIONS
 // ==========================================
 
-// Wichtig: Benutzer werden mit Discord-Username als Key gespeichert!
-function getSafeDbKey(discordUsername) {
-    if (!discordUsername) return 'unknown_user';
-    return discordUsername.toLowerCase().replace(/[.#$\[\]]/g, '_');
+function getSafeDbKey(username) {
+    return username ? username.replace(/[.#$\[\]]/g, '_') : 'unknown_user';
 }
 
 function playLoginMusic() {
@@ -334,153 +332,6 @@ async function fetchRoleName(roleId) {
         console.warn("Error fetching role name:", e);
     }
     return roleId;
-}
-
-// ==========================================
-// 3.5 MANUAL USER REGISTRATION
-// ==========================================
-
-async function checkExistingUserByDiscordUsername(discordUsername) {
-    if (!discordUsername) return { exists: false };
-    
-    try {
-        const dbKey = getSafeDbKey(discordUsername);
-        const userRef = ref(db, `users/${dbKey}`);
-        const snap = await get(userRef);
-        
-        if (snap.exists()) {
-            return { exists: true, userKey: dbKey, userData: snap.val() };
-        }
-        return { exists: false };
-    } catch (e) {
-        console.error("Error checking existing user:", e);
-        return { exists: false, error: e.message };
-    }
-}
-
-async function manualRegisterUser() {
-    if (!hasOwnerPermission()) {
-        showNotify("Only the owner can manually register users!", "error");
-        return;
-    }
-    
-    const discordId = document.getElementById('manualDiscordId')?.value.trim();
-    const discordName = document.getElementById('manualDiscordName')?.value.trim() || "Unknown";
-    const discordUsername = document.getElementById('manualDiscordUsername')?.value.trim();
-    const robloxId = document.getElementById('manualRobloxId')?.value.trim();
-    const robloxName = document.getElementById('manualRobloxName')?.value.trim() || "Unknown";
-    const robloxUsername = document.getElementById('manualRobloxUsername')?.value.trim();
-    const initialGp = parseInt(document.getElementById('manualInitialGp')?.value) || 0;
-    
-    const resultDiv = document.getElementById('manualRegisterResult');
-    
-    if (!discordId) {
-        resultDiv.innerHTML = '<span style="color: #f56565;">❌ Discord User ID is required!</span>';
-        return;
-    }
-    
-    if (!discordUsername) {
-        resultDiv.innerHTML = '<span style="color: #f56565;">❌ Discord Username is required!</span>';
-        return;
-    }
-    
-    if (!robloxId) {
-        resultDiv.innerHTML = '<span style="color: #f56565;">❌ Roblox User ID is required!</span>';
-        return;
-    }
-    
-    if (!robloxUsername) {
-        resultDiv.innerHTML = '<span style="color: #f56565;">❌ Roblox Username is required!</span>';
-        return;
-    }
-    
-    resultDiv.innerHTML = '<span style="color: #ffd700;"><i class="fas fa-spinner fa-spin"></i> Saving user...</span>';
-    
-    try {
-        const dbKey = getSafeDbKey(discordUsername);
-        
-        const userData = {
-            id: discordId,
-            discordName: discordName,
-            discordUsername: discordUsername,
-            robloxId: robloxId,
-            robloxName: robloxName,
-            robloxUsername: robloxUsername,
-            totalGP: initialGp,
-            hasLeftServer: false,
-            manuallyRegistered: true,
-            registeredAt: Date.now(),
-            registeredBy: currentUser?.id
-        };
-        
-        const existing = await checkExistingUserByDiscordUsername(discordUsername);
-        
-        if (existing.exists) {
-            await update(ref(db, `users/${dbKey}`), {
-                ...userData,
-                updatedAt: Date.now(),
-                updatedBy: currentUser?.id
-            });
-            resultDiv.innerHTML = `<span style="color: #48bb78;">✅ User UPDATED successfully! Discord: @${discordUsername}</span>`;
-            showNotify(`User ${discordUsername} has been updated!`, "success");
-        } else {
-            await set(ref(db, `users/${dbKey}`), {
-                ...userData,
-                createdAt: Date.now()
-            });
-            resultDiv.innerHTML = `<span style="color: #48bb78;">✅ User CREATED successfully! Discord: @${discordUsername}</span>`;
-            showNotify(`User ${discordUsername} has been registered manually!`, "success");
-        }
-        
-        loadRegisteredUsersCount();
-        
-    } catch (e) {
-        console.error("Manual registration error:", e);
-        resultDiv.innerHTML = `<span style="color: #f56565;">❌ Error: ${e.message}</span>`;
-    }
-}
-
-async function manualCheckUser() {
-    const discordUsername = document.getElementById('manualDiscordUsername')?.value.trim();
-    const resultDiv = document.getElementById('manualRegisterResult');
-    
-    if (!discordUsername) {
-        resultDiv.innerHTML = '<span style="color: #f56565;">❌ Please enter a Discord Username first!</span>';
-        return;
-    }
-    
-    resultDiv.innerHTML = '<span style="color: #ffd700;"><i class="fas fa-spinner fa-spin"></i> Checking...</span>';
-    
-    try {
-        const existing = await checkExistingUserByDiscordUsername(discordUsername);
-        
-        if (existing.exists) {
-            const user = existing.userData;
-            resultDiv.innerHTML = `
-                <span style="color: #48bb78;">✅ User FOUND!</span><br>
-                📝 Discord: ${user.discordName} (@${user.discordUsername})<br>
-                🎮 Roblox: ${user.robloxName} (@${user.robloxUsername})<br>
-                💰 GP: ${(user.totalGP || 0).toLocaleString()}<br>
-                📅 Registered: ${user.manuallyRegistered ? 'Manually' : 'Via Login'}
-            `;
-        } else {
-            resultDiv.innerHTML = '<span style="color: #f56565;">❌ User NOT found in database. You can create them using the form above.</span>';
-        }
-    } catch (e) {
-        resultDiv.innerHTML = `<span style="color: #f56565;">❌ Error: ${e.message}</span>`;
-    }
-}
-
-function clearManualForm() {
-    document.getElementById('manualDiscordId').value = '';
-    document.getElementById('manualDiscordName').value = '';
-    document.getElementById('manualDiscordUsername').value = '';
-    document.getElementById('manualRobloxId').value = '';
-    document.getElementById('manualRobloxName').value = '';
-    document.getElementById('manualRobloxUsername').value = '';
-    document.getElementById('manualInitialGp').value = '0';
-    document.getElementById('manualRegisterResult').innerHTML = '';
-    showNotify("Form cleared!", "success");
 }
 
 // ==========================================
@@ -699,7 +550,7 @@ async function sendGPRequestToDiscord(requestData, images) {
 }
 
 // ==========================================
-// 5. DISCORD & ROBLOX AUTHENTIFICATION (mit automatischer Erkennung)
+// 5. DISCORD & ROBLOX AUTHENTIFICATION (VERBESSERT)
 // ==========================================
 
 async function doLiveCheck() {
@@ -768,31 +619,7 @@ async function handleDiscordLogin(code) {
             currentUser = data.user;
             sessionStorage.setItem('pn_session', JSON.stringify(currentUser));
             window.history.replaceState({}, '', REDIRECT_URI);
-            
-            // AUTOMATISCH PRÜFEN OB USER BEREITS IN DB EXISTIERT
-            const dbKey = getSafeDbKey(currentUser.username);
-            const userSnap = await get(ref(db, `users/${dbKey}`));
-            
-            if (userSnap.exists() && userSnap.val().robloxId && userSnap.val().robloxId !== '1') {
-                // User existiert bereits in DB -> Roblox überspringen!
-                console.log("User exists in DB, skipping Roblox link");
-                const userData = userSnap.val();
-                
-                await update(ref(db, `users/${dbKey}`), {
-                    discordName: currentUser.global_name || currentUser.username,
-                    discordUsername: currentUser.username,
-                    lastLoginAt: Date.now()
-                });
-                
-                await updateDiscordNickname(currentUser.id, userData.robloxName, userData.robloxUsername);
-                await fetchUserRoles(currentUser.id);
-                showDashboard();
-                startLiveMemberCheck();
-                showNotify(`Welcome back ${currentUser.global_name || currentUser.username}!`, "success");
-            } else {
-                // Neuer User -> Roblox Linking nötig
-                await checkRobloxLink();
-            }
+            await checkRobloxLink();
         } else {
             showNotify("Discord authorization failed!", "error");
         }
@@ -900,7 +727,7 @@ async function checkRobloxLink() {
         const loginPage = document.getElementById('loginPage');
         if (loginPage) loginPage.classList.add('hidden');
         
-        if (snap.exists() && snap.val().robloxId && snap.val().robloxId !== '1') {
+        if (snap.exists() && snap.val().robloxId) {
             if (currentUser && currentUser.id) {
                 await fetchUserRoles(currentUser.id);
             }
@@ -926,7 +753,7 @@ async function checkRobloxLink() {
 }
 
 // ==========================================
-// 6. DASHBOARD & UI
+// 6. DASHBOARD & UI (VERBESSERT)
 // ==========================================
 
 function showDashboard() {
@@ -1061,7 +888,7 @@ function loadProfileHistory() {
 }
 
 // ==========================================
-// 7. IMAGE UPLOAD & PREVIEW
+// 7. IMAGE UPLOAD & PREVIEW (VERBESSERT)
 // ==========================================
 
 function updateImagePreviews() {
@@ -1096,7 +923,7 @@ function updateImagePreviews() {
 }
 
 // ==========================================
-// 8. GP SUBMIT FUNCTION
+// 8. GP SUBMIT FUNCTION (VERBESSERT)
 // ==========================================
 
 async function submitGPRequest() {
@@ -1308,7 +1135,7 @@ window.handleAdminAction = async (reqId, userId, amount, action, passedDbKey, ro
             processedByName: currentUser.global_name || currentUser.username
         });
 
-        const dbKey = getSafeDbKey(discordUsername);
+        const dbKey = getSafeDbKey(passedDbKey);
         let newTotal = 0;
         const userRef = ref(db, `users/${dbKey}`);
         const snap = await get(userRef);
@@ -1998,11 +1825,6 @@ function initEventListeners() {
     const enableMaintenanceBtn = document.getElementById('enableMaintenanceBtn');
     const disableMaintenanceBtn = document.getElementById('disableMaintenanceBtn');
     
-    // Manual registration buttons
-    const manualRegisterBtn = document.getElementById('manualRegisterBtn');
-    const manualCheckUserBtn = document.getElementById('manualCheckUserBtn');
-    const manualClearFormBtn = document.getElementById('manualClearFormBtn');
-    
     if (discordLoginBtn) discordLoginBtn.addEventListener('click', () => {
         window.location.href = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=identify%20guilds&state=discord`;
     });
@@ -2096,11 +1918,6 @@ function initEventListeners() {
     if (clearMessageFormBtn) clearMessageFormBtn.addEventListener('click', clearMessageForm);
     if (enableMaintenanceBtn) enableMaintenanceBtn.addEventListener('click', () => setMaintenanceMode(true));
     if (disableMaintenanceBtn) disableMaintenanceBtn.addEventListener('click', () => setMaintenanceMode(false));
-    
-    // Manual registration event listeners
-    if (manualRegisterBtn) manualRegisterBtn.addEventListener('click', manualRegisterUser);
-    if (manualCheckUserBtn) manualCheckUserBtn.addEventListener('click', manualCheckUser);
-    if (manualClearFormBtn) manualClearFormBtn.addEventListener('click', clearManualForm);
 }
 
 // ==========================================
