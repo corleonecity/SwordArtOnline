@@ -795,10 +795,12 @@ async function handleDiscordLogin(code) {
             }
         } else {
             showNotify("Discord authorization failed!", "error");
+            document.getElementById('loginPage').classList.remove('hidden');
         }
     } catch (e) {
         console.error("Discord login error:", e);
         showNotify("Login Error! Please try again.", "error");
+        document.getElementById('loginPage').classList.remove('hidden');
     } finally {
         showLoading(false, 'discordLoginBtn');
     }
@@ -882,6 +884,9 @@ async function handleRobloxLogin(code) {
     } catch (e) {
         console.error("Roblox login error:", e);
         showNotify(`Linking Error: ${e.message}`, "error");
+        // Bei Fehler zurück zur Login-Seite? Oder zur Roblox-Seite? Besser zur Login-Seite.
+        document.getElementById('robloxPage').classList.add('hidden');
+        document.getElementById('loginPage').classList.remove('hidden');
     } finally {
         showLoading(false, 'robloxLoginBtn');
     }
@@ -899,6 +904,8 @@ async function checkRobloxLink() {
         
         const dbKey = getSafeDbKey(currentUser.username);
         const snap = await get(ref(db, `users/${dbKey}`));
+        
+        // Login-Seite ausblenden (wichtig!)
         const loginPage = document.getElementById('loginPage');
         if (loginPage) loginPage.classList.add('hidden');
         
@@ -921,8 +928,15 @@ async function checkRobloxLink() {
         }
     } catch (err) {
         console.error("checkRobloxLink error:", err);
+        // Bei Fehler: Login-Seite wieder einblenden und Fehlermeldung
+        const loginPage = document.getElementById('loginPage');
+        if (loginPage) loginPage.classList.remove('hidden');
+        showNotify("Failed to load user data. Please try again.", "error");
+        // Nicht zum Dashboard springen
         if (currentUser) {
-            showDashboard();
+            // Notfall: Trotzdem Dashboard versuchen? Nein, besser logout.
+            sessionStorage.removeItem('pn_session');
+            currentUser = null;
         }
     }
 }
@@ -1216,7 +1230,7 @@ function loadAdminData() {
         
         body.innerHTML = '';
         if (!data) {
-            body.innerHTML = '<td><td colspan="4" style="text-align:center; color:#666;">No pending requests</td></tr>';
+            body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No pending requests</td></tr>';
             return;
         }
         
