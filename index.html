@@ -63,13 +63,13 @@
                 <div id="currentGuildDisplay" class="current-guild"></div>
             </div>
             <div class="header-actions">
-                <button id="changeGuildBtn" class="btn-logout change-guild">
+                <button id="changeGuildBtn" class="btn-change-guild" title="Change Server">
                     <i class="fas fa-exchange-alt"></i> Change Server
                 </button>
-                <button id="rbxLogoutBtn" class="btn-logout change-roblox">
-                    <i class="fas fa-exchange-alt"></i> Change Roblox
+                <button id="rbxLogoutBtn" class="btn-logout rbx" title="Change Roblox Account">
+                    <i class="fas fa-gamepad"></i> Change Roblox
                 </button>
-                <button id="dcLogoutBtn" class="btn-logout logout-discord">
+                <button id="dcLogoutBtn" class="btn-logout dc" title="Log out">
                     <i class="fas fa-sign-out-alt"></i> Logout
                 </button>
             </div>
@@ -137,54 +137,91 @@
                 </div>
             </div>
 
-            <!-- Tab 5: Guild Leader (Roles & Channel Config) -->
+            <!-- Tab 5: Guild Leader (nur noch Übersicht – keine Konfiguration mehr) -->
             <div id="content-guildleader" class="hidden">
                 <div class="system-card">
                     <h3 style="color:#ffd700;">⭐ Guild Leader Panel</h3>
-                    <p style="color:#666; margin-bottom:24px;">Role and channel configuration.</p>
-
-                    <!-- Add Role -->
-                    <div style="background:#0a0a0a; border-radius:20px; padding:24px; margin-bottom:24px;">
-                        <h4>➕ Add Admin / Guild Leader Role</h4>
-                        <div style="display:flex; gap:12px; flex-wrap:wrap;">
-                            <input type="text" id="newRoleId" placeholder="Discord Role ID" style="flex:2;">
-                            <select id="rolePermissionLevel" style="flex:1;">
-                                <option value="admin">Admin</option>
-                                <option value="owner">Guild Leader</option>
-                            </select>
-                            <button id="addRoleBtn" class="btn-primary" style="background:#48bb78; width:auto;">Add</button>
-                        </div>
-                    </div>
-
-                    <!-- Current Roles -->
-                    <div style="background:#0a0a0a; border-radius:20px; padding:24px; margin-bottom:24px;">
-                        <h4>📋 Current Roles</h4>
-                        <div id="adminRolesList">Loading...</div>
-                    </div>
-
-                    <!-- GP Submit Role (Teil der Role Config) -->
-                    <div style="background:#0a0a0a; border-radius:20px; padding:24px; margin-bottom:24px;">
-                        <h4>🎮 GP Submit Role</h4>
-                        <input type="text" id="gpSubmitRoleId" placeholder="Role ID for submitting GP">
-                        <button id="saveGpSubmitRoleBtn" class="btn-primary" style="background:#ffd700; color:#000; width:auto; margin-top:12px;">Save</button>
-                    </div>
-
-                    <!-- Channel Configuration (inkl. Ticket-Kanäle und Rollen) -->
-                    <div style="background:#0a0a0a; border-radius:20px; padding:24px; margin-bottom:24px;">
-                        <h4>📡 Channel & Role Configuration</h4>
-                        <div id="channelConfigList">Loading...</div>
-                        <button id="saveChannelConfigBtn" class="btn-primary" style="background:#5865F2; margin-top:16px;">Save Configuration</button>
-                    </div>
+                    <p style="color:#666;">This panel is for overview only. Configuration has been moved to Panel Owner tab.</p>
+                    <p style="color:#666; margin-top:16px;">If you need to configure roles, channels, or system settings, please contact the Panel Owner.</p>
                 </div>
             </div>
 
-            <!-- Tab 6: Panel Owner (System Config, Registered Users, Maintenance, Test Mode) -->
+            <!-- Tab 6: Panel Owner (alle Konfigurationen) -->
             <div id="content-panelowner" class="hidden">
                 <div class="system-card">
-                    <h3 style="color:#ff3366;">👑 Panel Owner</h3>
-                    <p style="color:#666; margin-bottom:24px;">Advanced system settings.</p>
+                    <h3 style="color:#ff3366;">👑 Panel Owner Configuration</h3>
+                    <p style="color:#666; margin-bottom:24px;">Complete server configuration – only visible to the Panel Owner (ID: 917426398120005653).</p>
 
-                    <!-- System Configuration -->
+                    <!-- ===== ROLES ===== -->
+                    <div style="background:#0a0a0a; border-radius:20px; padding:24px; margin-bottom:24px;">
+                        <h4>🎭 Role Configuration</h4>
+                        <p style="color:#666; margin-bottom:16px;">Discord role IDs for permissions and notifications.</p>
+
+                        <!-- Admin Roles (Add) -->
+                        <div style="margin-bottom:20px;">
+                            <h5>➕ Add Admin / Guild Leader Role</h5>
+                            <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                                <input type="text" id="newRoleId" placeholder="Discord Role ID" style="flex:2;">
+                                <select id="rolePermissionLevel" style="flex:1;">
+                                    <option value="admin">Admin</option>
+                                    <option value="owner">Guild Leader</option>
+                                </select>
+                                <button id="addRoleBtn" class="btn-primary" style="background:#48bb78; width:auto;">Add</button>
+                            </div>
+                        </div>
+
+                        <!-- Current Roles List -->
+                        <div style="margin-bottom:20px;">
+                            <h5>📋 Current Roles</h5>
+                            <div id="adminRolesList">Loading...</div>
+                        </div>
+
+                        <!-- GP Submit Role -->
+                        <div style="margin-bottom:20px;">
+                            <h5>🎮 GP Submit Role</h5>
+                            <input type="text" id="gpSubmitRoleId" placeholder="Role ID for submitting GP">
+                            <button id="saveGpSubmitRoleBtn" class="btn-primary" style="background:#ffd700; color:#000; width:auto; margin-top:12px;">Save</button>
+                        </div>
+
+                        <!-- Ticket & Notification Roles -->
+                        <div style="margin-bottom:20px;">
+                            <h5>🎫 Ticket & Notification Roles</h5>
+                            <div class="role-config-item">
+                                <div class="role-config-name">Admin Ping Role (Ticket)</div>
+                                <div class="role-config-description">Role that gets pinged when a new admin ticket is created</div>
+                                <div class="role-config-input">
+                                    <input type="text" id="roleAdminPing" placeholder="Discord Role ID">
+                                    <span>Role ID</span>
+                                </div>
+                            </div>
+                            <div class="role-config-item">
+                                <div class="role-config-name">Mod Ping Role (Ticket)</div>
+                                <div class="role-config-description">Role that gets pinged when a new mod ticket is created</div>
+                                <div class="role-config-input">
+                                    <input type="text" id="roleModPing" placeholder="Discord Role ID">
+                                    <span>Role ID</span>
+                                </div>
+                            </div>
+                            <div class="role-config-item">
+                                <div class="role-config-name">Panel Ping Role</div>
+                                <div class="role-config-description">Role for leave/join, GP requests, and bot mail notifications</div>
+                                <div class="role-config-input">
+                                    <input type="text" id="rolePanelPing" placeholder="Discord Role ID">
+                                    <span>Role ID</span>
+                                </div>
+                            </div>
+                            <button id="saveRolesConfigBtn" class="btn-primary" style="background:#5865F2; margin-top:12px;">Save Role Configuration</button>
+                        </div>
+                    </div>
+
+                    <!-- ===== CHANNEL CONFIGURATION ===== -->
+                    <div style="background:#0a0a0a; border-radius:20px; padding:24px; margin-bottom:24px;">
+                        <h4>📡 Channel Configuration</h4>
+                        <div id="channelConfigList">Loading...</div>
+                        <button id="saveChannelConfigBtn" class="btn-primary" style="background:#5865F2; margin-top:16px;">Save Channel Configuration</button>
+                    </div>
+
+                    <!-- ===== SYSTEM CONFIGURATION ===== -->
                     <div style="background:#0a0a0a; border-radius:20px; padding:24px; margin-bottom:24px;">
                         <h4>⚙️ System Configuration</h4>
                         <h5>🎨 Embed Colors</h5>
@@ -204,7 +241,7 @@
                         <button id="saveSystemConfigBtn" class="btn-primary" style="background:#ffd700; margin-top:20px;">Save System Config</button>
                     </div>
 
-                    <!-- Saved Messages -->
+                    <!-- ===== SAVED MESSAGES ===== -->
                     <div style="background:#0a0a0a; border-radius:20px; padding:24px; margin-bottom:24px;">
                         <h4>💾 Saved Messages</h4>
                         <input type="text" id="messageName" placeholder="Message Name">
@@ -221,20 +258,20 @@
                         <div id="savedMessagesList" style="margin-top:20px;">Loading...</div>
                     </div>
 
-                    <!-- Registered Users (read-only) -->
+                    <!-- ===== REGISTERED USERS ===== -->
                     <div style="background:#0a0a0a; border-radius:20px; padding:24px; margin-bottom:24px; text-align:center;">
                         <h4>👥 Registered Users</h4>
                         <div style="font-size:48px; color:#ffd700; font-weight:800;" id="statTotalUsers">0</div>
                         <button id="refreshUsersBtn" class="btn-primary" style="background:#5865F2; width:auto; margin-top:16px;">Refresh</button>
                     </div>
 
-                    <!-- Kick Logs -->
+                    <!-- ===== KICK LOGS ===== -->
                     <div style="background:#0a0a0a; border-radius:20px; padding:24px; margin-bottom:24px;">
                         <h4>📜 Kick History</h4>
                         <div class="table-responsive"><table class="table"><thead><tr><th>Date</th><th>Kicked User</th><th>Kicked By</th><th>Reason</th><th>DM</th></tr></thead><tbody id="kickLogsBody"></tbody></table></div>
                     </div>
 
-                    <!-- Maintenance Mode -->
+                    <!-- ===== MAINTENANCE MODE ===== -->
                     <div style="background:#0a0a0a; border-radius:20px; padding:24px; margin-bottom:24px;">
                         <h4>🔧 Maintenance Mode</h4>
                         <div style="display:flex; gap:12px; flex-wrap:wrap;">
@@ -244,7 +281,7 @@
                         </div>
                     </div>
 
-                    <!-- Test Mode -->
+                    <!-- ===== TEST MODE ===== -->
                     <div style="background:#0a0a0a; border-radius:20px; padding:24px;">
                         <h4>🧪 Test Mode</h4>
                         <div style="display:flex; gap:12px; flex-wrap:wrap;">
@@ -259,7 +296,7 @@
         </div>
     </div>
 
-    <!-- Guild Selector Overlay -->
+    <!-- Guild Selector Container -->
     <div id="guildSelectorContainer"></div>
 
     <div id="notification" class="notification"></div>
