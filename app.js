@@ -153,7 +153,7 @@ function updateTestModeIndicator() {
 }
 
 // ==========================================
-// 3. NEUE FUNKTIONEN FÜR ROLLEN-MANAGEMENT
+// 3. NEUE FUNKTIONEN FÜR ROLLEN-MANAGEMENT (KORRIGIERT)
 // ==========================================
 
 async function loadAllGuildRoles() {
@@ -221,30 +221,32 @@ async function renderDynamicRoles() {
         container.appendChild(roleDiv);
     }
     
-    // Direkte Zuweisung der Event-Listener per onclick (funktioniert immer)
+    // Event-Listener für alle Open-Buttons (direktes Setzen von onclick)
     document.querySelectorAll('.role-open-btn').forEach(btn => {
         btn.onclick = (e) => {
             e.stopPropagation();
             const roleId = btn.getAttribute('data-role-id');
             const roleName = btn.getAttribute('data-role-name');
+            // Direkter Aufruf der Modal-Öffnungsfunktion
             openRolePermissionModal(roleId, roleName);
         };
     });
 }
 
-// Globale Funktion, die das Modal öffnet (muss im globalen Scope sein, damit sie von onclick aufgerufen werden kann)
-window.openRolePermissionModal = function(roleId, roleName) {
-    openRolePermissionModal(roleId, roleName);
-};
-
 let currentEditingRoleId = null;
 
+// Die Funktion öffnet das Modal – sie muss im gleichen Modul verfügbar sein
 function openRolePermissionModal(roleId, roleName) {
     console.log("Opening modal for role:", roleId, roleName);
-    currentEditingRoleId = roleId;
+    
     const modal = document.getElementById('rolePermissionModal');
+    if (!modal) {
+        console.error("Modal element not found!");
+        return;
+    }
+    
     const title = document.getElementById('modalRoleTitle');
-    title.textContent = `Permissions for ${roleName}`;
+    if (title) title.textContent = `Permissions for ${roleName}`;
     
     const permissions = rolePermissions[roleId] || {};
     
@@ -285,12 +287,16 @@ function openRolePermissionModal(roleId, roleName) {
         html += `</div>`;
     }
     
-    document.getElementById('modalPermissionsList').innerHTML = html;
+    const permissionsList = document.getElementById('modalPermissionsList');
+    if (permissionsList) permissionsList.innerHTML = html;
+    
+    currentEditingRoleId = roleId;
     modal.classList.remove('hidden');
 }
 
 function closeModal() {
-    document.getElementById('rolePermissionModal').classList.add('hidden');
+    const modal = document.getElementById('rolePermissionModal');
+    if (modal) modal.classList.add('hidden');
     currentEditingRoleId = null;
 }
 
@@ -307,9 +313,8 @@ async function saveCurrentRolePermissions() {
     await saveRolePermission(currentEditingRoleId, permissions);
     closeModal();
     
-    // Nach dem Speichern die lokalen Berechtigungen aktualisieren und ggf. UI anpassen
+    // Nach dem Speichern die lokalen Berechtigungen aktualisieren
     await loadRolePermissions();
-    // Berechtigungen des aktuellen Users neu laden
     if (currentUser) {
         await fetchUserRoles(currentUser.id);
         updatePermissions();
@@ -735,7 +740,7 @@ function loadProfileHistory() {
         userRequests.forEach(req => {
             const dateStr = new Date(req.timestamp).toLocaleDateString('en-US', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
             let statusHtml = req.status === 'pending' ? '<span class="status-badge status-pending">Pending ⏳</span>' : (req.status === 'approved' ? '<span class="status-badge status-approved">Approved ✅</span>' : '<span class="status-badge status-rejected">Rejected ❌</span>');
-            body.innerHTML += `<tr><td style="font-size:14px; color:#aaa;">${dateStr}</td><td style="font-weight:bold;">+${req.amount.toLocaleString()} GP</td><td>${statusHtml}</td><td style="font-size:12px; color:#888;">${escapeHtml(req.adminComment || '-')}</td></table>`;
+            body.innerHTML += `<tr><td style="font-size:14px; color:#aaa;">${dateStr}</td><td style="font-weight:bold;">+${req.amount.toLocaleString()} GP</span><td>${statusHtml}</span><td style="font-size:12px; color:#888;">${escapeHtml(req.adminComment || '-')}</span></tr>`;
         });
         if (userRequests.length === 0) body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No requests yet</td></tr>';
     });
@@ -816,7 +821,20 @@ function loadAdminData() {
         const pendingRequests = Object.values(data).filter(r => r.status === 'pending').sort((a, b) => a.timestamp - b.timestamp);
         if (pendingRequests.length === 0) { body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No pending requests</td></tr>'; return; }
         pendingRequests.forEach(req => {
-            body.innerHTML += `<tr><td><div class="user-name-cell"><span class="display-name">${escapeHtml(req.discordName || "Unknown")}</span><span class="username-handle">@${escapeHtml(req.discordUsername || "Unknown")}</span></div></td><td><div class="user-name-cell"><span class="display-name">${escapeHtml(req.robloxName || "Unknown")}</span><span class="username-handle">@${escapeHtml(req.robloxUsername || "Unknown")}</span></div></td><td style="color:#cd7f32; font-weight:bold;">+${req.amount.toLocaleString()} GP</td><td><div style="display: flex; flex-direction: column; gap: 8px;"><input type="text" id="comment_${req.id}" placeholder="Admin comment (optional)" style="padding: 6px; font-size: 12px;"><div style="display: flex; gap: 5px;"><button class="btn-small btn-approve" onclick="window.handleAdminActionWithComment('${req.id}', '${req.userId}', ${req.amount}, 'approve', '${req.dbKey || req.discordUsername}', '${req.robloxId || ''}', '${escapeHtml(req.discordName)}', '${escapeHtml(req.discordUsername)}', '${escapeHtml(req.robloxName)}', '${escapeHtml(req.robloxUsername)}')"><i class="fas fa-check"></i> Approve</button><button class="btn-small btn-deny" onclick="window.handleAdminActionWithComment('${req.id}', '${req.userId}', ${req.amount}, 'reject', '${req.dbKey || req.discordUsername}', '${req.robloxId || ''}', '${escapeHtml(req.discordName)}', '${escapeHtml(req.discordUsername)}', '${escapeHtml(req.robloxName)}', '${escapeHtml(req.robloxUsername)}')"><i class="fas fa-times"></i> Reject</button></div></div></td></tr>`;
+            body.innerHTML += `<table>
+                <td><div class="user-name-cell"><span class="display-name">${escapeHtml(req.discordName || "Unknown")}</span><span class="username-handle">@${escapeHtml(req.discordUsername || "Unknown")}</span></div></span>
+                <td><div class="user-name-cell"><span class="display-name">${escapeHtml(req.robloxName || "Unknown")}</span><span class="username-handle">@${escapeHtml(req.robloxUsername || "Unknown")}</span></div></span>
+                <td style="color:#cd7f32; font-weight:bold;">+${req.amount.toLocaleString()} GP</span>
+                <td>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <input type="text" id="comment_${req.id}" placeholder="Admin comment (optional)" style="padding: 6px; font-size: 12px;">
+                        <div style="display: flex; gap: 5px;">
+                            <button class="btn-small btn-approve" onclick="window.handleAdminActionWithComment('${req.id}', '${req.userId}', ${req.amount}, 'approve', '${req.dbKey || req.discordUsername}', '${req.robloxId || ''}', '${escapeHtml(req.discordName)}', '${escapeHtml(req.discordUsername)}', '${escapeHtml(req.robloxName)}', '${escapeHtml(req.robloxUsername)}')"><i class="fas fa-check"></i> Approve</button>
+                            <button class="btn-small btn-deny" onclick="window.handleAdminActionWithComment('${req.id}', '${req.userId}', ${req.amount}, 'reject', '${req.dbKey || req.discordUsername}', '${req.robloxId || ''}', '${escapeHtml(req.discordName)}', '${escapeHtml(req.discordUsername)}', '${escapeHtml(req.robloxName)}', '${escapeHtml(req.robloxUsername)}')"><i class="fas fa-times"></i> Reject</button>
+                        </div>
+                    </div>
+                </span>
+            </tr>`;
         });
     });
 }
@@ -843,7 +861,7 @@ window.handleAdminActionWithComment = async (reqId, userId, amount, action, pass
         const channels = await getChannelConfig();
         const processedChannel = channels.CH_GP_PROCESSED;
         if (processedChannel) {
-            const embed = { title: action === 'approve' ? '✅ GP Donation Approved' : '❌ GP Donation Rejected', url: "https://corleonecity.github.io/SwordArtOnline/", color: action === 'approve' ? parseInt(systemConfig.embedColors.approve.replace('#', ''), 16) : parseInt(systemConfig.embedColors.reject.replace('#', ''), 16), fields: [{ name: "💬 Discord", value: `**Name:** ${discordName}\n**Tag:** @${discordUsername}\n**Ping:** <@${userId}>`, inline: true }, { name: "🎮 Roblox", value: `**Name:** ${robloxName}\n**User:** @${robloxUsername}\n**Profile:** [Click Here](https://www.roblox.com/users/${robloxId}/profile)`, inline: true }, { name: "💰 Amount", value: action === 'approve' ? `+${amount.toLocaleString()} GP` : `-${amount.toLocaleString()} GP`, inline: false }, { name: "📊 New Total", value: `${newTotal.toLocaleString()} GP`, inline: true }, { name: "🛡️ Processed By", value: `<@${currentUser.id}>`, inline: false }], timestamp: new Date().toISOString(), footer: { text: "SwordArtOnline GP System" } };
+            const embed = { title: action === 'approve' ? '✅ GP Donation Approved' : '❌ GP Donation Rejected', url: "https://corleonecity.github.io/SwordArtOnline/", color: action === 'approve' ? parseInt(systemConfig.embedColors.approve.replace('#', ''), 16) : parseInt(systemConfig.embedColors.reject.replace('#', ''), 16), fields: [{ name: "💬 Discord", value: `**Name:** ${discordName}\n**Tag:** @${discordUsername}\n**Ping:** <@${userId}>`, inline: true }, { name: "🎮 Roblox", value: `**Name:** ${robloxName}\n**User:** @${robloxUsername}\n**Profile:** [Click Here](https://www.roblox.com/users/${robloxId}/profile)`, inline: true }, { name: "💰 Amount", value: action === 'approve' ? `+${amount.toLocaleString()} GP` : `-${amount.toLocaleString()} GP`, inline: false }, { name: "📊 New Total", value: `${newTotal.toLocaleString()} GP`, inline: true }, { name: "🏆 Rank", value: `?`, inline: true }, { name: "🛡️ Processed By", value: `<@${currentUser.id}>`, inline: false }], timestamp: new Date().toISOString(), footer: { text: "SwordArtOnline GP System" } };
             if (adminComment) embed.fields.push({ name: "💬 Admin Comment", value: adminComment, inline: false });
             await sendDiscordMessage(processedChannel, `<@${userId}>`, [embed]);
         }
