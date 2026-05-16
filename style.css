@@ -203,18 +203,6 @@ body {
     box-shadow: 0 10px 30px -8px rgba(0, 0, 0, 0.5);
 }
 
-.logo-pn {
-    background: linear-gradient(135deg, #1a1a1a, #000);
-    color: #fff;
-    border: 2px solid #ffd700;
-}
-
-.logo-rblx {
-    background: linear-gradient(135deg, #1a1a1a, #000);
-    color: #fff;
-    border: 2px solid #ffd700;
-}
-
 h1, h2, h3 {
     letter-spacing: -0.5px;
     color: #fff;
@@ -321,6 +309,15 @@ h1, h2, h3 {
     font-weight: 600;
 }
 
+.current-guild {
+    background: #0a0a0a;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    color: #ffd700;
+    border: 1px solid #1a1a1a;
+}
+
 .header-actions {
     display: flex;
     gap: 12px;
@@ -420,7 +417,7 @@ h1, h2, h3 {
     color: white;
 }
 
-/* ========== GUILD LEADER TAB (ex Owner, umbenannt) ========== */
+/* ========== GUILD LEADER TAB (alle Konfigurationen) ========== */
 .nav-tab.guild-leader-tab {
     background: rgba(255, 215, 0, 0.1);
     border-color: rgba(255, 215, 0, 0.3);
@@ -437,7 +434,7 @@ h1, h2, h3 {
     background: rgba(255, 215, 0, 0.2);
 }
 
-/* ========== PANEL OWNER TAB (nur für fixe User ID) ========== */
+/* ========== PANEL OWNER TAB ========== */
 .nav-tab.panel-owner-tab {
     background: linear-gradient(135deg, #ff3366, #cc0044);
     color: white;
@@ -455,11 +452,6 @@ h1, h2, h3 {
 .nav-tab.panel-owner-tab:hover {
     transform: translateY(-2px);
     filter: brightness(1.05);
-}
-
-/* ========== ALTER OWNER TAB WIRD AUSGEBLENDET ========== */
-.nav-tab.owner-tab {
-    display: none !important;
 }
 
 /* ========== CARDS ========== */
@@ -949,16 +941,6 @@ input[type="file"] {
 
 ::-webkit-scrollbar-thumb:hover {
     background: #2a2a2a;
-}
-
-/* ========== CURRENT GUILD DISPLAY ========== */
-.current-guild {
-    background: #0a0a0a;
-    padding: 8px 16px;
-    border-radius: 12px;
-    font-size: 12px;
-    color: #ffd700;
-    border: 1px solid #1a1a1a;
 }
 
 /* ========== RESPONSIVE ========== */
