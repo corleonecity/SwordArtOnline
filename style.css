@@ -94,6 +94,85 @@ body {
     100% { opacity: 0.8; transform: translateX(-50%) scale(1); }
 }
 
+/* ========== GUILD SELECTOR OVERLAY ========== */
+.guild-selector-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.95);
+    z-index: 10001;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(10px);
+}
+
+.guild-selector-card {
+    background: #0a0a0a;
+    border-radius: 32px;
+    padding: 40px;
+    border: 1px solid #ffd700;
+    max-width: 500px;
+    width: 90%;
+    text-align: center;
+}
+
+.guild-selector-card i {
+    font-size: 48px;
+    color: #ffd700;
+    margin-bottom: 20px;
+}
+
+.guild-selector-card h2 {
+    color: #ffd700;
+    margin-bottom: 10px;
+}
+
+.guild-selector-card p {
+    color: #666;
+    margin-bottom: 30px;
+}
+
+.guild-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.guild-selector-btn {
+    background: #111;
+    border: 1px solid #1a1a1a;
+    border-radius: 16px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: white;
+    font-weight: 600;
+}
+
+.guild-selector-btn:hover {
+    border-color: #ffd700;
+    background: #1a1a1a;
+    transform: translateX(5px);
+}
+
+.guild-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+}
+
+.guild-selector-btn i {
+    font-size: 24px;
+    color: #ffd700;
+    margin: 0;
+}
+
 /* ========== LOGIN CONTAINER ========== */
 .login-container {
     text-align: center;
@@ -245,23 +324,6 @@ h1, h2, h3 {
 .header-actions {
     display: flex;
     gap: 12px;
-    align-items: center;
-}
-
-.server-selector {
-    background: #111;
-    color: white;
-    border: 1px solid #333;
-    padding: 10px 15px;
-    border-radius: 12px;
-    outline: none;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-}
-
-.server-selector:hover {
-    border-color: #ffd700;
 }
 
 .btn-logout {
@@ -345,6 +407,7 @@ h1, h2, h3 {
     box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
 }
 
+/* ========== ADMIN TAB ========== */
 .nav-tab.admin-tab {
     background: rgba(205, 127, 50, 0.1);
     color: #cd7f32;
@@ -357,20 +420,46 @@ h1, h2, h3 {
     color: white;
 }
 
-.nav-tab.owner-tab {
+/* ========== GUILD LEADER TAB (ex Owner, umbenannt) ========== */
+.nav-tab.guild-leader-tab {
     background: rgba(255, 215, 0, 0.1);
     border-color: rgba(255, 215, 0, 0.3);
     color: #ffd700;
     display: none;
 }
 
-.nav-tab.owner-tab.active {
+.nav-tab.guild-leader-tab.active {
     background: linear-gradient(135deg, #ffd700, #e6b800);
     color: #000;
 }
 
-.nav-tab.owner-tab:hover {
+.nav-tab.guild-leader-tab:hover {
     background: rgba(255, 215, 0, 0.2);
+}
+
+/* ========== PANEL OWNER TAB (nur für fixe User ID) ========== */
+.nav-tab.panel-owner-tab {
+    background: linear-gradient(135deg, #ff3366, #cc0044);
+    color: white;
+    border: 1px solid #ff3366;
+    display: none;
+    box-shadow: 0 0 10px rgba(255, 51, 102, 0.3);
+}
+
+.nav-tab.panel-owner-tab.active {
+    background: linear-gradient(135deg, #ff3366, #cc0044);
+    color: white;
+    box-shadow: 0 4px 15px rgba(255, 51, 102, 0.5);
+}
+
+.nav-tab.panel-owner-tab:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.05);
+}
+
+/* ========== ALTER OWNER TAB WIRD AUSGEBLENDET ========== */
+.nav-tab.owner-tab {
+    display: none !important;
 }
 
 /* ========== CARDS ========== */
@@ -862,6 +951,16 @@ input[type="file"] {
     background: #2a2a2a;
 }
 
+/* ========== CURRENT GUILD DISPLAY ========== */
+.current-guild {
+    background: #0a0a0a;
+    padding: 8px 16px;
+    border-radius: 12px;
+    font-size: 12px;
+    color: #ffd700;
+    border: 1px solid #1a1a1a;
+}
+
 /* ========== RESPONSIVE ========== */
 @media (max-width: 768px) {
     .header {
@@ -874,7 +973,6 @@ input[type="file"] {
     .header-actions {
         justify-content: center;
         width: 100%;
-        flex-wrap: wrap;
     }
     
     .user-info {
