@@ -735,7 +735,7 @@ function loadProfileHistory() {
         userRequests.forEach(req => {
             const dateStr = new Date(req.timestamp).toLocaleDateString('en-US', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
             let statusHtml = req.status === 'pending' ? '<span class="status-badge status-pending">Pending ⏳</span>' : (req.status === 'approved' ? '<span class="status-badge status-approved">Approved ✅</span>' : '<span class="status-badge status-rejected">Rejected ❌</span>');
-            body.innerHTML += `<tr><td style="font-size:14px; color:#aaa;">${dateStr}</td><td style="font-weight:bold;">+${req.amount.toLocaleString()} GP</td><td>${statusHtml}</td><td style="font-size:12px; color:#888;">${escapeHtml(req.adminComment || '-')}</td></tr>`;
+            body.innerHTML += `<tr><td style="font-size:14px; color:#aaa;">${dateStr}</td><td style="font-weight:bold;">+${req.amount.toLocaleString()} GP</td><td>${statusHtml}</td><td style="font-size:12px; color:#888;">${escapeHtml(req.adminComment || '-')}</td></table>`;
         });
         if (userRequests.length === 0) body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No requests yet</td></tr>';
     });
