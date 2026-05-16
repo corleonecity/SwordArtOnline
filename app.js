@@ -8,7 +8,7 @@ const OWNER_USER_ID = '917426398120005653';
 let ADMIN_ROLES = [];
 let OWNER_ROLES = [];
 
-// GP Submit Role - now configurable via panel (wird durch Rollen-Permissions ersetzt)
+// GP Submit Role - now configurable via panel
 let GP_SUBMIT_ROLE = '';
 
 // System configuration
@@ -33,8 +33,8 @@ let testModeEnabled = false;
 // Role name cache
 let roleNameCache = {};
 
-// Neue Variable für Rollen-Permissions (aus Firebase)
-let rolePermissions = {}; // { roleId: { canSubmitGP: true, canViewAdmin: false, ... } }
+// Role permissions from Firebase
+let rolePermissions = {};
 
 const DISCORD_CLIENT_ID = '1503179151073345678';
 const ROBLOX_CLIENT_ID = '1529843549493669743';
@@ -153,7 +153,7 @@ function updateTestModeIndicator() {
 }
 
 // ==========================================
-// 3. NEUE FUNKTIONEN FÜR ROLLEN-MANAGEMENT
+// 3. ROLE MANAGEMENT FUNCTIONS (NEU & EINFACH)
 // ==========================================
 
 async function loadAllGuildRoles() {
@@ -221,32 +221,49 @@ async function renderDynamicRoles() {
         container.appendChild(roleDiv);
     }
     
-    console.log("Roles rendered, total buttons:", document.querySelectorAll('.role-open-btn').length);
+    // Direkte Event-Listener für alle Open-Buttons
+    document.querySelectorAll('.role-open-btn').forEach(btn => {
+        btn.onclick = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const roleId = this.getAttribute('data-role-id');
+            const roleName = this.getAttribute('data-role-name');
+            console.log("Button clicked:", roleId, roleName);
+            openPermissionModal(roleId, roleName);
+        };
+    });
 }
 
-// VARIABLE für die aktuell bearbeitete Rolle
-let currentEditingRoleId = null;
+// Variable für die aktuell bearbeitete Rolle
+let currentRoleId = null;
 
-// DIE EIGENTLICHE MODAL-FUNKTION (umbenannt, um Rekursion zu vermeiden)
-function showRolePermissionModal(roleId, roleName) {
-    console.log("showRolePermissionModal called for role:", roleId, roleName);
+// Öffnet das Modal mit den Berechtigungen
+function openPermissionModal(roleId, roleName) {
+    console.log("openPermissionModal called for:", roleId, roleName);
     
-    currentEditingRoleId = roleId;
+    currentRoleId = roleId;
     const modal = document.getElementById('rolePermissionModal');
     const title = document.getElementById('modalRoleTitle');
+    
+    if (!modal) {
+        console.error("Modal element not found!");
+        alert("Fehler: Modal-Element nicht gefunden!");
+        return;
+    }
+    
     title.textContent = `Permissions for ${roleName}`;
     
     const permissions = rolePermissions[roleId] || {};
     
-    // Definiere alle möglichen Berechtigungen
+    // Berechtigungsdefinitionen
     const permissionDefs = [
         { key: 'canSubmitGP', label: 'Submit GP Donations', default: false, category: 'GP System' },
         { key: 'canViewLeaderboard', label: 'View Leaderboard', default: true, category: 'GP System' },
         { key: 'canViewProfile', label: 'View Own Profile', default: true, category: 'GP System' },
         { key: 'canViewAdminPanel', label: 'Access Admin Panel', default: false, category: 'Admin' },
         { key: 'canViewOwnerPanel', label: 'Access Owner Panel', default: false, category: 'Owner' },
-        { key: 'canManageRoles', label: 'Manage Role Permissions (Owner only)', default: false, category: 'Owner' },
-        { key: 'canManageSystem', label: 'Manage System Config (Owner only)', default: false, category: 'Owner' },
+        { key: 'canManageRoles', label: 'Manage Role Permissions', default: false, category: 'Owner' },
+        { key: 'canManageSystem', label: 'Manage System Config', default: false, category: 'Owner' },
         { key: 'canManageMessages', label: 'Manage Saved Messages', default: false, category: 'Owner' },
         { key: 'canViewKickLogs', label: 'View Kick Logs', default: false, category: 'Owner' },
         { key: 'canToggleMaintenance', label: 'Toggle Maintenance Mode', default: false, category: 'Owner' },
@@ -277,21 +294,22 @@ function showRolePermissionModal(roleId, roleName) {
     
     document.getElementById('modalPermissionsList').innerHTML = html;
     modal.classList.remove('hidden');
-    console.log("Modal opened, classList now:", modal.classList);
+    console.log("Modal opened, hidden class removed");
 }
 
-// GLOBALE Funktion für den Zugriff von außen (vermeidet Rekursion)
-window.openRolePermissionModal = function(roleId, roleName) {
-    showRolePermissionModal(roleId, roleName);
-};
-
-function closeModal() {
-    document.getElementById('rolePermissionModal').classList.add('hidden');
-    currentEditingRoleId = null;
+// Schließt das Modal
+function closePermissionModal() {
+    const modal = document.getElementById('rolePermissionModal');
+    if (modal) modal.classList.add('hidden');
+    currentRoleId = null;
 }
 
-async function saveCurrentRolePermissions() {
-    if (!currentEditingRoleId) return;
+// Speichert die Berechtigungen
+async function savePermissionChanges() {
+    if (!currentRoleId) {
+        console.warn("No role selected");
+        return;
+    }
     
     const checkboxes = document.querySelectorAll('#modalPermissionsList input[type="checkbox"]');
     const permissions = {};
@@ -300,12 +318,11 @@ async function saveCurrentRolePermissions() {
         permissions[key] = cb.checked;
     });
     
-    await saveRolePermission(currentEditingRoleId, permissions);
-    closeModal();
+    await saveRolePermission(currentRoleId, permissions);
+    closePermissionModal();
     
-    // Nach dem Speichern die lokalen Berechtigungen aktualisieren und ggf. UI anpassen
+    // Berechtigungen neu laden und UI aktualisieren
     await loadRolePermissions();
-    // Berechtigungen des aktuellen Users neu laden
     if (currentUser) {
         await fetchUserRoles(currentUser.id);
         updatePermissions();
@@ -366,11 +383,10 @@ function forceKickUser() {
     stopMusic();
 }
 
-// Prüft Berechtigungen basierend auf den neuen Rollen-Permissions
+// Permission checks
 function hasPermission(permissionKey) {
     if (!currentUser) return false;
     if (currentUser.id === OWNER_USER_ID) return true;
-    // Durchlaufe alle Rollen des Users
     for (const roleId of userGuildRoles) {
         const perms = rolePermissions[roleId];
         if (perms && perms[permissionKey] === true) return true;
@@ -446,7 +462,7 @@ async function fetchUserRoles(userId) {
         userGuildRoles = [];
     }
     
-    await loadRolePermissions(); // Lade auch die Berechtigungen für diese Rollen
+    await loadRolePermissions();
     updatePermissions();
     return userGuildRoles;
 }
@@ -473,7 +489,7 @@ async function fetchRoleName(roleId) {
 }
 
 // ==========================================
-// 5. DISCORD BOT MESSAGES (gekürzt)
+// 5. DISCORD BOT MESSAGES (minimal)
 // ==========================================
 
 async function sendDiscordMessage(channelId, content, embeds = null) {
@@ -564,7 +580,7 @@ async function sendGPRequestToDiscord(requestData, images) {
 }
 
 // ==========================================
-// 6. DISCORD & ROBLOX AUTHENTIFICATION (gekürzt)
+// 6. DISCORD & ROBLOX AUTHENTIFICATION
 // ==========================================
 
 async function doLiveCheck() {
@@ -711,7 +727,7 @@ function renderLeaderboard(filterText) {
             <td style="color:#48bb78; font-weight:bold;">${(u.totalGP || 0).toLocaleString()} GP</span>
         </tr>`;
     });
-    if (usersArray.length === 0) body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No users with GP yet</span></tr>';
+    if (usersArray.length === 0) body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No users with GP yet</span></td>';
     const totalGP = Object.values(allUsersData).reduce((sum, u) => sum + (u.totalGP || 0), 0);
     const totalGpStat = document.getElementById('totalGpStat');
     if (totalGpStat) totalGpStat.textContent = totalGP.toLocaleString();
@@ -818,9 +834,9 @@ function loadAdminData() {
         const body = document.getElementById('adminPendingBody');
         if (!body) return;
         body.innerHTML = '';
-        if (!data) { body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No pending requests</td></tr>'; return; }
+        if (!data) { body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No pending requests</span></tr>'; return; }
         const pendingRequests = Object.values(data).filter(r => r.status === 'pending').sort((a, b) => a.timestamp - b.timestamp);
-        if (pendingRequests.length === 0) { body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No pending requests</td></tr>'; return; }
+        if (pendingRequests.length === 0) { body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No pending requests</span></tr>'; return; }
         pendingRequests.forEach(req => {
             body.innerHTML += `<tr>
                 <td><div class="user-name-cell"><span class="display-name">${escapeHtml(req.discordName || "Unknown")}</span><span class="username-handle">@${escapeHtml(req.discordUsername || "Unknown")}</span></div></td>
@@ -830,10 +846,10 @@ function loadAdminData() {
                     <div style="display: flex; flex-direction: column; gap: 8px;">
                         <input type="text" id="comment_${req.id}" placeholder="Admin comment (optional)" style="padding: 6px; font-size: 12px;">
                         <div style="display: flex; gap: 5px;">
-                            <button class="btn-small btn-approve" onclick="window.handleAdminActionWithComment('${req.id}', '${req.userId}', ${req.amount}, 'approve', '${req.dbKey || req.discordUsername}', '${req.robloxId || ''}', '${escapeHtml(req.discordName)}', '${escapeHtml(req.discordUsername)}', '${escapeHtml(req.robloxName)}', '${escapeHtml(req.robloxUsername)}')">
+                            <button class="btn-small btn-approve" onclick="handleAdminApprove('${req.id}', '${req.userId}', ${req.amount}, '${req.dbKey || req.discordUsername}', '${req.robloxId || ''}', '${escapeHtml(req.discordName)}', '${escapeHtml(req.discordUsername)}', '${escapeHtml(req.robloxName)}', '${escapeHtml(req.robloxUsername)}')">
                                 <i class="fas fa-check"></i> Approve
                             </button>
-                            <button class="btn-small btn-deny" onclick="window.handleAdminActionWithComment('${req.id}', '${req.userId}', ${req.amount}, 'reject', '${req.dbKey || req.discordUsername}', '${req.robloxId || ''}', '${escapeHtml(req.discordName)}', '${escapeHtml(req.discordUsername)}', '${escapeHtml(req.robloxName)}', '${escapeHtml(req.robloxUsername)}')">
+                            <button class="btn-small btn-deny" onclick="handleAdminReject('${req.id}', '${req.userId}', ${req.amount}, '${req.dbKey || req.discordUsername}', '${req.robloxId || ''}', '${escapeHtml(req.discordName)}', '${escapeHtml(req.discordUsername)}', '${escapeHtml(req.robloxName)}', '${escapeHtml(req.robloxUsername)}')">
                                 <i class="fas fa-times"></i> Reject
                             </button>
                         </div>
@@ -844,39 +860,63 @@ function loadAdminData() {
     });
 }
 
-window.handleAdminActionWithComment = async (reqId, userId, amount, action, passedDbKey, robloxId, discordName, discordUsername, robloxName, robloxUsername) => {
+window.handleAdminApprove = async (reqId, userId, amount, passedDbKey, robloxId, discordName, discordUsername, robloxName, robloxUsername) => {
     const commentInput = document.getElementById(`comment_${reqId}`);
     const adminComment = commentInput ? commentInput.value.trim() : '';
-    if (!confirm(`Are you sure you want to ${action === 'approve' ? 'APPROVE' : 'REJECT'} this request?${adminComment ? `\n\nComment: ${adminComment}` : ''}`)) return;
+    if (!confirm(`Approve request for ${amount} GP?${adminComment ? `\n\nComment: ${adminComment}` : ''}`)) return;
     if (testModeEnabled) {
-        await update(ref(db, `requests/${reqId}`), { status: action === 'approve' ? 'approved' : 'rejected', adminComment, processedAt: Date.now(), processedBy: currentUser.id, testMode: true });
-        showNotify(`Test: Request ${action === 'approve' ? 'approved' : 'rejected'}!`, "success");
+        await update(ref(db, `requests/${reqId}`), { status: 'approved', adminComment, processedAt: Date.now(), processedBy: currentUser.id, testMode: true });
+        showNotify(`Test: Request approved!`, "success");
         return;
     }
     try {
-        await update(ref(db, `requests/${reqId}`), { status: action === 'approve' ? 'approved' : 'rejected', adminComment, processedAt: Date.now(), processedBy: currentUser.id, processedByName: currentUser.global_name || currentUser.username });
+        await update(ref(db, `requests/${reqId}`), { status: 'approved', adminComment, processedAt: Date.now(), processedBy: currentUser.id, processedByName: currentUser.global_name || currentUser.username });
         const dbKey = getSafeDbKey(passedDbKey);
-        let newTotal = 0;
         const userRef = ref(db, `users/${dbKey}`);
         const snap = await get(userRef);
-        if (snap.exists()) {
-            newTotal = snap.val().totalGP || 0;
-            if (action === 'approve') { newTotal += amount; await update(userRef, { totalGP: newTotal }); }
-        }
+        let newTotal = (snap.val()?.totalGP || 0) + amount;
+        await update(userRef, { totalGP: newTotal });
         const channels = await getChannelConfig();
         const processedChannel = channels.CH_GP_PROCESSED;
         if (processedChannel) {
-            const embed = { title: action === 'approve' ? '✅ GP Donation Approved' : '❌ GP Donation Rejected', url: "https://corleonecity.github.io/SwordArtOnline/", color: action === 'approve' ? parseInt(systemConfig.embedColors.approve.replace('#', ''), 16) : parseInt(systemConfig.embedColors.reject.replace('#', ''), 16), fields: [
+            const embed = { title: '✅ GP Donation Approved', url: "https://corleonecity.github.io/SwordArtOnline/", color: parseInt(systemConfig.embedColors.approve.replace('#', ''), 16), fields: [
                 { name: "💬 Discord", value: `**Name:** ${discordName}\n**Tag:** @${discordUsername}\n**Ping:** <@${userId}>`, inline: true },
                 { name: "🎮 Roblox", value: `**Name:** ${robloxName}\n**User:** @${robloxUsername}\n**Profile:** [Click Here](https://www.roblox.com/users/${robloxId}/profile)`, inline: true },
-                { name: "💰 Amount", value: action === 'approve' ? `+${amount.toLocaleString()} GP` : `-${amount.toLocaleString()} GP`, inline: false },
+                { name: "💰 Amount", value: `+${amount.toLocaleString()} GP`, inline: false },
                 { name: "📊 New Total", value: `${newTotal.toLocaleString()} GP`, inline: true },
                 { name: "🛡️ Processed By", value: `<@${currentUser.id}>`, inline: false }
             ], timestamp: new Date().toISOString(), footer: { text: "SwordArtOnline GP System" } };
             if (adminComment) embed.fields.push({ name: "💬 Admin Comment", value: adminComment, inline: false });
             await sendDiscordMessage(processedChannel, `<@${userId}>`, [embed]);
         }
-        showNotify(`Request ${action === 'approve' ? 'approved' : 'rejected'}!`, "success");
+        showNotify(`Request approved! +${amount} GP`, "success");
+    } catch (e) { alert("Error: " + e.message); }
+};
+
+window.handleAdminReject = async (reqId, userId, amount, passedDbKey, robloxId, discordName, discordUsername, robloxName, robloxUsername) => {
+    const commentInput = document.getElementById(`comment_${reqId}`);
+    const adminComment = commentInput ? commentInput.value.trim() : '';
+    if (!confirm(`Reject request for ${amount} GP?${adminComment ? `\n\nComment: ${adminComment}` : ''}`)) return;
+    if (testModeEnabled) {
+        await update(ref(db, `requests/${reqId}`), { status: 'rejected', adminComment, processedAt: Date.now(), processedBy: currentUser.id, testMode: true });
+        showNotify(`Test: Request rejected!`, "success");
+        return;
+    }
+    try {
+        await update(ref(db, `requests/${reqId}`), { status: 'rejected', adminComment, processedAt: Date.now(), processedBy: currentUser.id, processedByName: currentUser.global_name || currentUser.username });
+        const channels = await getChannelConfig();
+        const processedChannel = channels.CH_GP_PROCESSED;
+        if (processedChannel) {
+            const embed = { title: '❌ GP Donation Rejected', url: "https://corleonecity.github.io/SwordArtOnline/", color: parseInt(systemConfig.embedColors.reject.replace('#', ''), 16), fields: [
+                { name: "💬 Discord", value: `**Name:** ${discordName}\n**Tag:** @${discordUsername}\n**Ping:** <@${userId}>`, inline: true },
+                { name: "🎮 Roblox", value: `**Name:** ${robloxName}\n**User:** @${robloxUsername}\n**Profile:** [Click Here](https://www.roblox.com/users/${robloxId}/profile)`, inline: true },
+                { name: "💰 Amount", value: `${amount.toLocaleString()} GP`, inline: false },
+                { name: "🛡️ Processed By", value: `<@${currentUser.id}>`, inline: false }
+            ], timestamp: new Date().toISOString(), footer: { text: "SwordArtOnline GP System" } };
+            if (adminComment) embed.fields.push({ name: "💬 Admin Comment", value: adminComment, inline: false });
+            await sendDiscordMessage(processedChannel, `<@${userId}>`, [embed]);
+        }
+        showNotify(`Request rejected!`, "success");
     } catch (e) { alert("Error: " + e.message); }
 };
 
@@ -966,7 +1006,7 @@ async function loadKickLogs() {
         const body = document.getElementById('kickLogsBody');
         if (!body) return;
         body.innerHTML = '';
-        if (!data) { body.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#666;">No kick logs found</td></tr>'; return; }
+        if (!data) { body.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#666;">No kick logs found</span></tr>'; return; }
         const logs = Object.values(data).sort((a, b) => b.timestamp - a.timestamp);
         logs.forEach(log => { body.innerHTML += `<tr><td style="font-size:12px;">${new Date(log.timestamp).toLocaleString()}</td><td><code>${escapeHtml(log.kickedUserId || '?')}</code><br>${escapeHtml(log.kickedUserName || '')}</td><td><code>${escapeHtml(log.kickedByUserId || '?')}</code><br>${escapeHtml(log.kickedByUserName || '')}</td><td>${escapeHtml(log.reason || 'No reason')}</td><td>${log.dmSent ? '✅ Yes' : '❌ No'}</td></tr>`; });
     });
@@ -1182,24 +1222,11 @@ document.getElementById('tabBtnProfile')?.addEventListener('click', () => switch
 document.getElementById('tabBtnAdmin')?.addEventListener('click', () => { if (hasAdminPermission()) { switchTab('Admin'); loadAdminData(); } else { showNotify("You don't have permission to access Admin Panel!", "error"); } });
 document.getElementById('tabBtnOwner')?.addEventListener('click', () => { if (hasOwnerPermission()) { switchTab('Owner'); renderDynamicRoles(); loadChannelConfigUI(); loadRoleConfigUI(); loadKickLogs(); loadSavedMessages(); loadSystemConfigUI(); loadRegisteredUsersCount(); } else { showNotify("You don't have permission to access Owner Panel!", "error"); } });
 
-// GLOBAL EVENT DELEGATION für Open-Buttons (funktioniert immer, auch bei dynamisch nachgeladenen Elementen)
-document.addEventListener('click', function(e) {
-    const openBtn = e.target.closest('.role-open-btn');
-    if (openBtn) {
-        console.log("Open button clicked via delegation!");
-        const roleId = openBtn.getAttribute('data-role-id');
-        const roleName = openBtn.getAttribute('data-role-name');
-        e.preventDefault();
-        e.stopPropagation();
-        showRolePermissionModal(roleId, roleName);
-    }
-});
-
-// Modal Events
-document.getElementById('modalSaveBtn')?.addEventListener('click', saveCurrentRolePermissions);
-document.getElementById('modalCancelBtn')?.addEventListener('click', closeModal);
-document.querySelector('.modal-close')?.addEventListener('click', closeModal);
-window.addEventListener('click', (e) => { if (e.target === document.getElementById('rolePermissionModal')) closeModal(); });
+// MODAL EVENTS (einfach und direkt)
+document.getElementById('modalSaveBtn')?.addEventListener('click', savePermissionChanges);
+document.getElementById('modalCancelBtn')?.addEventListener('click', closePermissionModal);
+document.querySelector('.modal-close')?.addEventListener('click', closePermissionModal);
+window.addEventListener('click', (e) => { if (e.target === document.getElementById('rolePermissionModal')) closePermissionModal(); });
 
 // Weitere Buttons
 document.getElementById('saveChannelConfigBtn')?.addEventListener('click', saveChannelConfig);
