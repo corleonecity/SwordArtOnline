@@ -21,7 +21,7 @@ let systemConfig = {
         leaderboard: '#ffd700'
     },
     limits: {
-        maxImagesPerRequest: 3  // Erhöht auf 3 Bilder
+        maxImagesPerRequest: 3
     },
     musicUrl: 'https://www.youtube.com/embed/BtEkzZoUCpw?autoplay=1&loop=1',
     updateInterval: 60
@@ -164,6 +164,10 @@ function updateTestModeIndicator() {
 
 function getSafeDbKey(username) {
     return username ? username.replace(/[.#$\[\]]/g, '_') : 'unknown_user';
+}
+
+function getSafeDbKeyById(userId) {
+    return userId ? `user_${userId}` : 'unknown_user';
 }
 
 function playLoginMusic() {
@@ -332,6 +336,153 @@ async function fetchRoleName(roleId) {
         console.warn("Error fetching role name:", e);
     }
     return roleId;
+}
+
+// ==========================================
+// 3.5 MANUAL USER REGISTRATION (NEW)
+// ==========================================
+
+async function checkExistingUserByDiscordId(discordId) {
+    try {
+        const usersRef = ref(db, 'users');
+        const snap = await get(usersRef);
+        if (snap.exists()) {
+            const users = snap.val();
+            for (const [key, user] of Object.entries(users)) {
+                if (user.id === discordId) {
+                    return { exists: true, userKey: key, userData: user };
+                }
+            }
+        }
+        return { exists: false };
+    } catch (e) {
+        console.error("Error checking existing user:", e);
+        return { exists: false, error: e.message };
+    }
+}
+
+async function manualRegisterUser() {
+    if (!hasOwnerPermission()) {
+        showNotify("Only the owner can manually register users!", "error");
+        return;
+    }
+    
+    const discordId = document.getElementById('manualDiscordId')?.value.trim();
+    const discordName = document.getElementById('manualDiscordName')?.value.trim() || "Unknown";
+    const discordUsername = document.getElementById('manualDiscordUsername')?.value.trim();
+    const robloxId = document.getElementById('manualRobloxId')?.value.trim();
+    const robloxName = document.getElementById('manualRobloxName')?.value.trim() || "Unknown";
+    const robloxUsername = document.getElementById('manualRobloxUsername')?.value.trim();
+    const initialGp = parseInt(document.getElementById('manualInitialGp')?.value) || 0;
+    
+    const resultDiv = document.getElementById('manualRegisterResult');
+    
+    if (!discordId) {
+        resultDiv.innerHTML = '<span style="color: #f56565;">❌ Discord User ID is required!</span>';
+        return;
+    }
+    
+    if (!discordUsername) {
+        resultDiv.innerHTML = '<span style="color: #f56565;">❌ Discord Username is required!</span>';
+        return;
+    }
+    
+    if (!robloxId) {
+        resultDiv.innerHTML = '<span style="color: #f56565;">❌ Roblox User ID is required!</span>';
+        return;
+    }
+    
+    if (!robloxUsername) {
+        resultDiv.innerHTML = '<span style="color: #f56565;">❌ Roblox Username is required!</span>';
+        return;
+    }
+    
+    resultDiv.innerHTML = '<span style="color: #ffd700;"><i class="fas fa-spinner fa-spin"></i> Saving user...</span>';
+    
+    try {
+        const existing = await checkExistingUserByDiscordId(discordId);
+        const dbKey = getSafeDbKeyById(discordId);
+        
+        const userData = {
+            id: discordId,
+            discordName: discordName,
+            discordUsername: discordUsername,
+            robloxId: robloxId,
+            robloxName: robloxName,
+            robloxUsername: robloxUsername,
+            totalGP: initialGp,
+            hasLeftServer: false,
+            manuallyRegistered: true,
+            registeredAt: Date.now(),
+            registeredBy: currentUser?.id
+        };
+        
+        if (existing.exists) {
+            await update(ref(db, `users/${existing.userKey}`), {
+                ...userData,
+                updatedAt: Date.now(),
+                updatedBy: currentUser?.id
+            });
+            resultDiv.innerHTML = `<span style="color: #48bb78;">✅ User UPDATED successfully! Discord ID: ${discordId}</span>`;
+            showNotify(`User ${discordUsername} has been updated!`, "success");
+        } else {
+            await set(ref(db, `users/${dbKey}`), {
+                ...userData,
+                createdAt: Date.now()
+            });
+            resultDiv.innerHTML = `<span style="color: #48bb78;">✅ User CREATED successfully! Discord ID: ${discordId}</span>`;
+            showNotify(`User ${discordUsername} has been registered manually!`, "success");
+        }
+        
+        loadRegisteredUsersCount();
+        
+    } catch (e) {
+        console.error("Manual registration error:", e);
+        resultDiv.innerHTML = `<span style="color: #f56565;">❌ Error: ${e.message}</span>`;
+    }
+}
+
+async function manualCheckUser() {
+    const discordId = document.getElementById('manualDiscordId')?.value.trim();
+    const resultDiv = document.getElementById('manualRegisterResult');
+    
+    if (!discordId) {
+        resultDiv.innerHTML = '<span style="color: #f56565;">❌ Please enter a Discord User ID first!</span>';
+        return;
+    }
+    
+    resultDiv.innerHTML = '<span style="color: #ffd700;"><i class="fas fa-spinner fa-spin"></i> Checking...</span>';
+    
+    try {
+        const existing = await checkExistingUserByDiscordId(discordId);
+        
+        if (existing.exists) {
+            const user = existing.userData;
+            resultDiv.innerHTML = `
+                <span style="color: #48bb78;">✅ User FOUND!</span><br>
+                📝 Discord: ${user.discordName} (@${user.discordUsername})<br>
+                🎮 Roblox: ${user.robloxName} (@${user.robloxUsername})<br>
+                💰 GP: ${(user.totalGP || 0).toLocaleString()}<br>
+                📅 Registered: ${user.manuallyRegistered ? 'Manually' : 'Via Login'}
+            `;
+        } else {
+            resultDiv.innerHTML = '<span style="color: #f56565;">❌ User NOT found in database. You can create them using the form above.</span>';
+        }
+    } catch (e) {
+        resultDiv.innerHTML = `<span style="color: #f56565;">❌ Error: ${e.message}</span>`;
+    }
+}
+
+function clearManualForm() {
+    document.getElementById('manualDiscordId').value = '';
+    document.getElementById('manualDiscordName').value = '';
+    document.getElementById('manualDiscordUsername').value = '';
+    document.getElementById('manualRobloxId').value = '';
+    document.getElementById('manualRobloxName').value = '';
+    document.getElementById('manualRobloxUsername').value = '';
+    document.getElementById('manualInitialGp').value = '0';
+    document.getElementById('manualRegisterResult').innerHTML = '';
+    showNotify("Form cleared!", "success");
 }
 
 // ==========================================
@@ -550,7 +701,7 @@ async function sendGPRequestToDiscord(requestData, images) {
 }
 
 // ==========================================
-// 5. DISCORD & ROBLOX AUTHENTIFICATION (VERBESSERT)
+// 5. DISCORD & ROBLOX AUTHENTIFICATION (VERBESSERT mit Skip)
 // ==========================================
 
 async function doLiveCheck() {
@@ -584,7 +735,7 @@ function startLiveMemberCheck() {
 }
 
 async function sendLoginWebhook(userData) {
-    const dbKey = getSafeDbKey(userData.discordUsername);
+    const dbKey = getSafeDbKeyById(userData.userId);
     const userRef = ref(db, `users/${dbKey}`);
     const snap = await get(userRef);
     
@@ -619,7 +770,32 @@ async function handleDiscordLogin(code) {
             currentUser = data.user;
             sessionStorage.setItem('pn_session', JSON.stringify(currentUser));
             window.history.replaceState({}, '', REDIRECT_URI);
-            await checkRobloxLink();
+            
+            // Check if user already has Roblox data in database (manually registered)
+            const dbKey = getSafeDbKeyById(currentUser.id);
+            const userSnap = await get(ref(db, `users/${dbKey}`));
+            
+            if (userSnap.exists() && userSnap.val().robloxId && userSnap.val().robloxId !== '1') {
+                // User already has Roblox data - skip Roblox linking!
+                console.log("User has existing Roblox data, skipping Roblox link");
+                const userData = userSnap.val();
+                
+                // Update any missing Discord info
+                await update(ref(db, `users/${dbKey}`), {
+                    discordName: currentUser.global_name || currentUser.username,
+                    discordUsername: currentUser.username,
+                    lastLoginAt: Date.now()
+                });
+                
+                await updateDiscordNickname(currentUser.id, userData.robloxName, userData.robloxUsername);
+                await fetchUserRoles(currentUser.id);
+                showDashboard();
+                startLiveMemberCheck();
+                showNotify(`Welcome back ${currentUser.global_name || currentUser.username}! Roblox account already linked.`, "success");
+            } else {
+                // New user - need Roblox linking
+                await checkRobloxLink();
+            }
         } else {
             showNotify("Discord authorization failed!", "error");
         }
@@ -628,6 +804,36 @@ async function handleDiscordLogin(code) {
         showNotify("Login Error! Please try again.", "error");
     } finally {
         showLoading(false, 'discordLoginBtn');
+    }
+}
+
+async function skipRobloxLinking() {
+    if (!currentUser) return;
+    
+    showLoading(true, 'skipRobloxBtn');
+    
+    try {
+        const dbKey = getSafeDbKeyById(currentUser.id);
+        const userSnap = await get(ref(db, `users/${dbKey}`));
+        
+        if (userSnap.exists() && userSnap.val().robloxId && userSnap.val().robloxId !== '1') {
+            // User already has data in database
+            const userData = userSnap.val();
+            await updateDiscordNickname(currentUser.id, userData.robloxName, userData.robloxUsername);
+            await fetchUserRoles(currentUser.id);
+            showDashboard();
+            startLiveMemberCheck();
+            showNotify("Roblox linking skipped! Using existing database entry.", "success");
+        } else if (userSnap.exists() && (!userSnap.val().robloxId || userSnap.val().robloxId === '1')) {
+            showNotify("No Roblox data found in database. Please link your Roblox account or ask an owner to add you manually.", "error");
+        } else {
+            showNotify("No user data found. Please link your Roblox account first.", "error");
+        }
+    } catch (e) {
+        console.error("Skip Roblox error:", e);
+        showNotify("Error: " + e.message, "error");
+    } finally {
+        showLoading(false, 'skipRobloxBtn');
     }
 }
 
@@ -665,7 +871,7 @@ async function handleRobloxLogin(code) {
             const rId = data.robloxUser.sub;
             const dDisplayName = currentUser.global_name || currentUser.username || "Unknown";
             
-            const dbKey = getSafeDbKey(currentUser.username);
+            const dbKey = getSafeDbKeyById(currentUser.id);
             const userRef = ref(db, `users/${dbKey}`);
             const snap = await get(userRef);
             let currentGP = snap.exists() && snap.val().totalGP ? snap.val().totalGP : 0;
@@ -722,12 +928,12 @@ async function checkRobloxLink() {
         await loadSystemConfig();
         await loadTestMode();
         
-        const dbKey = getSafeDbKey(currentUser.username);
+        const dbKey = getSafeDbKeyById(currentUser.id);
         const snap = await get(ref(db, `users/${dbKey}`));
         const loginPage = document.getElementById('loginPage');
         if (loginPage) loginPage.classList.add('hidden');
         
-        if (snap.exists() && snap.val().robloxId) {
+        if (snap.exists() && snap.val().robloxId && snap.val().robloxId !== '1') {
             if (currentUser && currentUser.id) {
                 await fetchUserRoles(currentUser.id);
             }
@@ -888,7 +1094,7 @@ function loadProfileHistory() {
 }
 
 // ==========================================
-// 7. IMAGE UPLOAD & PREVIEW (VERBESSERT)
+// 7. IMAGE UPLOAD & PREVIEW
 // ==========================================
 
 function updateImagePreviews() {
@@ -923,7 +1129,7 @@ function updateImagePreviews() {
 }
 
 // ==========================================
-// 8. GP SUBMIT FUNCTION (VERBESSERT)
+// 8. GP SUBMIT FUNCTION
 // ==========================================
 
 async function submitGPRequest() {
@@ -962,7 +1168,7 @@ async function submitGPRequest() {
     }
 
     try {
-        const dbKey = getSafeDbKey(currentUser.username);
+        const dbKey = getSafeDbKeyById(currentUser.id);
         const userRef = ref(db, `users/${dbKey}`);
         const snap = await get(userRef);
         const userData = snap.val() || {};
@@ -1135,7 +1341,7 @@ window.handleAdminAction = async (reqId, userId, amount, action, passedDbKey, ro
             processedByName: currentUser.global_name || currentUser.username
         });
 
-        const dbKey = getSafeDbKey(passedDbKey);
+        const dbKey = getSafeDbKeyById(userId);
         let newTotal = 0;
         const userRef = ref(db, `users/${dbKey}`);
         const snap = await get(userRef);
@@ -1802,6 +2008,7 @@ function escapeHtml(text) {
 function initEventListeners() {
     const discordLoginBtn = document.getElementById('discordLoginBtn');
     const robloxLoginBtn = document.getElementById('robloxLoginBtn');
+    const skipRobloxBtn = document.getElementById('skipRobloxBtn');
     const dcLogoutBtn = document.getElementById('dcLogoutBtn');
     const rbxLogoutBtn = document.getElementById('rbxLogoutBtn');
     const leaderboardSearch = document.getElementById('leaderboardSearch');
@@ -1825,6 +2032,11 @@ function initEventListeners() {
     const enableMaintenanceBtn = document.getElementById('enableMaintenanceBtn');
     const disableMaintenanceBtn = document.getElementById('disableMaintenanceBtn');
     
+    // Manual registration buttons
+    const manualRegisterBtn = document.getElementById('manualRegisterBtn');
+    const manualCheckUserBtn = document.getElementById('manualCheckUserBtn');
+    const manualClearFormBtn = document.getElementById('manualClearFormBtn');
+    
     if (discordLoginBtn) discordLoginBtn.addEventListener('click', () => {
         window.location.href = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=identify%20guilds&state=discord`;
     });
@@ -1832,6 +2044,8 @@ function initEventListeners() {
     if (robloxLoginBtn) robloxLoginBtn.addEventListener('click', () => {
         window.location.href = `https://apis.roblox.com/oauth/v1/authorize?client_id=${ROBLOX_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=openid%20profile&state=roblox`;
     });
+    
+    if (skipRobloxBtn) skipRobloxBtn.addEventListener('click', skipRobloxLinking);
     
     if (dcLogoutBtn) dcLogoutBtn.addEventListener('click', () => {
         sessionStorage.removeItem('pn_session');
@@ -1841,7 +2055,7 @@ function initEventListeners() {
     if (rbxLogoutBtn) rbxLogoutBtn.addEventListener('click', async () => {
         if (!confirm("Disconnect Roblox?")) return;
         try {
-            const dbKey = getSafeDbKey(currentUser.username);
+            const dbKey = getSafeDbKeyById(currentUser.id);
             await update(ref(db, `users/${dbKey}`), {
                 robloxId: null,
                 robloxName: null,
@@ -1918,6 +2132,11 @@ function initEventListeners() {
     if (clearMessageFormBtn) clearMessageFormBtn.addEventListener('click', clearMessageForm);
     if (enableMaintenanceBtn) enableMaintenanceBtn.addEventListener('click', () => setMaintenanceMode(true));
     if (disableMaintenanceBtn) disableMaintenanceBtn.addEventListener('click', () => setMaintenanceMode(false));
+    
+    // Manual registration event listeners
+    if (manualRegisterBtn) manualRegisterBtn.addEventListener('click', manualRegisterUser);
+    if (manualCheckUserBtn) manualCheckUserBtn.addEventListener('click', manualCheckUser);
+    if (manualClearFormBtn) manualClearFormBtn.addEventListener('click', clearManualForm);
 }
 
 // ==========================================
