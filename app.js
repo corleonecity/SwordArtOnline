@@ -699,7 +699,7 @@ async function sendGPRequestToDiscord(requestData, images) {
 }
 
 // ==========================================
-// 5. DISCORD & ROBLOX AUTHENTIFICATION (mit automatischer Erkennung)
+// 5. DISCORD & ROBLOX AUTHENTIFICATION
 // ==========================================
 
 async function doLiveCheck() {
@@ -833,8 +833,10 @@ async function handleRobloxLogin(code) {
         }
         
         if (data.success && data.robloxUser) {
-            const rDisplayName = data.robloxUser.preferred_username || data.robloxUser.name;
+            // HIER IST DIE KORREKTUR DER NAMEN:
+            const rDisplayName = data.robloxUser.nickname || data.robloxUser.name;
             const rUsername = data.robloxUser.preferred_username || data.robloxUser.name;
+            
             const rId = data.robloxUser.sub;
             const dDisplayName = currentUser.global_name || currentUser.username || "Unknown";
             
