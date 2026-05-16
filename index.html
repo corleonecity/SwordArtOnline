@@ -12,12 +12,12 @@
 
     <div id="audioPlayerContainer" class="hidden"></div>
 
-    <!-- Maintenance Mode Overlay -->
+    <!-- Maintenance Overlay -->
     <div id="maintenanceOverlay" class="maintenance-overlay hidden">
         <div class="maintenance-content">
             <i class="fas fa-tools"></i>
             <h2>Maintenance Mode</h2>
-            <p>The system is currently being updated. Please check back soon!</p>
+            <p>This server is currently under maintenance.</p>
             <div class="loader"></div>
         </div>
     </div>
@@ -27,30 +27,34 @@
         <i class="fas fa-flask"></i> TEST MODE ACTIVE
     </div>
 
+    <!-- Login Page -->
     <div id="loginPage" class="login-container">
         <div class="logo-main">⚔️</div>
         <h1>Sword Art Online</h1>
-        <p>Login with your Discord account to access the GP Panel.</p>
+        <p>Login with Discord to access the GP Panel.</p>
         <button id="discordLoginBtn" class="btn-discord">
             <i class="fab fa-discord"></i> Login with Discord
         </button>
     </div>
 
+    <!-- No Permission Page -->
     <div id="noPermissionPage" class="login-container hidden">
         <div class="logo-main" style="background: linear-gradient(135deg, #dc2626, #991b1b);">🔒</div>
         <h1 style="background: linear-gradient(135deg, #dc2626, #ef4444); -webkit-background-clip: text; background-clip: text; color: transparent;">Access Denied</h1>
-        <p>You do not have permission to view this page. You must be a member of our official Discord server to access the panel.</p>
+        <p>You are not a member of any server where this bot is active.</p>
     </div>
 
+    <!-- Roblox Link Page -->
     <div id="robloxPage" class="login-container hidden">
         <div class="logo-main" style="background: linear-gradient(135deg, #fff, #ccc);">🎮</div>
         <h1 style="background: linear-gradient(135deg, #fff, #aaa); -webkit-background-clip: text; background-clip: text; color: transparent;">Link Roblox</h1>
-        <p>Please link your official Roblox account to continue tracking your GP.</p>
+        <p>Please link your Roblox account to continue.</p>
         <button id="robloxLoginBtn" class="btn-roblox">
             <i class="fas fa-gamepad"></i> Connect with Roblox
         </button>
     </div>
 
+    <!-- Main Content (wird erst nach Guild-Auswahl sichtbar) -->
     <div id="mainContent" class="hidden">
         <div class="header">
             <div class="user-info">
@@ -58,7 +62,6 @@
                 <h2 id="userWelcome">Hi, ...</h2>
                 <div id="currentGuildDisplay" class="current-guild"></div>
             </div>
-            
             <div class="header-actions">
                 <button id="changeGuildBtn" class="btn-logout rbx" title="Change Server">
                     <i class="fas fa-exchange-alt"></i> Change Server
@@ -66,7 +69,7 @@
                 <button id="rbxLogoutBtn" class="btn-logout rbx" title="Change Roblox Account">
                     <i class="fas fa-exchange-alt"></i> Change Roblox
                 </button>
-                <button id="dcLogoutBtn" class="btn-logout dc" title="Log out completely">
+                <button id="dcLogoutBtn" class="btn-logout dc" title="Log out">
                     <i class="fas fa-sign-out-alt"></i> Logout
                 </button>
             </div>
@@ -88,27 +91,20 @@
             <div id="content-spenden">
                 <div class="system-card" id="gpSubmitCard">
                     <h3>Submit GP Donation</h3>
-                    <p style="color:#666; margin-bottom: 24px;">Enter your amount and select images as proof. The admin will verify your request.</p>
-                    
+                    <p style="color:#666; margin-bottom: 24px;">Amount and proof screenshots.</p>
                     <input type="number" id="gpAmount" placeholder="Amount (e.g. 5000)">
-                    
                     <div class="file-upload-wrapper">
-                        <label for="proofImage" class="custom-file-btn">
-                            <i class="fas fa-image"></i> Add Screenshots
-                        </label>
+                        <label for="proofImage" class="custom-file-btn"><i class="fas fa-image"></i> Add Screenshots</label>
                         <input type="file" id="proofImage" accept="image/*" multiple>
                         <span class="file-instruction" id="fileCountText">0 images selected</span>
                     </div>
-
                     <div id="imagePreviewContainer"></div>
-                    
-                    <button id="addGPBtn" class="btn-primary">SUBMIT PROOF FOR REVIEW</button>
+                    <button id="addGPBtn" class="btn-primary">SUBMIT PROOF</button>
                 </div>
-                <div id="noPermissionCard" class="system-card hidden" style="text-align: center; border-color: rgba(220,38,38,0.3);">
-                    <i class="fas fa-lock" style="font-size: 48px; color: #f56565; margin-bottom: 16px;"></i>
-                    <h3 style="color: #f56565;">No Permission</h3>
-                    <p>You need the required Discord role to submit GP donation requests.</p>
-                    <p style="color: #666; font-size: 14px; margin-top: 12px;">Please contact an admin if you believe this is an error.</p>
+                <div id="noPermissionCard" class="system-card hidden" style="text-align:center; border-color:rgba(220,38,38,0.3);">
+                    <i class="fas fa-lock" style="font-size:48px; color:#f56565;"></i>
+                    <h3 style="color:#f56565;">No Permission</h3>
+                    <p>You need the GP Submit role to donate.</p>
                 </div>
             </div>
 
@@ -116,205 +112,156 @@
             <div id="content-leaderboard" class="hidden">
                 <div class="system-card">
                     <h3>🏆 Leaderboard</h3>
-                    <p style="color:#666; margin-bottom: 20px;">Shows all verified GP donations for this server.</p>
-                    
-                    <div class="search-bar">
-                        <i class="fas fa-search"></i>
-                        <input type="text" id="leaderboardSearch" placeholder="Search for Discord or Roblox name...">
-                    </div>
-
-                    <div class="table-responsive">
-                        <table class="table">
-                            <thead>
-                                <tr><th>#</th><th>Discord</th><th>Roblox</th><th>Total GP</th></tr>
-                            </thead>
-                            <tbody id="leaderboardBody"></tbody>
-                        </table>
-                    </div>
-                    
-                    <div style="margin-top: 24px; padding: 24px; background: #0a0a0a; border-radius: 20px; text-align: center;">
-                        <div style="font-size: 13px; color: #666;">Total GP in System</div>
-                        <div style="font-size: 36px; color: #ffd700; font-weight: 800;" id="totalGpStat">0</div>
+                    <div class="search-bar"><i class="fas fa-search"></i><input type="text" id="leaderboardSearch" placeholder="Search..."></div>
+                    <div class="table-responsive"><table class="table"><thead><tr><th>#</th><th>Discord</th><th>Roblox</th><th>Total GP</th></tr></thead><tbody id="leaderboardBody"></tbody></table></div>
+                    <div style="margin-top:24px; padding:24px; background:#0a0a0a; border-radius:20px; text-align:center;">
+                        <div style="font-size:13px; color:#666;">Total GP in System</div>
+                        <div style="font-size:36px; color:#ffd700; font-weight:800;" id="totalGpStat">0</div>
                     </div>
                 </div>
             </div>
 
-            <!-- Tab 3: My Profile -->
+            <!-- Tab 3: Profile -->
             <div id="content-profile" class="hidden">
                 <div class="system-card">
                     <h3>👤 My Requests</h3>
-                    <p style="color:#666; margin-bottom: 20px;">Here you can see the status of your submitted GP.</p>
-                    <div class="table-responsive">
-                        <table class="table">
-                            <thead>
-                                <tr><th>Date</th><th>Amount</th><th>Status</th><th>Admin Comment</th></tr>
-                            </thead>
-                            <tbody id="profileHistoryBody"></tbody>
-                        </table>
-                    </div>
+                    <div class="table-responsive"><table class="table"><thead><tr><th>Date</th><th>Amount</th><th>Status</th><th>Comment</th></tr></thead><tbody id="profileHistoryBody"></tbody></table></div>
                 </div>
             </div>
 
-            <!-- Tab 4: Admin Panel -->
+            <!-- Tab 4: Admin Panel (Pending Requests) -->
             <div id="content-admin" class="hidden">
                 <div class="system-card">
-                    <h3 style="color: #cd7f32;">⏳ Pending Requests</h3>
-                    <p style="color:#666; margin-bottom: 20px;">Please check proof photos before approving.</p>
-                    <div class="table-responsive">
-                        <table class="table">
-                            <thead>
-                                <tr><th>User (Discord)</th><th>Roblox</th><th>Amount</th><th>Action</th></tr>
-                            </thead>
-                            <tbody id="adminPendingBody"></tbody>
-                        </table>
-                    </div>
+                    <h3 style="color:#cd7f32;">⏳ Pending Requests</h3>
+                    <div class="table-responsive"><table class="table"><thead><tr><th>Discord</th><th>Roblox</th><th>Amount</th><th>Action</th></tr></thead><tbody id="adminPendingBody"></tbody></table></div>
                 </div>
             </div>
 
-            <!-- Tab 5: Guild Leader (ex Owner, umbenannt) -->
+            <!-- Tab 5: Guild Leader (ex Owner) – alle Konfigurationen hier -->
             <div id="content-guildleader" class="hidden">
                 <div class="system-card">
-                    <h3 style="color: #ffd700;">⭐ Guild Leader Panel</h3>
-                    <p style="color:#666; margin-bottom: 24px;">Server overview and management.</p>
-                    
-                    <!-- Registered Users -->
-                    <div style="background: #0a0a0a; border-radius: 20px; padding: 24px; margin-bottom: 24px; text-align: center;">
-                        <h4 style="margin-bottom: 16px;">👥 Registered Users</h4>
-                        <div style="font-size: 48px; color: #ffd700; font-weight: 800;" id="statTotalUsers">0</div>
-                        <button id="refreshUsersBtn" class="btn-primary" style="background: #5865F2; width: auto; margin-top: 16px;">🔄 Refresh</button>
-                    </div>
+                    <h3 style="color:#ffd700;">⭐ Guild Leader Panel</h3>
+                    <p style="color:#666; margin-bottom:24px;">Complete server configuration.</p>
 
-                    <!-- Kick Logs (readonly) -->
-                    <div style="background: #0a0a0a; border-radius: 20px; padding: 24px;">
-                        <h4 style="margin-bottom: 16px;">📜 Kick History</h4>
-                        <div class="table-responsive">
-                            <table class="table">
-                                <thead>
-                                    <tr><th>Date</th><th>Kicked User</th><th>Kicked By</th><th>Reason</th><th>DM Sent</th></tr>
-                                </thead>
-                                <tbody id="kickLogsBody"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Tab 6: Panel Owner (nur für User ID 917426398120005653) -->
-            <div id="content-panelowner" class="hidden">
-                <div class="system-card">
-                    <h3 style="color: #ff3366;">👑 Panel Owner Panel</h3>
-                    <p style="color:#666; margin-bottom: 24px;">Complete system control and configuration for this server.</p>
-                    
-                    <!-- Role Management -->
-                    <div style="background: #0a0a0a; border-radius: 20px; padding: 24px; margin-bottom: 24px;">
-                        <h4 style="margin-bottom: 16px;">➕ Add Admin Role</h4>
-                        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                            <input type="text" id="newRoleId" placeholder="Discord Role ID" style="flex: 2; margin-bottom: 0;">
-                            <select id="rolePermissionLevel" style="flex: 1; margin-bottom: 0;">
+                    <!-- Add Admin Role -->
+                    <div style="background:#0a0a0a; border-radius:20px; padding:24px; margin-bottom:24px;">
+                        <h4>➕ Add Admin / Guild Leader Role</h4>
+                        <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                            <input type="text" id="newRoleId" placeholder="Discord Role ID" style="flex:2;">
+                            <select id="rolePermissionLevel" style="flex:1;">
                                 <option value="admin">Admin</option>
                                 <option value="owner">Guild Leader</option>
                             </select>
-                            <button id="addRoleBtn" class="btn-primary" style="background: #48bb78; color: white; width: auto;">Add Role</button>
+                            <button id="addRoleBtn" class="btn-primary" style="background:#48bb78; width:auto;">Add</button>
                         </div>
                     </div>
 
                     <!-- Current Roles -->
-                    <div style="background: #0a0a0a; border-radius: 20px; padding: 24px; margin-bottom: 24px;">
-                        <h4 style="margin-bottom: 16px;">📋 Current Roles</h4>
-                        <div id="adminRolesList">
-                            <p style="color: #666;">Loading roles...</p>
-                        </div>
+                    <div style="background:#0a0a0a; border-radius:20px; padding:24px; margin-bottom:24px;">
+                        <h4>📋 Current Roles</h4>
+                        <div id="adminRolesList">Loading...</div>
                     </div>
 
                     <!-- GP Submit Role -->
-                    <div style="background: #0a0a0a; border-radius: 20px; padding: 24px; margin-bottom: 24px;">
-                        <h4 style="margin-bottom: 16px;">🎮 GP Submit Role</h4>
-                        <input type="text" id="gpSubmitRoleId" placeholder="Role ID required to submit GP">
-                        <p style="color: #666; font-size: 12px; margin-top: 8px;">Users need this Discord role to submit GP donation requests.</p>
-                        <button id="saveGpSubmitRoleBtn" class="btn-primary" style="background: #ffd700; color: #000; width: auto;">Save GP Submit Role</button>
+                    <div style="background:#0a0a0a; border-radius:20px; padding:24px; margin-bottom:24px;">
+                        <h4>🎮 GP Submit Role</h4>
+                        <input type="text" id="gpSubmitRoleId" placeholder="Role ID for submitting GP">
+                        <button id="saveGpSubmitRoleBtn" class="btn-primary" style="background:#ffd700; color:#000; width:auto; margin-top:12px;">Save</button>
                     </div>
 
                     <!-- Channel Configuration -->
-                    <div style="background: #0a0a0a; border-radius: 20px; padding: 24px; margin-bottom: 24px;">
-                        <h4 style="margin-bottom: 16px;">📡 Channel Configuration</h4>
-                        <div id="channelConfigList">
-                            <p style="color: #666;">Loading channel configuration...</p>
-                        </div>
-                        <button id="saveChannelConfigBtn" class="btn-primary" style="background: #5865F2; margin-top: 16px;">Save Channel Configuration</button>
+                    <div style="background:#0a0a0a; border-radius:20px; padding:24px; margin-bottom:24px;">
+                        <h4>📡 Channel Configuration</h4>
+                        <div id="channelConfigList">Loading...</div>
+                        <button id="saveChannelConfigBtn" class="btn-primary" style="background:#5865F2; margin-top:16px;">Save Channels</button>
                     </div>
 
                     <!-- System Configuration -->
-                    <div style="background: #0a0a0a; border-radius: 20px; padding: 24px; margin-bottom: 24px;">
-                        <h4 style="margin-bottom: 16px;">⚙️ System Configuration</h4>
-                        
-                        <h5 style="margin: 16px 0 12px;">🎨 Embed Colors</h5>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px;">
-                            <div><label>Approve:</label> <input type="color" id="colorApprove" value="#48bb78" style="width: 60px; height: 35px;"></div>
-                            <div><label>Reject:</label> <input type="color" id="colorReject" value="#f56565" style="width: 60px; height: 35px;"></div>
-                            <div><label>Pending:</label> <input type="color" id="colorPending" value="#cd7f32" style="width: 60px; height: 35px;"></div>
-                            <div><label>Info:</label> <input type="color" id="colorInfo" value="#5865F2" style="width: 60px; height: 35px;"></div>
-                            <div><label>Leaderboard:</label> <input type="color" id="colorLeaderboard" value="#ffd700" style="width: 60px; height: 35px;"></div>
+                    <div style="background:#0a0a0a; border-radius:20px; padding:24px; margin-bottom:24px;">
+                        <h4>⚙️ System Configuration</h4>
+                        <h5>🎨 Embed Colors</h5>
+                        <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:12px;">
+                            <div><label>Approve:</label> <input type="color" id="colorApprove" value="#48bb78"></div>
+                            <div><label>Reject:</label> <input type="color" id="colorReject" value="#f56565"></div>
+                            <div><label>Pending:</label> <input type="color" id="colorPending" value="#cd7f32"></div>
+                            <div><label>Info:</label> <input type="color" id="colorInfo" value="#5865F2"></div>
+                            <div><label>Leaderboard:</label> <input type="color" id="colorLeaderboard" value="#ffd700"></div>
                         </div>
-
-                        <h5 style="margin: 20px 0 12px;">🎵 Music URL</h5>
-                        <input type="text" id="loginMusicUrl" placeholder="Login Music URL">
-
-                        <h5 style="margin: 20px 0 12px;">🔄 Update Interval (seconds)</h5>
+                        <h5 style="margin-top:20px;">🎵 Music URL</h5>
+                        <input type="text" id="loginMusicUrl" placeholder="Music URL">
+                        <h5>🔄 Update Interval (seconds)</h5>
                         <input type="number" id="updateInterval" value="60">
-
-                        <h5 style="margin: 20px 0 12px;">🖼️ Max Images per Request</h5>
+                        <h5>🖼️ Max Images per Request</h5>
                         <input type="number" id="maxImagesPerRequest" value="1">
-                        
-                        <button id="saveSystemConfigBtn" class="btn-primary" style="background: #ffd700; color: #000; margin-top: 20px;">Save System Configuration</button>
+                        <button id="saveSystemConfigBtn" class="btn-primary" style="background:#ffd700; margin-top:20px;">Save System Config</button>
                     </div>
 
                     <!-- Saved Messages -->
-                    <div style="background: #0a0a0a; border-radius: 20px; padding: 24px; margin-bottom: 24px;">
-                        <h4 style="margin-bottom: 16px;">💾 Saved Messages</h4>
-                        
-                        <div style="margin-bottom: 20px;">
-                            <input type="text" id="messageName" placeholder="Message Name">
-                            <input type="text" id="messageChannelId" placeholder="Channel ID">
-                            <textarea id="messageContent" rows="3" placeholder="Message content..."></textarea>
-                            <input type="text" id="messageEmbedTitle" placeholder="Embed Title (optional)">
-                            <textarea id="messageEmbedDesc" rows="2" placeholder="Embed Description (optional)"></textarea>
-                            <input type="color" id="messageEmbedColor" value="#5865F2" style="width: 60px;">
-                            <div style="display: flex; gap: 10px; margin-top: 16px;">
-                                <button id="saveMessageBtn" class="btn-primary" style="background: #48bb78; color: white; width: auto;">💾 Save</button>
-                                <button id="sendMessageBtn" class="btn-primary" style="background: #5865F2; width: auto;">📤 Send</button>
-                                <button id="clearMessageFormBtn" class="btn-primary" style="background: #2a2a2a; color: white; width: auto;">🗑️ Clear</button>
-                            </div>
+                    <div style="background:#0a0a0a; border-radius:20px; padding:24px; margin-bottom:24px;">
+                        <h4>💾 Saved Messages</h4>
+                        <input type="text" id="messageName" placeholder="Message Name">
+                        <input type="text" id="messageChannelId" placeholder="Channel ID">
+                        <textarea id="messageContent" rows="3" placeholder="Message content..."></textarea>
+                        <input type="text" id="messageEmbedTitle" placeholder="Embed Title">
+                        <textarea id="messageEmbedDesc" rows="2" placeholder="Embed Description"></textarea>
+                        <input type="color" id="messageEmbedColor" value="#5865F2">
+                        <div style="display:flex; gap:10px; margin-top:16px;">
+                            <button id="saveMessageBtn" class="btn-primary" style="background:#48bb78; width:auto;">💾 Save</button>
+                            <button id="sendMessageBtn" class="btn-primary" style="background:#5865F2; width:auto;">📤 Send</button>
+                            <button id="clearMessageFormBtn" class="btn-primary" style="background:#2a2a2a; width:auto;">Clear</button>
                         </div>
-                        
-                        <div id="savedMessagesList">
-                            <p style="color: #666;">Loading saved messages...</p>
+                        <div id="savedMessagesList" style="margin-top:20px;">Loading...</div>
+                    </div>
+
+                    <!-- Registered Users (read-only) -->
+                    <div style="background:#0a0a0a; border-radius:20px; padding:24px; margin-bottom:24px; text-align:center;">
+                        <h4>👥 Registered Users</h4>
+                        <div style="font-size:48px; color:#ffd700; font-weight:800;" id="statTotalUsers">0</div>
+                        <button id="refreshUsersBtn" class="btn-primary" style="background:#5865F2; width:auto; margin-top:16px;">Refresh</button>
+                    </div>
+
+                    <!-- Kick Logs -->
+                    <div style="background:#0a0a0a; border-radius:20px; padding:24px; margin-bottom:24px;">
+                        <h4>📜 Kick History</h4>
+                        <div class="table-responsive"><table class="table"><thead><tr><th>Date</th><th>Kicked User</th><th>Kicked By</th><th>Reason</th><th>DM</th></tr></thead><tbody id="kickLogsBody"></tbody></table></div>
+                    </div>
+
+                    <!-- Maintenance Mode (nur Panel Owner? Laut Wunsch: bei owner) – wir setzen auf Guild Leader -->
+                    <div style="background:#0a0a0a; border-radius:20px; padding:24px; margin-bottom:24px;">
+                        <h4>🔧 Maintenance Mode</h4>
+                        <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                            <button id="enableMaintenanceBtn" class="btn-primary" style="background:#dc2626; width:auto;">Enable</button>
+                            <button id="disableMaintenanceBtn" class="btn-primary" style="background:#48bb78; width:auto;">Disable</button>
+                            <span>Status: <span id="maintenanceStatusText">Disabled</span></span>
                         </div>
                     </div>
 
-                    <!-- Maintenance Mode -->
-                    <div style="background: #0a0a0a; border-radius: 20px; padding: 24px; margin-bottom: 24px;">
-                        <h4 style="margin-bottom: 16px;">🔧 Maintenance Mode</h4>
-                        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                            <button id="enableMaintenanceBtn" class="btn-primary" style="background: #dc2626; color: white; width: auto;">Enable Maintenance</button>
-                            <button id="disableMaintenanceBtn" class="btn-primary" style="background: #48bb78; color: white; width: auto;">Disable Maintenance</button>
-                            <span style="color: #666;">Status: <span id="maintenanceStatusText">Disabled</span></span>
+                    <!-- Test Mode (nur Panel Owner? Auch hier bei Guild Leader) -->
+                    <div style="background:#0a0a0a; border-radius:20px; padding:24px;">
+                        <h4>🧪 Test Mode</h4>
+                        <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                            <button id="enableTestModeBtn" class="btn-primary" style="background:#dc2626; width:auto;">Enable</button>
+                            <button id="disableTestModeBtn" class="btn-primary" style="background:#48bb78; width:auto;">Disable</button>
+                            <span>Status: <span id="testModeStatusText">Disabled</span></span>
                         </div>
+                        <p style="color:#ffd700; font-size:12px; margin-top:16px;">Test mode simulates approvals without changing GP.</p>
                     </div>
+                </div>
+            </div>
 
-                    <!-- Test Mode -->
-                    <div style="background: #0a0a0a; border-radius: 20px; padding: 24px;">
-                        <h4 style="margin-bottom: 16px;">🧪 Test Mode</h4>
-                        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                            <button id="enableTestModeBtn" class="btn-primary" style="background: #dc2626; color: white; width: auto;">Enable Test Mode</button>
-                            <button id="disableTestModeBtn" class="btn-primary" style="background: #48bb78; color: white; width: auto;">Disable Test Mode</button>
-                            <span style="color: #666;">Status: <span id="testModeStatusText">Disabled</span></span>
-                        </div>
-                        <p style="color: #ffd700; font-size: 12px; margin-top: 16px;">When Test Mode is enabled, all GP approvals/rejections will be simulated without changing actual GP balances.</p>
-                    </div>
+            <!-- Tab 6: Panel Owner (nur für User ID 917426398120005653) – hier bleibt nur eine Bestätigung, dass er alle Rechte hat, aber die Einstellungen sind bereits oben -->
+            <div id="content-panelowner" class="hidden">
+                <div class="system-card">
+                    <h3 style="color:#ff3366;">👑 Panel Owner</h3>
+                    <p>You have full access to all guilds. Use the Guild Leader tab to configure each server.</p>
+                    <p style="color:#666;">You can also change server via the "Change Server" button in the header.</p>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Guild Selector Overlay (wird dynamisch eingefügt) -->
+    <div id="guildSelectorContainer"></div>
 
     <div id="notification" class="notification"></div>
 
