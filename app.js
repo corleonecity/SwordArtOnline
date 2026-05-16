@@ -5,11 +5,11 @@
 const OWNER_USER_ID = '917426398120005653';
 
 // Roles for access control - stored in Firebase
-let ADMIN_ROLES = ['1503609455466643547'];
-let OWNER_ROLES = ['1504646932243546152'];
+let ADMIN_ROLES = [];
+let OWNER_ROLES = [];
 
 // GP Submit Role - now configurable via panel
-let GP_SUBMIT_ROLE = '1503193408280330400';
+let GP_SUBMIT_ROLE = '';
 
 // System configuration
 let systemConfig = {
@@ -87,6 +87,17 @@ async function getChannelConfig() {
         return snap.val() || {};
     } catch (e) {
         console.error("Error loading channel config:", e);
+        return {};
+    }
+}
+
+async function getRoleConfig() {
+    try {
+        const configRef = ref(db, 'config/roles');
+        const snap = await get(configRef);
+        return snap.val() || {};
+    } catch (e) {
+        console.error("Error loading role config:", e);
         return {};
     }
 }
@@ -706,6 +717,7 @@ function showDashboard() {
     if (hasOwnerPermission()) {
         loadAdminRolesList();
         loadChannelConfigUI();
+        loadRoleConfigUI();       // Neu: Guild- & Ticket-Rollen
         loadKickLogs();
         loadSavedMessages();
         loadSystemConfigUI();
@@ -737,16 +749,16 @@ function renderLeaderboard(filterText) {
     usersArray.forEach((u, i) => {
         body.innerHTML += `
             <tr>
-                <td>#${i + 1}</td>
-                <td><div class="user-name-cell"><span class="display-name">${escapeHtml(u.discordName || "Unknown")}</span><span class="username-handle">@${escapeHtml(u.discordUsername || "Unknown")}</span></div></td>
-                <td><div class="user-name-cell"><span class="display-name">${escapeHtml(u.robloxName || "Unknown")}</span><span class="username-handle">@${escapeHtml(u.robloxUsername || "Unknown")}</span></div></td>
-                <td style="color:#48bb78; font-weight:bold; font-size:16px;">${(u.totalGP || 0).toLocaleString()} GP</span></td>
+                <td>#${i + 1}</span>
+                <td><div class="user-name-cell"><span class="display-name">${escapeHtml(u.discordName || "Unknown")}</span><span class="username-handle">@${escapeHtml(u.discordUsername || "Unknown")}</span></div></span>
+                <td><div class="user-name-cell"><span class="display-name">${escapeHtml(u.robloxName || "Unknown")}</span><span class="username-handle">@${escapeHtml(u.robloxUsername || "Unknown")}</span></div></span>
+                <td style="color:#48bb78; font-weight:bold; font-size:16px;">${(u.totalGP || 0).toLocaleString()} GP</span>
             </tr>
         `;
     });
     
     if (usersArray.length === 0) {
-        body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No users with GP yet</span></tr></tr>';
+        body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No users with GP yet</td></tr>';
     }
     
     const totalGP = Object.values(allUsersData).reduce((sum, u) => sum + (u.totalGP || 0), 0);
@@ -790,16 +802,16 @@ function loadProfileHistory() {
             
             body.innerHTML += `
                 <tr>
-                    <td style="font-size:14px; color:#aaa;">${dateStr}</td>
-                    <td style="font-weight:bold;">+${req.amount.toLocaleString()} GP</span></td>
-                    <td>${statusHtml}</td>
-                    <td style="font-size:12px; color:#888;">${escapeHtml(req.adminComment || '-')}</td>
+                    <td style="font-size:14px; color:#aaa;">${dateStr}</span>
+                    <td style="font-weight:bold;">+${req.amount.toLocaleString()} GP</span>
+                    <td>${statusHtml}</span>
+                    <td style="font-size:12px; color:#888;">${escapeHtml(req.adminComment || '-')}</span>
                 </tr>
             `;
         });
         
         if (userRequests.length === 0) {
-            body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No requests yet</span></tr></table>';
+            body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No requests yet</td></tr>';
         }
     });
 }
@@ -930,7 +942,7 @@ async function submitGPRequest() {
 }
 
 // ==========================================
-// 9. ADMIN FUNCTIONS with comments
+// 9. ADMIN FUNCTIONS with comments & Discord message update
 // ==========================================
 
 function loadAdminData() {
@@ -941,7 +953,7 @@ function loadAdminData() {
         
         body.innerHTML = '';
         if (!data) {
-            body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No pending requests</span></td></tr>';
+            body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No pending requests</td></tr>';
             return;
         }
         
@@ -950,7 +962,7 @@ function loadAdminData() {
             .sort((a, b) => a.timestamp - b.timestamp);
         
         if (pendingRequests.length === 0) {
-            body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No pending requests</span></td></tr>';
+            body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No pending requests</td></tr>';
             return;
         }
         
@@ -989,6 +1001,25 @@ function loadAdminData() {
     });
 }
 
+// Helper: Aufruf an Worker, um Discord-Nachricht zu aktualisieren
+async function updateDiscordGPRequestMessage(requestId, adminId, adminName) {
+    try {
+        const response = await fetch(`${BACKEND_URL}/update-gp-message`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ requestId, adminId, adminName })
+        });
+        const data = await response.json();
+        if (data.success) {
+            console.log("Discord message updated successfully");
+        } else {
+            console.warn("Failed to update Discord message:", data.error);
+        }
+    } catch (e) {
+        console.error("Error calling update-gp-message:", e);
+    }
+}
+
 window.handleAdminActionWithComment = async (reqId, userId, amount, action, passedDbKey, robloxId, discordName, discordUsername, robloxName, robloxUsername) => {
     const commentInput = document.getElementById(`comment_${reqId}`);
     const adminComment = commentInput ? commentInput.value.trim() : '';
@@ -1019,7 +1050,8 @@ window.handleAdminActionWithComment = async (reqId, userId, amount, action, pass
             status: action === 'approve' ? 'approved' : 'rejected',
             adminComment: adminComment,
             processedAt: Date.now(),
-            processedBy: currentUser.id
+            processedBy: currentUser.id,
+            processedByName: currentUser.global_name || currentUser.username
         });
 
         const dbKey = getSafeDbKey(passedDbKey);
@@ -1044,6 +1076,9 @@ window.handleAdminActionWithComment = async (reqId, userId, amount, action, pass
             const index = sorted.findIndex(u => u.id === userId);
             rank = index !== -1 ? (index + 1).toString() : "?";
         }
+
+        // Discord-Nachricht im Request-Channel aktualisieren
+        await updateDiscordGPRequestMessage(reqId, currentUser.id, currentUser.global_name || currentUser.username);
 
         const channels = await getChannelConfig();
         const processedChannel = channels.CH_GP_PROCESSED;
@@ -1084,7 +1119,7 @@ window.handleAdminActionWithComment = async (reqId, userId, amount, action, pass
 };
 
 // ==========================================
-// 10. OWNER PANEL FUNCTIONS
+// 10. OWNER PANEL FUNCTIONS (Admin Roles, Channels, Roles Config)
 // ==========================================
 
 async function loadAdminRolesList() {
@@ -1098,12 +1133,12 @@ async function loadAdminRolesList() {
         
         for (const role of ADMIN_ROLES) {
             const roleName = await fetchRoleName(role);
-            html += `<tr><td class="role-name">${escapeHtml(roleName)}</span><td><td class="role-id">${escapeHtml(role)}</span><td><span class="status-badge status-approved">Admin</span></span><td><button class="btn-small btn-remove-role" onclick="removeAdminRole('${role}')">Remove</button></span></tr>`;
+            html += `<tr><td class="role-name">${escapeHtml(roleName)}</td><td class="role-id">${escapeHtml(role)}</td><td><span class="status-badge status-approved">Admin</span></td><td><button class="btn-small btn-remove-role" onclick="removeAdminRole('${role}')">Remove</button></td></tr>`;
         }
         
         for (const role of OWNER_ROLES) {
             const roleName = await fetchRoleName(role);
-            html += `<tr><td class="role-name">${escapeHtml(roleName)}</span><td><td class="role-id">${escapeHtml(role)}</span><td><span class="status-badge status-pending">Owner</span></span><td><button class="btn-small btn-remove-role" onclick="removeOwnerRole('${role}')">Remove</button></span></tr>`;
+            html += `<tr><td class="role-name">${escapeHtml(roleName)}</td><td class="role-id">${escapeHtml(role)}</td><td><span class="status-badge status-pending">Owner</span></td><td><button class="btn-small btn-remove-role" onclick="removeOwnerRole('${role}')">Remove</button></td></tr>`;
         }
         
         html += '</tbody></table>';
@@ -1176,6 +1211,7 @@ window.removeOwnerRole = async (roleId) => {
     }
 };
 
+// ---------- Channel Configuration (inkl. Ticket-Kanäle) ----------
 async function loadChannelConfigUI() {
     const container = document.getElementById('channelConfigList');
     if (!container) return;
@@ -1191,7 +1227,12 @@ async function loadChannelConfigUI() {
         { key: 'CH_GP_REQUESTS', name: '💎 GP Requests Channel', description: 'Channel for new GP donation requests' },
         { key: 'CH_GP_PROCESSED', name: '✅ GP Processed Channel', description: 'Channel for approved/rejected GP requests' },
         { key: 'CH_LOGIN_LOGS', name: '🔐 Login Logs Channel', description: 'Channel for user login notifications' },
-        { key: 'CH_BOT_DM_LOGS', name: '📨 Bot DM Logs Channel', description: 'Channel for /admin command messages' }
+        { key: 'CH_BOT_DM_LOGS', name: '📨 Bot DM Logs Channel', description: 'Channel for /admin command messages' },
+        // Ticket-Kanäle
+        { key: 'ticketMenuChannel', name: '🎫 Ticket Menu Channel', description: 'Channel where ticket dropdown is posted' },
+        { key: 'ticketCatAdmin', name: '👑 Admin Ticket Category', description: 'Category ID for admin tickets' },
+        { key: 'ticketCatMod', name: '🛡️ Moderator Ticket Category', description: 'Category ID for moderator tickets' },
+        { key: 'ticketTranscriptCh', name: '📜 Ticket Transcript Channel', description: 'Channel where closed ticket transcripts are sent' }
     ];
     
     container.innerHTML = channels.map(ch => `
@@ -1207,21 +1248,19 @@ async function loadChannelConfigUI() {
 }
 
 async function saveChannelConfig() {
-    const channels = [
+    const channelKeys = [
         'CH_LEAVE_LOGS', 'CH_USER_INFO', 'CH_PANEL_INFO', 'CH_LEADERBOARD',
-        'CH_TRIGGER_BTN', 'CH_GP_REQUESTS', 'CH_GP_PROCESSED', 'CH_LOGIN_LOGS', 'CH_BOT_DM_LOGS'
+        'CH_TRIGGER_BTN', 'CH_GP_REQUESTS', 'CH_GP_PROCESSED', 'CH_LOGIN_LOGS', 'CH_BOT_DM_LOGS',
+        'ticketMenuChannel', 'ticketCatAdmin', 'ticketCatMod', 'ticketTranscriptCh'
     ];
     
     const newConfig = {};
     let hasChanges = false;
     
-    for (const ch of channels) {
-        const input = document.getElementById(`cfg_${ch}`);
-        if (input && input.value.trim()) {
-            newConfig[ch] = input.value.trim();
-            hasChanges = true;
-        } else if (input && input.value === '') {
-            newConfig[ch] = null;
+    for (const key of channelKeys) {
+        const input = document.getElementById(`cfg_${key}`);
+        if (input) {
+            newConfig[key] = input.value.trim() || null;
             hasChanges = true;
         }
     }
@@ -1254,6 +1293,80 @@ async function saveChannelConfig() {
     }
 }
 
+// ---------- Role Configuration (Guild & Ticket Rollen) ----------
+async function loadRoleConfigUI() {
+    const container = document.getElementById('roleConfigList');
+    if (!container) return;
+    
+    const roleConfig = await getRoleConfig();
+    
+    const roles = [
+        { key: 'ROLE_GUILD_MEMBER', name: '👥 Guild Member Role', description: 'Role assigned to guild members' },
+        { key: 'ROLE_PENDING_GUILD', name: '⏳ Pending Guild Role', description: 'Role for pending members' },
+        { key: 'ROLE_PANEL_REG', name: '✅ Panel Registered Role', description: 'Role for users who registered on panel' },
+        { key: 'ROLE_PANEL_UNREG', name: '❌ Panel Unregistered Role', description: 'Role for users not registered' },
+        { key: 'ticketModRole', name: '🛡️ Ticket Moderator Role', description: 'Role that gets access to moderator tickets' },
+        { key: 'adminPingRoleId', name: '👑 Admin Ping Role', description: 'Role pinged when admin ticket is created' }
+    ];
+    
+    container.innerHTML = roles.map(role => `
+        <div class="channel-config-item">
+            <div class="channel-config-name">${role.name}</div>
+            <div class="channel-config-description">${role.description}</div>
+            <div class="channel-config-input">
+                <input type="text" id="role_${role.key}" value="${roleConfig[role.key] || ''}" placeholder="Enter Discord Role ID">
+                <span>Role ID</span>
+            </div>
+        </div>
+    `).join('');
+}
+
+async function saveRoleConfig() {
+    const roleKeys = [
+        'ROLE_GUILD_MEMBER', 'ROLE_PENDING_GUILD', 'ROLE_PANEL_REG', 'ROLE_PANEL_UNREG',
+        'ticketModRole', 'adminPingRoleId'
+    ];
+    
+    const newConfig = {};
+    let hasChanges = false;
+    
+    for (const key of roleKeys) {
+        const input = document.getElementById(`role_${key}`);
+        if (input) {
+            newConfig[key] = input.value.trim() || null;
+            hasChanges = true;
+        }
+    }
+    
+    if (!hasChanges) {
+        showNotify("No changes to save!", "warning");
+        return;
+    }
+    
+    try {
+        const configToSave = {};
+        for (const [key, value] of Object.entries(newConfig)) {
+            if (value !== null && value !== '') {
+                configToSave[key] = value;
+            }
+        }
+        
+        if (Object.keys(configToSave).length === 0) {
+            await set(ref(db, 'config/roles'), null);
+            showNotify("All role configurations cleared!", "success");
+        } else {
+            await set(ref(db, 'config/roles'), configToSave);
+            showNotify("Role configuration saved!", "success");
+        }
+        
+        await loadRoleConfigUI();
+    } catch (e) {
+        console.error("Error saving role config:", e);
+        showNotify("Error saving role configuration!", "error");
+    }
+}
+
+// ---------- Kick Logs, System Config, etc. (unverändert) ----------
 async function loadKickLogs() {
     const logsRef = ref(db, 'logs/kicks');
     onValue(logsRef, (snapshot) => {
@@ -1263,7 +1376,7 @@ async function loadKickLogs() {
         
         body.innerHTML = '';
         if (!data) {
-            body.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#666;">No kick logs found</span></td></tr>';
+            body.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#666;">No kick logs found</td></tr>';
             return;
         }
         
@@ -1277,7 +1390,7 @@ async function loadKickLogs() {
                     <td><code>${escapeHtml(log.kickedUserId || '?')}</code><br>${escapeHtml(log.kickedUserName || '')}</td>
                     <td><code>${escapeHtml(log.kickedByUserId || '?')}</code><br>${escapeHtml(log.kickedByUserName || '')}</td>
                     <td>${escapeHtml(log.reason || 'No reason')}</td>
-                    <td>${log.dmSent ? '✅ Yes' : '❌ No'}</span></td>
+                    <td>${log.dmSent ? '✅ Yes' : '❌ No'}</td>
                 </tr>
             `;
         });
@@ -1385,7 +1498,7 @@ async function saveGpSubmitRole() {
 }
 
 // ==========================================
-// 11. SAVED MESSAGES FUNCTIONS
+// 11. SAVED MESSAGES FUNCTIONS (unverändert)
 // ==========================================
 
 async function loadSavedMessages() {
@@ -1696,6 +1809,7 @@ document.getElementById('tabBtnOwner')?.addEventListener('click', () => {
         switchTab('Owner');
         loadAdminRolesList();
         loadChannelConfigUI();
+        loadRoleConfigUI();
         loadKickLogs();
         loadSavedMessages();
         loadSystemConfigUI();
@@ -1707,6 +1821,7 @@ document.getElementById('tabBtnOwner')?.addEventListener('click', () => {
 
 document.getElementById('addRoleBtn')?.addEventListener('click', window.addAdminRole);
 document.getElementById('saveChannelConfigBtn')?.addEventListener('click', saveChannelConfig);
+document.getElementById('saveRoleConfigBtn')?.addEventListener('click', saveRoleConfig);
 document.getElementById('saveSystemConfigBtn')?.addEventListener('click', saveSystemConfig);
 document.getElementById('saveGpSubmitRoleBtn')?.addEventListener('click', saveGpSubmitRole);
 document.getElementById('refreshUsersBtn')?.addEventListener('click', loadRegisteredUsersCount);
