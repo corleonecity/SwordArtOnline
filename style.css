@@ -735,6 +735,98 @@ input[type="file"] {
     color: #888;
 }
 
+/* ========== MODAL ========== */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 10001;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.8);
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    background-color: #0a0a0a;
+    margin: 10% auto;
+    padding: 25px;
+    border: 2px solid #ffd700;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 500px;
+    color: #e2e8f0;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+}
+
+.modal-close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.modal-close:hover {
+    color: #fff;
+}
+
+/* Permission Groups */
+.permission-group {
+    margin-bottom: 15px;
+    border-bottom: 1px solid #222;
+    padding-bottom: 10px;
+}
+
+.permission-group h4 {
+    color: #ffd700;
+    margin-bottom: 10px;
+}
+
+.permission-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.permission-item label {
+    cursor: pointer;
+}
+
+/* Role Items im Role Management */
+.role-item {
+    background: #0f0f0f;
+    border: 1px solid #222;
+    border-radius: 12px;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: 0.2s;
+}
+
+.role-item:hover {
+    border-color: #ffd70040;
+}
+
+.role-open-btn {
+    background: #5865F2;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.2s;
+}
+
+.role-open-btn:hover {
+    background: #4752c4;
+    transform: translateY(-1px);
+}
+
 /* ========== RESPONSIVE ========== */
 @media (max-width: 650px) {
     .header {
@@ -783,5 +875,10 @@ input[type="file"] {
     
     .message-actions button {
         flex: 1;
+    }
+    
+    .modal-content {
+        margin: 20% auto;
+        width: 95%;
     }
 }
