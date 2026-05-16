@@ -274,6 +274,56 @@ h1, h2, h3 {
     transform: translateY(0);
 }
 
+/* ========== HEADER BUTTONS ========== */
+.btn-logout {
+    padding: 10px 18px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+    transition: all 0.2s ease;
+    border: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Change Server Button (blau) */
+.btn-change-guild {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+    border: none;
+}
+
+.btn-change-guild:hover {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    transform: translateY(-2px);
+}
+
+/* Change Roblox Button (rot) */
+.btn-logout.rbx {
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    color: white;
+    border: none;
+}
+
+.btn-logout.rbx:hover {
+    background: linear-gradient(135deg, #b91c1c, #991b1b);
+    transform: translateY(-2px);
+}
+
+/* Discord Logout Button (dunkelrot) */
+.btn-logout.dc {
+    background: linear-gradient(135deg, #7f1d1d, #5e1a1a);
+    color: white;
+    border: none;
+}
+
+.btn-logout.dc:hover {
+    background: linear-gradient(135deg, #5e1a1a, #3f1212);
+    transform: translateY(-2px);
+}
+
 /* ========== HEADER ========== */
 .header {
     background: #050505;
@@ -313,7 +363,7 @@ h1, h2, h3 {
     background: #0a0a0a;
     padding: 6px 14px;
     border-radius: 20px;
-    font-size: 12px;
+    font-size: 13px;
     color: #ffd700;
     border: 1px solid #1a1a1a;
 }
@@ -321,42 +371,6 @@ h1, h2, h3 {
 .header-actions {
     display: flex;
     gap: 12px;
-}
-
-.btn-logout {
-    padding: 10px 18px;
-    border-radius: 12px;
-    cursor: pointer;
-    font-weight: 600;
-    font-size: 13px;
-    transition: all 0.2s ease;
-    border: none;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.btn-logout.rbx {
-    background: rgba(255, 255, 255, 0.05);
-    color: #aaa;
-    border: 1px solid #1a1a1a;
-}
-
-.btn-logout.rbx:hover {
-    background: #1a1a1a;
-    color: white;
-    border-color: #333;
-}
-
-.btn-logout.dc {
-    background: rgba(220, 38, 38, 0.1);
-    color: #f56565;
-    border: 1px solid rgba(220, 38, 38, 0.3);
-}
-
-.btn-logout.dc:hover {
-    background: #dc2626;
-    color: white;
 }
 
 /* ========== CONTAINER & TABS ========== */
@@ -417,7 +431,7 @@ h1, h2, h3 {
     color: white;
 }
 
-/* ========== GUILD LEADER TAB (alle Konfigurationen) ========== */
+/* ========== GUILD LEADER TAB (nur noch grundlegende Infos) ========== */
 .nav-tab.guild-leader-tab {
     background: rgba(255, 215, 0, 0.1);
     border-color: rgba(255, 215, 0, 0.3);
@@ -829,6 +843,46 @@ input[type="file"] {
     font-size: 12px;
 }
 
+/* ========== ROLE CONFIG ITEMS ========== */
+.role-config-item {
+    background: #0a0a0a;
+    border: 1px solid #111;
+    border-radius: 16px;
+    padding: 18px;
+    margin-bottom: 14px;
+}
+
+.role-config-name {
+    font-weight: 700;
+    color: #ffd700;
+    margin-bottom: 6px;
+    font-size: 15px;
+}
+
+.role-config-description {
+    color: #555;
+    font-size: 12px;
+    margin-bottom: 12px;
+}
+
+.role-config-input {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.role-config-input input {
+    flex: 2;
+    margin-bottom: 0;
+    font-size: 14px;
+}
+
+.role-config-input span {
+    color: #555;
+    font-size: 12px;
+}
+
 /* ========== SAVED MESSAGE STYLES ========== */
 .saved-message-item {
     background: #0a0a0a;
@@ -970,7 +1024,7 @@ input[type="file"] {
         padding: 20px;
     }
     
-    .btn-logout {
+    .btn-logout, .btn-change-guild {
         flex: 1;
         justify-content: center;
     }
@@ -980,12 +1034,12 @@ input[type="file"] {
         font-size: 13px;
     }
     
-    .channel-config-input {
+    .channel-config-input, .role-config-input {
         flex-direction: column;
         align-items: stretch;
     }
     
-    .channel-config-input input {
+    .channel-config-input input, .role-config-input input {
         margin-bottom: 8px;
     }
     
