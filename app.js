@@ -1,5 +1,10 @@
 // ==========================================
-// 1. SETTINGS & CONFIGURATION
+// SWORD ART ONLINE - APP.JS
+// MULTI-GUILD SUPPORT
+// ==========================================
+
+// ==========================================
+// 1. KONFIGURATION
 // ==========================================
 
 const PANEL_OWNER_USER_ID = '917426398120005653';
@@ -15,8 +20,8 @@ let availableGuilds = [];
 let selectedFiles = [];
 let allUsersData = {};
 let liveCheckInterval = null;
-let userGuildRoles = {};
-let guildConfigs = {};
+let userGuildRoles = {}; // { guildId: [roleIds] }
+let guildConfigs = {};   // { guildId: config }
 let currentEditingMessageId = null;
 let testModeEnabled = false;
 let roleNameCache = {};
@@ -25,7 +30,7 @@ let roleNameCache = {};
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
 import { getDatabase, ref, set, onValue, get, update, push, remove } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
 
-// Firebase Configuration
+// Firebase Config
 const firebaseConfig = {
     apiKey: "AIzaSyAjo_0WEf9qBH-EcKPNEY4PtBVGwxdHsbI",
     authDomain: "cc-shop-finanzsystem.firebaseapp.com",
@@ -36,12 +41,11 @@ const firebaseConfig = {
     appId: "1:575918945925:web:288a763f1bcbb5ae7e5bec"
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
 // ==========================================
-// 2. HELPER FUNCTIONS
+// 2. HELPER
 // ==========================================
 
 function getSafeDbKey(username) {
@@ -49,8 +53,7 @@ function getSafeDbKey(username) {
 }
 
 function playLoginMusic() {
-    const guildConfig = guildConfigs[currentGuildId];
-    const musicUrl = guildConfig?.system?.musicUrl || 'https://www.youtube.com/embed/BtEkzZoUCpw?autoplay=1&loop=1';
+    const musicUrl = guildConfigs[currentGuildId]?.system?.musicUrl || 'https://www.youtube.com/embed/BtEkzZoUCpw?autoplay=1&loop=1';
     const ac = document.getElementById('audioPlayerContainer');
     if (ac.innerHTML === '') {
         ac.innerHTML = `<iframe width="0" height="0" src="${musicUrl}" frameborder="0" allow="autoplay"></iframe>`;
@@ -81,7 +84,7 @@ function updateTestModeIndicator() {
     if (testModeEnabled) {
         indicator.classList.remove('hidden');
         if (statusText) statusText.textContent = 'Enabled';
-        showNotify('⚠️ TEST MODE ENABLED - No real changes will be made', 'warning');
+        showNotify('⚠️ TEST MODE ACTIVE - No real changes', 'warning');
     } else {
         indicator.classList.add('hidden');
         if (statusText) statusText.textContent = 'Disabled';
@@ -89,16 +92,14 @@ function updateTestModeIndicator() {
 }
 
 // ==========================================
-// 3. PERMISSION CHECKS
+// 3. PERMISSIONS (guild-spezifisch)
 // ==========================================
 
 function isPanelOwner() {
-    if (!currentUser) return false;
-    return currentUser.id === PANEL_OWNER_USER_ID;
+    return currentUser?.id === PANEL_OWNER_USER_ID;
 }
 
 function hasAdminPermission(guildId) {
-    if (!currentUser) return false;
     if (isPanelOwner()) return true;
     const guildRoles = userGuildRoles[guildId] || [];
     const adminRoles = guildConfigs[guildId]?.adminRoles || [];
@@ -106,7 +107,6 @@ function hasAdminPermission(guildId) {
 }
 
 function hasGuildLeaderPermission(guildId) {
-    if (!currentUser) return false;
     if (isPanelOwner()) return true;
     const guildRoles = userGuildRoles[guildId] || [];
     const ownerRoles = guildConfigs[guildId]?.ownerRoles || [];
@@ -114,7 +114,6 @@ function hasGuildLeaderPermission(guildId) {
 }
 
 function hasGpSubmitPermission(guildId) {
-    if (!currentUser) return false;
     if (isPanelOwner()) return true;
     const guildRoles = userGuildRoles[guildId] || [];
     const gpSubmitRole = guildConfigs[guildId]?.gpSubmitRole;
@@ -122,34 +121,20 @@ function hasGpSubmitPermission(guildId) {
 }
 
 // ==========================================
-// 4. DISCORD BOT INTERACTIONS
+// 4. DISCORD BOT INTERAKTIONEN
 // ==========================================
 
 async function sendDiscordMessage(channelId, content, embeds) {
-    if (!channelId) {
-        console.warn("No channel ID provided");
-        return false;
-    }
-    
+    if (!channelId) return false;
     try {
-        const body = {};
-        if (content) body.content = content;
-        if (embeds && embeds.length > 0) body.embeds = embeds;
-        
         const response = await fetch(`${BACKEND_URL}/send-channel-message`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ channelId, content, embeds })
         });
-        
-        if (!response.ok) {
-            const error = await response.text();
-            console.error(`Discord message failed:`, error);
-            return false;
-        }
-        return true;
+        return response.ok;
     } catch (e) {
-        console.error(`Discord message error:`, e);
+        console.error(e);
         return false;
     }
 }
@@ -162,37 +147,19 @@ async function updateBotStatus() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ status: `🎮 Total GP: ${totalGP.toLocaleString()}` })
         });
-    } catch (e) {
-        console.error("Failed to update bot status:", e);
-    }
+    } catch (e) {}
 }
 
 async function updateDiscordNickname(userId, robloxName, robloxUsername) {
     try {
-        const newNickname = `${robloxName} (@${robloxUsername})`;
-        
-        const response = await fetch(`${BACKEND_URL}/update-nickname`, {
+        const nickname = `${robloxName} (@${robloxUsername})`;
+        const res = await fetch(`${BACKEND_URL}/update-nickname`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                userId: userId, 
-                nickname: newNickname,
-                guildId: currentGuildId
-            })
+            body: JSON.stringify({ userId, nickname, guildId: currentGuildId })
         });
-        
-        if (response.ok) {
-            console.log(`Nickname updated to: ${newNickname}`);
-            return true;
-        } else {
-            const error = await response.text();
-            console.error(`Failed to update nickname: ${error}`);
-            return false;
-        }
-    } catch (e) {
-        console.error(`Nickname update error:`, e);
-        return false;
-    }
+        return res.ok;
+    } catch (e) { return false; }
 }
 
 // ==========================================
@@ -214,7 +181,6 @@ function switchTab(tabName) {
             }
         }
     });
-    
     if (tabName === 'GuildLeader') {
         loadRegisteredUsersCount();
         loadKickLogs();
@@ -227,22 +193,20 @@ function switchTab(tabName) {
         loadRegisteredUsersCount();
         loadKickLogs();
     }
-    if (tabName === 'Admin') {
-        loadAdminData();
-    }
+    if (tabName === 'Admin') loadAdminData();
 }
 
 // ==========================================
-// 6. PERMISSION UI UPDATES
+// 6. PERMISSION UI
 // ==========================================
 
 function updatePermissions() {
     const gpSubmitCard = document.getElementById('gpSubmitCard');
-    const noPermissionCard = document.getElementById('noPermissionCard');
-    const tabBtnSpenden = document.getElementById('tabBtnSpenden');
-    const tabBtnAdmin = document.getElementById('tabBtnAdmin');
-    const tabBtnGuildLeader = document.getElementById('tabBtnGuildLeader');
-    const tabBtnPanelOwner = document.getElementById('tabBtnPanelOwner');
+    const noPermCard = document.getElementById('noPermissionCard');
+    const tabSpenden = document.getElementById('tabBtnSpenden');
+    const tabAdmin = document.getElementById('tabBtnAdmin');
+    const tabGuildLeader = document.getElementById('tabBtnGuildLeader');
+    const tabPanelOwner = document.getElementById('tabBtnPanelOwner');
     const spendenContent = document.getElementById('content-spenden');
     
     const canSubmit = hasGpSubmitPermission(currentGuildId);
@@ -251,109 +215,75 @@ function updatePermissions() {
     const panelOwner = isPanelOwner();
     
     if (canSubmit) {
-        if (gpSubmitCard) gpSubmitCard.classList.remove('hidden');
-        if (noPermissionCard) noPermissionCard.classList.add('hidden');
-        if (tabBtnSpenden) tabBtnSpenden.style.display = 'block';
+        gpSubmitCard?.classList.remove('hidden');
+        noPermCard?.classList.add('hidden');
+        if (tabSpenden) tabSpenden.style.display = 'block';
     } else {
-        if (gpSubmitCard) gpSubmitCard.classList.add('hidden');
-        if (noPermissionCard) noPermissionCard.classList.remove('hidden');
-        if (tabBtnSpenden) tabBtnSpenden.style.display = 'none';
-        if (spendenContent && !spendenContent.classList.contains('hidden')) {
-            switchTab('Leaderboard');
-        }
+        gpSubmitCard?.classList.add('hidden');
+        noPermCard?.classList.remove('hidden');
+        if (tabSpenden) tabSpenden.style.display = 'none';
+        if (spendenContent && !spendenContent.classList.contains('hidden')) switchTab('Leaderboard');
     }
-    
-    if (tabBtnAdmin) {
-        tabBtnAdmin.style.display = (canAdmin || panelOwner) ? 'block' : 'none';
-    }
-    
-    if (tabBtnGuildLeader) {
-        tabBtnGuildLeader.style.display = (canGuildLeader || panelOwner) ? 'block' : 'none';
-    }
-    
-    if (tabBtnPanelOwner) {
-        tabBtnPanelOwner.style.display = panelOwner ? 'block' : 'none';
-    }
+    if (tabAdmin) tabAdmin.style.display = (canAdmin || panelOwner) ? 'block' : 'none';
+    if (tabGuildLeader) tabGuildLeader.style.display = (canGuildLeader || panelOwner) ? 'block' : 'none';
+    if (tabPanelOwner) tabPanelOwner.style.display = panelOwner ? 'block' : 'none';
 }
 
 // ==========================================
-// 7. GUILD SELECTION
+// 7. GUILD SELECTION (KORREKTUR)
 // ==========================================
 
 async function fetchUserRoles(userId, guildId) {
-    if (!userId || !guildId) {
+    try {
+        const res = await fetch(`${BACKEND_URL}/user-roles`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId, guildId })
+        });
+        const data = await res.json();
+        userGuildRoles[guildId] = data.roles || [];
+        return userGuildRoles[guildId];
+    } catch (e) {
         userGuildRoles[guildId] = [];
         return [];
     }
-    
-    try {
-        const response = await fetch(`${BACKEND_URL}/user-roles`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId: userId, guildId: guildId })
-        });
-        
-        if (response.ok) {
-            const data = await response.json();
-            userGuildRoles[guildId] = data.roles || [];
-            console.log(`User roles loaded for guild ${guildId}:`, userGuildRoles[guildId]);
-            return userGuildRoles[guildId];
-        } else {
-            userGuildRoles[guildId] = [];
-        }
-    } catch (e) {
-        console.warn("Error fetching user roles:", e);
-        userGuildRoles[guildId] = [];
-    }
-    return userGuildRoles[guildId];
 }
 
 async function fetchRoleName(roleId) {
     if (roleNameCache[roleId]) return roleNameCache[roleId];
-    
     try {
-        const response = await fetch(`${BACKEND_URL}/role-name`, {
+        const res = await fetch(`${BACKEND_URL}/role-name`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ roleId: roleId, guildId: currentGuildId })
+            body: JSON.stringify({ roleId, guildId: currentGuildId })
         });
-        
-        if (response.ok) {
-            const data = await response.json();
-            roleNameCache[roleId] = data.name || roleId;
-            return roleNameCache[roleId];
-        }
-    } catch (e) {
-        console.warn("Error fetching role name:", e);
-    }
-    return roleId;
+        const data = await res.json();
+        roleNameCache[roleId] = data.name || roleId;
+        return roleNameCache[roleId];
+    } catch (e) { return roleId; }
 }
 
 async function loadAvailableGuilds() {
     if (!currentUser) return [];
-    
     try {
-        const response = await fetch(`${BACKEND_URL}/user-guilds`, {
+        const res = await fetch(`${BACKEND_URL}/user-guilds`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ userId: currentUser.id })
         });
-        
-        if (response.ok) {
-            const data = await response.json();
-            availableGuilds = data.guilds || [];
-            return availableGuilds;
-        }
+        const data = await res.json();
+        availableGuilds = data.guilds || [];
+        return availableGuilds;
     } catch (e) {
-        console.error("Error loading guilds:", e);
+        console.error("loadAvailableGuilds error", e);
+        return [];
     }
-    return [];
 }
 
-async function showGuildSelector() {
-    const guildsContainer = document.createElement('div');
-    guildsContainer.className = 'guild-selector-overlay';
-    guildsContainer.innerHTML = `
+function showGuildSelector() {
+    const overlay = document.createElement('div');
+    overlay.className = 'guild-selector-overlay';
+    overlay.innerHTML = `
         <div class="guild-selector-card">
             <i class="fas fa-server"></i>
             <h2>Select Discord Server</h2>
@@ -361,43 +291,38 @@ async function showGuildSelector() {
             <div id="guildList" class="guild-list"></div>
         </div>
     `;
-    document.body.appendChild(guildsContainer);
-    
+    document.body.appendChild(overlay);
     const guildList = document.getElementById('guildList');
-    
     for (const guild of availableGuilds) {
-        const guildBtn = document.createElement('button');
-        guildBtn.className = 'guild-selector-btn';
-        guildBtn.innerHTML = `
+        const btn = document.createElement('button');
+        btn.className = 'guild-selector-btn';
+        btn.innerHTML = `
             ${guild.icon ? `<img src="https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png" class="guild-icon">` : '<i class="fas fa-server"></i>'}
             <span>${escapeHtml(guild.name)}</span>
         `;
-        guildBtn.onclick = () => selectGuild(guild.id);
-        guildList.appendChild(guildBtn);
+        btn.onclick = () => selectGuild(guild.id);
+        guildList.appendChild(btn);
     }
 }
 
 async function selectGuild(guildId) {
     currentGuildId = guildId;
     document.querySelector('.guild-selector-overlay')?.remove();
-    
     document.getElementById('currentGuildDisplay').textContent = `📡 Server: ${guildId.substring(0, 8)}...`;
-    
     await loadGuildConfig(guildId);
     await loadTestMode(guildId);
     await loadMaintenanceStatus(guildId);
     await fetchUserRoles(currentUser.id, guildId);
     await loadGuildData(guildId);
-    
     updatePermissions();
     showDashboard();
     startLiveMemberCheck();
+    playLoginMusic(); // Musik nur wenn gewünscht
 }
 
 async function loadGuildConfig(guildId) {
     const configRef = ref(db, `guilds/${guildId}/config`);
     const snap = await get(configRef);
-    
     if (snap.exists()) {
         guildConfigs[guildId] = snap.val();
     } else {
@@ -407,13 +332,7 @@ async function loadGuildConfig(guildId) {
             gpSubmitRole: '',
             channels: {},
             system: {
-                embedColors: {
-                    approve: '#48bb78',
-                    reject: '#f56565',
-                    pending: '#cd7f32',
-                    info: '#5865F2',
-                    leaderboard: '#ffd700'
-                },
+                embedColors: { approve: '#48bb78', reject: '#f56565', pending: '#cd7f32', info: '#5865F2', leaderboard: '#ffd700' },
                 limits: { maxImagesPerRequest: 1 },
                 musicUrl: 'https://www.youtube.com/embed/BtEkzZoUCpw?autoplay=1&loop=1',
                 updateInterval: 60
@@ -429,49 +348,44 @@ async function loadGuildConfig(guildId) {
 async function loadTestMode(guildId) {
     const testRef = ref(db, `guilds/${guildId}/config/testMode`);
     const snap = await get(testRef);
-    if (snap.exists()) {
-        testModeEnabled = snap.val().enabled === true;
-        updateTestModeIndicator();
-    }
+    testModeEnabled = snap.val()?.enabled === true;
+    updateTestModeIndicator();
 }
 
 async function loadMaintenanceStatus(guildId) {
-    const maintenanceRef = ref(db, `guilds/${guildId}/config/maintenance`);
-    const snap = await get(maintenanceRef);
-    if (snap.exists() && snap.val().enabled) {
-        document.getElementById('maintenanceOverlay').classList.remove('hidden');
-        document.getElementById('maintenanceStatusText').textContent = 'Enabled';
+    const maintRef = ref(db, `guilds/${guildId}/config/maintenance`);
+    const snap = await get(maintRef);
+    const enabled = snap.val()?.enabled === true;
+    const overlay = document.getElementById('maintenanceOverlay');
+    const statusSpan = document.getElementById('maintenanceStatusText');
+    if (enabled) {
+        overlay?.classList.remove('hidden');
+        if (statusSpan) statusSpan.textContent = 'Enabled';
     } else {
-        document.getElementById('maintenanceOverlay').classList.add('hidden');
-        document.getElementById('maintenanceStatusText').textContent = 'Disabled';
+        overlay?.classList.add('hidden');
+        if (statusSpan) statusSpan.textContent = 'Disabled';
     }
 }
 
 async function loadGuildData(guildId) {
     onValue(ref(db, `guilds/${guildId}/users`), (snapshot) => {
         allUsersData = snapshot.val() || {};
-        const searchValue = document.getElementById('leaderboardSearch')?.value || "";
-        renderLeaderboard(searchValue);
+        const search = document.getElementById('leaderboardSearch')?.value || '';
+        renderLeaderboard(search);
         updateBotStatus();
     });
-    
     onValue(ref(db, `guilds/${guildId}/requests`), (snapshot) => {
         const data = snapshot.val();
         updateProfileHistory(data);
-        if (hasAdminPermission(guildId)) {
-            updateAdminPending(data);
-        }
+        if (hasAdminPermission(guildId)) updateAdminPending(data);
     });
-    
     if (hasGuildLeaderPermission(guildId) || isPanelOwner()) {
-        onValue(ref(db, `guilds/${guildId}/logs/kicks`), (snapshot) => {
-            updateKickLogs(snapshot.val());
-        });
+        onValue(ref(db, `guilds/${guildId}/logs/kicks`), (snapshot) => updateKickLogs(snapshot.val()));
     }
 }
 
 // ==========================================
-// 8. DASHBOARD & UI
+// 8. DASHBOARD
 // ==========================================
 
 function showDashboard() {
@@ -479,24 +393,15 @@ function showDashboard() {
     document.getElementById('robloxPage').classList.add('hidden');
     document.getElementById('mainContent').classList.remove('hidden');
     document.getElementById('userWelcome').textContent = `Hi, ${currentUser.global_name || currentUser.username}`;
-    
     if (currentUser.avatar) {
         document.getElementById('userAvatar').src = `https://cdn.discordapp.com/avatars/${currentUser.id}/${currentUser.avatar}.png`;
     }
-    
     updatePermissions();
     loadLeaderboard();
-    
-    if (hasAdminPermission(currentGuildId) || isPanelOwner()) {
-        loadAdminData();
-    }
-    
-    if (isPanelOwner()) {
-        loadPanelOwnerData();
-    }
-    
+    if (hasAdminPermission(currentGuildId) || isPanelOwner()) loadAdminData();
+    if (isPanelOwner()) loadPanelOwnerData();
     updateBotStatus();
-    setInterval(() => updateBotStatus(), 60000);
+    setInterval(updateBotStatus, 60000);
 }
 
 function loadPanelOwnerData() {
@@ -508,141 +413,74 @@ function loadPanelOwnerData() {
     loadKickLogs();
 }
 
-function renderLeaderboard(filterText) {
+// ==========================================
+// 9. LEADERBOARD
+// ==========================================
+
+function renderLeaderboard(filter) {
     const body = document.getElementById('leaderboardBody');
     if (!body) return;
     body.innerHTML = '';
-    if (!allUsersData) return;
-    
-    let usersArray = Object.values(allUsersData)
-        .filter(u => u.totalGP && u.totalGP > 0)
-        .sort((a, b) => (b.totalGP || 0) - (a.totalGP || 0));
-    
-    if (filterText) {
-        const lowerFilter = filterText.toLowerCase();
-        usersArray = usersArray.filter(u => 
-            (u.discordName && u.discordName.toLowerCase().includes(lowerFilter)) ||
-            (u.discordUsername && u.discordUsername.toLowerCase().includes(lowerFilter)) ||
-            (u.robloxName && u.robloxName.toLowerCase().includes(lowerFilter))
-        );
+    let users = Object.values(allUsersData).filter(u => u.totalGP > 0).sort((a,b) => b.totalGP - a.totalGP);
+    if (filter) {
+        const f = filter.toLowerCase();
+        users = users.filter(u => (u.discordName?.toLowerCase().includes(f) || u.discordUsername?.toLowerCase().includes(f) || u.robloxName?.toLowerCase().includes(f)));
     }
-    
-    usersArray.forEach((u, i) => {
-        body.innerHTML += `
-            <tr>
-                <td>#${i + 1}</td>
-                <td><div class="user-name-cell"><span class="display-name">${escapeHtml(u.discordName || "Unknown")}</span><span class="username-handle">@${escapeHtml(u.discordUsername || "Unknown")}</span></div></td>
-                <td><div class="user-name-cell"><span class="display-name">${escapeHtml(u.robloxName || "Unknown")}</span><span class="username-handle">@${escapeHtml(u.robloxUsername || "Unknown")}</span></div></td>
-                <td style="color:#48bb78; font-weight:bold; font-size:16px;">${(u.totalGP || 0).toLocaleString()} GP</td>
-            </tr>
-        `;
+    users.forEach((u, i) => {
+        body.innerHTML += `<tr><td>#${i+1}</td><td><div class="user-name-cell"><span class="display-name">${escapeHtml(u.discordName)}</span><span class="username-handle">@${escapeHtml(u.discordUsername)}</span></div></td><td><div class="user-name-cell"><span class="display-name">${escapeHtml(u.robloxName)}</span><span class="username-handle">@${escapeHtml(u.robloxUsername)}</span></div></td><td style="color:#48bb78;font-weight:bold;">${(u.totalGP || 0).toLocaleString()} GP</td></tr>`;
     });
-    
-    if (usersArray.length === 0) {
-        body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No users with GP yet</td></tr>';
-    }
-    
-    const totalGP = Object.values(allUsersData).reduce((sum, u) => sum + (u.totalGP || 0), 0);
-    const totalGpStat = document.getElementById('totalGpStat');
-    if (totalGpStat) totalGpStat.textContent = totalGP.toLocaleString();
+    if (users.length === 0) body.innerHTML = '<tr><td colspan="4" style="text-align:center;">No users with GP</td></tr>';
+    const total = Object.values(allUsersData).reduce((s,u) => s + (u.totalGP||0),0);
+    document.getElementById('totalGpStat').textContent = total.toLocaleString();
 }
 
 function loadLeaderboard() {
     if (!currentGuildId) return;
     onValue(ref(db, `guilds/${currentGuildId}/users`), (snapshot) => {
-        allUsersData = snapshot.val();
-        const searchValue = document.getElementById('leaderboardSearch')?.value || "";
-        renderLeaderboard(searchValue);
-        updateBotStatus();
+        allUsersData = snapshot.val() || {};
+        renderLeaderboard(document.getElementById('leaderboardSearch')?.value || '');
     });
 }
+
+// ==========================================
+// 10. PROFILE HISTORY
+// ==========================================
 
 function updateProfileHistory(data) {
     const body = document.getElementById('profileHistoryBody');
     if (!body) return;
     body.innerHTML = '';
     if (!data || !currentUser) return;
-    
-    const userRequests = Object.values(data)
-        .filter(r => r.userId === currentUser.id)
-        .sort((a, b) => b.timestamp - a.timestamp);
-    
-    userRequests.forEach(req => {
-        const dateStr = new Date(req.timestamp).toLocaleDateString('en-US', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-        
-        let statusHtml = '';
-        if (req.status === 'pending') statusHtml = '<span class="status-badge status-pending">Pending ⏳</span>';
-        else if (req.status === 'approved') statusHtml = '<span class="status-badge status-approved">Approved ✅</span>';
-        else statusHtml = '<span class="status-badge status-rejected">Rejected ❌</span>';
-        
-        body.innerHTML += `
-            <tr>
-                <td style="font-size:14px; color:#aaa;">${dateStr}</td>
-                <td style="font-weight:bold;">+${req.amount.toLocaleString()} GP</td>
-                <td>${statusHtml}</td>
-                <td style="font-size:12px; color:#888;">${escapeHtml(req.adminComment || '-')}</td>
-            </tr>
-        `;
+    const requests = Object.values(data).filter(r => r.userId === currentUser.id).sort((a,b) => b.timestamp - a.timestamp);
+    requests.forEach(req => {
+        const date = new Date(req.timestamp).toLocaleString();
+        let statusHtml = req.status === 'pending' ? '<span class="status-badge status-pending">Pending</span>' : (req.status === 'approved' ? '<span class="status-badge status-approved">Approved</span>' : '<span class="status-badge status-rejected">Rejected</span>');
+        body.innerHTML += `<tr><td>${date}</td><td>+${req.amount.toLocaleString()} GP</td><td>${statusHtml}</td><td>${escapeHtml(req.adminComment || '-')}</td></tr>`;
     });
-    
-    if (userRequests.length === 0) {
-        body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No requests yet</td></tr>';
-    }
+    if (requests.length === 0) body.innerHTML = '<tr><td colspan="4">No requests</td></tr>';
 }
+
+// ==========================================
+// 11. ADMIN PENDING
+// ==========================================
 
 function updateAdminPending(data) {
     const body = document.getElementById('adminPendingBody');
     if (!body) return;
-    
     body.innerHTML = '';
-    if (!data) {
-        body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No pending requests</td></tr>';
-        return;
-    }
-    
-    const pendingRequests = Object.values(data)
-        .filter(r => r.status === 'pending')
-        .sort((a, b) => a.timestamp - b.timestamp);
-    
-    if (pendingRequests.length === 0) {
-        body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No pending requests</td></tr>';
-        return;
-    }
-    
-    pendingRequests.forEach(req => {
+    if (!data) { body.innerHTML = '<tr><td colspan="4">No pending requests</td></tr>'; return; }
+    const pending = Object.values(data).filter(r => r.status === 'pending').sort((a,b) => a.timestamp - b.timestamp);
+    if (pending.length === 0) { body.innerHTML = '<tr><td colspan="4">No pending requests</td></tr>'; return; }
+    pending.forEach(req => {
         body.innerHTML += `
             <tr>
+                <td><div class="user-name-cell"><span class="display-name">${escapeHtml(req.discordName)}</span><span class="username-handle">@${escapeHtml(req.discordUsername)}</span></div></td>
+                <td><div class="user-name-cell"><span class="display-name">${escapeHtml(req.robloxName)}</span><span class="username-handle">@${escapeHtml(req.robloxUsername)}</span></div></td>
+                <td style="color:#cd7f32;">+${req.amount.toLocaleString()} GP</td>
                 <td>
-                    <div class="user-name-cell">
-                        <span class="display-name">${escapeHtml(req.discordName || "Unknown")}</span>
-                        <span class="username-handle">@${escapeHtml(req.discordUsername || "Unknown")}</span>
-                    </div>
-                </td>
-                <td>
-                    <div class="user-name-cell">
-                        <span class="display-name">${escapeHtml(req.robloxName || "Unknown")}</span>
-                        <span class="username-handle">@${escapeHtml(req.robloxUsername || "Unknown")}</span>
-                    </div>
-                </td>
-                <td style="color:#cd7f32; font-weight:bold;">+${req.amount.toLocaleString()} GP</td>
-                <td>
-                    <div style="display: flex; flex-direction: column; gap: 8px;">
-                        <input type="text" id="comment_${req.id}" placeholder="Admin comment (optional)" style="padding: 6px; font-size: 12px; margin-bottom: 5px;">
-                        <div style="display: flex; gap: 5px;">
-                            <button class="btn-small btn-approve" onclick="window.handleAdminActionWithComment('${req.id}', '${req.userId}', ${req.amount}, 'approve', '${req.dbKey || req.discordUsername}', '${req.robloxId || ''}', '${escapeHtml(req.discordName)}', '${escapeHtml(req.discordUsername)}', '${escapeHtml(req.robloxName)}', '${escapeHtml(req.robloxUsername)}')">
-                                <i class="fas fa-check"></i> Approve
-                            </button>
-                            <button class="btn-small btn-deny" onclick="window.handleAdminActionWithComment('${req.id}', '${req.userId}', ${req.amount}, 'reject', '${req.dbKey || req.discordUsername}', '${req.robloxId || ''}', '${escapeHtml(req.discordName)}', '${escapeHtml(req.discordUsername)}', '${escapeHtml(req.robloxName)}', '${escapeHtml(req.robloxUsername)}')">
-                                <i class="fas fa-times"></i> Reject
-                            </button>
-                        </div>
-                    </div>
+                    <input type="text" id="comment_${req.id}" placeholder="Comment" style="width:100%; margin-bottom:5px;">
+                    <button class="btn-small btn-approve" onclick="window.handleAdminAction('${req.id}', '${req.userId}', ${req.amount}, 'approve', '${req.dbKey || req.discordUsername}', '${req.robloxId || ''}', '${escapeHtml(req.discordName)}', '${escapeHtml(req.discordUsername)}', '${escapeHtml(req.robloxName)}', '${escapeHtml(req.robloxUsername)}')">Approve</button>
+                    <button class="btn-small btn-deny" onclick="window.handleAdminAction('${req.id}', '${req.userId}', ${req.amount}, 'reject', '${req.dbKey || req.discordUsername}', '${req.robloxId || ''}', '${escapeHtml(req.discordName)}', '${escapeHtml(req.discordUsername)}', '${escapeHtml(req.robloxName)}', '${escapeHtml(req.robloxUsername)}')">Reject</button>
                 </td>
             </tr>
         `;
@@ -651,516 +489,181 @@ function updateAdminPending(data) {
 
 function loadAdminData() {
     if (!currentGuildId) return;
-    onValue(ref(db, `guilds/${currentGuildId}/requests`), (snapshot) => {
-        updateAdminPending(snapshot.val());
-    });
+    onValue(ref(db, `guilds/${currentGuildId}/requests`), (snapshot) => updateAdminPending(snapshot.val()));
 }
 
 // ==========================================
-// 9. IMAGE UPLOAD & PREVIEW
+// 12. ADMIN ACTIONS (MIT COMMENT)
 // ==========================================
 
-function updateImagePreviews() {
-    const previewContainer = document.getElementById('imagePreviewContainer');
-    const fileCountText = document.getElementById('fileCountText');
-    const maxImages = guildConfigs[currentGuildId]?.system?.limits?.maxImagesPerRequest || 1;
-    
-    previewContainer.innerHTML = '';
-    fileCountText.textContent = `${selectedFiles.length} / ${maxImages} image(s) selected`;
-    
-    selectedFiles.forEach((file, index) => {
-        const box = document.createElement('div');
-        box.className = 'preview-box';
-        const img = document.createElement('img');
-        img.src = URL.createObjectURL(file);
-        const btn = document.createElement('button');
-        btn.className = 'remove-img-btn';
-        btn.innerHTML = '&times;';
-        btn.onclick = () => {
-            selectedFiles.splice(index, 1);
-            updateImagePreviews();
-        };
-        box.appendChild(img);
-        box.appendChild(btn);
-        previewContainer.appendChild(box);
-    });
-}
-
-// ==========================================
-// 10. GP SUBMIT FUNCTION
-// ==========================================
-
-async function submitGPRequest() {
-    if (!hasGpSubmitPermission(currentGuildId)) {
-        showNotify("You don't have permission to submit GP requests!", "error");
-        return;
-    }
-    
-    const amount = parseInt(document.getElementById('gpAmount').value);
-    const btn = document.getElementById('addGPBtn');
-    const maxImages = guildConfigs[currentGuildId]?.system?.limits?.maxImagesPerRequest || 1;
-    
-    if (isNaN(amount) || amount <= 0) {
-        alert("Please enter a valid amount!");
-        return;
-    }
-    
-    if (selectedFiles.length === 0) {
-        alert("Please add at least 1 screenshot as proof!");
-        return;
-    }
-    
-    if (selectedFiles.length > maxImages) {
-        alert(`Maximum ${maxImages} images allowed!`);
-        return;
-    }
-
-    btn.disabled = true;
-    btn.textContent = "SENDING...";
-
-    try {
-        const dbKey = getSafeDbKey(currentUser.username);
-        const userRef = ref(db, `guilds/${currentGuildId}/users/${dbKey}`);
-        const snap = await get(userRef);
-        const userData = snap.val() || {};
-
-        const dName = userData.discordName || currentUser.global_name || "Unknown";
-        const dUser = userData.discordUsername || currentUser.username || "Unknown";
-        const dId = currentUser.id || "1";
-        const rName = userData.robloxName || "Unknown";
-        const rUser = userData.robloxUsername || "Unknown";
-        const rId = userData.robloxId || "1";
-
-        const newReqRef = push(ref(db, `guilds/${currentGuildId}/requests`));
-        const reqKey = newReqRef.key;
-
-        await set(newReqRef, {
-            id: reqKey,
-            dbKey: dbKey,
-            userId: dId,
-            discordName: dName,
-            discordUsername: dUser,
-            robloxName: rName,
-            robloxUsername: rUser,
-            robloxId: rId,
-            amount: amount,
-            status: 'pending',
-            timestamp: Date.now()
-        });
-
-        showNotify(`GP Request submitted successfully!`, "success");
-
-        document.getElementById('gpAmount').value = '';
-        selectedFiles = [];
-        updateImagePreviews();
-        
-        switchTab('Profile');
-        
-    } catch (e) {
-        console.error("Submit error:", e);
-        alert("Error: " + e.message);
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = "SUBMIT PROOF FOR REVIEW";
-    }
-}
-
-// ==========================================
-// 11. ADMIN ACTIONS
-// ==========================================
-
-window.handleAdminActionWithComment = async (reqId, userId, amount, action, passedDbKey, robloxId, discordName, discordUsername, robloxName, robloxUsername) => {
+window.handleAdminAction = async (reqId, userId, amount, action, dbKey, robloxId, discordName, discordUsername, robloxName, robloxUsername) => {
     const commentInput = document.getElementById(`comment_${reqId}`);
-    const adminComment = commentInput ? commentInput.value.trim() : '';
-    
-    if (!confirm(`Are you sure you want to ${action === 'approve' ? 'APPROVE' : 'REJECT'} this request?${adminComment ? `\n\nComment: ${adminComment}` : ''}`)) return;
+    const adminComment = commentInput?.value.trim() || '';
+    if (!confirm(`${action === 'approve' ? 'APPROVE' : 'REJECT'} request? ${adminComment ? `\nComment: ${adminComment}` : ''}`)) return;
     
     if (testModeEnabled) {
-        showNotify(`🔬 TEST MODE: ${action === 'approve' ? 'Approved' : 'Rejected'} request ${reqId} (simulated)`, "warning");
-        
-        await update(ref(db, `guilds/${currentGuildId}/requests/${reqId}`), {
-            status: action === 'approve' ? 'approved' : 'rejected',
-            adminComment: adminComment,
-            processedAt: Date.now(),
-            processedBy: currentUser.id,
-            testMode: true
-        });
-        
-        showNotify(`Test: Request ${action === 'approve' ? 'approved' : 'rejected'}!`, "success");
+        showNotify(`🔬 TEST MODE: ${action} simulated`, 'warning');
+        await update(ref(db, `guilds/${currentGuildId}/requests/${reqId}`), { status: action === 'approve' ? 'approved' : 'rejected', adminComment, processedAt: Date.now(), processedBy: currentUser.id, testMode: true });
+        showNotify(`Test: ${action}ed`, 'success');
         return;
     }
     
     try {
-        const reqSnap = await get(ref(db, `guilds/${currentGuildId}/requests/${reqId}`));
-        const reqData = reqSnap.val();
-        if (!reqData) return alert("Request not found!");
-
-        await update(ref(db, `guilds/${currentGuildId}/requests/${reqId}`), {
-            status: action === 'approve' ? 'approved' : 'rejected',
-            adminComment: adminComment,
-            processedAt: Date.now(),
-            processedBy: currentUser.id
-        });
-
-        const dbKey = getSafeDbKey(passedDbKey);
+        await update(ref(db, `guilds/${currentGuildId}/requests/${reqId}`), { status: action === 'approve' ? 'approved' : 'rejected', adminComment, processedAt: Date.now(), processedBy: currentUser.id });
         let newTotal = 0;
-        const userRef = ref(db, `guilds/${currentGuildId}/users/${dbKey}`);
-        const snap = await get(userRef);
-
-        if (snap.exists()) {
-            newTotal = snap.val().totalGP || 0;
-            if (action === 'approve') {
-                newTotal += amount;
-                await update(userRef, { totalGP: newTotal });
-            }
+        if (action === 'approve') {
+            const userRef = ref(db, `guilds/${currentGuildId}/users/${dbKey}`);
+            const snap = await get(userRef);
+            newTotal = (snap.val()?.totalGP || 0) + amount;
+            await update(userRef, { totalGP: newTotal });
         }
-
-        const allUsersSnap = await get(ref(db, `guilds/${currentGuildId}/users`));
-        let rank = "?";
-        if (allUsersSnap.exists()) {
-            const sorted = Object.values(allUsersSnap.val())
-                .filter(u => u.totalGP && u.totalGP > 0)
-                .sort((a, b) => (b.totalGP || 0) - (a.totalGP || 0));
-            const index = sorted.findIndex(u => u.id === userId);
-            rank = index !== -1 ? (index + 1).toString() : "?";
-        }
-
-        const channels = guildConfigs[currentGuildId]?.channels || {};
-        const processedChannel = channels.CH_GP_PROCESSED;
-        
-        if (processedChannel) {
-            const actionText = action === 'approve' ? '✅ GP Donation Approved' : '❌ GP Donation Rejected';
-            const amountText = action === 'approve' ? `+${amount.toLocaleString()} GP` : `-${amount.toLocaleString()} GP`;
-            const embedColors = guildConfigs[currentGuildId]?.system?.embedColors || {};
-            
-            const embed = {
-                title: actionText,
-                url: "https://corleonecity.github.io/SwordArtOnline/",
-                color: action === 'approve' ? parseInt(embedColors.approve?.replace('#', ''), 16) : parseInt(embedColors.reject?.replace('#', ''), 16),
-                fields: [
-                    { name: "💬 Discord", value: `**Name:** ${discordName}\n**Tag:** @${discordUsername}\n**Ping:** <@${userId}>`, inline: true },
-                    { name: "🎮 Roblox", value: `**Name:** ${robloxName}\n**User:** @${robloxUsername}\n**Profile:** [Click Here](https://www.roblox.com/users/${robloxId}/profile)`, inline: true },
-                    { name: "💰 Amount", value: amountText, inline: false },
-                    { name: "📊 New Total", value: `${newTotal.toLocaleString()} GP`, inline: true },
-                    { name: "🏆 Rank", value: `#${rank}`, inline: true },
-                    { name: "🛡️ Processed By", value: `<@${currentUser.id}>`, inline: false }
-                ],
-                timestamp: new Date().toISOString(),
-                footer: { text: "SwordArtOnline GP System" }
-            };
-            
-            if (adminComment) {
-                embed.fields.push({ name: "💬 Admin Comment", value: adminComment, inline: false });
-            }
-            
-            await sendDiscordMessage(processedChannel, `<@${userId}>`, [embed]);
-        }
-
-        showNotify(`Request ${action === 'approve' ? 'approved' : 'rejected'}!`, "success");
-        
-    } catch (e) {
-        console.error("Admin action error:", e);
-        alert("Error: " + e.message);
-    }
+        // Optionale Discord-Benachrichtigung
+        showNotify(`Request ${action}ed`, 'success');
+    } catch(e) { alert('Error: '+e.message); }
 };
 
 // ==========================================
-// 12. OWNER PANEL FUNCTIONS (Roles, Config, etc.)
+// 13. GUILD LEADER & PANEL OWNER FUNKTIONEN
 // ==========================================
 
 async function loadAdminRolesList() {
     const container = document.getElementById('adminRolesList');
     if (!container) return;
-    
-    try {
-        const config = guildConfigs[currentGuildId] || {};
-        const adminRoles = config.adminRoles || [];
-        const ownerRoles = config.ownerRoles || [];
-        
-        let html = '<table class="table"><thead><tr><th>Role Name</th><th>Role ID</th><th>Type</th><th>Action</th></tr></thead><tbody>';
-        
-        for (const role of adminRoles) {
-            const roleName = await fetchRoleName(role);
-            html += `<tr><td class="role-name">${escapeHtml(roleName)}</td><td class="role-id">${escapeHtml(role)}</td><td><span class="status-badge status-approved">Admin</span></td><td><button class="btn-small btn-remove-role" onclick="removeAdminRole('${role}')">Remove</button></td></tr>`;
-        }
-        
-        for (const role of ownerRoles) {
-            const roleName = await fetchRoleName(role);
-            html += `<tr><td class="role-name">${escapeHtml(roleName)}</span><td><td class="role-id">${escapeHtml(role)}</span><td><span class="status-badge status-pending">Guild Leader</span></span><td><button class="btn-small btn-remove-role" onclick="removeOwnerRole('${role}')">Remove</button></span></tr>`;
-        }
-        
-        html += '</tbody></table>';
-        container.innerHTML = html;
-    } catch (e) {
-        console.error("Error loading roles:", e);
-        container.innerHTML = '<p style="color: #f56565;">Error loading roles</p>';
+    const cfg = guildConfigs[currentGuildId] || {};
+    const adminRoles = cfg.adminRoles || [];
+    const ownerRoles = cfg.ownerRoles || [];
+    let html = '<table class="table"><thead><tr><th>Role Name</th><th>Role ID</th><th>Type</th><th>Action</th></tr></thead><tbody>';
+    for (const role of adminRoles) {
+        const name = await fetchRoleName(role);
+        html += `<tr><td class="role-name">${escapeHtml(name)}</td><td class="role-id">${escapeHtml(role)}</td><td><span class="status-badge status-approved">Admin</span></td><td><button class="btn-small btn-remove-role" onclick="removeAdminRole('${role}')">Remove</button></td></tr>`;
     }
+    for (const role of ownerRoles) {
+        const name = await fetchRoleName(role);
+        html += `<tr><td class="role-name">${escapeHtml(name)}</td><td class="role-id">${escapeHtml(role)}</td><td><span class="status-badge status-pending">Guild Leader</span></td><td><button class="btn-small btn-remove-role" onclick="removeOwnerRole('${role}')">Remove</button></td></tr>`;
+    }
+    html += '</tbody></table>';
+    container.innerHTML = html;
 }
 
 window.addAdminRole = async () => {
     const roleId = document.getElementById('newRoleId').value.trim();
-    const permissionLevel = document.getElementById('rolePermissionLevel').value;
-    
-    if (!roleId) {
-        showNotify("Please enter a role ID!", "error");
-        return;
-    }
-    
-    try {
-        const config = guildConfigs[currentGuildId] || {};
-        let adminRoles = config.adminRoles || [];
-        let ownerRoles = config.ownerRoles || [];
-        
-        if (permissionLevel === 'admin') {
-            if (!adminRoles.includes(roleId)) {
-                adminRoles.push(roleId);
-            }
-        } else {
-            if (!ownerRoles.includes(roleId)) {
-                ownerRoles.push(roleId);
-            }
-        }
-        
-        await set(ref(db, `guilds/${currentGuildId}/config`), {
-            ...config,
-            adminRoles: adminRoles,
-            ownerRoles: ownerRoles
-        });
-        
-        guildConfigs[currentGuildId].adminRoles = adminRoles;
-        guildConfigs[currentGuildId].ownerRoles = ownerRoles;
-        
-        showNotify(`Role added as ${permissionLevel === 'admin' ? 'Admin' : 'Guild Leader'}!`, "success");
-        document.getElementById('newRoleId').value = '';
-        await loadAdminRolesList();
-        await fetchUserRoles(currentUser.id, currentGuildId);
-        updatePermissions();
-    } catch (e) {
-        showNotify("Error saving role!", "error");
-    }
+    const level = document.getElementById('rolePermissionLevel').value;
+    if (!roleId) { showNotify('Enter role ID','error'); return; }
+    const cfg = guildConfigs[currentGuildId] || {};
+    let admin = cfg.adminRoles || [];
+    let owner = cfg.ownerRoles || [];
+    if (level === 'admin') { if (!admin.includes(roleId)) admin.push(roleId); }
+    else { if (!owner.includes(roleId)) owner.push(roleId); }
+    await set(ref(db, `guilds/${currentGuildId}/config`), { ...cfg, adminRoles: admin, ownerRoles: owner });
+    guildConfigs[currentGuildId].adminRoles = admin;
+    guildConfigs[currentGuildId].ownerRoles = owner;
+    showNotify(`Role added as ${level === 'admin' ? 'Admin' : 'Guild Leader'}`, 'success');
+    document.getElementById('newRoleId').value = '';
+    await loadAdminRolesList();
+    await fetchUserRoles(currentUser.id, currentGuildId);
+    updatePermissions();
 };
 
 window.removeAdminRole = async (roleId) => {
-    const config = guildConfigs[currentGuildId] || {};
-    let adminRoles = config.adminRoles || [];
-    const index = adminRoles.indexOf(roleId);
-    if (index !== -1) {
-        adminRoles.splice(index, 1);
-        await set(ref(db, `guilds/${currentGuildId}/config`), {
-            ...config,
-            adminRoles: adminRoles
-        });
-        guildConfigs[currentGuildId].adminRoles = adminRoles;
-        showNotify(`Role removed from admin!`, "success");
-        await loadAdminRolesList();
-        await fetchUserRoles(currentUser.id, currentGuildId);
-        updatePermissions();
-    }
+    const cfg = guildConfigs[currentGuildId] || {};
+    let admin = (cfg.adminRoles || []).filter(r => r !== roleId);
+    await set(ref(db, `guilds/${currentGuildId}/config`), { ...cfg, adminRoles: admin });
+    guildConfigs[currentGuildId].adminRoles = admin;
+    showNotify('Role removed', 'success');
+    await loadAdminRolesList();
+    await fetchUserRoles(currentUser.id, currentGuildId);
+    updatePermissions();
 };
 
 window.removeOwnerRole = async (roleId) => {
-    const config = guildConfigs[currentGuildId] || {};
-    let ownerRoles = config.ownerRoles || [];
-    const index = ownerRoles.indexOf(roleId);
-    if (index !== -1) {
-        ownerRoles.splice(index, 1);
-        await set(ref(db, `guilds/${currentGuildId}/config`), {
-            ...config,
-            ownerRoles: ownerRoles
-        });
-        guildConfigs[currentGuildId].ownerRoles = ownerRoles;
-        showNotify(`Role removed from guild leader!`, "success");
-        await loadAdminRolesList();
-        await fetchUserRoles(currentUser.id, currentGuildId);
-        updatePermissions();
-    }
+    const cfg = guildConfigs[currentGuildId] || {};
+    let owner = (cfg.ownerRoles || []).filter(r => r !== roleId);
+    await set(ref(db, `guilds/${currentGuildId}/config`), { ...cfg, ownerRoles: owner });
+    guildConfigs[currentGuildId].ownerRoles = owner;
+    showNotify('Role removed', 'success');
+    await loadAdminRolesList();
+    await fetchUserRoles(currentUser.id, currentGuildId);
+    updatePermissions();
 };
 
 async function loadChannelConfigUI() {
     const container = document.getElementById('channelConfigList');
     if (!container) return;
-    
-    const channelConfig = guildConfigs[currentGuildId]?.channels || {};
-    
-    const channels = [
-        { key: 'CH_LEAVE_LOGS', name: '📤 Leave Logs Channel', description: 'Channel for user leave notifications' },
-        { key: 'CH_USER_INFO', name: '🛡️ User Info Board', description: 'Channel for Guild User Info board' },
-        { key: 'CH_PANEL_INFO', name: '💻 Panel Info Board', description: 'Channel for Panel Registration Info board' },
-        { key: 'CH_LEADERBOARD', name: '🏆 Leaderboard Channel', description: 'Channel for GP Leaderboard' },
-        { key: 'CH_TRIGGER_BTN', name: '🔄 Trigger Button Channel', description: 'Channel with manual update button' },
-        { key: 'CH_GP_REQUESTS', name: '💎 GP Requests Channel', description: 'Channel for new GP donation requests' },
-        { key: 'CH_GP_PROCESSED', name: '✅ GP Processed Channel', description: 'Channel for approved/rejected GP requests' },
-        { key: 'CH_LOGIN_LOGS', name: '🔐 Login Logs Channel', description: 'Channel for user login notifications' },
-        { key: 'CH_BOT_DM_LOGS', name: '📨 Bot DM Logs Channel', description: 'Channel for /admin command messages' }
+    const channels = guildConfigs[currentGuildId]?.channels || {};
+    const items = [
+        { key: 'CH_LEAVE_LOGS', name: '📤 Leave Logs', desc: 'User leave notifications' },
+        { key: 'CH_USER_INFO', name: '🛡️ User Info Board', desc: 'Member info board' },
+        { key: 'CH_PANEL_INFO', name: '💻 Panel Info Board', desc: 'Registration board' },
+        { key: 'CH_LEADERBOARD', name: '🏆 Leaderboard', desc: 'GP leaderboard channel' },
+        { key: 'CH_GP_REQUESTS', name: '💎 GP Requests', desc: 'New GP requests channel' },
+        { key: 'CH_GP_PROCESSED', name: '✅ GP Processed', desc: 'Approved/rejected channel' },
+        { key: 'CH_LOGIN_LOGS', name: '🔐 Login Logs', desc: 'User login notifications' },
+        { key: 'CH_BOT_DM_LOGS', name: '📨 Bot DM Logs', desc: '/admin command logs' }
     ];
-    
-    container.innerHTML = channels.map(ch => `
+    container.innerHTML = items.map(i => `
         <div class="channel-config-item">
-            <div class="channel-config-name">${ch.name}</div>
-            <div class="channel-config-description">${ch.description}</div>
+            <div class="channel-config-name">${i.name}</div>
+            <div class="channel-config-description">${i.desc}</div>
             <div class="channel-config-input">
-                <input type="text" id="cfg_${ch.key}" value="${channelConfig[ch.key] || ''}" placeholder="Enter Discord Channel ID">
-                <span>Channel ID</span>
+                <input type="text" id="cfg_${i.key}" value="${channels[i.key] || ''}" placeholder="Channel ID">
             </div>
         </div>
     `).join('');
 }
 
 async function saveChannelConfig() {
-    const channels = [
-        'CH_LEAVE_LOGS', 'CH_USER_INFO', 'CH_PANEL_INFO', 'CH_LEADERBOARD',
-        'CH_TRIGGER_BTN', 'CH_GP_REQUESTS', 'CH_GP_PROCESSED', 'CH_LOGIN_LOGS', 'CH_BOT_DM_LOGS'
-    ];
-    
-    const newConfig = {};
-    let hasChanges = false;
-    
-    for (const ch of channels) {
-        const input = document.getElementById(`cfg_${ch}`);
-        if (input && input.value.trim()) {
-            newConfig[ch] = input.value.trim();
-            hasChanges = true;
-        } else if (input && input.value === '') {
-            newConfig[ch] = null;
-            hasChanges = true;
-        }
+    const keys = ['CH_LEAVE_LOGS', 'CH_USER_INFO', 'CH_PANEL_INFO', 'CH_LEADERBOARD', 'CH_GP_REQUESTS', 'CH_GP_PROCESSED', 'CH_LOGIN_LOGS', 'CH_BOT_DM_LOGS'];
+    const newChannels = {};
+    for (const k of keys) {
+        const val = document.getElementById(`cfg_${k}`)?.value.trim();
+        if (val) newChannels[k] = val;
     }
-    
-    if (!hasChanges) {
-        showNotify("No changes to save!", "warning");
-        return;
-    }
-    
-    try {
-        const configToSave = {};
-        for (const [key, value] of Object.entries(newConfig)) {
-            if (value !== null && value !== '') {
-                configToSave[key] = value;
-            }
-        }
-        
-        const currentConfig = guildConfigs[currentGuildId] || {};
-        
-        if (Object.keys(configToSave).length === 0) {
-            await set(ref(db, `guilds/${currentGuildId}/config/channels`), null);
-            currentConfig.channels = {};
-            showNotify("All channel configurations cleared!", "success");
-        } else {
-            await set(ref(db, `guilds/${currentGuildId}/config/channels`), configToSave);
-            currentConfig.channels = configToSave;
-            showNotify("Channel configuration saved!", "success");
-        }
-        
-        guildConfigs[currentGuildId] = currentConfig;
-        await loadChannelConfigUI();
-    } catch (e) {
-        console.error("Error saving config:", e);
-        showNotify("Error saving configuration!", "error");
-    }
+    const cfg = guildConfigs[currentGuildId] || {};
+    cfg.channels = newChannels;
+    await set(ref(db, `guilds/${currentGuildId}/config/channels`), newChannels);
+    guildConfigs[currentGuildId] = cfg;
+    showNotify('Channel config saved', 'success');
 }
 
 function updateKickLogs(data) {
     const body = document.getElementById('kickLogsBody');
     if (!body) return;
-    
     body.innerHTML = '';
-    if (!data) {
-        body.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#666;">No kick logs found</span></td></tr>';
-        return;
-    }
-    
-    const logs = Object.values(data).sort((a, b) => b.timestamp - a.timestamp);
-    
+    if (!data) { body.innerHTML = '<tr><td colspan="5">No kick logs</td></tr>'; return; }
+    const logs = Object.values(data).sort((a,b) => b.timestamp - a.timestamp);
     logs.forEach(log => {
-        const dateStr = new Date(log.timestamp).toLocaleString();
-        body.innerHTML += `
-            <tr>
-                <td style="font-size:12px;">${dateStr}</span>
-                <td><code>${escapeHtml(log.kickedUserId || '?')}</code><br>${escapeHtml(log.kickedUserName || '')}</span>
-                <td><code>${escapeHtml(log.kickedByUserId || '?')}</code><br>${escapeHtml(log.kickedByUserName || '')}</span>
-                <td>${escapeHtml(log.reason || 'No reason')}</span>
-                <td>${log.dmSent ? '✅ Yes' : '❌ No'}</span>
-            </tr>
-        `;
+        body.innerHTML += `<tr><td>${new Date(log.timestamp).toLocaleString()}</td><td>${escapeHtml(log.kickedUserName)} (${log.kickedUserId})</td><td>${escapeHtml(log.kickedByUserName)}</td><td>${escapeHtml(log.reason)}</td><td>${log.dmSent ? '✅' : '❌'}</td></tr>`;
     });
 }
 
 function loadKickLogs() {
     if (!currentGuildId) return;
-    onValue(ref(db, `guilds/${currentGuildId}/logs/kicks`), (snapshot) => {
-        updateKickLogs(snapshot.val());
-    });
-}
-
-async function setMaintenanceMode(enabled) {
-    if (!isPanelOwner()) {
-        showNotify("Only Panel Owner can change maintenance mode!", "error");
-        return;
-    }
-    try {
-        await set(ref(db, `guilds/${currentGuildId}/config/maintenance`), { enabled });
-        if (enabled) {
-            document.getElementById('maintenanceOverlay').classList.remove('hidden');
-            document.getElementById('maintenanceStatusText').textContent = 'Enabled';
-            showNotify("Maintenance mode ENABLED", "warning");
-        } else {
-            document.getElementById('maintenanceOverlay').classList.add('hidden');
-            document.getElementById('maintenanceStatusText').textContent = 'Disabled';
-            showNotify("Maintenance mode DISABLED", "success");
-        }
-    } catch (e) {
-        showNotify("Error toggling maintenance mode!", "error");
-    }
-}
-
-async function setTestMode(enabled) {
-    if (!isPanelOwner()) {
-        showNotify("Only Panel Owner can change test mode!", "error");
-        return;
-    }
-    try {
-        await set(ref(db, `guilds/${currentGuildId}/config/testMode`), { enabled });
-        testModeEnabled = enabled;
-        updateTestModeIndicator();
-        showNotify(`Test mode ${enabled ? 'ENABLED' : 'DISABLED'}`, enabled ? "warning" : "success");
-    } catch (e) {
-        showNotify("Error toggling test mode!", "error");
-    }
+    onValue(ref(db, `guilds/${currentGuildId}/logs/kicks`), (snap) => updateKickLogs(snap.val()));
 }
 
 async function loadRegisteredUsersCount() {
-    try {
-        const usersSnap = await get(ref(db, `guilds/${currentGuildId}/users`));
-        const users = usersSnap.val() || {};
-        let totalUsers = 0;
-        for (const [key, user] of Object.entries(users)) {
-            if (user.robloxId && user.robloxId !== '1') totalUsers++;
-        }
-        const statTotalUsers = document.getElementById('statTotalUsers');
-        if (statTotalUsers) statTotalUsers.textContent = totalUsers;
-    } catch (e) {
-        console.error("Error loading users count:", e);
-    }
+    const snap = await get(ref(db, `guilds/${currentGuildId}/users`));
+    const users = snap.val() || {};
+    let total = Object.values(users).filter(u => u.robloxId && u.robloxId !== '1').length;
+    document.getElementById('statTotalUsers').textContent = total;
 }
 
 function loadSystemConfigUI() {
-    const system = guildConfigs[currentGuildId]?.system || {};
-    const embedColors = system.embedColors || {};
-    const limits = system.limits || {};
-    
-    document.getElementById('colorApprove').value = embedColors.approve || '#48bb78';
-    document.getElementById('colorReject').value = embedColors.reject || '#f56565';
-    document.getElementById('colorPending').value = embedColors.pending || '#cd7f32';
-    document.getElementById('colorInfo').value = embedColors.info || '#5865F2';
-    document.getElementById('colorLeaderboard').value = embedColors.leaderboard || '#ffd700';
-    document.getElementById('maxImagesPerRequest').value = limits.maxImagesPerRequest || 1;
-    document.getElementById('loginMusicUrl').value = system.musicUrl || '';
-    document.getElementById('updateInterval').value = system.updateInterval || 60;
+    const sys = guildConfigs[currentGuildId]?.system || {};
+    const ec = sys.embedColors || {};
+    document.getElementById('colorApprove').value = ec.approve || '#48bb78';
+    document.getElementById('colorReject').value = ec.reject || '#f56565';
+    document.getElementById('colorPending').value = ec.pending || '#cd7f32';
+    document.getElementById('colorInfo').value = ec.info || '#5865F2';
+    document.getElementById('colorLeaderboard').value = ec.leaderboard || '#ffd700';
+    document.getElementById('maxImagesPerRequest').value = sys.limits?.maxImagesPerRequest || 1;
+    document.getElementById('loginMusicUrl').value = sys.musicUrl || '';
+    document.getElementById('updateInterval').value = sys.updateInterval || 60;
     document.getElementById('gpSubmitRoleId').value = guildConfigs[currentGuildId]?.gpSubmitRole || '';
 }
 
 async function saveSystemConfig() {
-    const newConfig = {
+    const newSys = {
         embedColors: {
             approve: document.getElementById('colorApprove').value,
             reject: document.getElementById('colorReject').value,
@@ -1168,80 +671,49 @@ async function saveSystemConfig() {
             info: document.getElementById('colorInfo').value,
             leaderboard: document.getElementById('colorLeaderboard').value
         },
-        limits: {
-            maxImagesPerRequest: parseInt(document.getElementById('maxImagesPerRequest').value)
-        },
+        limits: { maxImagesPerRequest: parseInt(document.getElementById('maxImagesPerRequest').value) },
         musicUrl: document.getElementById('loginMusicUrl').value,
         updateInterval: parseInt(document.getElementById('updateInterval').value)
     };
-    
-    try {
-        const currentConfig = guildConfigs[currentGuildId] || {};
-        await set(ref(db, `guilds/${currentGuildId}/config/system`), newConfig);
-        currentConfig.system = newConfig;
-        guildConfigs[currentGuildId] = currentConfig;
-        showNotify("System configuration saved!", "success");
-    } catch (e) {
-        showNotify("Error saving configuration!", "error");
-    }
+    const cfg = guildConfigs[currentGuildId] || {};
+    cfg.system = newSys;
+    await set(ref(db, `guilds/${currentGuildId}/config/system`), newSys);
+    guildConfigs[currentGuildId] = cfg;
+    showNotify('System config saved', 'success');
 }
 
 async function saveGpSubmitRole() {
-    const newRoleId = document.getElementById('gpSubmitRoleId').value.trim();
-    if (!newRoleId) {
-        showNotify("Please enter a role ID!", "error");
-        return;
-    }
-    
-    try {
-        const currentConfig = guildConfigs[currentGuildId] || {};
-        await set(ref(db, `guilds/${currentGuildId}/config/gpSubmitRole`), newRoleId);
-        currentConfig.gpSubmitRole = newRoleId;
-        guildConfigs[currentGuildId] = currentConfig;
-        showNotify(`GP Submit Role updated to ${newRoleId}!`, "success");
-        updatePermissions();
-    } catch (e) {
-        showNotify("Error saving GP Submit Role!", "error");
-    }
+    const roleId = document.getElementById('gpSubmitRoleId').value.trim();
+    if (!roleId) { showNotify('Enter role ID', 'error'); return; }
+    const cfg = guildConfigs[currentGuildId] || {};
+    cfg.gpSubmitRole = roleId;
+    await set(ref(db, `guilds/${currentGuildId}/config/gpSubmitRole`), roleId);
+    guildConfigs[currentGuildId] = cfg;
+    showNotify('GP Submit role saved', 'success');
+    updatePermissions();
 }
 
 // ==========================================
-// 13. SAVED MESSAGES FUNCTIONS
+// 14. SAVED MESSAGES (guild-spezifisch)
 // ==========================================
 
 async function loadSavedMessages() {
-    const messagesRef = ref(db, `guilds/${currentGuildId}/saved_messages`);
-    onValue(messagesRef, (snapshot) => {
-        const data = snapshot.val();
-        const container = document.getElementById('savedMessagesList');
-        
-        if (!container) return;
-        
-        if (!data || Object.keys(data).length === 0) {
-            container.innerHTML = '<p style="color: #666; text-align: center;">No saved messages yet. Create one above!</p>';
-            return;
-        }
-        
+    const container = document.getElementById('savedMessagesList');
+    if (!container) return;
+    onValue(ref(db, `guilds/${currentGuildId}/saved_messages`), (snap) => {
+        const data = snap.val();
+        if (!data) { container.innerHTML = '<p style="color:#666;">No saved messages</p>'; return; }
         container.innerHTML = '';
         Object.entries(data).forEach(([id, msg]) => {
-            const previewContent = msg.content ? (msg.content.substring(0, 100) + (msg.content.length > 100 ? '...' : '')) : 'No content';
-            const messageIdDisplay = msg.discordMessageId ? `✅ Message ID: ${msg.discordMessageId.substring(0, 8)}...` : '⚠️ Not sent yet';
-            
             container.innerHTML += `
                 <div class="saved-message-item" data-id="${id}">
                     <div class="message-name">📝 ${escapeHtml(msg.name)}</div>
-                    <div class="message-channel">📡 Channel ID: ${escapeHtml(msg.channelId || 'Not set')}</div>
-                    <div class="message-id" style="font-size: 11px; color: ${msg.discordMessageId ? '#48bb78' : '#f56565'}; margin-bottom: 5px;">
-                        ${messageIdDisplay}
-                    </div>
-                    <div class="message-preview">
-                        <strong>Message:</strong> ${escapeHtml(previewContent)}
-                        ${msg.embedTitle ? `<br><strong>Embed:</strong> ${escapeHtml(msg.embedTitle)}` : ''}
-                    </div>
+                    <div class="message-channel">📡 Channel: ${escapeHtml(msg.channelId)}</div>
+                    <div class="message-preview">${escapeHtml(msg.content?.substring(0,100))}</div>
                     <div class="message-actions">
-                        <button class="btn-edit-message" onclick="window.editSavedMessage('${id}')">✏️ Edit</button>
-                        <button class="btn-send-message" onclick="window.sendSavedMessage('${id}')">📤 Send / Update</button>
-                        <button class="btn-delete-message" onclick="window.deleteSavedMessage('${id}')">🗑️ Delete</button>
+                        <button class="btn-edit-message" onclick="editSavedMessage('${id}')">Edit</button>
+                        <button class="btn-send-message" onclick="sendSavedMessage('${id}')">Send</button>
+                        <button class="btn-delete-message" onclick="deleteSavedMessage('${id}')">Delete</button>
                     </div>
                 </div>
             `;
@@ -1253,21 +725,15 @@ window.editSavedMessage = async (id) => {
     const snap = await get(ref(db, `guilds/${currentGuildId}/saved_messages/${id}`));
     const msg = snap.val();
     if (!msg) return;
-    
     currentEditingMessageId = id;
-    
     document.getElementById('messageName').value = msg.name || '';
     document.getElementById('messageChannelId').value = msg.channelId || '';
     document.getElementById('messageContent').value = msg.content || '';
     document.getElementById('messageEmbedTitle').value = msg.embedTitle || '';
     document.getElementById('messageEmbedDesc').value = msg.embedDesc || '';
-    if (msg.embedColor) document.getElementById('messageEmbedColor').value = msg.embedColor;
-    
-    const saveBtn = document.getElementById('saveMessageBtn');
-    saveBtn.textContent = '✏️ Update Message';
-    saveBtn.style.background = '#ffd700';
-    
-    showNotify(`Editing "${msg.name}" - Click Update to save changes`, "success");
+    document.getElementById('messageEmbedColor').value = msg.embedColor || '#5865F2';
+    document.getElementById('saveMessageBtn').textContent = '✏️ Update';
+    showNotify(`Editing "${msg.name}"`, 'success');
 };
 
 async function saveMessage() {
@@ -1277,155 +743,45 @@ async function saveMessage() {
     const embedTitle = document.getElementById('messageEmbedTitle').value;
     const embedDesc = document.getElementById('messageEmbedDesc').value;
     const embedColor = document.getElementById('messageEmbedColor').value;
-    
-    if (!name) {
-        showNotify("Please enter a message name!", "error");
-        return;
-    }
-    
-    if (!channelId) {
-        showNotify("Please enter a channel ID!", "error");
-        return;
-    }
-    
-    const messageData = {
-        name: name,
-        channelId: channelId,
-        content: content,
-        embedTitle: embedTitle,
-        embedDesc: embedDesc,
-        embedColor: embedColor,
-        updatedAt: Date.now(),
-        updatedBy: currentUser?.id
-    };
-    
+    if (!name || !channelId) { showNotify('Name and Channel ID required', 'error'); return; }
+    const msgData = { name, channelId, content, embedTitle, embedDesc, embedColor, updatedAt: Date.now(), updatedBy: currentUser.id };
     try {
         if (currentEditingMessageId) {
-            const existingSnap = await get(ref(db, `guilds/${currentGuildId}/saved_messages/${currentEditingMessageId}`));
-            const existing = existingSnap.val();
-            if (existing && existing.discordMessageId) {
-                messageData.discordMessageId = existing.discordMessageId;
-            }
-            await update(ref(db, `guilds/${currentGuildId}/saved_messages/${currentEditingMessageId}`), messageData);
-            showNotify(`Message "${name}" updated successfully!`, "success");
+            await update(ref(db, `guilds/${currentGuildId}/saved_messages/${currentEditingMessageId}`), msgData);
+            showNotify('Message updated', 'success');
             currentEditingMessageId = null;
-            
-            const saveBtn = document.getElementById('saveMessageBtn');
-            saveBtn.textContent = '💾 Save Message';
-            saveBtn.style.background = '#48bb78';
+            document.getElementById('saveMessageBtn').textContent = '💾 Save';
         } else {
-            const newRef = push(ref(db, `guilds/${currentGuildId}/saved_messages`));
-            await set(newRef, { ...messageData, createdAt: Date.now(), createdBy: currentUser?.id });
-            showNotify(`Message "${name}" saved successfully!`, "success");
+            await push(ref(db, `guilds/${currentGuildId}/saved_messages`), { ...msgData, createdAt: Date.now() });
+            showNotify('Message saved', 'success');
         }
-        
-        document.getElementById('messageName').value = '';
-        document.getElementById('messageChannelId').value = '';
-        document.getElementById('messageContent').value = '';
-        document.getElementById('messageEmbedTitle').value = '';
-        document.getElementById('messageEmbedDesc').value = '';
-        document.getElementById('messageEmbedColor').value = '#5865F2';
-        
+        clearMessageForm();
         loadSavedMessages();
-    } catch (e) {
-        showNotify("Error saving message!", "error");
-    }
+    } catch(e) { showNotify('Error saving', 'error'); }
 }
 
 window.sendSavedMessage = async (id) => {
     const snap = await get(ref(db, `guilds/${currentGuildId}/saved_messages/${id}`));
     const msg = snap.val();
-    if (!msg) return;
-    
-    if (!msg.channelId) {
-        showNotify("No channel ID configured for this message!", "error");
-        return;
-    }
-    
+    if (!msg || !msg.channelId) { showNotify('No channel ID', 'error'); return; }
     let embeds = null;
     if (msg.embedTitle || msg.embedDesc) {
-        embeds = [{
-            title: msg.embedTitle || undefined,
-            description: msg.embedDesc || undefined,
-            color: msg.embedColor ? parseInt(msg.embedColor.replace('#', ''), 16) : 0x5865F2,
-            timestamp: new Date().toISOString()
-        }];
+        embeds = [{ title: msg.embedTitle, description: msg.embedDesc, color: parseInt(msg.embedColor?.replace('#',''),16) || 0x5865F2 }];
     }
-    
-    showNotify(`Sending "${msg.name}"...`, "warning");
-    
-    let storedMessageId = msg.discordMessageId;
-    let success = false;
-    
-    if (storedMessageId) {
-        try {
-            const response = await fetch(`${BACKEND_URL}/update-message`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    channelId: msg.channelId, 
-                    messageId: storedMessageId, 
-                    content: msg.content, 
-                    embeds: embeds 
-                })
-            });
-            
-            if (response.ok) {
-                success = true;
-                showNotify(`Message "${msg.name}" updated successfully!`, "success");
-            } else if (response.status === 404) {
-                console.log("Message not found, sending new one");
-                storedMessageId = null;
-            } else {
-                storedMessageId = null;
-            }
-        } catch (e) {
-            console.error("Update failed, sending new message:", e);
-            storedMessageId = null;
-        }
-    }
-    
-    if (!storedMessageId) {
-        const newMsgResponse = await fetch(`${BACKEND_URL}/send-channel-message`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ channelId: msg.channelId, content: msg.content, embeds: embeds })
-        });
-        
-        if (newMsgResponse.ok) {
-            const newMsgData = await newMsgResponse.json();
-            success = true;
-            
-            if (newMsgData.messageId) {
-                await update(ref(db, `guilds/${currentGuildId}/saved_messages/${id}`), { 
-                    discordMessageId: newMsgData.messageId,
-                    lastSentAt: Date.now()
-                });
-                showNotify(`Message "${msg.name}" sent successfully! Message ID saved.`, "success");
-            } else {
-                showNotify(`Message "${msg.name}" sent successfully!`, "success");
-            }
-        } else {
-            success = false;
-        }
-    }
-    
-    if (!success) {
-        showNotify(`Failed to send "${msg.name}"!`, "error");
-    }
-    
-    loadSavedMessages();
+    const res = await fetch(`${BACKEND_URL}/send-channel-message`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ channelId: msg.channelId, content: msg.content, embeds })
+    });
+    if (res.ok) showNotify('Message sent', 'success');
+    else showNotify('Failed to send', 'error');
 };
 
 window.deleteSavedMessage = async (id) => {
-    if (!confirm("Are you sure you want to delete this message?")) return;
-    try {
-        await remove(ref(db, `guilds/${currentGuildId}/saved_messages/${id}`));
-        showNotify("Message deleted!", "success");
-        loadSavedMessages();
-    } catch (e) {
-        showNotify("Error deleting message!", "error");
-    }
+    if (!confirm('Delete this message?')) return;
+    await remove(ref(db, `guilds/${currentGuildId}/saved_messages/${id}`));
+    showNotify('Deleted', 'success');
+    loadSavedMessages();
 };
 
 function clearMessageForm() {
@@ -1436,40 +792,101 @@ function clearMessageForm() {
     document.getElementById('messageEmbedTitle').value = '';
     document.getElementById('messageEmbedDesc').value = '';
     document.getElementById('messageEmbedColor').value = '#5865F2';
-    
-    const saveBtn = document.getElementById('saveMessageBtn');
-    saveBtn.textContent = '💾 Save Message';
-    saveBtn.style.background = '#48bb78';
-    
-    showNotify("Form cleared!", "success");
+    document.getElementById('saveMessageBtn').textContent = '💾 Save';
 }
 
 // ==========================================
-// 14. DISCORD & ROBLOX AUTHENTIFICATION
+// 15. MAINTENANCE & TEST MODE (NUR PANEL OWNER)
+// ==========================================
+
+async function setMaintenanceMode(enabled) {
+    if (!isPanelOwner()) { showNotify('Only Panel Owner', 'error'); return; }
+    await set(ref(db, `guilds/${currentGuildId}/config/maintenance`), { enabled });
+    loadMaintenanceStatus(currentGuildId);
+    showNotify(`Maintenance ${enabled ? 'ON' : 'OFF'}`, enabled ? 'warning' : 'success');
+}
+
+async function setTestMode(enabled) {
+    if (!isPanelOwner()) { showNotify('Only Panel Owner', 'error'); return; }
+    await set(ref(db, `guilds/${currentGuildId}/config/testMode`), { enabled });
+    testModeEnabled = enabled;
+    updateTestModeIndicator();
+    showNotify(`Test mode ${enabled ? 'ON' : 'OFF'}`, enabled ? 'warning' : 'success');
+}
+
+// ==========================================
+// 16. IMAGE UPLOAD & GP SUBMIT
+// ==========================================
+
+function updateImagePreviews() {
+    const container = document.getElementById('imagePreviewContainer');
+    const countSpan = document.getElementById('fileCountText');
+    const max = guildConfigs[currentGuildId]?.system?.limits?.maxImagesPerRequest || 1;
+    countSpan.textContent = `${selectedFiles.length} / ${max} selected`;
+    container.innerHTML = '';
+    selectedFiles.forEach((f, idx) => {
+        const div = document.createElement('div');
+        div.className = 'preview-box';
+        const img = document.createElement('img');
+        img.src = URL.createObjectURL(f);
+        const btn = document.createElement('button');
+        btn.className = 'remove-img-btn';
+        btn.innerHTML = '&times;';
+        btn.onclick = () => { selectedFiles.splice(idx,1); updateImagePreviews(); };
+        div.appendChild(img); div.appendChild(btn);
+        container.appendChild(div);
+    });
+}
+
+async function submitGPRequest() {
+    if (!hasGpSubmitPermission(currentGuildId)) { showNotify('No permission', 'error'); return; }
+    const amount = parseInt(document.getElementById('gpAmount').value);
+    const maxImages = guildConfigs[currentGuildId]?.system?.limits?.maxImagesPerRequest || 1;
+    if (isNaN(amount) || amount <= 0) { alert('Valid amount'); return; }
+    if (selectedFiles.length === 0) { alert('At least one screenshot'); return; }
+    if (selectedFiles.length > maxImages) { alert(`Max ${maxImages} images`); return; }
+    const btn = document.getElementById('addGPBtn');
+    btn.disabled = true; btn.textContent = 'SENDING...';
+    try {
+        const dbKey = getSafeDbKey(currentUser.username);
+        const userRef = ref(db, `guilds/${currentGuildId}/users/${dbKey}`);
+        const snap = await get(userRef);
+        const user = snap.val() || {};
+        const reqRef = push(ref(db, `guilds/${currentGuildId}/requests`));
+        await set(reqRef, {
+            id: reqRef.key, dbKey, userId: currentUser.id,
+            discordName: user.discordName || currentUser.global_name,
+            discordUsername: user.discordUsername || currentUser.username,
+            robloxName: user.robloxName || 'Unknown',
+            robloxUsername: user.robloxUsername || 'Unknown',
+            robloxId: user.robloxId || '1',
+            amount, status: 'pending', timestamp: Date.now()
+        });
+        showNotify('Request submitted', 'success');
+        document.getElementById('gpAmount').value = '';
+        selectedFiles = [];
+        updateImagePreviews();
+        switchTab('Profile');
+    } catch(e) { alert('Error: '+e.message); }
+    finally { btn.disabled = false; btn.textContent = 'SUBMIT PROOF FOR REVIEW'; }
+}
+
+// ==========================================
+// 17. LOGIN & AUTH
 // ==========================================
 
 async function doLiveCheck() {
-    if (!currentUser) return false;
+    if (!currentUser || !currentGuildId) return false;
     try {
         const res = await fetch(`${BACKEND_URL}/check-member`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ userId: currentUser.id, guildId: currentGuildId })
         });
-        if (!res.ok) {
-            forceKickUser();
-            return false;
-        }
         const data = await res.json();
-        if (data.isMember === false) {
-            forceKickUser();
-            return false;
-        }
-        return true;
-    } catch (e) {
-        forceKickUser();
-        return false;
-    }
+        if (!data.isMember) forceKickUser();
+        return data.isMember;
+    } catch(e) { forceKickUser(); return false; }
 }
 
 function startLiveMemberCheck() {
@@ -1496,31 +913,25 @@ async function handleDiscordLogin(code) {
             body: JSON.stringify({ code, redirect_uri: REDIRECT_URI })
         });
         const data = await res.json();
-        
         if (data.isAuthorized) {
-            if (!data.isMember) {
-                document.getElementById('loginPage').classList.add('hidden');
-                document.getElementById('noPermissionPage').classList.remove('hidden');
-                stopMusic();
-                return;
-            }
             currentUser = data.user;
             sessionStorage.setItem('pn_session', JSON.stringify(currentUser));
             window.history.replaceState({}, '', REDIRECT_URI);
+            // Guilds laden und Auswahl anzeigen
             await loadAvailableGuilds();
-            if (availableGuilds.length === 1) {
-                await selectGuild(availableGuilds[0].id);
-            } else if (availableGuilds.length > 1) {
-                showGuildSelector();
-            } else {
+            if (availableGuilds.length === 0) {
                 document.getElementById('loginPage').classList.add('hidden');
                 document.getElementById('noPermissionPage').classList.remove('hidden');
+            } else if (availableGuilds.length === 1) {
+                await selectGuild(availableGuilds[0].id);
+            } else {
+                document.getElementById('loginPage').classList.add('hidden');
+                showGuildSelector();
             }
+        } else {
+            alert('Login failed');
         }
-    } catch (e) {
-        alert("Login Error!");
-        console.error(e);
-    }
+    } catch(e) { alert('Error'); console.error(e); }
 }
 
 async function handleRobloxLogin(code) {
@@ -1533,120 +944,77 @@ async function handleRobloxLogin(code) {
         });
         const data = await res.json();
         if (data.success && data.robloxUser) {
-            const rDisplayName = data.robloxUser.nickname || data.robloxUser.name;
+            const rName = data.robloxUser.nickname || data.robloxUser.name;
             const rUsername = data.robloxUser.preferred_username || data.robloxUser.name;
             const rId = data.robloxUser.sub;
-            const dDisplayName = currentUser.global_name || currentUser.username || "Unknown";
-            
             const dbKey = getSafeDbKey(currentUser.username);
             const userRef = ref(db, `guilds/${currentGuildId}/users/${dbKey}`);
             const snap = await get(userRef);
-            let currentGP = snap.exists() && snap.val().totalGP ? snap.val().totalGP : 0;
-            
-            await update(userRef, {
-                discordName: dDisplayName || "Unknown",
-                discordUsername: currentUser.username || "Unknown",
-                robloxName: rDisplayName || "Unknown",
-                robloxUsername: rUsername || "Unknown",
-                robloxId: rId || "1",
+            const currentGP = snap.val()?.totalGP || 0;
+            await set(userRef, {
+                discordName: currentUser.global_name || currentUser.username,
+                discordUsername: currentUser.username,
+                robloxName: rName,
+                robloxUsername: rUsername,
+                robloxId: rId,
                 totalGP: currentGP,
-                id: currentUser.id || "1",
-                hasLeftServer: false
+                id: currentUser.id
             });
-
-            await updateDiscordNickname(currentUser.id, rDisplayName, rUsername);
+            await updateDiscordNickname(currentUser.id, rName, rUsername);
             window.location.href = REDIRECT_URI;
         }
-    } catch (e) {
-        alert("Linking Error!");
-        console.error(e);
-    }
+    } catch(e) { alert('Roblox link error'); }
 }
 
 // ==========================================
-// 15. EVENT LISTENERS
+// 18. EVENT LISTENERS & INIT
 // ==========================================
 
 document.getElementById('discordLoginBtn')?.addEventListener('click', () => {
     window.location.href = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=identify%20guilds&state=discord`;
 });
-
 document.getElementById('robloxLoginBtn')?.addEventListener('click', () => {
     window.location.href = `https://apis.roblox.com/oauth/v1/authorize?client_id=${ROBLOX_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=openid%20profile&state=roblox`;
 });
-
 document.getElementById('dcLogoutBtn')?.addEventListener('click', () => {
     sessionStorage.removeItem('pn_session');
     window.location.href = REDIRECT_URI;
 });
-
 document.getElementById('changeGuildBtn')?.addEventListener('click', async () => {
     await loadAvailableGuilds();
     showGuildSelector();
 });
-
 document.getElementById('rbxLogoutBtn')?.addEventListener('click', async () => {
-    if (!confirm("Disconnect Roblox?")) return;
-    try {
-        const dbKey = getSafeDbKey(currentUser.username);
-        await update(ref(db, `guilds/${currentGuildId}/users/${dbKey}`), {
-            robloxId: null,
-            robloxName: null,
-            robloxUsername: null
-        });
-        window.location.reload();
-    } catch (e) {
-        showNotify("Error!", "error");
-    }
+    if (!confirm('Disconnect Roblox?')) return;
+    const dbKey = getSafeDbKey(currentUser.username);
+    await update(ref(db, `guilds/${currentGuildId}/users/${dbKey}`), { robloxId: null, robloxName: null, robloxUsername: null });
+    window.location.reload();
 });
-
-document.getElementById('leaderboardSearch')?.addEventListener('input', (e) => {
-    renderLeaderboard(e.target.value);
-});
-
+document.getElementById('leaderboardSearch')?.addEventListener('input', (e) => renderLeaderboard(e.target.value));
 document.getElementById('proofImage')?.addEventListener('change', (e) => {
     const newFiles = Array.from(e.target.files);
-    const maxImages = guildConfigs[currentGuildId]?.system?.limits?.maxImagesPerRequest || 1;
-    if (selectedFiles.length + newFiles.length > maxImages) {
-        alert(`Only ${maxImages} screenshot(s) are allowed!`);
-        return;
-    }
+    const max = guildConfigs[currentGuildId]?.system?.limits?.maxImagesPerRequest || 1;
+    if (selectedFiles.length + newFiles.length > max) { alert(`Max ${max} images`); return; }
     selectedFiles = selectedFiles.concat(newFiles);
     updateImagePreviews();
     e.target.value = '';
 });
-
 document.getElementById('addGPBtn')?.addEventListener('click', submitGPRequest);
-
 document.getElementById('tabBtnSpenden')?.addEventListener('click', () => switchTab('Spenden'));
 document.getElementById('tabBtnLeaderboard')?.addEventListener('click', () => switchTab('Leaderboard'));
 document.getElementById('tabBtnProfile')?.addEventListener('click', () => switchTab('Profile'));
 document.getElementById('tabBtnAdmin')?.addEventListener('click', () => {
-    if (hasAdminPermission(currentGuildId) || isPanelOwner()) {
-        switchTab('Admin');
-        loadAdminData();
-    } else {
-        showNotify("You don't have permission to access Admin Panel!", "error");
-    }
+    if (hasAdminPermission(currentGuildId) || isPanelOwner()) switchTab('Admin');
+    else showNotify('No permission', 'error');
 });
 document.getElementById('tabBtnGuildLeader')?.addEventListener('click', () => {
-    if (hasGuildLeaderPermission(currentGuildId) || isPanelOwner()) {
-        switchTab('GuildLeader');
-        loadRegisteredUsersCount();
-        loadKickLogs();
-    } else {
-        showNotify("You don't have permission to access Guild Leader Panel!", "error");
-    }
+    if (hasGuildLeaderPermission(currentGuildId) || isPanelOwner()) switchTab('GuildLeader');
+    else showNotify('No permission', 'error');
 });
 document.getElementById('tabBtnPanelOwner')?.addEventListener('click', () => {
-    if (isPanelOwner()) {
-        switchTab('PanelOwner');
-        loadPanelOwnerData();
-    } else {
-        showNotify("You don't have permission to access Panel Owner Panel!", "error");
-    }
+    if (isPanelOwner()) switchTab('PanelOwner');
+    else showNotify('No permission', 'error');
 });
-
 document.getElementById('addRoleBtn')?.addEventListener('click', window.addAdminRole);
 document.getElementById('saveChannelConfigBtn')?.addEventListener('click', saveChannelConfig);
 document.getElementById('saveSystemConfigBtn')?.addEventListener('click', saveSystemConfig);
@@ -1656,56 +1024,32 @@ document.getElementById('enableTestModeBtn')?.addEventListener('click', () => se
 document.getElementById('disableTestModeBtn')?.addEventListener('click', () => setTestMode(false));
 document.getElementById('saveMessageBtn')?.addEventListener('click', saveMessage);
 document.getElementById('sendMessageBtn')?.addEventListener('click', () => {
-    if (currentEditingMessageId) {
-        window.sendSavedMessage(currentEditingMessageId);
-    } else {
-        const name = document.getElementById('messageName').value.trim();
-        if (!name) {
-            showNotify("Please save the message first or load an existing one!", "error");
-            return;
-        }
-        saveMessage();
-    }
+    if (currentEditingMessageId) sendSavedMessage(currentEditingMessageId);
+    else saveMessage();
 });
 document.getElementById('clearMessageFormBtn')?.addEventListener('click', clearMessageForm);
 document.getElementById('enableMaintenanceBtn')?.addEventListener('click', () => setMaintenanceMode(true));
 document.getElementById('disableMaintenanceBtn')?.addEventListener('click', () => setMaintenanceMode(false));
 
-// ==========================================
-// 16. APP START
-// ==========================================
-
+// APP START
 const urlParams = new URLSearchParams(window.location.search);
 const code = urlParams.get('code');
 const state = urlParams.get('state');
-
 if (code) {
-    if (state === 'discord') {
-        handleDiscordLogin(code);
-    } else if (state === 'roblox') {
-        handleRobloxLogin(code);
-    }
+    if (state === 'discord') handleDiscordLogin(code);
+    else if (state === 'roblox') handleRobloxLogin(code);
 } else {
     const saved = sessionStorage.getItem('pn_session');
     if (saved) {
         try {
             currentUser = JSON.parse(saved);
-            if (!currentUser.id) throw new Error("Broken session");
             (async () => {
                 await loadAvailableGuilds();
-                if (availableGuilds.length === 1) {
-                    await selectGuild(availableGuilds[0].id);
-                } else if (availableGuilds.length > 1) {
-                    showGuildSelector();
-                } else {
-                    document.getElementById('loginPage').classList.add('hidden');
-                    document.getElementById('noPermissionPage').classList.remove('hidden');
-                }
+                if (availableGuilds.length === 1) await selectGuild(availableGuilds[0].id);
+                else if (availableGuilds.length > 1) showGuildSelector();
+                else { document.getElementById('loginPage').classList.add('hidden'); document.getElementById('noPermissionPage').classList.remove('hidden'); }
             })();
-        } catch (e) {
-            sessionStorage.removeItem('pn_session');
-            playLoginMusic();
-        }
+        } catch(e) { sessionStorage.removeItem('pn_session'); playLoginMusic(); }
     } else {
         playLoginMusic();
     }
