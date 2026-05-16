@@ -221,35 +221,29 @@ async function renderDynamicRoles() {
         container.appendChild(roleDiv);
     }
     
-    // Direkte Zuweisung der Event-Listener per onclick (funktioniert immer)
-    document.querySelectorAll('.role-open-btn').forEach(btn => {
-        // Alte Listener entfernen (falls vorhanden)
-        btn.removeEventListener('click', window.handleRoleOpenClick);
-        // Neuen Listener zuweisen
-        btn.addEventListener('click', window.handleRoleOpenClick);
-    });
+    console.log("Roles rendered, total buttons:", document.querySelectorAll('.role-open-btn').length);
 }
 
-// Globale Event-Handler-Funktion für die Open-Buttons
-window.handleRoleOpenClick = (event) => {
-    const btn = event.currentTarget;
-    const roleId = btn.getAttribute('data-role-id');
-    const roleName = btn.getAttribute('data-role-name');
-    console.log("Open clicked for role:", roleId, roleName);
-    openRolePermissionModal(roleId, roleName);
-};
-
-// Globale Funktion, die das Modal öffnet
+// GLOBALE Funktion für das Modal - damit sie von überall aufgerufen werden kann
 window.openRolePermissionModal = function(roleId, roleName) {
+    console.log("window.openRolePermissionModal called with:", roleId, roleName);
     openRolePermissionModal(roleId, roleName);
 };
 
 let currentEditingRoleId = null;
 
 function openRolePermissionModal(roleId, roleName) {
-    console.log("Opening modal for role:", roleId, roleName);
+    console.log("OPENING MODAL for role:", roleId, roleName);
+    alert("Modal should open now! Role: " + roleName); // TEST-ALERT
+    
     currentEditingRoleId = roleId;
     const modal = document.getElementById('rolePermissionModal');
+    if (!modal) {
+        console.error("Modal element not found!");
+        alert("Modal element not found in HTML!");
+        return;
+    }
+    
     const title = document.getElementById('modalRoleTitle');
     title.textContent = `Permissions for ${roleName}`;
     
@@ -294,6 +288,7 @@ function openRolePermissionModal(roleId, roleName) {
     
     document.getElementById('modalPermissionsList').innerHTML = html;
     modal.classList.remove('hidden');
+    console.log("Modal opened, classList now:", modal.classList);
 }
 
 function closeModal() {
@@ -484,7 +479,7 @@ async function fetchRoleName(roleId) {
 }
 
 // ==========================================
-// 5. DISCORD BOT MESSAGES (gekürzt, bleibt gleich)
+// 5. DISCORD BOT MESSAGES (gekürzt)
 // ==========================================
 
 async function sendDiscordMessage(channelId, content, embeds = null) {
@@ -575,7 +570,7 @@ async function sendGPRequestToDiscord(requestData, images) {
 }
 
 // ==========================================
-// 6. DISCORD & ROBLOX AUTHENTIFICATION (gekürzt, bleibt gleich)
+// 6. DISCORD & ROBLOX AUTHENTIFICATION (gekürzt)
 // ==========================================
 
 async function doLiveCheck() {
@@ -715,7 +710,12 @@ function renderLeaderboard(filterText) {
         usersArray = usersArray.filter(u => (u.discordName && u.discordName.toLowerCase().includes(lowerFilter)) || (u.discordUsername && u.discordUsername.toLowerCase().includes(lowerFilter)) || (u.robloxName && u.robloxName.toLowerCase().includes(lowerFilter)));
     }
     usersArray.forEach((u, i) => {
-        body.innerHTML += `<tr><td>#${i+1}</td><td><div class="user-name-cell"><span class="display-name">${escapeHtml(u.discordName || "Unknown")}</span><span class="username-handle">@${escapeHtml(u.discordUsername || "Unknown")}</span></div></td><td><div class="user-name-cell"><span class="display-name">${escapeHtml(u.robloxName || "Unknown")}</span><span class="username-handle">@${escapeHtml(u.robloxUsername || "Unknown")}</span></div></td><td style="color:#48bb78; font-weight:bold;">${(u.totalGP || 0).toLocaleString()} GP</td></tr>`;
+        body.innerHTML += `<tr>
+            <td>#${i+1}</td>
+            <td><div class="user-name-cell"><span class="display-name">${escapeHtml(u.discordName || "Unknown")}</span><span class="username-handle">@${escapeHtml(u.discordUsername || "Unknown")}</span></div></td>
+            <td><div class="user-name-cell"><span class="display-name">${escapeHtml(u.robloxName || "Unknown")}</span><span class="username-handle">@${escapeHtml(u.robloxUsername || "Unknown")}</span></div></td>
+            <td style="color:#48bb78; font-weight:bold;">${(u.totalGP || 0).toLocaleString()} GP</span>
+        </tr>`;
     });
     if (usersArray.length === 0) body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No users with GP yet</td></tr>';
     const totalGP = Object.values(allUsersData).reduce((sum, u) => sum + (u.totalGP || 0), 0);
@@ -742,9 +742,14 @@ function loadProfileHistory() {
         userRequests.forEach(req => {
             const dateStr = new Date(req.timestamp).toLocaleDateString('en-US', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
             let statusHtml = req.status === 'pending' ? '<span class="status-badge status-pending">Pending ⏳</span>' : (req.status === 'approved' ? '<span class="status-badge status-approved">Approved ✅</span>' : '<span class="status-badge status-rejected">Rejected ❌</span>');
-            body.innerHTML += `<tr><td style="font-size:14px; color:#aaa;">${dateStr}</td><td style="font-weight:bold;">+${req.amount.toLocaleString()} GP</td><td>${statusHtml}</td><td style="font-size:12px; color:#888;">${escapeHtml(req.adminComment || '-')}NonNull</td></tr>`;
+            body.innerHTML += `<tr>
+                <td style="font-size:14px; color:#aaa;">${dateStr}</span>
+                <td style="font-weight:bold;">+${req.amount.toLocaleString()} GP</span>
+                <td>${statusHtml}</span>
+                <td style="font-size:12px; color:#888;">${escapeHtml(req.adminComment || '-')}</span>
+            </tr>`;
         });
-        if (userRequests.length === 0) body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No requests yet</td></tr>';
+        if (userRequests.length === 0) body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No requests yet</span></tr>';
     });
 }
 
@@ -810,7 +815,7 @@ async function submitGPRequest() {
 }
 
 // ==========================================
-// 10. ADMIN FUNCTIONS (gekürzt)
+// 10. ADMIN FUNCTIONS
 // ==========================================
 
 function loadAdminData() {
@@ -826,7 +831,7 @@ function loadAdminData() {
             body.innerHTML += `<tr>
                 <td><div class="user-name-cell"><span class="display-name">${escapeHtml(req.discordName || "Unknown")}</span><span class="username-handle">@${escapeHtml(req.discordUsername || "Unknown")}</span></div></td>
                 <td><div class="user-name-cell"><span class="display-name">${escapeHtml(req.robloxName || "Unknown")}</span><span class="username-handle">@${escapeHtml(req.robloxUsername || "Unknown")}</span></div></td>
-                <td style="color:#cd7f32; font-weight:bold;">+${req.amount.toLocaleString()} GP</td>
+                <td style="color:#cd7f32; font-weight:bold;">+${req.amount.toLocaleString()} GP</span>
                 <td>
                     <div style="display: flex; flex-direction: column; gap: 8px;">
                         <input type="text" id="comment_${req.id}" placeholder="Admin comment (optional)" style="padding: 6px; font-size: 12px;">
@@ -839,7 +844,7 @@ function loadAdminData() {
                             </button>
                         </div>
                     </div>
-                </td>
+                </span>
             </tr>`;
         });
     });
@@ -872,6 +877,7 @@ window.handleAdminActionWithComment = async (reqId, userId, amount, action, pass
                 { name: "🎮 Roblox", value: `**Name:** ${robloxName}\n**User:** @${robloxUsername}\n**Profile:** [Click Here](https://www.roblox.com/users/${robloxId}/profile)`, inline: true },
                 { name: "💰 Amount", value: action === 'approve' ? `+${amount.toLocaleString()} GP` : `-${amount.toLocaleString()} GP`, inline: false },
                 { name: "📊 New Total", value: `${newTotal.toLocaleString()} GP`, inline: true },
+                { name: "🏆 Rank", value: `#${rank}`, inline: true },
                 { name: "🛡️ Processed By", value: `<@${currentUser.id}>`, inline: false }
             ], timestamp: new Date().toISOString(), footer: { text: "SwordArtOnline GP System" } };
             if (adminComment) embed.fields.push({ name: "💬 Admin Comment", value: adminComment, inline: false });
@@ -1037,7 +1043,7 @@ async function saveGpSubmitRole() {
 }
 
 // ==========================================
-// 12. SAVED MESSAGES FUNCTIONS (gekürzt)
+// 12. SAVED MESSAGES FUNCTIONS
 // ==========================================
 
 async function loadSavedMessages() {
@@ -1182,6 +1188,19 @@ document.getElementById('tabBtnLeaderboard')?.addEventListener('click', () => sw
 document.getElementById('tabBtnProfile')?.addEventListener('click', () => switchTab('Profile'));
 document.getElementById('tabBtnAdmin')?.addEventListener('click', () => { if (hasAdminPermission()) { switchTab('Admin'); loadAdminData(); } else { showNotify("You don't have permission to access Admin Panel!", "error"); } });
 document.getElementById('tabBtnOwner')?.addEventListener('click', () => { if (hasOwnerPermission()) { switchTab('Owner'); renderDynamicRoles(); loadChannelConfigUI(); loadRoleConfigUI(); loadKickLogs(); loadSavedMessages(); loadSystemConfigUI(); loadRegisteredUsersCount(); } else { showNotify("You don't have permission to access Owner Panel!", "error"); } });
+
+// GLOBAL EVENT DELEGATION für Open-Buttons (funktioniert immer, auch bei dynamisch nachgeladenen Elementen)
+document.addEventListener('click', function(e) {
+    const openBtn = e.target.closest('.role-open-btn');
+    if (openBtn) {
+        console.log("Open button clicked via delegation!");
+        const roleId = openBtn.getAttribute('data-role-id');
+        const roleName = openBtn.getAttribute('data-role-name');
+        e.preventDefault();
+        e.stopPropagation();
+        openRolePermissionModal(roleId, roleName);
+    }
+});
 
 // Modal Events
 document.getElementById('modalSaveBtn')?.addEventListener('click', saveCurrentRolePermissions);
