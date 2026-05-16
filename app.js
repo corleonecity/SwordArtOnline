@@ -8,7 +8,7 @@ const OWNER_USER_ID = '917426398120005653';
 let ADMIN_ROLES = [];
 let OWNER_ROLES = [];
 
-// GP Submit Role - now configurable via panel
+// GP Submit Role - now configurable via panel (wird durch Rollen-Permissions ersetzt)
 let GP_SUBMIT_ROLE = '';
 
 // System configuration
@@ -32,6 +32,9 @@ let testModeEnabled = false;
 
 // Role name cache
 let roleNameCache = {};
+
+// Neue Variable für Rollen-Permissions (aus Firebase)
+let rolePermissions = {}; // { roleId: { canSubmitGP: true, canViewAdmin: false, ... } }
 
 const DISCORD_CLIENT_ID = '1503179151073345678';
 const ROBLOX_CLIENT_ID = '1529843549493669743';
@@ -150,7 +153,164 @@ function updateTestModeIndicator() {
 }
 
 // ==========================================
-// 3. HELPER FUNCTIONS
+// 3. NEUE FUNKTIONEN FÜR ROLLEN-MANAGEMENT
+// ==========================================
+
+async function loadAllGuildRoles() {
+    try {
+        const response = await fetch(`${BACKEND_URL}/guild-roles`);
+        const data = await response.json();
+        if (data.success) {
+            return data.roles;
+        } else {
+            console.error("Failed to load guild roles:", data.error);
+            return [];
+        }
+    } catch (e) {
+        console.error("Error loading guild roles:", e);
+        return [];
+    }
+}
+
+async function loadRolePermissions() {
+    try {
+        const snap = await get(ref(db, 'config/role_permissions'));
+        if (snap.exists()) {
+            rolePermissions = snap.val();
+        } else {
+            rolePermissions = {};
+        }
+    } catch (e) {
+        console.error("Error loading role permissions:", e);
+    }
+}
+
+async function saveRolePermission(roleId, permissions) {
+    try {
+        await fetch(`${BACKEND_URL}/save-role-permissions`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ roleId, permissions })
+        });
+        rolePermissions[roleId] = permissions;
+        showNotify(`Permissions for role saved!`, "success");
+    } catch (e) {
+        showNotify("Error saving permissions!", "error");
+    }
+}
+
+async function renderDynamicRoles() {
+    const container = document.getElementById('dynamicRolesContainer');
+    if (!container) return;
+    
+    const roles = await loadAllGuildRoles();
+    if (!roles.length) {
+        container.innerHTML = '<div style="text-align: center; color: #888;">No roles found (make sure guild ID is set).</div>';
+        return;
+    }
+    
+    container.innerHTML = '';
+    for (const role of roles) {
+        const roleDiv = document.createElement('div');
+        roleDiv.className = 'role-item';
+        const colorHex = role.color ? `#${role.color.toString(16).padStart(6,'0')}` : '#ffd700';
+        roleDiv.innerHTML = `
+            <span class="role-name" style="color: ${colorHex};">${escapeHtml(role.name)}</span>
+            <button class="role-open-btn" data-role-id="${role.id}" data-role-name="${escapeHtml(role.name)}">Open</button>
+        `;
+        container.appendChild(roleDiv);
+    }
+    
+    // Event-Listener für alle Open-Buttons
+    document.querySelectorAll('.role-open-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const roleId = btn.getAttribute('data-role-id');
+            const roleName = btn.getAttribute('data-role-name');
+            openRolePermissionModal(roleId, roleName);
+        });
+    });
+}
+
+let currentEditingRoleId = null;
+
+function openRolePermissionModal(roleId, roleName) {
+    currentEditingRoleId = roleId;
+    const modal = document.getElementById('rolePermissionModal');
+    const title = document.getElementById('modalRoleTitle');
+    title.textContent = `Permissions for ${roleName}`;
+    
+    const permissions = rolePermissions[roleId] || {};
+    
+    // Hier definieren wir alle möglichen Berechtigungen (anpassbar)
+    const permissionDefs = [
+        { key: 'canSubmitGP', label: 'Submit GP Donations', default: false, category: 'GP System' },
+        { key: 'canViewLeaderboard', label: 'View Leaderboard', default: true, category: 'GP System' },
+        { key: 'canViewProfile', label: 'View Own Profile', default: true, category: 'GP System' },
+        { key: 'canViewAdminPanel', label: 'Access Admin Panel', default: false, category: 'Admin' },
+        { key: 'canViewOwnerPanel', label: 'Access Owner Panel', default: false, category: 'Owner' },
+        { key: 'canManageRoles', label: 'Manage Role Permissions (Owner only)', default: false, category: 'Owner' },
+        { key: 'canManageSystem', label: 'Manage System Config (Owner only)', default: false, category: 'Owner' },
+        { key: 'canManageMessages', label: 'Manage Saved Messages', default: false, category: 'Owner' },
+        { key: 'canViewKickLogs', label: 'View Kick Logs', default: false, category: 'Owner' },
+        { key: 'canToggleMaintenance', label: 'Toggle Maintenance Mode', default: false, category: 'Owner' },
+        { key: 'canToggleTestMode', label: 'Toggle Test Mode', default: false, category: 'Owner' }
+    ];
+    
+    // Gruppieren nach Kategorie
+    const grouped = {};
+    permissionDefs.forEach(def => {
+        if (!grouped[def.category]) grouped[def.category] = [];
+        grouped[def.category].push(def);
+    });
+    
+    let html = '';
+    for (const [category, items] of Object.entries(grouped)) {
+        html += `<div class="permission-group"><h4>${category}</h4>`;
+        items.forEach(item => {
+            const isChecked = permissions[item.key] !== undefined ? permissions[item.key] : item.default;
+            html += `
+                <div class="permission-item">
+                    <input type="checkbox" id="perm_${item.key}" ${isChecked ? 'checked' : ''}>
+                    <label for="perm_${item.key}">${item.label}</label>
+                </div>
+            `;
+        });
+        html += `</div>`;
+    }
+    
+    document.getElementById('modalPermissionsList').innerHTML = html;
+    modal.classList.remove('hidden');
+}
+
+function closeModal() {
+    document.getElementById('rolePermissionModal').classList.add('hidden');
+    currentEditingRoleId = null;
+}
+
+async function saveCurrentRolePermissions() {
+    if (!currentEditingRoleId) return;
+    
+    const checkboxes = document.querySelectorAll('#modalPermissionsList input[type="checkbox"]');
+    const permissions = {};
+    checkboxes.forEach(cb => {
+        const key = cb.id.replace('perm_', '');
+        permissions[key] = cb.checked;
+    });
+    
+    await saveRolePermission(currentEditingRoleId, permissions);
+    closeModal();
+    
+    // Nach dem Speichern die lokalen Berechtigungen aktualisieren und ggf. UI anpassen
+    await loadRolePermissions();
+    // Berechtigungen des aktuellen Users neu laden
+    if (currentUser) {
+        await fetchUserRoles(currentUser.id);
+        updatePermissions();
+    }
+}
+
+// ==========================================
+// 4. HELPER FUNCTIONS
 // ==========================================
 
 function getSafeDbKey(username) {
@@ -203,20 +363,31 @@ function forceKickUser() {
     stopMusic();
 }
 
-function hasAdminPermission() {
+// Prüft Berechtigungen basierend auf den neuen Rollen-Permissions
+function hasPermission(permissionKey) {
     if (!currentUser) return false;
     if (currentUser.id === OWNER_USER_ID) return true;
-    return userGuildRoles.some(role => ADMIN_ROLES.includes(role));
+    // Durchlaufe alle Rollen des Users
+    for (const roleId of userGuildRoles) {
+        const perms = rolePermissions[roleId];
+        if (perms && perms[permissionKey] === true) return true;
+    }
+    return false;
+}
+
+function hasAdminPermission() {
+    // Verwende neue Berechtigung für Admin-Panel
+    return hasPermission('canViewAdminPanel');
 }
 
 function hasOwnerPermission() {
-    if (!currentUser) return false;
-    if (currentUser.id === OWNER_USER_ID) return true;
-    return userGuildRoles.some(role => OWNER_ROLES.includes(role));
+    // Owner-Panel darf nur haben, wer canViewOwnerPanel true hat oder Owner selbst
+    if (currentUser && currentUser.id === OWNER_USER_ID) return true;
+    return hasPermission('canViewOwnerPanel');
 }
 
 function hasGpSubmitPermission() {
-    return userGuildRoles.includes(GP_SUBMIT_ROLE);
+    return hasPermission('canSubmitGP');
 }
 
 function updatePermissions() {
@@ -274,7 +445,7 @@ async function fetchUserRoles(userId) {
         userGuildRoles = [];
     }
     
-    await loadRoleConfig();
+    await loadRolePermissions(); // Lade auch die Berechtigungen für diese Rollen
     updatePermissions();
     return userGuildRoles;
 }
@@ -301,7 +472,7 @@ async function fetchRoleName(roleId) {
 }
 
 // ==========================================
-// 4. DISCORD BOT MESSAGES
+// 5. DISCORD BOT MESSAGES
 // ==========================================
 
 async function sendDiscordMessage(channelId, content, embeds = null) {
@@ -524,7 +695,7 @@ async function sendGPRequestToDiscord(requestData, images) {
 }
 
 // ==========================================
-// 5. DISCORD & ROBLOX AUTHENTIFICATION
+// 6. DISCORD & ROBLOX AUTHENTIFICATION
 // ==========================================
 
 async function doLiveCheck() {
@@ -663,6 +834,7 @@ async function checkRobloxLink() {
         await loadRoleConfig();
         await loadSystemConfig();
         await loadTestMode();
+        await loadRolePermissions(); // Lade Rollen-Permissions
         
         const dbKey = getSafeDbKey(currentUser.username);
         const snap = await get(ref(db, `users/${dbKey}`));
@@ -693,7 +865,7 @@ async function checkRobloxLink() {
 }
 
 // ==========================================
-// 6. DASHBOARD & UI
+// 7. DASHBOARD & UI
 // ==========================================
 
 function showDashboard() {
@@ -715,9 +887,9 @@ function showDashboard() {
     }
     
     if (hasOwnerPermission()) {
-        loadAdminRolesList();
+        renderDynamicRoles();
         loadChannelConfigUI();
-        loadRoleConfigUI();       // Neu: Guild- & Ticket-Rollen
+        loadRoleConfigUI();
         loadKickLogs();
         loadSavedMessages();
         loadSystemConfigUI();
@@ -753,7 +925,7 @@ function renderLeaderboard(filterText) {
                 <td><div class="user-name-cell"><span class="display-name">${escapeHtml(u.discordName || "Unknown")}</span><span class="username-handle">@${escapeHtml(u.discordUsername || "Unknown")}</span></div></span>
                 <td><div class="user-name-cell"><span class="display-name">${escapeHtml(u.robloxName || "Unknown")}</span><span class="username-handle">@${escapeHtml(u.robloxUsername || "Unknown")}</span></div></span>
                 <td style="color:#48bb78; font-weight:bold; font-size:16px;">${(u.totalGP || 0).toLocaleString()} GP</span>
-            </tr>
+            </table>
         `;
     });
     
@@ -817,7 +989,7 @@ function loadProfileHistory() {
 }
 
 // ==========================================
-// 7. IMAGE UPLOAD & PREVIEW
+// 8. IMAGE UPLOAD & PREVIEW
 // ==========================================
 
 function updateImagePreviews() {
@@ -846,7 +1018,7 @@ function updateImagePreviews() {
 }
 
 // ==========================================
-// 8. GP SUBMIT FUNCTION
+// 9. GP SUBMIT FUNCTION
 // ==========================================
 
 async function submitGPRequest() {
@@ -942,7 +1114,7 @@ async function submitGPRequest() {
 }
 
 // ==========================================
-// 9. ADMIN FUNCTIONS with comments & Discord message update
+// 10. ADMIN FUNCTIONS with comments & Discord message update
 // ==========================================
 
 function loadAdminData() {
@@ -1119,97 +1291,8 @@ window.handleAdminActionWithComment = async (reqId, userId, amount, action, pass
 };
 
 // ==========================================
-// 10. OWNER PANEL FUNCTIONS (Admin Roles, Channels, Roles Config)
+// 11. OWNER PANEL FUNCTIONS (Channel Config, Role Config, etc.)
 // ==========================================
-
-async function loadAdminRolesList() {
-    const container = document.getElementById('adminRolesList');
-    if (!container) return;
-    
-    try {
-        await loadRoleConfig();
-        
-        let html = '<table class="table"><thead><tr><th>Role Name</th><th>Role ID</th><th>Type</th><th>Action</th></tr></thead><tbody>';
-        
-        for (const role of ADMIN_ROLES) {
-            const roleName = await fetchRoleName(role);
-            html += `<tr><td class="role-name">${escapeHtml(roleName)}</td><td class="role-id">${escapeHtml(role)}</td><td><span class="status-badge status-approved">Admin</span></td><td><button class="btn-small btn-remove-role" onclick="removeAdminRole('${role}')">Remove</button></td></tr>`;
-        }
-        
-        for (const role of OWNER_ROLES) {
-            const roleName = await fetchRoleName(role);
-            html += `<tr><td class="role-name">${escapeHtml(roleName)}</td><td class="role-id">${escapeHtml(role)}</td><td><span class="status-badge status-pending">Owner</span></td><td><button class="btn-small btn-remove-role" onclick="removeOwnerRole('${role}')">Remove</button></td></tr>`;
-        }
-        
-        html += '</tbody></table>';
-        container.innerHTML = html;
-    } catch (e) {
-        console.error("Error loading roles:", e);
-        container.innerHTML = '<p style="color: #f56565;">Error loading roles</p>';
-    }
-}
-
-window.addAdminRole = async () => {
-    const roleId = document.getElementById('newRoleId').value.trim();
-    const permissionLevel = document.getElementById('rolePermissionLevel').value;
-    
-    if (!roleId) {
-        showNotify("Please enter a role ID!", "error");
-        return;
-    }
-    
-    try {
-        if (permissionLevel === 'admin') {
-            if (!ADMIN_ROLES.includes(roleId)) {
-                ADMIN_ROLES.push(roleId);
-            }
-        } else {
-            if (!OWNER_ROLES.includes(roleId)) {
-                OWNER_ROLES.push(roleId);
-            }
-        }
-        
-        await set(ref(db, 'config/admin_roles'), {
-            adminRoles: ADMIN_ROLES,
-            ownerRoles: OWNER_ROLES
-        });
-        
-        showNotify(`Role added as ${permissionLevel}!`, "success");
-        document.getElementById('newRoleId').value = '';
-        await loadAdminRolesList();
-        await fetchUserRoles(currentUser.id);
-    } catch (e) {
-        showNotify("Error saving role!", "error");
-    }
-};
-
-window.removeAdminRole = async (roleId) => {
-    const index = ADMIN_ROLES.indexOf(roleId);
-    if (index !== -1) {
-        ADMIN_ROLES.splice(index, 1);
-        await set(ref(db, 'config/admin_roles'), {
-            adminRoles: ADMIN_ROLES,
-            ownerRoles: OWNER_ROLES
-        });
-        showNotify(`Role removed from admin!`, "success");
-        await loadAdminRolesList();
-        await fetchUserRoles(currentUser.id);
-    }
-};
-
-window.removeOwnerRole = async (roleId) => {
-    const index = OWNER_ROLES.indexOf(roleId);
-    if (index !== -1) {
-        OWNER_ROLES.splice(index, 1);
-        await set(ref(db, 'config/admin_roles'), {
-            adminRoles: ADMIN_ROLES,
-            ownerRoles: OWNER_ROLES
-        });
-        showNotify(`Role removed from owner!`, "success");
-        await loadAdminRolesList();
-        await fetchUserRoles(currentUser.id);
-    }
-};
 
 // ---------- Channel Configuration (inkl. Ticket-Kanäle) ----------
 async function loadChannelConfigUI() {
@@ -1366,7 +1449,7 @@ async function saveRoleConfig() {
     }
 }
 
-// ---------- Kick Logs, System Config, etc. (unverändert) ----------
+// ---------- Kick Logs, System Config, etc. ----------
 async function loadKickLogs() {
     const logsRef = ref(db, 'logs/kicks');
     onValue(logsRef, (snapshot) => {
@@ -1481,6 +1564,7 @@ async function saveSystemConfig() {
 }
 
 async function saveGpSubmitRole() {
+    // Diese Funktion ist veraltet durch das neue Role Management, aber wir behalten sie für Kompatibilität
     const newRoleId = document.getElementById('gpSubmitRoleId').value.trim();
     if (!newRoleId) {
         showNotify("Please enter a role ID!", "error");
@@ -1498,7 +1582,7 @@ async function saveGpSubmitRole() {
 }
 
 // ==========================================
-// 11. SAVED MESSAGES FUNCTIONS (unverändert)
+// 12. SAVED MESSAGES FUNCTIONS
 // ==========================================
 
 async function loadSavedMessages() {
@@ -1744,7 +1828,7 @@ function escapeHtml(text) {
 }
 
 // ==========================================
-// 12. EVENT LISTENERS & INITIALIZATION
+// 13. EVENT LISTENERS & INITIALIZATION
 // ==========================================
 
 document.getElementById('discordLoginBtn')?.addEventListener('click', () => {
@@ -1807,7 +1891,7 @@ document.getElementById('tabBtnAdmin')?.addEventListener('click', () => {
 document.getElementById('tabBtnOwner')?.addEventListener('click', () => {
     if (hasOwnerPermission()) {
         switchTab('Owner');
-        loadAdminRolesList();
+        renderDynamicRoles();
         loadChannelConfigUI();
         loadRoleConfigUI();
         loadKickLogs();
@@ -1819,7 +1903,16 @@ document.getElementById('tabBtnOwner')?.addEventListener('click', () => {
     }
 });
 
-document.getElementById('addRoleBtn')?.addEventListener('click', window.addAdminRole);
+// Event-Listener für Modal
+document.getElementById('modalSaveBtn')?.addEventListener('click', saveCurrentRolePermissions);
+document.getElementById('modalCancelBtn')?.addEventListener('click', closeModal);
+document.querySelector('.modal-close')?.addEventListener('click', closeModal);
+window.addEventListener('click', (e) => {
+    if (e.target === document.getElementById('rolePermissionModal')) closeModal();
+});
+
+// Alte Rollen-Buttons entfernen (nicht mehr vorhanden)
+// Stattdessen neue für Channel, Role Config etc.
 document.getElementById('saveChannelConfigBtn')?.addEventListener('click', saveChannelConfig);
 document.getElementById('saveRoleConfigBtn')?.addEventListener('click', saveRoleConfig);
 document.getElementById('saveSystemConfigBtn')?.addEventListener('click', saveSystemConfig);
@@ -1845,7 +1938,7 @@ document.getElementById('enableMaintenanceBtn')?.addEventListener('click', () =>
 document.getElementById('disableMaintenanceBtn')?.addEventListener('click', () => setMaintenanceMode(false));
 
 // ==========================================
-// 13. APP START (AUTH CHECK)
+// 14. APP START (AUTH CHECK)
 // ==========================================
 
 const urlParams = new URLSearchParams(window.location.search);
