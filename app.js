@@ -21,7 +21,7 @@ let systemConfig = {
         leaderboard: '#ffd700'
     },
     limits: {
-        maxImagesPerRequest: 1
+        maxImagesPerRequest: 3  // Erhöht auf 3 Bilder
     },
     musicUrl: 'https://www.youtube.com/embed/BtEkzZoUCpw?autoplay=1&loop=1',
     updateInterval: 60
@@ -41,7 +41,7 @@ const REDIRECT_URI = 'https://corleonecity.github.io/SwordArtOnline/';
 
 // Firebase Imports
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
-import { getDatabase, ref, set, onValue, get, update, push, remove } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
+import { getDatabase, ref, set, onValue, get, update, push, remove, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
 
 // Firebase Configuration
 const firebaseConfig = {
@@ -55,8 +55,8 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+const firebaseApp = initializeApp(firebaseConfig);
+const db = getDatabase(firebaseApp);
 
 // Global variables
 let currentUser = null;
@@ -71,12 +71,16 @@ let currentEditingMessageId = null;
 // ==========================================
 
 async function loadRoleConfig() {
-    const rolesRef = ref(db, 'config/admin_roles');
-    const snap = await get(rolesRef);
-    if (snap.exists()) {
-        const data = snap.val();
-        if (data.adminRoles) ADMIN_ROLES = data.adminRoles;
-        if (data.ownerRoles) OWNER_ROLES = data.ownerRoles;
+    try {
+        const rolesRef = ref(db, 'config/admin_roles');
+        const snap = await get(rolesRef);
+        if (snap.exists()) {
+            const data = snap.val();
+            if (data.adminRoles) ADMIN_ROLES = data.adminRoles;
+            if (data.ownerRoles) OWNER_ROLES = data.ownerRoles;
+        }
+    } catch (e) {
+        console.error("Error loading role config:", e);
     }
 }
 
@@ -92,36 +96,52 @@ async function getChannelConfig() {
 }
 
 async function loadSystemConfig() {
-    const configRef = ref(db, 'config/system');
-    const snap = await get(configRef);
-    if (snap.exists()) {
-        const data = snap.val();
-        if (data.embedColors) systemConfig.embedColors = { ...systemConfig.embedColors, ...data.embedColors };
-        if (data.limits) systemConfig.limits = { ...systemConfig.limits, ...data.limits };
-        if (data.musicUrl) systemConfig.musicUrl = data.musicUrl;
-        if (data.updateInterval) systemConfig.updateInterval = data.updateInterval;
-        if (data.gpSubmitRole) GP_SUBMIT_ROLE = data.gpSubmitRole;
+    try {
+        const configRef = ref(db, 'config/system');
+        const snap = await get(configRef);
+        if (snap.exists()) {
+            const data = snap.val();
+            if (data.embedColors) systemConfig.embedColors = { ...systemConfig.embedColors, ...data.embedColors };
+            if (data.limits) systemConfig.limits = { ...systemConfig.limits, ...data.limits };
+            if (data.musicUrl) systemConfig.musicUrl = data.musicUrl;
+            if (data.updateInterval) systemConfig.updateInterval = data.updateInterval;
+            if (data.gpSubmitRole) GP_SUBMIT_ROLE = data.gpSubmitRole;
+        }
+    } catch (e) {
+        console.error("Error loading system config:", e);
     }
 }
 
 async function loadTestMode() {
-    const testRef = ref(db, 'config/testMode');
-    const snap = await get(testRef);
-    if (snap.exists()) {
-        testModeEnabled = snap.val().enabled === true;
-        updateTestModeIndicator();
+    try {
+        const testRef = ref(db, 'config/testMode');
+        const snap = await get(testRef);
+        if (snap.exists()) {
+            testModeEnabled = snap.val().enabled === true;
+            updateTestModeIndicator();
+        }
+    } catch (e) {
+        console.error("Error loading test mode:", e);
     }
 }
 
 async function loadMaintenanceStatus() {
-    const maintenanceRef = ref(db, 'config/maintenance');
-    const snap = await get(maintenanceRef);
-    if (snap.exists() && snap.val().enabled) {
-        document.getElementById('maintenanceOverlay').classList.remove('hidden');
-        document.getElementById('maintenanceStatusText').textContent = 'Enabled';
-    } else {
-        document.getElementById('maintenanceOverlay').classList.add('hidden');
-        document.getElementById('maintenanceStatusText').textContent = 'Disabled';
+    try {
+        const maintenanceRef = ref(db, 'config/maintenance');
+        const snap = await get(maintenanceRef);
+        if (snap.exists() && snap.val().enabled) {
+            const overlay = document.getElementById('maintenanceOverlay');
+            if (overlay) overlay.classList.remove('hidden');
+            const statusText = document.getElementById('maintenanceStatusText');
+            if (statusText) statusText.textContent = 'Enabled';
+        } else {
+            const overlay = document.getElementById('maintenanceOverlay');
+            if (overlay) overlay.classList.add('hidden');
+            const statusText = document.getElementById('maintenanceStatusText');
+            if (statusText) statusText.textContent = 'Disabled';
+        }
+    } catch (e) {
+        console.error("Error loading maintenance status:", e);
     }
 }
 
@@ -129,11 +149,11 @@ function updateTestModeIndicator() {
     const indicator = document.getElementById('testModeIndicator');
     const statusText = document.getElementById('testModeStatusText');
     if (testModeEnabled) {
-        indicator.classList.remove('hidden');
+        if (indicator) indicator.classList.remove('hidden');
         if (statusText) statusText.textContent = 'Enabled';
         showNotify('⚠️ TEST MODE ENABLED - No real changes will be made', 'warning');
     } else {
-        indicator.classList.add('hidden');
+        if (indicator) indicator.classList.add('hidden');
         if (statusText) statusText.textContent = 'Disabled';
     }
 }
@@ -148,20 +168,40 @@ function getSafeDbKey(username) {
 
 function playLoginMusic() {
     const ac = document.getElementById('audioPlayerContainer');
-    if (ac.innerHTML === '') {
+    if (ac && ac.innerHTML === '') {
         ac.innerHTML = `<iframe width="0" height="0" src="${systemConfig.musicUrl}" frameborder="0" allow="autoplay"></iframe>`;
     }
 }
 
 function stopMusic() {
-    document.getElementById('audioPlayerContainer').innerHTML = '';
+    const ac = document.getElementById('audioPlayerContainer');
+    if (ac) ac.innerHTML = '';
 }
 
 function showNotify(msg, type) {
     const n = document.getElementById('notification');
+    if (!n) return;
     n.textContent = msg;
     n.className = `notification show ${type === 'success' ? 'bg-success' : (type === 'warning' ? 'bg-warning' : 'bg-error')}`;
     setTimeout(() => n.classList.remove('show'), 3000);
+}
+
+function showLoading(show, elementId = null) {
+    if (elementId) {
+        const element = document.getElementById(elementId);
+        if (element) {
+            if (show) {
+                element.disabled = true;
+                element.dataset.originalText = element.innerHTML;
+                element.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+            } else {
+                element.disabled = false;
+                if (element.dataset.originalText) {
+                    element.innerHTML = element.dataset.originalText;
+                }
+            }
+        }
+    }
 }
 
 function switchTab(tabName) {
@@ -185,10 +225,15 @@ function forceKickUser() {
     if (liveCheckInterval) clearInterval(liveCheckInterval);
     sessionStorage.removeItem('pn_session');
     currentUser = null;
-    document.getElementById('mainContent').classList.add('hidden');
-    document.getElementById('robloxPage').classList.add('hidden');
-    document.getElementById('loginPage').classList.add('hidden');
-    document.getElementById('noPermissionPage').classList.remove('hidden');
+    const mainContent = document.getElementById('mainContent');
+    const robloxPage = document.getElementById('robloxPage');
+    const loginPage = document.getElementById('loginPage');
+    const noPermissionPage = document.getElementById('noPermissionPage');
+    
+    if (mainContent) mainContent.classList.add('hidden');
+    if (robloxPage) robloxPage.classList.add('hidden');
+    if (loginPage) loginPage.classList.add('hidden');
+    if (noPermissionPage) noPermissionPage.classList.remove('hidden');
     stopMusic();
 }
 
@@ -230,11 +275,11 @@ function updatePermissions() {
     }
     
     if (tabBtnAdmin) {
-        tabBtnAdmin.style.display = hasAdminPermission() ? 'block' : 'none';
+        tabBtnAdmin.style.display = hasAdminPermission() ? 'flex' : 'none';
     }
     
     if (tabBtnOwner) {
-        tabBtnOwner.style.display = hasOwnerPermission() ? 'block' : 'none';
+        tabBtnOwner.style.display = hasOwnerPermission() ? 'flex' : 'none';
     }
 }
 
@@ -300,10 +345,6 @@ async function sendDiscordMessage(channelId, content, embeds = null) {
     }
     
     try {
-        const body = {};
-        if (content) body.content = content;
-        if (embeds && embeds.length > 0) body.embeds = embeds;
-        
         const response = await fetch(`${BACKEND_URL}/send-channel-message`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -397,8 +438,7 @@ async function sendLeftUserToDiscord(userData) {
         return false;
     }
     
-    const { adminRoles } = await getAdminRoles();
-    const adminRoleId = adminRoles[0] || '1503609455466643547';
+    const adminRoleId = ADMIN_ROLES[0] || '1503609455466643547';
     
     const robloxProfileLink = userData.robloxUsername 
         ? `https://www.roblox.com/user.aspx?username=${userData.robloxUsername}`
@@ -424,7 +464,6 @@ async function sendGPRequestToDiscord(requestData, images) {
     
     const adminRoleId = ADMIN_ROLES[0] || '1503609455466643547';
     
-    // Get channel config
     const channels = await getChannelConfig();
     const gpRequestsChannel = channels.CH_GP_REQUESTS;
     
@@ -448,12 +487,10 @@ async function sendGPRequestToDiscord(requestData, images) {
         footer: { text: "SwordArtOnline GP System" }
     };
     
-    // Add image to embed if exists
     if (images && images.length > 0) {
         embed.image = { url: "attachment://proof_1.png" };
     }
 
-    // Create buttons for interaction
     const components = [{
         type: 1,
         components: [
@@ -513,7 +550,7 @@ async function sendGPRequestToDiscord(requestData, images) {
 }
 
 // ==========================================
-// 5. DISCORD & ROBLOX AUTHENTIFICATION
+// 5. DISCORD & ROBLOX AUTHENTIFICATION (VERBESSERT)
 // ==========================================
 
 async function doLiveCheck() {
@@ -535,6 +572,7 @@ async function doLiveCheck() {
         }
         return true;
     } catch (e) {
+        console.warn("Live check failed:", e);
         forceKickUser();
         return false;
     }
@@ -562,6 +600,8 @@ async function sendLoginWebhook(userData) {
 
 async function handleDiscordLogin(code) {
     try {
+        showLoading(true, 'discordLoginBtn');
+        
         const res = await fetch(`${BACKEND_URL}/token`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -579,25 +619,48 @@ async function handleDiscordLogin(code) {
             currentUser = data.user;
             sessionStorage.setItem('pn_session', JSON.stringify(currentUser));
             window.history.replaceState({}, '', REDIRECT_URI);
-            checkRobloxLink();
+            await checkRobloxLink();
+        } else {
+            showNotify("Discord authorization failed!", "error");
         }
     } catch (e) {
-        alert("Login Error!");
-        console.error(e);
+        console.error("Discord login error:", e);
+        showNotify("Login Error! Please try again.", "error");
+    } finally {
+        showLoading(false, 'discordLoginBtn');
     }
 }
 
 async function handleRobloxLogin(code) {
     try {
-        currentUser = JSON.parse(sessionStorage.getItem('pn_session'));
+        showLoading(true, 'robloxLoginBtn');
+        
+        const savedSession = sessionStorage.getItem('pn_session');
+        if (!savedSession) {
+            throw new Error("No Discord session found. Please login with Discord first.");
+        }
+        
+        currentUser = JSON.parse(savedSession);
+        
         const res = await fetch(`${BACKEND_URL}/roblox-token`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ code, redirect_uri: REDIRECT_URI })
         });
+        
+        if (!res.ok) {
+            const errorData = await res.text();
+            throw new Error(`Server error: ${res.status} - ${errorData}`);
+        }
+        
         const data = await res.json();
+        
+        if (!data.success) {
+            throw new Error(data.error || "Roblox authentication failed");
+        }
+        
         if (data.success && data.robloxUser) {
-            const rDisplayName = data.robloxUser.nickname || data.robloxUser.name;
+            const rDisplayName = data.robloxUser.preferred_username || data.robloxUser.name;
             const rUsername = data.robloxUser.preferred_username || data.robloxUser.name;
             const rId = data.robloxUser.sub;
             const dDisplayName = currentUser.global_name || currentUser.username || "Unknown";
@@ -615,7 +678,8 @@ async function handleRobloxLogin(code) {
                 robloxId: rId || "1",
                 totalGP: currentGP,
                 id: currentUser.id || "1",
-                hasLeftServer: false
+                hasLeftServer: false,
+                linkedAt: Date.now()
             });
 
             await updateDiscordNickname(currentUser.id, rDisplayName, rUsername);
@@ -629,17 +693,22 @@ async function handleRobloxLogin(code) {
                 robloxId: rId
             });
 
-            fetch(`${BACKEND_URL}/check-member`, {
+            await fetch(`${BACKEND_URL}/check-member`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ userId: currentUser.id, updateRoles: true })
             });
 
+            showNotify("Roblox account linked successfully!", "success");
             window.location.href = REDIRECT_URI;
+        } else {
+            throw new Error("Invalid Roblox user data received");
         }
     } catch (e) {
-        alert("Linking Error!");
-        console.error(e);
+        console.error("Roblox login error:", e);
+        showNotify(`Linking Error: ${e.message}`, "error");
+    } finally {
+        showLoading(false, 'robloxLoginBtn');
     }
 }
 
@@ -655,7 +724,8 @@ async function checkRobloxLink() {
         
         const dbKey = getSafeDbKey(currentUser.username);
         const snap = await get(ref(db, `users/${dbKey}`));
-        document.getElementById('loginPage').classList.add('hidden');
+        const loginPage = document.getElementById('loginPage');
+        if (loginPage) loginPage.classList.add('hidden');
         
         if (snap.exists() && snap.val().robloxId) {
             if (currentUser && currentUser.id) {
@@ -669,7 +739,8 @@ async function checkRobloxLink() {
                 body: JSON.stringify({ userId: currentUser.id, updateRoles: true })
             });
         } else {
-            document.getElementById('robloxPage').classList.remove('hidden');
+            const robloxPage = document.getElementById('robloxPage');
+            if (robloxPage) robloxPage.classList.remove('hidden');
             playLoginMusic();
             startLiveMemberCheck();
         }
@@ -682,16 +753,21 @@ async function checkRobloxLink() {
 }
 
 // ==========================================
-// 6. DASHBOARD & UI
+// 6. DASHBOARD & UI (VERBESSERT)
 // ==========================================
 
 function showDashboard() {
     stopMusic();
-    document.getElementById('robloxPage').classList.add('hidden');
-    document.getElementById('mainContent').classList.remove('hidden');
-    document.getElementById('userWelcome').textContent = `Hi, ${currentUser.global_name || currentUser.username}`;
-    if (currentUser.avatar) {
-        document.getElementById('userAvatar').src = `https://cdn.discordapp.com/avatars/${currentUser.id}/${currentUser.avatar}.png`;
+    const robloxPage = document.getElementById('robloxPage');
+    const mainContent = document.getElementById('mainContent');
+    const userWelcome = document.getElementById('userWelcome');
+    const userAvatar = document.getElementById('userAvatar');
+    
+    if (robloxPage) robloxPage.classList.add('hidden');
+    if (mainContent) mainContent.classList.remove('hidden');
+    if (userWelcome) userWelcome.textContent = `Hi, ${currentUser.global_name || currentUser.username}`;
+    if (userAvatar && currentUser.avatar) {
+        userAvatar.src = `https://cdn.discordapp.com/avatars/${currentUser.id}/${currentUser.avatar}.png`;
     }
     
     updatePermissions();
@@ -718,6 +794,7 @@ function showDashboard() {
 
 function renderLeaderboard(filterText) {
     const body = document.getElementById('leaderboardBody');
+    if (!body) return;
     body.innerHTML = '';
     if (!allUsersData) return;
     
@@ -734,20 +811,22 @@ function renderLeaderboard(filterText) {
         );
     }
     
+    if (usersArray.length === 0) {
+        body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No users with GP yet</td></tr>';
+        return;
+    }
+    
     usersArray.forEach((u, i) => {
+        const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}`;
         body.innerHTML += `
             <tr>
-                <td>#${i + 1}</td>
+                <td><strong>${medal}</strong></td>
                 <td><div class="user-name-cell"><span class="display-name">${escapeHtml(u.discordName || "Unknown")}</span><span class="username-handle">@${escapeHtml(u.discordUsername || "Unknown")}</span></div></td>
                 <td><div class="user-name-cell"><span class="display-name">${escapeHtml(u.robloxName || "Unknown")}</span><span class="username-handle">@${escapeHtml(u.robloxUsername || "Unknown")}</span></div></td>
-                <td style="color:#48bb78; font-weight:bold; font-size:16px;">${(u.totalGP || 0).toLocaleString()} GP</span></td>
+                <td style="color:#48bb78; font-weight:bold; font-size:16px;">${(u.totalGP || 0).toLocaleString()} GP</td>
             </tr>
         `;
     });
-    
-    if (usersArray.length === 0) {
-        body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No users with GP yet</span></tr></tr>';
-    }
     
     const totalGP = Object.values(allUsersData).reduce((sum, u) => sum + (u.totalGP || 0), 0);
     const totalGpStat = document.getElementById('totalGpStat');
@@ -755,7 +834,8 @@ function renderLeaderboard(filterText) {
 }
 
 function loadLeaderboard() {
-    onValue(ref(db, 'users'), (snapshot) => {
+    const usersRef = ref(db, 'users');
+    onValue(usersRef, (snapshot) => {
         allUsersData = snapshot.val();
         const searchValue = document.getElementById('leaderboardSearch')?.value || "";
         renderLeaderboard(searchValue);
@@ -764,15 +844,22 @@ function loadLeaderboard() {
 }
 
 function loadProfileHistory() {
-    onValue(ref(db, 'requests'), (snapshot) => {
+    const requestsRef = ref(db, 'requests');
+    onValue(requestsRef, (snapshot) => {
         const data = snapshot.val();
         const body = document.getElementById('profileHistoryBody');
+        if (!body) return;
         body.innerHTML = '';
         if (!data || !currentUser) return;
         
         const userRequests = Object.values(data)
             .filter(r => r.userId === currentUser.id)
             .sort((a, b) => b.timestamp - a.timestamp);
+        
+        if (userRequests.length === 0) {
+            body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No requests yet</td></tr>';
+            return;
+        }
         
         userRequests.forEach(req => {
             const dateStr = new Date(req.timestamp).toLocaleDateString('en-US', {
@@ -791,29 +878,31 @@ function loadProfileHistory() {
             body.innerHTML += `
                 <tr>
                     <td style="font-size:14px; color:#aaa;">${dateStr}</td>
-                    <td style="font-weight:bold;">+${req.amount.toLocaleString()} GP</span></td>
+                    <td style="font-weight:bold; color:#48bb78;">+${req.amount.toLocaleString()} GP</td>
                     <td>${statusHtml}</td>
                     <td style="font-size:12px; color:#888;">${escapeHtml(req.adminComment || '-')}</td>
                 </tr>
             `;
         });
-        
-        if (userRequests.length === 0) {
-            body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No requests yet</span></tr></table>';
-        }
     });
 }
 
 // ==========================================
-// 7. IMAGE UPLOAD & PREVIEW
+// 7. IMAGE UPLOAD & PREVIEW (VERBESSERT)
 // ==========================================
 
 function updateImagePreviews() {
     const previewContainer = document.getElementById('imagePreviewContainer');
     const fileCountText = document.getElementById('fileCountText');
     
+    if (!previewContainer) return;
     previewContainer.innerHTML = '';
-    fileCountText.textContent = `${selectedFiles.length} / ${systemConfig.limits.maxImagesPerRequest} image(s) selected`;
+    
+    const maxImages = systemConfig.limits.maxImagesPerRequest;
+    if (fileCountText) {
+        fileCountText.textContent = `${selectedFiles.length} / ${maxImages} image(s) selected`;
+        fileCountText.style.color = selectedFiles.length === maxImages ? '#f56565' : '#888';
+    }
     
     selectedFiles.forEach((file, index) => {
         const box = document.createElement('div');
@@ -834,7 +923,7 @@ function updateImagePreviews() {
 }
 
 // ==========================================
-// 8. GP SUBMIT FUNCTION
+// 8. GP SUBMIT FUNCTION (VERBESSERT)
 // ==========================================
 
 async function submitGPRequest() {
@@ -843,26 +932,34 @@ async function submitGPRequest() {
         return;
     }
     
-    const amount = parseInt(document.getElementById('gpAmount').value);
+    const amountInput = document.getElementById('gpAmount');
+    const amount = parseInt(amountInput?.value);
     const btn = document.getElementById('addGPBtn');
     
     if (isNaN(amount) || amount <= 0) {
-        alert("Please enter a valid amount!");
+        showNotify("Please enter a valid amount!", "error");
+        return;
+    }
+    
+    if (amount < 100) {
+        showNotify("Minimum donation is 100 GP!", "warning");
         return;
     }
     
     if (selectedFiles.length === 0) {
-        alert("Please add at least 1 screenshot as proof!");
+        showNotify("Please add at least 1 screenshot as proof!", "error");
         return;
     }
     
     if (selectedFiles.length > systemConfig.limits.maxImagesPerRequest) {
-        alert(`Maximum ${systemConfig.limits.maxImagesPerRequest} images allowed!`);
+        showNotify(`Maximum ${systemConfig.limits.maxImagesPerRequest} images allowed!`, "error");
         return;
     }
 
-    btn.disabled = true;
-    btn.textContent = "SENDING...";
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> SENDING...';
+    }
 
     try {
         const dbKey = getSafeDbKey(currentUser.username);
@@ -914,7 +1011,7 @@ async function submitGPRequest() {
             showNotify(`GP Request saved but Discord notification failed!`, "warning");
         }
 
-        document.getElementById('gpAmount').value = '';
+        if (amountInput) amountInput.value = '';
         selectedFiles = [];
         updateImagePreviews();
         
@@ -922,26 +1019,29 @@ async function submitGPRequest() {
         
     } catch (e) {
         console.error("Submit error:", e);
-        alert("Error: " + e.message);
+        showNotify("Error: " + e.message, "error");
     } finally {
-        btn.disabled = false;
-        btn.innerHTML = "SUBMIT PROOF FOR REVIEW";
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = "SUBMIT PROOF FOR REVIEW";
+        }
     }
 }
 
 // ==========================================
-// 9. ADMIN FUNCTIONS with comments
+// 9. ADMIN FUNCTIONS
 // ==========================================
 
 function loadAdminData() {
-    onValue(ref(db, 'requests'), (snapshot) => {
+    const requestsRef = ref(db, 'requests');
+    onValue(requestsRef, (snapshot) => {
         const data = snapshot.val();
         const body = document.getElementById('adminPendingBody');
         if (!body) return;
         
         body.innerHTML = '';
         if (!data) {
-            body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No pending requests</span></td></tr>';
+            body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No pending requests</td></tr>';
             return;
         }
         
@@ -950,50 +1050,57 @@ function loadAdminData() {
             .sort((a, b) => a.timestamp - b.timestamp);
         
         if (pendingRequests.length === 0) {
-            body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No pending requests</span></td></tr>';
+            body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No pending requests</td></tr>';
             return;
         }
         
         pendingRequests.forEach(req => {
-            body.innerHTML += `
-                <tr>
-                    <td>
-                        <div class="user-name-cell">
-                            <span class="display-name">${escapeHtml(req.discordName || "Unknown")}</span>
-                            <span class="username-handle">@${escapeHtml(req.discordUsername || "Unknown")}</span>
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>
+                    <div class="user-name-cell">
+                        <span class="display-name">${escapeHtml(req.discordName || "Unknown")}</span>
+                        <span class="username-handle">@${escapeHtml(req.discordUsername || "Unknown")}</span>
+                    </div>
+                </td>
+                <td>
+                    <div class="user-name-cell">
+                        <span class="display-name">${escapeHtml(req.robloxName || "Unknown")}</span>
+                        <span class="username-handle">@${escapeHtml(req.robloxUsername || "Unknown")}</span>
+                    </div>
+                </td>
+                <td style="color:#cd7f32; font-weight:bold;">+${req.amount.toLocaleString()} GP</td>
+                <td>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <input type="text" id="comment_${req.id}" placeholder="Admin comment (optional)" style="padding: 6px; font-size: 12px; border-radius: 6px;">
+                        <div style="display: flex; gap: 5px;">
+                            <button class="btn-small btn-approve" onclick="window.handleAdminAction('${req.id}', '${req.userId}', ${req.amount}, 'approve', '${req.dbKey || req.discordUsername}', '${req.robloxId || ''}', '${escapeHtml(req.discordName)}', '${escapeHtml(req.discordUsername)}', '${escapeHtml(req.robloxName)}', '${escapeHtml(req.robloxUsername)}')">
+                                <i class="fas fa-check"></i> Approve
+                            </button>
+                            <button class="btn-small btn-deny" onclick="window.handleAdminAction('${req.id}', '${req.userId}', ${req.amount}, 'reject', '${req.dbKey || req.discordUsername}', '${req.robloxId || ''}', '${escapeHtml(req.discordName)}', '${escapeHtml(req.discordUsername)}', '${escapeHtml(req.robloxName)}', '${escapeHtml(req.robloxUsername)}')">
+                                <i class="fas fa-times"></i> Reject
+                            </button>
                         </div>
-                    </span>
-                    <td>
-                        <div class="user-name-cell">
-                            <span class="display-name">${escapeHtml(req.robloxName || "Unknown")}</span>
-                            <span class="username-handle">@${escapeHtml(req.robloxUsername || "Unknown")}</span>
-                        </div>
-                    </span>
-                    <td style="color:#cd7f32; font-weight:bold;">+${req.amount.toLocaleString()} GP</span>
-                    <td>
-                        <div style="display: flex; flex-direction: column; gap: 8px;">
-                            <input type="text" id="comment_${req.id}" placeholder="Admin comment (optional)" style="padding: 6px; font-size: 12px; margin-bottom: 5px;">
-                            <div style="display: flex; gap: 5px;">
-                                <button class="btn-small btn-approve" onclick="window.handleAdminActionWithComment('${req.id}', '${req.userId}', ${req.amount}, 'approve', '${req.dbKey || req.discordUsername}', '${req.robloxId || ''}', '${escapeHtml(req.discordName)}', '${escapeHtml(req.discordUsername)}', '${escapeHtml(req.robloxName)}', '${escapeHtml(req.robloxUsername)}')">
-                                    <i class="fas fa-check"></i> Approve
-                                </button>
-                                <button class="btn-small btn-deny" onclick="window.handleAdminActionWithComment('${req.id}', '${req.userId}', ${req.amount}, 'reject', '${req.dbKey || req.discordUsername}', '${req.robloxId || ''}', '${escapeHtml(req.discordName)}', '${escapeHtml(req.discordUsername)}', '${escapeHtml(req.robloxName)}', '${escapeHtml(req.robloxUsername)}')">
-                                    <i class="fas fa-times"></i> Reject
-                                </button>
-                            </div>
-                        </div>
-                    </span>
-                </tr>
+                    </div>
+                </td>
             `;
+            body.appendChild(row);
         });
     });
 }
 
-window.handleAdminActionWithComment = async (reqId, userId, amount, action, passedDbKey, robloxId, discordName, discordUsername, robloxName, robloxUsername) => {
+window.handleAdminAction = async (reqId, userId, amount, action, passedDbKey, robloxId, discordName, discordUsername, robloxName, robloxUsername) => {
     const commentInput = document.getElementById(`comment_${reqId}`);
     const adminComment = commentInput ? commentInput.value.trim() : '';
     
-    if (!confirm(`Are you sure you want to ${action === 'approve' ? 'APPROVE' : 'REJECT'} this request?${adminComment ? `\n\nComment: ${adminComment}` : ''}`)) return;
+    const confirmMsg = `Are you sure you want to ${action === 'approve' ? 'APPROVE' : 'REJECT'} this request?${adminComment ? `\n\nComment: ${adminComment}` : ''}`;
+    if (!confirm(confirmMsg)) return;
+    
+    const btn = event.target.closest('button');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    }
     
     if (testModeEnabled) {
         showNotify(`🔬 TEST MODE: ${action === 'approve' ? 'Approved' : 'Rejected'} request ${reqId} (simulated)`, "warning");
@@ -1007,19 +1114,25 @@ window.handleAdminActionWithComment = async (reqId, userId, amount, action, pass
         });
         
         showNotify(`Test: Request ${action === 'approve' ? 'approved' : 'rejected'}!`, "success");
+        if (btn) btn.disabled = false;
         return;
     }
     
     try {
         const reqSnap = await get(ref(db, `requests/${reqId}`));
         const reqData = reqSnap.val();
-        if (!reqData) return alert("Request not found!");
+        if (!reqData) {
+            alert("Request not found!");
+            if (btn) btn.disabled = false;
+            return;
+        }
 
         await update(ref(db, `requests/${reqId}`), {
             status: action === 'approve' ? 'approved' : 'rejected',
             adminComment: adminComment,
             processedAt: Date.now(),
-            processedBy: currentUser.id
+            processedBy: currentUser.id,
+            processedByName: currentUser.global_name || currentUser.username
         });
 
         const dbKey = getSafeDbKey(passedDbKey);
@@ -1062,7 +1175,7 @@ window.handleAdminActionWithComment = async (reqId, userId, amount, action, pass
                     { name: "💰 Amount", value: amountText, inline: false },
                     { name: "📊 New Total", value: `${newTotal.toLocaleString()} GP`, inline: true },
                     { name: "🏆 Rank", value: `#${rank}`, inline: true },
-                    { name: "🛡️ Processed By", value: `<@${currentUser.id}>`, inline: false }
+                    { name: "🛡️ Processed By", value: `<@${currentUser.id}> (${currentUser.global_name || currentUser.username})`, inline: false }
                 ],
                 timestamp: new Date().toISOString(),
                 footer: { text: "SwordArtOnline GP System" }
@@ -1080,6 +1193,8 @@ window.handleAdminActionWithComment = async (reqId, userId, amount, action, pass
     } catch (e) {
         console.error("Admin action error:", e);
         alert("Error: " + e.message);
+    } finally {
+        if (btn) btn.disabled = false;
     }
 };
 
@@ -1098,12 +1213,12 @@ async function loadAdminRolesList() {
         
         for (const role of ADMIN_ROLES) {
             const roleName = await fetchRoleName(role);
-            html += `<tr><td class="role-name">${escapeHtml(roleName)}</span><td><td class="role-id">${escapeHtml(role)}</span><td><span class="status-badge status-approved">Admin</span></span><td><button class="btn-small btn-remove-role" onclick="removeAdminRole('${role}')">Remove</button></span></tr>`;
+            html += `<tr><td class="role-name">${escapeHtml(roleName)}</td><td class="role-id">${escapeHtml(role)}</td><td><span class="status-badge status-approved">Admin</span></td><td><button class="btn-small btn-remove-role" onclick="removeAdminRole('${role}')">Remove</button></td></tr>`;
         }
         
         for (const role of OWNER_ROLES) {
             const roleName = await fetchRoleName(role);
-            html += `<tr><td class="role-name">${escapeHtml(roleName)}</span><td><td class="role-id">${escapeHtml(role)}</span><td><span class="status-badge status-pending">Owner</span></span><td><button class="btn-small btn-remove-role" onclick="removeOwnerRole('${role}')">Remove</button></span></tr>`;
+            html += `<tr><td class="role-name">${escapeHtml(roleName)}</td><td class="role-id">${escapeHtml(role)}</td><td><span class="status-badge status-pending">Owner</span></td><td><button class="btn-small btn-remove-role" onclick="removeOwnerRole('${role}')">Remove</button></td></tr>`;
         }
         
         html += '</tbody></table>';
@@ -1115,8 +1230,8 @@ async function loadAdminRolesList() {
 }
 
 window.addAdminRole = async () => {
-    const roleId = document.getElementById('newRoleId').value.trim();
-    const permissionLevel = document.getElementById('rolePermissionLevel').value;
+    const roleId = document.getElementById('newRoleId')?.value.trim();
+    const permissionLevel = document.getElementById('rolePermissionLevel')?.value;
     
     if (!roleId) {
         showNotify("Please enter a role ID!", "error");
@@ -1140,10 +1255,12 @@ window.addAdminRole = async () => {
         });
         
         showNotify(`Role added as ${permissionLevel}!`, "success");
-        document.getElementById('newRoleId').value = '';
+        const newRoleInput = document.getElementById('newRoleId');
+        if (newRoleInput) newRoleInput.value = '';
         await loadAdminRolesList();
         await fetchUserRoles(currentUser.id);
     } catch (e) {
+        console.error("Error saving role:", e);
         showNotify("Error saving role!", "error");
     }
 };
@@ -1263,7 +1380,7 @@ async function loadKickLogs() {
         
         body.innerHTML = '';
         if (!data) {
-            body.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#666;">No kick logs found</span></td></tr>';
+            body.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#666;">No kick logs found</td></tr>';
             return;
         }
         
@@ -1277,7 +1394,7 @@ async function loadKickLogs() {
                     <td><code>${escapeHtml(log.kickedUserId || '?')}</code><br>${escapeHtml(log.kickedUserName || '')}</td>
                     <td><code>${escapeHtml(log.kickedByUserId || '?')}</code><br>${escapeHtml(log.kickedByUserName || '')}</td>
                     <td>${escapeHtml(log.reason || 'No reason')}</td>
-                    <td>${log.dmSent ? '✅ Yes' : '❌ No'}</span></td>
+                    <td>${log.dmSent ? '✅ Yes' : '❌ No'}</td>
                 </tr>
             `;
         });
@@ -1288,15 +1405,20 @@ async function setMaintenanceMode(enabled) {
     try {
         await set(ref(db, 'config/maintenance'), { enabled });
         if (enabled) {
-            document.getElementById('maintenanceOverlay').classList.remove('hidden');
-            document.getElementById('maintenanceStatusText').textContent = 'Enabled';
+            const overlay = document.getElementById('maintenanceOverlay');
+            if (overlay) overlay.classList.remove('hidden');
+            const statusText = document.getElementById('maintenanceStatusText');
+            if (statusText) statusText.textContent = 'Enabled';
             showNotify("Maintenance mode ENABLED", "warning");
         } else {
-            document.getElementById('maintenanceOverlay').classList.add('hidden');
-            document.getElementById('maintenanceStatusText').textContent = 'Disabled';
+            const overlay = document.getElementById('maintenanceOverlay');
+            if (overlay) overlay.classList.add('hidden');
+            const statusText = document.getElementById('maintenanceStatusText');
+            if (statusText) statusText.textContent = 'Disabled';
             showNotify("Maintenance mode DISABLED", "success");
         }
     } catch (e) {
+        console.error("Error toggling maintenance:", e);
         showNotify("Error toggling maintenance mode!", "error");
     }
 }
@@ -1308,6 +1430,7 @@ async function setTestMode(enabled) {
         updateTestModeIndicator();
         showNotify(`Test mode ${enabled ? 'ENABLED' : 'DISABLED'}`, enabled ? "warning" : "success");
     } catch (e) {
+        console.error("Error toggling test mode:", e);
         showNotify("Error toggling test mode!", "error");
     }
 }
@@ -1328,31 +1451,41 @@ async function loadRegisteredUsersCount() {
 }
 
 function loadSystemConfigUI() {
-    document.getElementById('colorApprove').value = systemConfig.embedColors.approve;
-    document.getElementById('colorReject').value = systemConfig.embedColors.reject;
-    document.getElementById('colorPending').value = systemConfig.embedColors.pending;
-    document.getElementById('colorInfo').value = systemConfig.embedColors.info;
-    document.getElementById('colorLeaderboard').value = systemConfig.embedColors.leaderboard;
-    document.getElementById('maxImagesPerRequest').value = systemConfig.limits.maxImagesPerRequest;
-    document.getElementById('loginMusicUrl').value = systemConfig.musicUrl;
-    document.getElementById('updateInterval').value = systemConfig.updateInterval;
-    document.getElementById('gpSubmitRoleId').value = GP_SUBMIT_ROLE;
+    const colorApprove = document.getElementById('colorApprove');
+    const colorReject = document.getElementById('colorReject');
+    const colorPending = document.getElementById('colorPending');
+    const colorInfo = document.getElementById('colorInfo');
+    const colorLeaderboard = document.getElementById('colorLeaderboard');
+    const maxImages = document.getElementById('maxImagesPerRequest');
+    const musicUrl = document.getElementById('loginMusicUrl');
+    const updateInterval = document.getElementById('updateInterval');
+    const gpSubmitRole = document.getElementById('gpSubmitRoleId');
+    
+    if (colorApprove) colorApprove.value = systemConfig.embedColors.approve;
+    if (colorReject) colorReject.value = systemConfig.embedColors.reject;
+    if (colorPending) colorPending.value = systemConfig.embedColors.pending;
+    if (colorInfo) colorInfo.value = systemConfig.embedColors.info;
+    if (colorLeaderboard) colorLeaderboard.value = systemConfig.embedColors.leaderboard;
+    if (maxImages) maxImages.value = systemConfig.limits.maxImagesPerRequest;
+    if (musicUrl) musicUrl.value = systemConfig.musicUrl;
+    if (updateInterval) updateInterval.value = systemConfig.updateInterval;
+    if (gpSubmitRole) gpSubmitRole.value = GP_SUBMIT_ROLE;
 }
 
 async function saveSystemConfig() {
     const newConfig = {
         embedColors: {
-            approve: document.getElementById('colorApprove').value,
-            reject: document.getElementById('colorReject').value,
-            pending: document.getElementById('colorPending').value,
-            info: document.getElementById('colorInfo').value,
-            leaderboard: document.getElementById('colorLeaderboard').value
+            approve: document.getElementById('colorApprove')?.value || '#48bb78',
+            reject: document.getElementById('colorReject')?.value || '#f56565',
+            pending: document.getElementById('colorPending')?.value || '#cd7f32',
+            info: document.getElementById('colorInfo')?.value || '#5865F2',
+            leaderboard: document.getElementById('colorLeaderboard')?.value || '#ffd700'
         },
         limits: {
-            maxImagesPerRequest: parseInt(document.getElementById('maxImagesPerRequest').value)
+            maxImagesPerRequest: parseInt(document.getElementById('maxImagesPerRequest')?.value || '3')
         },
-        musicUrl: document.getElementById('loginMusicUrl').value,
-        updateInterval: parseInt(document.getElementById('updateInterval').value)
+        musicUrl: document.getElementById('loginMusicUrl')?.value || systemConfig.musicUrl,
+        updateInterval: parseInt(document.getElementById('updateInterval')?.value || '60')
     };
     
     try {
@@ -1363,12 +1496,13 @@ async function saveSystemConfig() {
         systemConfig.updateInterval = newConfig.updateInterval;
         showNotify("System configuration saved!", "success");
     } catch (e) {
+        console.error("Error saving config:", e);
         showNotify("Error saving configuration!", "error");
     }
 }
 
 async function saveGpSubmitRole() {
-    const newRoleId = document.getElementById('gpSubmitRoleId').value.trim();
+    const newRoleId = document.getElementById('gpSubmitRoleId')?.value.trim();
     if (!newRoleId) {
         showNotify("Please enter a role ID!", "error");
         return;
@@ -1380,6 +1514,7 @@ async function saveGpSubmitRole() {
         showNotify(`GP Submit Role updated to ${newRoleId}!`, "success");
         updatePermissions();
     } catch (e) {
+        console.error("Error saving GP Submit Role:", e);
         showNotify("Error saving GP Submit Role!", "error");
     }
 }
@@ -1435,27 +1570,36 @@ window.editSavedMessage = async (id) => {
     
     currentEditingMessageId = id;
     
-    document.getElementById('messageName').value = msg.name || '';
-    document.getElementById('messageChannelId').value = msg.channelId || '';
-    document.getElementById('messageContent').value = msg.content || '';
-    document.getElementById('messageEmbedTitle').value = msg.embedTitle || '';
-    document.getElementById('messageEmbedDesc').value = msg.embedDesc || '';
-    if (msg.embedColor) document.getElementById('messageEmbedColor').value = msg.embedColor;
-    
+    const messageName = document.getElementById('messageName');
+    const messageChannelId = document.getElementById('messageChannelId');
+    const messageContent = document.getElementById('messageContent');
+    const messageEmbedTitle = document.getElementById('messageEmbedTitle');
+    const messageEmbedDesc = document.getElementById('messageEmbedDesc');
+    const messageEmbedColor = document.getElementById('messageEmbedColor');
     const saveBtn = document.getElementById('saveMessageBtn');
-    saveBtn.textContent = '✏️ Update Message';
-    saveBtn.style.background = '#ffd700';
+    
+    if (messageName) messageName.value = msg.name || '';
+    if (messageChannelId) messageChannelId.value = msg.channelId || '';
+    if (messageContent) messageContent.value = msg.content || '';
+    if (messageEmbedTitle) messageEmbedTitle.value = msg.embedTitle || '';
+    if (messageEmbedDesc) messageEmbedDesc.value = msg.embedDesc || '';
+    if (messageEmbedColor && msg.embedColor) messageEmbedColor.value = msg.embedColor;
+    
+    if (saveBtn) {
+        saveBtn.textContent = '✏️ Update Message';
+        saveBtn.style.background = '#ffd700';
+    }
     
     showNotify(`Editing "${msg.name}" - Click Update to save changes`, "success");
 };
 
 async function saveMessage() {
-    const name = document.getElementById('messageName').value.trim();
-    const channelId = document.getElementById('messageChannelId').value.trim();
-    const content = document.getElementById('messageContent').value;
-    const embedTitle = document.getElementById('messageEmbedTitle').value;
-    const embedDesc = document.getElementById('messageEmbedDesc').value;
-    const embedColor = document.getElementById('messageEmbedColor').value;
+    const name = document.getElementById('messageName')?.value.trim();
+    const channelId = document.getElementById('messageChannelId')?.value.trim();
+    const content = document.getElementById('messageContent')?.value;
+    const embedTitle = document.getElementById('messageEmbedTitle')?.value;
+    const embedDesc = document.getElementById('messageEmbedDesc')?.value;
+    const embedColor = document.getElementById('messageEmbedColor')?.value;
     
     if (!name) {
         showNotify("Please enter a message name!", "error");
@@ -1470,10 +1614,10 @@ async function saveMessage() {
     const messageData = {
         name: name,
         channelId: channelId,
-        content: content,
-        embedTitle: embedTitle,
-        embedDesc: embedDesc,
-        embedColor: embedColor,
+        content: content || '',
+        embedTitle: embedTitle || '',
+        embedDesc: embedDesc || '',
+        embedColor: embedColor || '#5865F2',
         updatedAt: Date.now(),
         updatedBy: currentUser?.id
     };
@@ -1490,23 +1634,34 @@ async function saveMessage() {
             currentEditingMessageId = null;
             
             const saveBtn = document.getElementById('saveMessageBtn');
-            saveBtn.textContent = '💾 Save Message';
-            saveBtn.style.background = '#48bb78';
+            if (saveBtn) {
+                saveBtn.textContent = '💾 Save Message';
+                saveBtn.style.background = '#48bb78';
+            }
         } else {
             const newRef = push(ref(db, 'saved_messages'));
             await set(newRef, { ...messageData, createdAt: Date.now(), createdBy: currentUser?.id });
             showNotify(`Message "${name}" saved successfully!`, "success");
         }
         
-        document.getElementById('messageName').value = '';
-        document.getElementById('messageChannelId').value = '';
-        document.getElementById('messageContent').value = '';
-        document.getElementById('messageEmbedTitle').value = '';
-        document.getElementById('messageEmbedDesc').value = '';
-        document.getElementById('messageEmbedColor').value = '#5865F2';
+        // Clear form
+        const messageName = document.getElementById('messageName');
+        const messageChannelId = document.getElementById('messageChannelId');
+        const messageContent = document.getElementById('messageContent');
+        const messageEmbedTitle = document.getElementById('messageEmbedTitle');
+        const messageEmbedDesc = document.getElementById('messageEmbedDesc');
+        const messageEmbedColor = document.getElementById('messageEmbedColor');
+        
+        if (messageName) messageName.value = '';
+        if (messageChannelId) messageChannelId.value = '';
+        if (messageContent) messageContent.value = '';
+        if (messageEmbedTitle) messageEmbedTitle.value = '';
+        if (messageEmbedDesc) messageEmbedDesc.value = '';
+        if (messageEmbedColor) messageEmbedColor.value = '#5865F2';
         
         loadSavedMessages();
     } catch (e) {
+        console.error("Error saving message:", e);
         showNotify("Error saving message!", "error");
     }
 }
@@ -1603,22 +1758,32 @@ window.deleteSavedMessage = async (id) => {
         showNotify("Message deleted!", "success");
         loadSavedMessages();
     } catch (e) {
+        console.error("Error deleting message:", e);
         showNotify("Error deleting message!", "error");
     }
 };
 
 function clearMessageForm() {
     currentEditingMessageId = null;
-    document.getElementById('messageName').value = '';
-    document.getElementById('messageChannelId').value = '';
-    document.getElementById('messageContent').value = '';
-    document.getElementById('messageEmbedTitle').value = '';
-    document.getElementById('messageEmbedDesc').value = '';
-    document.getElementById('messageEmbedColor').value = '#5865F2';
-    
+    const messageName = document.getElementById('messageName');
+    const messageChannelId = document.getElementById('messageChannelId');
+    const messageContent = document.getElementById('messageContent');
+    const messageEmbedTitle = document.getElementById('messageEmbedTitle');
+    const messageEmbedDesc = document.getElementById('messageEmbedDesc');
+    const messageEmbedColor = document.getElementById('messageEmbedColor');
     const saveBtn = document.getElementById('saveMessageBtn');
-    saveBtn.textContent = '💾 Save Message';
-    saveBtn.style.background = '#48bb78';
+    
+    if (messageName) messageName.value = '';
+    if (messageChannelId) messageChannelId.value = '';
+    if (messageContent) messageContent.value = '';
+    if (messageEmbedTitle) messageEmbedTitle.value = '';
+    if (messageEmbedDesc) messageEmbedDesc.value = '';
+    if (messageEmbedColor) messageEmbedColor.value = '#5865F2';
+    
+    if (saveBtn) {
+        saveBtn.textContent = '💾 Save Message';
+        saveBtn.style.background = '#48bb78';
+    }
     
     showNotify("Form cleared!", "success");
 }
@@ -1634,127 +1799,160 @@ function escapeHtml(text) {
 // 12. EVENT LISTENERS & INITIALIZATION
 // ==========================================
 
-document.getElementById('discordLoginBtn')?.addEventListener('click', () => {
-    window.location.href = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=identify%20guilds&state=discord`;
-});
-
-document.getElementById('robloxLoginBtn')?.addEventListener('click', () => {
-    window.location.href = `https://apis.roblox.com/oauth/v1/authorize?client_id=${ROBLOX_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=openid%20profile&state=roblox`;
-});
-
-document.getElementById('dcLogoutBtn')?.addEventListener('click', () => {
-    sessionStorage.removeItem('pn_session');
-    window.location.href = REDIRECT_URI;
-});
-
-document.getElementById('rbxLogoutBtn')?.addEventListener('click', async () => {
-    if (!confirm("Disconnect Roblox?")) return;
-    try {
-        const dbKey = getSafeDbKey(currentUser.username);
-        await update(ref(db, `users/${dbKey}`), {
-            robloxId: null,
-            robloxName: null,
-            robloxUsername: null
-        });
-        window.location.reload();
-    } catch (e) {
-        showNotify("Error!", "error");
-    }
-});
-
-document.getElementById('leaderboardSearch')?.addEventListener('input', (e) => {
-    renderLeaderboard(e.target.value);
-});
-
-document.getElementById('proofImage')?.addEventListener('change', (e) => {
-    const newFiles = Array.from(e.target.files);
-    const maxImages = systemConfig.limits.maxImagesPerRequest;
-    if (selectedFiles.length + newFiles.length > maxImages) {
-        alert(`Only ${maxImages} screenshot(s) are allowed!`);
-        return;
-    }
-    selectedFiles = selectedFiles.concat(newFiles);
-    updateImagePreviews();
-    e.target.value = '';
-});
-
-document.getElementById('addGPBtn')?.addEventListener('click', submitGPRequest);
-
-document.getElementById('tabBtnSpenden')?.addEventListener('click', () => switchTab('Spenden'));
-document.getElementById('tabBtnLeaderboard')?.addEventListener('click', () => switchTab('Leaderboard'));
-document.getElementById('tabBtnProfile')?.addEventListener('click', () => switchTab('Profile'));
-document.getElementById('tabBtnAdmin')?.addEventListener('click', () => {
-    if (hasAdminPermission()) {
-        switchTab('Admin');
-        loadAdminData();
-    } else {
-        showNotify("You don't have permission to access Admin Panel!", "error");
-    }
-});
-document.getElementById('tabBtnOwner')?.addEventListener('click', () => {
-    if (hasOwnerPermission()) {
-        switchTab('Owner');
-        loadAdminRolesList();
-        loadChannelConfigUI();
-        loadKickLogs();
-        loadSavedMessages();
-        loadSystemConfigUI();
-        loadRegisteredUsersCount();
-    } else {
-        showNotify("You don't have permission to access Owner Panel!", "error");
-    }
-});
-
-document.getElementById('addRoleBtn')?.addEventListener('click', window.addAdminRole);
-document.getElementById('saveChannelConfigBtn')?.addEventListener('click', saveChannelConfig);
-document.getElementById('saveSystemConfigBtn')?.addEventListener('click', saveSystemConfig);
-document.getElementById('saveGpSubmitRoleBtn')?.addEventListener('click', saveGpSubmitRole);
-document.getElementById('refreshUsersBtn')?.addEventListener('click', loadRegisteredUsersCount);
-document.getElementById('enableTestModeBtn')?.addEventListener('click', () => setTestMode(true));
-document.getElementById('disableTestModeBtn')?.addEventListener('click', () => setTestMode(false));
-document.getElementById('saveMessageBtn')?.addEventListener('click', saveMessage);
-document.getElementById('sendMessageBtn')?.addEventListener('click', () => {
-    if (currentEditingMessageId) {
-        sendSavedMessage(currentEditingMessageId);
-    } else {
-        const name = document.getElementById('messageName').value.trim();
-        if (!name) {
-            showNotify("Please save the message first or load an existing one!", "error");
+function initEventListeners() {
+    const discordLoginBtn = document.getElementById('discordLoginBtn');
+    const robloxLoginBtn = document.getElementById('robloxLoginBtn');
+    const dcLogoutBtn = document.getElementById('dcLogoutBtn');
+    const rbxLogoutBtn = document.getElementById('rbxLogoutBtn');
+    const leaderboardSearch = document.getElementById('leaderboardSearch');
+    const proofImage = document.getElementById('proofImage');
+    const addGPBtn = document.getElementById('addGPBtn');
+    const tabBtnSpenden = document.getElementById('tabBtnSpenden');
+    const tabBtnLeaderboard = document.getElementById('tabBtnLeaderboard');
+    const tabBtnProfile = document.getElementById('tabBtnProfile');
+    const tabBtnAdmin = document.getElementById('tabBtnAdmin');
+    const tabBtnOwner = document.getElementById('tabBtnOwner');
+    const addRoleBtn = document.getElementById('addRoleBtn');
+    const saveChannelConfigBtn = document.getElementById('saveChannelConfigBtn');
+    const saveSystemConfigBtn = document.getElementById('saveSystemConfigBtn');
+    const saveGpSubmitRoleBtn = document.getElementById('saveGpSubmitRoleBtn');
+    const refreshUsersBtn = document.getElementById('refreshUsersBtn');
+    const enableTestModeBtn = document.getElementById('enableTestModeBtn');
+    const disableTestModeBtn = document.getElementById('disableTestModeBtn');
+    const saveMessageBtn = document.getElementById('saveMessageBtn');
+    const sendMessageBtn = document.getElementById('sendMessageBtn');
+    const clearMessageFormBtn = document.getElementById('clearMessageFormBtn');
+    const enableMaintenanceBtn = document.getElementById('enableMaintenanceBtn');
+    const disableMaintenanceBtn = document.getElementById('disableMaintenanceBtn');
+    
+    if (discordLoginBtn) discordLoginBtn.addEventListener('click', () => {
+        window.location.href = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=identify%20guilds&state=discord`;
+    });
+    
+    if (robloxLoginBtn) robloxLoginBtn.addEventListener('click', () => {
+        window.location.href = `https://apis.roblox.com/oauth/v1/authorize?client_id=${ROBLOX_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=openid%20profile&state=roblox`;
+    });
+    
+    if (dcLogoutBtn) dcLogoutBtn.addEventListener('click', () => {
+        sessionStorage.removeItem('pn_session');
+        window.location.href = REDIRECT_URI;
+    });
+    
+    if (rbxLogoutBtn) rbxLogoutBtn.addEventListener('click', async () => {
+        if (!confirm("Disconnect Roblox?")) return;
+        try {
+            const dbKey = getSafeDbKey(currentUser.username);
+            await update(ref(db, `users/${dbKey}`), {
+                robloxId: null,
+                robloxName: null,
+                robloxUsername: null
+            });
+            window.location.reload();
+        } catch (e) {
+            showNotify("Error!", "error");
+        }
+    });
+    
+    if (leaderboardSearch) leaderboardSearch.addEventListener('input', (e) => {
+        renderLeaderboard(e.target.value);
+    });
+    
+    if (proofImage) proofImage.addEventListener('change', (e) => {
+        const newFiles = Array.from(e.target.files);
+        const maxImages = systemConfig.limits.maxImagesPerRequest;
+        if (selectedFiles.length + newFiles.length > maxImages) {
+            showNotify(`Only ${maxImages} screenshot(s) are allowed!`, "warning");
             return;
         }
-        saveMessage();
-    }
-});
-document.getElementById('clearMessageFormBtn')?.addEventListener('click', clearMessageForm);
-document.getElementById('enableMaintenanceBtn')?.addEventListener('click', () => setMaintenanceMode(true));
-document.getElementById('disableMaintenanceBtn')?.addEventListener('click', () => setMaintenanceMode(false));
+        selectedFiles = selectedFiles.concat(newFiles);
+        updateImagePreviews();
+        e.target.value = '';
+    });
+    
+    if (addGPBtn) addGPBtn.addEventListener('click', submitGPRequest);
+    if (tabBtnSpenden) tabBtnSpenden.addEventListener('click', () => switchTab('Spenden'));
+    if (tabBtnLeaderboard) tabBtnLeaderboard.addEventListener('click', () => switchTab('Leaderboard'));
+    if (tabBtnProfile) tabBtnProfile.addEventListener('click', () => switchTab('Profile'));
+    if (tabBtnAdmin) tabBtnAdmin.addEventListener('click', () => {
+        if (hasAdminPermission()) {
+            switchTab('Admin');
+            loadAdminData();
+        } else {
+            showNotify("You don't have permission to access Admin Panel!", "error");
+        }
+    });
+    if (tabBtnOwner) tabBtnOwner.addEventListener('click', () => {
+        if (hasOwnerPermission()) {
+            switchTab('Owner');
+            loadAdminRolesList();
+            loadChannelConfigUI();
+            loadKickLogs();
+            loadSavedMessages();
+            loadSystemConfigUI();
+            loadRegisteredUsersCount();
+        } else {
+            showNotify("You don't have permission to access Owner Panel!", "error");
+        }
+    });
+    
+    if (addRoleBtn) addRoleBtn.addEventListener('click', window.addAdminRole);
+    if (saveChannelConfigBtn) saveChannelConfigBtn.addEventListener('click', saveChannelConfig);
+    if (saveSystemConfigBtn) saveSystemConfigBtn.addEventListener('click', saveSystemConfig);
+    if (saveGpSubmitRoleBtn) saveGpSubmitRoleBtn.addEventListener('click', saveGpSubmitRole);
+    if (refreshUsersBtn) refreshUsersBtn.addEventListener('click', loadRegisteredUsersCount);
+    if (enableTestModeBtn) enableTestModeBtn.addEventListener('click', () => setTestMode(true));
+    if (disableTestModeBtn) disableTestModeBtn.addEventListener('click', () => setTestMode(false));
+    if (saveMessageBtn) saveMessageBtn.addEventListener('click', saveMessage);
+    if (sendMessageBtn) sendMessageBtn.addEventListener('click', () => {
+        if (currentEditingMessageId) {
+            sendSavedMessage(currentEditingMessageId);
+        } else {
+            const name = document.getElementById('messageName')?.value.trim();
+            if (!name) {
+                showNotify("Please save the message first or load an existing one!", "error");
+                return;
+            }
+            saveMessage();
+        }
+    });
+    if (clearMessageFormBtn) clearMessageFormBtn.addEventListener('click', clearMessageForm);
+    if (enableMaintenanceBtn) enableMaintenanceBtn.addEventListener('click', () => setMaintenanceMode(true));
+    if (disableMaintenanceBtn) disableMaintenanceBtn.addEventListener('click', () => setMaintenanceMode(false));
+}
 
 // ==========================================
 // 13. APP START (AUTH CHECK)
 // ==========================================
 
-const urlParams = new URLSearchParams(window.location.search);
-const code = urlParams.get('code');
-const state = urlParams.get('state');
+function init() {
+    initEventListeners();
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+    const state = urlParams.get('state');
 
-if (code) {
-    if (state === 'discord') {
-        handleDiscordLogin(code);
-    } else if (state === 'roblox') {
-        handleRobloxLogin(code);
-    }
-} else {
-    const saved = sessionStorage.getItem('pn_session');
-    if (saved) {
-        try {
-            currentUser = JSON.parse(saved);
-            if (!currentUser.id) throw new Error("Broken session");
-            checkRobloxLink();
-        } catch (e) {
-            sessionStorage.removeItem('pn_session');
-            playLoginMusic();
+    if (code) {
+        if (state === 'discord') {
+            handleDiscordLogin(code);
+        } else if (state === 'roblox') {
+            handleRobloxLogin(code);
         }
     } else {
-        playLoginMusic();
+        const saved = sessionStorage.getItem('pn_session');
+        if (saved) {
+            try {
+                currentUser = JSON.parse(saved);
+                if (!currentUser.id) throw new Error("Broken session");
+                checkRobloxLink();
+            } catch (e) {
+                sessionStorage.removeItem('pn_session');
+                playLoginMusic();
+            }
+        } else {
+            playLoginMusic();
+        }
     }
 }
+
+// Start the app
+init();
