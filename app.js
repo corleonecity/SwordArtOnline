@@ -214,24 +214,23 @@ async function renderDynamicRoles() {
         const roleDiv = document.createElement('div');
         roleDiv.className = 'role-item';
         const colorHex = role.color ? `#${role.color.toString(16).padStart(6,'0')}` : '#ffd700';
+        
         roleDiv.innerHTML = `
             <span class="role-name" style="color: ${colorHex};" title="${escapeHtml(role.name)}">${escapeHtml(role.name)}</span>
-            <button class="role-open-btn" data-role-id="${role.id}" data-role-name="${escapeHtml(role.name)}">Open</button>
+            <button class="role-open-btn">Open</button>
         `;
-        container.appendChild(roleDiv);
-    }
-    
-    // Direkte Event-Listener für alle Open-Buttons
-    document.querySelectorAll('.role-open-btn').forEach(btn => {
-        btn.onclick = function(e) {
+        
+        // Zuverlässige Zuweisung des Event Listeners direkt am erstellten Button
+        const btn = roleDiv.querySelector('.role-open-btn');
+        btn.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            const roleId = this.getAttribute('data-role-id');
-            const roleName = this.getAttribute('data-role-name');
-            console.log("Button clicked:", roleId, roleName);
-            openPermissionModal(roleId, roleName);
-        };
-    });
+            console.log("Button clicked:", role.id, role.name);
+            openPermissionModal(role.id, role.name);
+        });
+
+        container.appendChild(roleDiv);
+    }
 }
 
 // Variable für die aktuell bearbeitete Rolle
@@ -244,6 +243,7 @@ function openPermissionModal(roleId, roleName) {
     currentRoleId = roleId;
     const modal = document.getElementById('rolePermissionModal');
     const title = document.getElementById('modalRoleTitle');
+    const listContainer = document.getElementById('modalPermissionsList');
     
     if (!modal) {
         console.error("Modal element not found!");
@@ -251,7 +251,10 @@ function openPermissionModal(roleId, roleName) {
         return;
     }
     
-    title.textContent = `Permissions for ${roleName}`;
+    // Sicherstellen, dass das Title-Element existiert, um JS-Abstürze zu verhindern
+    if (title) {
+        title.textContent = `Permissions for ${roleName}`;
+    }
     
     const permissions = rolePermissions[roleId] || {};
     
@@ -292,7 +295,9 @@ function openPermissionModal(roleId, roleName) {
         html += `</div>`;
     }
     
-    document.getElementById('modalPermissionsList').innerHTML = html;
+    if (listContainer) {
+        listContainer.innerHTML = html;
+    }
     modal.classList.remove('hidden');
     console.log("Modal opened, hidden class removed");
 }
@@ -846,10 +851,10 @@ function loadAdminData() {
                     <div style="display: flex; flex-direction: column; gap: 8px;">
                         <input type="text" id="comment_${req.id}" placeholder="Admin comment (optional)" style="padding: 6px; font-size: 12px;">
                         <div style="display: flex; gap: 5px;">
-                            <button class="btn-small btn-approve" onclick="handleAdminApprove('${req.id}', '${req.userId}', ${req.amount}, '${req.dbKey || req.discordUsername}', '${req.robloxId || ''}', '${escapeHtml(req.discordName)}', '${escapeHtml(req.discordUsername)}', '${escapeHtml(req.robloxName)}', '${escapeHtml(req.robloxUsername)}')">
+                            <button class="btn-small btn-approve" onclick="handleAdminApprove('${req.id}', '${req.userId}', ${req.amount}, '${escapeJsString(req.dbKey || req.discordUsername)}', '${escapeJsString(req.robloxId || '')}', '${escapeJsString(req.discordName)}', '${escapeJsString(req.discordUsername)}', '${escapeJsString(req.robloxName)}', '${escapeJsString(req.robloxUsername)}')">
                                 <i class="fas fa-check"></i> Approve
                             </button>
-                            <button class="btn-small btn-deny" onclick="handleAdminReject('${req.id}', '${req.userId}', ${req.amount}, '${req.dbKey || req.discordUsername}', '${req.robloxId || ''}', '${escapeHtml(req.discordName)}', '${escapeHtml(req.discordUsername)}', '${escapeHtml(req.robloxName)}', '${escapeHtml(req.robloxUsername)}')">
+                            <button class="btn-small btn-deny" onclick="handleAdminReject('${req.id}', '${req.userId}', ${req.amount}, '${escapeJsString(req.dbKey || req.discordUsername)}', '${escapeJsString(req.robloxId || '')}', '${escapeJsString(req.discordName)}', '${escapeJsString(req.discordUsername)}', '${escapeJsString(req.robloxName)}', '${escapeJsString(req.robloxUsername)}')">
                                 <i class="fas fa-times"></i> Reject
                             </button>
                         </div>
@@ -1198,11 +1203,24 @@ function clearMessageForm() {
     showNotify("Form cleared!", "success");
 }
 
+// Bessere HTML-Escaping-Funktion, die auch Anführungszeichen absichert
 function escapeHtml(text) {
     if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+    return text.toString()
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+// Zusätzlich: Eine JS-Escaping-Funktion, um Syntaxfehler bei Admin-Buttons (wie in loadAdminData) zu verhindern
+function escapeJsString(text) {
+    if (!text) return '';
+    return text.toString()
+        .replace(/\\/g, '\\\\')
+        .replace(/'/g, "\\'")
+        .replace(/"/g, '\\"');
 }
 
 // ==========================================
