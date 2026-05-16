@@ -159,61 +159,38 @@
             </div>
 
             <div id="content-owner" class="hidden">
-                <!-- Role & Channel Management Section (erweitert) -->
+                <!-- NEUER ROLE MANAGEMENT BEREICH (ersetzt Add Admin Role, Current Roles, GP Submit Role) -->
                 <div class="system-card" style="border-color: #ffd700; margin-bottom: 20px;">
-                    <h3 style="color: #ffd700;"><i class="fas fa-user-shield"></i> Role & Channel Management</h3>
-                    <p style="color:#888; margin-bottom: 15px; font-size:14px;">Manage admin roles, GP submit role, and server channels.</p>
+                    <h3 style="color: #ffd700;"><i class="fas fa-user-shield"></i> Role Management</h3>
+                    <p style="color:#888; margin-bottom: 15px; font-size:14px;">Manage which roles can access which parts of the panel.</p>
                     
-                    <!-- Admin / Owner Roles -->
-                    <div style="background: #0f0f0f; border-radius: 12px; padding: 20px; margin-bottom: 25px;">
-                        <h4 style="margin-bottom: 15px;">➕ Add Admin Role</h4>
-                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                            <input type="text" id="newRoleId" placeholder="Discord Role ID" style="flex: 2;">
-                            <select id="rolePermissionLevel" style="flex: 1;">
-                                <option value="admin">Admin</option>
-                                <option value="owner">Owner</option>
-                            </select>
-                            <button id="addRoleBtn" class="btn-primary" style="background: #48bb78; color: white; width: auto;">Add Role</button>
-                        </div>
-                    </div>
-
-                    <div style="background: #0f0f0f; border-radius: 12px; padding: 20px; margin-bottom: 25px;">
-                        <h4 style="margin-bottom: 15px;">📋 Current Roles</h4>
-                        <div id="adminRolesList" class="table-responsive">
-                            <p style="color: #666;">Loading roles...</p>
-                        </div>
-                    </div>
-
-                    <!-- GP Submit Role -->
-                    <div style="background: #0f0f0f; border-radius: 12px; padding: 20px; margin-bottom: 25px;">
-                        <h4 style="margin-bottom: 15px;">🎮 GP Submit Role (User permission)</h4>
-                        <div><label>GP Submit Role ID:</label><input type="text" id="gpSubmitRoleId" value="" style="width: 100%;" placeholder="Role ID required to submit GP"></div>
-                        <p style="color: #888; font-size: 12px; margin-top: 8px;">Users need this Discord role to submit GP donation requests.</p>
-                        <button id="saveGpSubmitRoleBtn" class="btn-primary" style="background: #ffd700; color: black; margin-top: 10px; width: auto;">Save GP Submit Role</button>
-                    </div>
-
-                    <!-- Channel Configuration (inkl. Ticket-Kanäle) -->
-                    <div style="background: #0f0f0f; border-radius: 12px; padding: 20px; margin-bottom: 25px;">
-                        <h4 style="margin-bottom: 15px;">👥 Manage Server Channels</h4>
-                        <p style="color:#888; margin-bottom: 15px;">Configure which channels the bot uses for notifications and tickets.</p>
-                        <div id="channelConfigList">
-                            <p style="color: #666;">Loading channel configuration...</p>
-                        </div>
-                        <button id="saveChannelConfigBtn" class="btn-primary" style="background: #5865F2; margin-top: 15px;">Save Channel Configuration</button>
-                    </div>
-
-                    <!-- Role Configuration (Guild & Ticket Rollen) -->
-                    <div style="background: #0f0f0f; border-radius: 12px; padding: 20px;">
-                        <h4 style="margin-bottom: 15px;">🎭 Role Configuration (Guild & Tickets)</h4>
-                        <p style="color:#888; margin-bottom: 15px;">Set role IDs for member management and ticket system.</p>
-                        <div id="roleConfigList">
-                            <p style="color: #666;">Loading role configuration...</p>
-                        </div>
-                        <button id="saveRoleConfigBtn" class="btn-primary" style="background: #5865F2; margin-top: 15px;">Save Role Configuration</button>
+                    <!-- Container für dynamische Rollenliste -->
+                    <div id="dynamicRolesContainer" style="display: flex; flex-direction: column; gap: 12px;">
+                        <div style="text-align: center; color: #666;">Loading roles...</div>
                     </div>
                 </div>
 
-                <!-- System Configuration Section (unverändert) -->
+                <!-- Channel Configuration (bleibt unverändert) -->
+                <div class="system-card" style="border-color: #ffd700; margin-bottom: 20px;">
+                    <h3 style="color: #ffd700;"><i class="fas fa-hashtag"></i> Channel Configuration</h3>
+                    <p style="color:#888; margin-bottom: 15px; font-size:14px;">Configure which channels the bot uses for notifications and tickets.</p>
+                    <div id="channelConfigList">
+                        <p style="color: #666;">Loading channel configuration...</p>
+                    </div>
+                    <button id="saveChannelConfigBtn" class="btn-primary" style="background: #5865F2; margin-top: 15px;">Save Channel Configuration</button>
+                </div>
+
+                <!-- Role Configuration (Guild & Ticket Rollen) - bleibt auch -->
+                <div class="system-card" style="border-color: #ffd700; margin-bottom: 20px;">
+                    <h3 style="color: #ffd700;"><i class="fas fa-tags"></i> Role Configuration (Guild & Tickets)</h3>
+                    <p style="color:#888; margin-bottom: 15px; font-size:14px;">Set role IDs for member management and ticket system.</p>
+                    <div id="roleConfigList">
+                        <p style="color: #666;">Loading role configuration...</p>
+                    </div>
+                    <button id="saveRoleConfigBtn" class="btn-primary" style="background: #5865F2; margin-top: 15px;">Save Role Configuration</button>
+                </div>
+
+                <!-- System Configuration Section -->
                 <div class="system-card" style="border-color: #ffd700; margin-bottom: 20px;">
                     <h3 style="color: #ffd700;"><i class="fas fa-sliders-h"></i> System Configuration</h3>
                     <p style="color:#888; margin-bottom: 15px; font-size:14px;">Configure embed colors, music, and update interval.</p>
@@ -337,6 +314,21 @@
     </div>
 
     <div id="notification" class="notification"></div>
+
+    <!-- Modal für Role Permissions -->
+    <div id="rolePermissionModal" class="modal hidden">
+        <div class="modal-content">
+            <span class="modal-close">&times;</span>
+            <h3 id="modalRoleTitle">Role Permissions</h3>
+            <div id="modalPermissionsList">
+                <!-- Dynamische Checkboxen/Tags werden hier eingefügt -->
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+                <button id="modalSaveBtn" class="btn-primary" style="background: #48bb78;">Save</button>
+                <button id="modalCancelBtn" class="btn-primary" style="background: #555;">Cancel</button>
+            </div>
+        </div>
+    </div>
 
     <script type="module" src="app.js"></script>
 </body>
