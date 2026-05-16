@@ -162,12 +162,10 @@ function updateTestModeIndicator() {
 // 3. HELPER FUNCTIONS
 // ==========================================
 
-function getSafeDbKey(username) {
-    return username ? username.replace(/[.#$\[\]]/g, '_') : 'unknown_user';
-}
-
-function getSafeDbKeyById(userId) {
-    return userId ? `user_${userId}` : 'unknown_user';
+// Wichtig: Benutzer werden mit Discord-Username als Key gespeichert!
+function getSafeDbKey(discordUsername) {
+    if (!discordUsername) return 'unknown_user';
+    return discordUsername.toLowerCase().replace(/[.#$\[\]]/g, '_');
 }
 
 function playLoginMusic() {
@@ -339,20 +337,19 @@ async function fetchRoleName(roleId) {
 }
 
 // ==========================================
-// 3.5 MANUAL USER REGISTRATION (NEW)
+// 3.5 MANUAL USER REGISTRATION
 // ==========================================
 
-async function checkExistingUserByDiscordId(discordId) {
+async function checkExistingUserByDiscordUsername(discordUsername) {
+    if (!discordUsername) return { exists: false };
+    
     try {
-        const usersRef = ref(db, 'users');
-        const snap = await get(usersRef);
+        const dbKey = getSafeDbKey(discordUsername);
+        const userRef = ref(db, `users/${dbKey}`);
+        const snap = await get(userRef);
+        
         if (snap.exists()) {
-            const users = snap.val();
-            for (const [key, user] of Object.entries(users)) {
-                if (user.id === discordId) {
-                    return { exists: true, userKey: key, userData: user };
-                }
-            }
+            return { exists: true, userKey: dbKey, userData: snap.val() };
         }
         return { exists: false };
     } catch (e) {
@@ -400,8 +397,7 @@ async function manualRegisterUser() {
     resultDiv.innerHTML = '<span style="color: #ffd700;"><i class="fas fa-spinner fa-spin"></i> Saving user...</span>';
     
     try {
-        const existing = await checkExistingUserByDiscordId(discordId);
-        const dbKey = getSafeDbKeyById(discordId);
+        const dbKey = getSafeDbKey(discordUsername);
         
         const userData = {
             id: discordId,
@@ -417,20 +413,22 @@ async function manualRegisterUser() {
             registeredBy: currentUser?.id
         };
         
+        const existing = await checkExistingUserByDiscordUsername(discordUsername);
+        
         if (existing.exists) {
-            await update(ref(db, `users/${existing.userKey}`), {
+            await update(ref(db, `users/${dbKey}`), {
                 ...userData,
                 updatedAt: Date.now(),
                 updatedBy: currentUser?.id
             });
-            resultDiv.innerHTML = `<span style="color: #48bb78;">✅ User UPDATED successfully! Discord ID: ${discordId}</span>`;
+            resultDiv.innerHTML = `<span style="color: #48bb78;">✅ User UPDATED successfully! Discord: @${discordUsername}</span>`;
             showNotify(`User ${discordUsername} has been updated!`, "success");
         } else {
             await set(ref(db, `users/${dbKey}`), {
                 ...userData,
                 createdAt: Date.now()
             });
-            resultDiv.innerHTML = `<span style="color: #48bb78;">✅ User CREATED successfully! Discord ID: ${discordId}</span>`;
+            resultDiv.innerHTML = `<span style="color: #48bb78;">✅ User CREATED successfully! Discord: @${discordUsername}</span>`;
             showNotify(`User ${discordUsername} has been registered manually!`, "success");
         }
         
@@ -443,18 +441,18 @@ async function manualRegisterUser() {
 }
 
 async function manualCheckUser() {
-    const discordId = document.getElementById('manualDiscordId')?.value.trim();
+    const discordUsername = document.getElementById('manualDiscordUsername')?.value.trim();
     const resultDiv = document.getElementById('manualRegisterResult');
     
-    if (!discordId) {
-        resultDiv.innerHTML = '<span style="color: #f56565;">❌ Please enter a Discord User ID first!</span>';
+    if (!discordUsername) {
+        resultDiv.innerHTML = '<span style="color: #f56565;">❌ Please enter a Discord Username first!</span>';
         return;
     }
     
     resultDiv.innerHTML = '<span style="color: #ffd700;"><i class="fas fa-spinner fa-spin"></i> Checking...</span>';
     
     try {
-        const existing = await checkExistingUserByDiscordId(discordId);
+        const existing = await checkExistingUserByDiscordUsername(discordUsername);
         
         if (existing.exists) {
             const user = existing.userData;
@@ -701,7 +699,7 @@ async function sendGPRequestToDiscord(requestData, images) {
 }
 
 // ==========================================
-// 5. DISCORD & ROBLOX AUTHENTIFICATION (VERBESSERT mit Skip)
+// 5. DISCORD & ROBLOX AUTHENTIFICATION (mit automatischer Erkennung)
 // ==========================================
 
 async function doLiveCheck() {
@@ -735,7 +733,7 @@ function startLiveMemberCheck() {
 }
 
 async function sendLoginWebhook(userData) {
-    const dbKey = getSafeDbKeyById(userData.userId);
+    const dbKey = getSafeDbKey(userData.discordUsername);
     const userRef = ref(db, `users/${dbKey}`);
     const snap = await get(userRef);
     
@@ -771,16 +769,15 @@ async function handleDiscordLogin(code) {
             sessionStorage.setItem('pn_session', JSON.stringify(currentUser));
             window.history.replaceState({}, '', REDIRECT_URI);
             
-            // Check if user already has Roblox data in database (manually registered)
-            const dbKey = getSafeDbKeyById(currentUser.id);
+            // AUTOMATISCH PRÜFEN OB USER BEREITS IN DB EXISTIERT
+            const dbKey = getSafeDbKey(currentUser.username);
             const userSnap = await get(ref(db, `users/${dbKey}`));
             
             if (userSnap.exists() && userSnap.val().robloxId && userSnap.val().robloxId !== '1') {
-                // User already has Roblox data - skip Roblox linking!
-                console.log("User has existing Roblox data, skipping Roblox link");
+                // User existiert bereits in DB -> Roblox überspringen!
+                console.log("User exists in DB, skipping Roblox link");
                 const userData = userSnap.val();
                 
-                // Update any missing Discord info
                 await update(ref(db, `users/${dbKey}`), {
                     discordName: currentUser.global_name || currentUser.username,
                     discordUsername: currentUser.username,
@@ -791,9 +788,9 @@ async function handleDiscordLogin(code) {
                 await fetchUserRoles(currentUser.id);
                 showDashboard();
                 startLiveMemberCheck();
-                showNotify(`Welcome back ${currentUser.global_name || currentUser.username}! Roblox account already linked.`, "success");
+                showNotify(`Welcome back ${currentUser.global_name || currentUser.username}!`, "success");
             } else {
-                // New user - need Roblox linking
+                // Neuer User -> Roblox Linking nötig
                 await checkRobloxLink();
             }
         } else {
@@ -804,36 +801,6 @@ async function handleDiscordLogin(code) {
         showNotify("Login Error! Please try again.", "error");
     } finally {
         showLoading(false, 'discordLoginBtn');
-    }
-}
-
-async function skipRobloxLinking() {
-    if (!currentUser) return;
-    
-    showLoading(true, 'skipRobloxBtn');
-    
-    try {
-        const dbKey = getSafeDbKeyById(currentUser.id);
-        const userSnap = await get(ref(db, `users/${dbKey}`));
-        
-        if (userSnap.exists() && userSnap.val().robloxId && userSnap.val().robloxId !== '1') {
-            // User already has data in database
-            const userData = userSnap.val();
-            await updateDiscordNickname(currentUser.id, userData.robloxName, userData.robloxUsername);
-            await fetchUserRoles(currentUser.id);
-            showDashboard();
-            startLiveMemberCheck();
-            showNotify("Roblox linking skipped! Using existing database entry.", "success");
-        } else if (userSnap.exists() && (!userSnap.val().robloxId || userSnap.val().robloxId === '1')) {
-            showNotify("No Roblox data found in database. Please link your Roblox account or ask an owner to add you manually.", "error");
-        } else {
-            showNotify("No user data found. Please link your Roblox account first.", "error");
-        }
-    } catch (e) {
-        console.error("Skip Roblox error:", e);
-        showNotify("Error: " + e.message, "error");
-    } finally {
-        showLoading(false, 'skipRobloxBtn');
     }
 }
 
@@ -871,7 +838,7 @@ async function handleRobloxLogin(code) {
             const rId = data.robloxUser.sub;
             const dDisplayName = currentUser.global_name || currentUser.username || "Unknown";
             
-            const dbKey = getSafeDbKeyById(currentUser.id);
+            const dbKey = getSafeDbKey(currentUser.username);
             const userRef = ref(db, `users/${dbKey}`);
             const snap = await get(userRef);
             let currentGP = snap.exists() && snap.val().totalGP ? snap.val().totalGP : 0;
@@ -928,7 +895,7 @@ async function checkRobloxLink() {
         await loadSystemConfig();
         await loadTestMode();
         
-        const dbKey = getSafeDbKeyById(currentUser.id);
+        const dbKey = getSafeDbKey(currentUser.username);
         const snap = await get(ref(db, `users/${dbKey}`));
         const loginPage = document.getElementById('loginPage');
         if (loginPage) loginPage.classList.add('hidden');
@@ -959,7 +926,7 @@ async function checkRobloxLink() {
 }
 
 // ==========================================
-// 6. DASHBOARD & UI (VERBESSERT)
+// 6. DASHBOARD & UI
 // ==========================================
 
 function showDashboard() {
@@ -1168,7 +1135,7 @@ async function submitGPRequest() {
     }
 
     try {
-        const dbKey = getSafeDbKeyById(currentUser.id);
+        const dbKey = getSafeDbKey(currentUser.username);
         const userRef = ref(db, `users/${dbKey}`);
         const snap = await get(userRef);
         const userData = snap.val() || {};
@@ -1341,7 +1308,7 @@ window.handleAdminAction = async (reqId, userId, amount, action, passedDbKey, ro
             processedByName: currentUser.global_name || currentUser.username
         });
 
-        const dbKey = getSafeDbKeyById(userId);
+        const dbKey = getSafeDbKey(discordUsername);
         let newTotal = 0;
         const userRef = ref(db, `users/${dbKey}`);
         const snap = await get(userRef);
@@ -2008,7 +1975,6 @@ function escapeHtml(text) {
 function initEventListeners() {
     const discordLoginBtn = document.getElementById('discordLoginBtn');
     const robloxLoginBtn = document.getElementById('robloxLoginBtn');
-    const skipRobloxBtn = document.getElementById('skipRobloxBtn');
     const dcLogoutBtn = document.getElementById('dcLogoutBtn');
     const rbxLogoutBtn = document.getElementById('rbxLogoutBtn');
     const leaderboardSearch = document.getElementById('leaderboardSearch');
@@ -2045,8 +2011,6 @@ function initEventListeners() {
         window.location.href = `https://apis.roblox.com/oauth/v1/authorize?client_id=${ROBLOX_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=openid%20profile&state=roblox`;
     });
     
-    if (skipRobloxBtn) skipRobloxBtn.addEventListener('click', skipRobloxLinking);
-    
     if (dcLogoutBtn) dcLogoutBtn.addEventListener('click', () => {
         sessionStorage.removeItem('pn_session');
         window.location.href = REDIRECT_URI;
@@ -2055,7 +2019,7 @@ function initEventListeners() {
     if (rbxLogoutBtn) rbxLogoutBtn.addEventListener('click', async () => {
         if (!confirm("Disconnect Roblox?")) return;
         try {
-            const dbKey = getSafeDbKeyById(currentUser.id);
+            const dbKey = getSafeDbKey(currentUser.username);
             await update(ref(db, `users/${dbKey}`), {
                 robloxId: null,
                 robloxName: null,
