@@ -159,18 +159,18 @@
             </div>
 
             <div id="content-owner" class="hidden">
-                <!-- NEUER ROLE MANAGEMENT BEREICH (ersetzt Add Admin Role, Current Roles, GP Submit Role) -->
+                <!-- NEUER ROLE MANAGEMENT BEREICH -->
                 <div class="system-card" style="border-color: #ffd700; margin-bottom: 20px;">
                     <h3 style="color: #ffd700;"><i class="fas fa-user-shield"></i> Role Management</h3>
                     <p style="color:#888; margin-bottom: 15px; font-size:14px;">Manage which roles can access which parts of the panel.</p>
                     
                     <!-- Container für dynamische Rollenliste (scrollbar) -->
-                    <div id="dynamicRolesContainer" style="display: flex; flex-direction: column; gap: 12px;">
+                    <div id="dynamicRolesContainer" style="max-height: 400px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px;">
                         <div style="text-align: center; color: #666;">Loading roles...</div>
                     </div>
                 </div>
 
-                <!-- Channel Configuration (bleibt unverändert) -->
+                <!-- Channel Configuration -->
                 <div class="system-card" style="border-color: #ffd700; margin-bottom: 20px;">
                     <h3 style="color: #ffd700;"><i class="fas fa-hashtag"></i> Channel Configuration</h3>
                     <p style="color:#888; margin-bottom: 15px; font-size:14px;">Configure which channels the bot uses for notifications and tickets.</p>
@@ -180,7 +180,7 @@
                     <button id="saveChannelConfigBtn" class="btn-primary" style="background: #5865F2; margin-top: 15px;">Save Channel Configuration</button>
                 </div>
 
-                <!-- Role Configuration (Guild & Ticket Rollen) - bleibt auch -->
+                <!-- Role Configuration (Guild & Tickets) -->
                 <div class="system-card" style="border-color: #ffd700; margin-bottom: 20px;">
                     <h3 style="color: #ffd700;"><i class="fas fa-tags"></i> Role Configuration (Guild & Tickets)</h3>
                     <p style="color:#888; margin-bottom: 15px; font-size:14px;">Set role IDs for member management and ticket system.</p>
@@ -321,7 +321,7 @@
             <span class="modal-close">&times;</span>
             <h3 id="modalRoleTitle">Role Permissions</h3>
             <div id="modalPermissionsList">
-                <!-- Dynamische Checkboxen/Tags werden hier eingefügt -->
+                <!-- Dynamische Checkboxen werden hier eingefügt -->
             </div>
             <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
                 <button id="modalSaveBtn" class="btn-primary" style="background: #48bb78;">Save</button>
