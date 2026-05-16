@@ -1,26 +1,43 @@
 // ==========================================
-// SWORD ART ONLINE - MULTI-GUILD PANEL (FRONTEND)
-// KONFIGURATION NUN IM PANEL OWNER TAB
+// 1. SETTINGS & CONFIGURATION
 // ==========================================
 
-const PANEL_OWNER_USER_ID = '917426398120005653';
+const OWNER_USER_ID = '917426398120005653';
+
+// Roles for access control - stored in Firebase
+let ADMIN_ROLES = ['1503609455466643547'];
+let OWNER_ROLES = ['1504646932243546152'];
+
+// GP Submit Role - now configurable via panel
+let GP_SUBMIT_ROLE = '1503193408280330400';
+
+// System configuration
+let systemConfig = {
+    embedColors: {
+        approve: '#48bb78',
+        reject: '#f56565',
+        pending: '#cd7f32',
+        info: '#5865F2',
+        leaderboard: '#ffd700'
+    },
+    limits: {
+        maxImagesPerRequest: 1
+    },
+    musicUrl: 'https://www.youtube.com/embed/BtEkzZoUCpw?autoplay=1&loop=1',
+    updateInterval: 60
+};
+
+// Test mode
+let testModeEnabled = false;
+
+// Role name cache
+let roleNameCache = {};
+
 const DISCORD_CLIENT_ID = '1503179151073345678';
 const ROBLOX_CLIENT_ID = '1529843549493669743';
+
 const BACKEND_URL = 'https://gentle-queen-63f0.keulecolin2005.workers.dev';
 const REDIRECT_URI = 'https://corleonecity.github.io/SwordArtOnline/';
-
-// Globale Variablen
-let currentUser = null;
-let currentGuildId = null;
-let availableGuilds = [];
-let selectedFiles = [];
-let allUsersData = {};
-let liveCheckInterval = null;
-let userGuildRoles = {};
-let guildConfigs = {};
-let currentEditingMessageId = null;
-let testModeEnabled = false;
-let roleNameCache = {};
 
 // Firebase Imports
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
@@ -37,42 +54,75 @@ const firebaseConfig = {
     appId: "1:575918945925:web:288a763f1bcbb5ae7e5bec"
 };
 
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
+// Global variables
+let currentUser = null;
+let selectedFiles = [];
+let allUsersData = {};
+let liveCheckInterval = null;
+let userGuildRoles = [];
+let currentEditingMessageId = null;
+
 // ==========================================
-// HELPER FUNCTIONS
+// 2. LOAD CONFIGURATIONS FROM FIREBASE
 // ==========================================
 
-function getSafeDbKey(username) {
-    return username ? username.replace(/[.#$\[\]]/g, '_') : 'unknown_user';
-}
-
-function playLoginMusic() {
-    const guildConfig = guildConfigs[currentGuildId];
-    const musicUrl = guildConfig?.system?.musicUrl || 'https://www.youtube.com/embed/BtEkzZoUCpw?autoplay=1&loop=1';
-    const ac = document.getElementById('audioPlayerContainer');
-    if (ac.innerHTML === '') {
-        ac.innerHTML = `<iframe width="0" height="0" src="${musicUrl}" frameborder="0" allow="autoplay"></iframe>`;
+async function loadRoleConfig() {
+    const rolesRef = ref(db, 'config/admin_roles');
+    const snap = await get(rolesRef);
+    if (snap.exists()) {
+        const data = snap.val();
+        if (data.adminRoles) ADMIN_ROLES = data.adminRoles;
+        if (data.ownerRoles) OWNER_ROLES = data.ownerRoles;
     }
 }
 
-function stopMusic() {
-    document.getElementById('audioPlayerContainer').innerHTML = '';
+async function getChannelConfig() {
+    try {
+        const configRef = ref(db, 'config/channels');
+        const snap = await get(configRef);
+        return snap.val() || {};
+    } catch (e) {
+        console.error("Error loading channel config:", e);
+        return {};
+    }
 }
 
-function showNotify(msg, type) {
-    const n = document.getElementById('notification');
-    n.textContent = msg;
-    n.className = `notification show ${type === 'success' ? 'bg-success' : (type === 'warning' ? 'bg-warning' : 'bg-error')}`;
-    setTimeout(() => n.classList.remove('show'), 3000);
+async function loadSystemConfig() {
+    const configRef = ref(db, 'config/system');
+    const snap = await get(configRef);
+    if (snap.exists()) {
+        const data = snap.val();
+        if (data.embedColors) systemConfig.embedColors = { ...systemConfig.embedColors, ...data.embedColors };
+        if (data.limits) systemConfig.limits = { ...systemConfig.limits, ...data.limits };
+        if (data.musicUrl) systemConfig.musicUrl = data.musicUrl;
+        if (data.updateInterval) systemConfig.updateInterval = data.updateInterval;
+        if (data.gpSubmitRole) GP_SUBMIT_ROLE = data.gpSubmitRole;
+    }
 }
 
-function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+async function loadTestMode() {
+    const testRef = ref(db, 'config/testMode');
+    const snap = await get(testRef);
+    if (snap.exists()) {
+        testModeEnabled = snap.val().enabled === true;
+        updateTestModeIndicator();
+    }
+}
+
+async function loadMaintenanceStatus() {
+    const maintenanceRef = ref(db, 'config/maintenance');
+    const snap = await get(maintenanceRef);
+    if (snap.exists() && snap.val().enabled) {
+        document.getElementById('maintenanceOverlay').classList.remove('hidden');
+        document.getElementById('maintenanceStatusText').textContent = 'Enabled';
+    } else {
+        document.getElementById('maintenanceOverlay').classList.add('hidden');
+        document.getElementById('maintenanceStatusText').textContent = 'Disabled';
+    }
 }
 
 function updateTestModeIndicator() {
@@ -89,85 +139,33 @@ function updateTestModeIndicator() {
 }
 
 // ==========================================
-// PERMISSION CHECKS
+// 3. HELPER FUNCTIONS
 // ==========================================
 
-function isPanelOwner() {
-    if (!currentUser) return false;
-    return currentUser.id === PANEL_OWNER_USER_ID;
+function getSafeDbKey(username) {
+    return username ? username.replace(/[.#$\[\]]/g, '_') : 'unknown_user';
 }
 
-function hasAdminPermission(guildId) {
-    if (!currentUser) return false;
-    if (isPanelOwner()) return true;
-    const guildRoles = userGuildRoles[guildId] || [];
-    const adminRoles = guildConfigs[guildId]?.adminRoles || [];
-    return guildRoles.some(role => adminRoles.includes(role));
-}
-
-function hasGuildLeaderPermission(guildId) {
-    if (!currentUser) return false;
-    if (isPanelOwner()) return true;
-    const guildRoles = userGuildRoles[guildId] || [];
-    const ownerRoles = guildConfigs[guildId]?.ownerRoles || [];
-    return guildRoles.some(role => ownerRoles.includes(role));
-}
-
-function hasGpSubmitPermission(guildId) {
-    if (!currentUser) return false;
-    if (isPanelOwner()) return true;
-    const guildRoles = userGuildRoles[guildId] || [];
-    const gpSubmitRole = guildConfigs[guildId]?.gpSubmitRole;
-    return gpSubmitRole ? guildRoles.includes(gpSubmitRole) : false;
-}
-
-// ==========================================
-// DISCORD BOT INTERACTIONS
-// ==========================================
-
-async function sendDiscordMessage(channelId, content, embeds) {
-    if (!channelId) return false;
-    try {
-        const response = await fetch(`${BACKEND_URL}/send-channel-message`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ channelId, content, embeds })
-        });
-        return response.ok;
-    } catch (e) {
-        console.error(e);
-        return false;
+function playLoginMusic() {
+    const ac = document.getElementById('audioPlayerContainer');
+    if (ac.innerHTML === '') {
+        ac.innerHTML = `<iframe width="0" height="0" src="${systemConfig.musicUrl}" frameborder="0" allow="autoplay"></iframe>`;
     }
 }
 
-async function updateBotStatus() {
-    try {
-        const totalGP = Object.values(allUsersData).reduce((sum, u) => sum + (u.totalGP || 0), 0);
-        await fetch(`${BACKEND_URL}/update-status`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status: `🎮 Total GP: ${totalGP.toLocaleString()}` })
-        });
-    } catch (e) {}
+function stopMusic() {
+    document.getElementById('audioPlayerContainer').innerHTML = '';
 }
 
-async function updateDiscordNickname(userId, robloxName, robloxUsername) {
-    try {
-        const newNickname = `${robloxName} (@${robloxUsername})`;
-        await fetch(`${BACKEND_URL}/update-nickname`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId, nickname: newNickname, guildId: currentGuildId })
-        });
-    } catch (e) {}
+function showNotify(msg, type) {
+    const n = document.getElementById('notification');
+    n.textContent = msg;
+    n.className = `notification show ${type === 'success' ? 'bg-success' : (type === 'warning' ? 'bg-warning' : 'bg-error')}`;
+    setTimeout(() => n.classList.remove('show'), 3000);
 }
-
-// ==========================================
-// TAB SWITCHING
-// ==========================================
 
 function switchTab(tabName) {
-    const tabs = ['Spenden', 'Leaderboard', 'Profile', 'Admin', 'GuildLeader', 'PanelOwner'];
+    const tabs = ['Spenden', 'Leaderboard', 'Profile', 'Admin', 'Owner'];
     tabs.forEach(name => {
         const btn = document.getElementById(`tabBtn${name}`);
         const content = document.getElementById(`content-${name.toLowerCase()}`);
@@ -181,804 +179,6 @@ function switchTab(tabName) {
             }
         }
     });
-    // Daten aktualisieren bei Bedarf
-    if (tabName === 'PanelOwner' && isPanelOwner()) {
-        loadPanelOwnerData();
-    }
-    if (tabName === 'Admin' && hasAdminPermission(currentGuildId)) {
-        loadAdminData();
-    }
-}
-
-// ==========================================
-// PERMISSION UI UPDATES
-// ==========================================
-
-function updatePermissions() {
-    const gpSubmitCard = document.getElementById('gpSubmitCard');
-    const noPermissionCard = document.getElementById('noPermissionCard');
-    const tabBtnSpenden = document.getElementById('tabBtnSpenden');
-    const tabBtnAdmin = document.getElementById('tabBtnAdmin');
-    const tabBtnGuildLeader = document.getElementById('tabBtnGuildLeader');
-    const tabBtnPanelOwner = document.getElementById('tabBtnPanelOwner');
-    const spendenContent = document.getElementById('content-spenden');
-    
-    const canSubmit = hasGpSubmitPermission(currentGuildId);
-    const canAdmin = hasAdminPermission(currentGuildId);
-    const canGuildLeader = hasGuildLeaderPermission(currentGuildId);
-    const panelOwner = isPanelOwner();
-    
-    if (canSubmit) {
-        if (gpSubmitCard) gpSubmitCard.classList.remove('hidden');
-        if (noPermissionCard) noPermissionCard.classList.add('hidden');
-        if (tabBtnSpenden) tabBtnSpenden.style.display = 'block';
-    } else {
-        if (gpSubmitCard) gpSubmitCard.classList.add('hidden');
-        if (noPermissionCard) noPermissionCard.classList.remove('hidden');
-        if (tabBtnSpenden) tabBtnSpenden.style.display = 'none';
-        if (spendenContent && !spendenContent.classList.contains('hidden')) switchTab('Leaderboard');
-    }
-    
-    if (tabBtnAdmin) tabBtnAdmin.style.display = (canAdmin || panelOwner) ? 'block' : 'none';
-    if (tabBtnGuildLeader) tabBtnGuildLeader.style.display = (canGuildLeader || panelOwner) ? 'block' : 'none';
-    if (tabBtnPanelOwner) tabBtnPanelOwner.style.display = panelOwner ? 'block' : 'none';
-}
-
-// ==========================================
-// GUILD SELECTION & LOADING
-// ==========================================
-
-async function fetchUserRoles(userId, guildId) {
-    if (!userId || !guildId) return [];
-    try {
-        const response = await fetch(`${BACKEND_URL}/user-roles`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId, guildId })
-        });
-        if (response.ok) {
-            const data = await response.json();
-            userGuildRoles[guildId] = data.roles || [];
-            return userGuildRoles[guildId];
-        }
-    } catch (e) { console.warn(e); }
-    return [];
-}
-
-async function fetchRoleName(roleId) {
-    if (roleNameCache[roleId]) return roleNameCache[roleId];
-    if (!currentGuildId) return roleId;
-    try {
-        const response = await fetch(`${BACKEND_URL}/role-name`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ roleId, guildId: currentGuildId })
-        });
-        if (response.ok) {
-            const data = await response.json();
-            roleNameCache[roleId] = data.name || roleId;
-            return roleNameCache[roleId];
-        }
-    } catch (e) {}
-    return roleId;
-}
-
-async function loadAvailableGuilds() {
-    if (!currentUser) return [];
-    try {
-        const response = await fetch(`${BACKEND_URL}/user-guilds`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId: currentUser.id })
-        });
-        if (response.ok) {
-            const data = await response.json();
-            availableGuilds = data.guilds || [];
-            return availableGuilds;
-        }
-    } catch (e) { console.error(e); }
-    return [];
-}
-
-async function showGuildSelector() {
-    const container = document.getElementById('guildSelectorContainer');
-    container.innerHTML = `
-        <div class="guild-selector-overlay">
-            <div class="guild-selector-card">
-                <i class="fas fa-server"></i>
-                <h2>Select Discord Server</h2>
-                <p>Choose which server you want to manage</p>
-                <div id="guildList" class="guild-list"></div>
-            </div>
-        </div>
-    `;
-    const guildList = document.getElementById('guildList');
-    for (const guild of availableGuilds) {
-        const btn = document.createElement('button');
-        btn.className = 'guild-selector-btn';
-        btn.innerHTML = `
-            ${guild.icon ? `<img src="https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png" class="guild-icon">` : '<i class="fas fa-server"></i>'}
-            <span>${escapeHtml(guild.name)}</span>
-        `;
-        btn.onclick = () => selectGuild(guild.id, guild.name);
-        guildList.appendChild(btn);
-    }
-}
-
-async function selectGuild(guildId, guildName) {
-    currentGuildId = guildId;
-    document.getElementById('guildSelectorContainer').innerHTML = '';
-    // Zeige vollen Servernamen an
-    document.getElementById('currentGuildDisplay').textContent = `📡 Server: ${escapeHtml(guildName)}`;
-    await loadGuildConfig(guildId);
-    await loadTestMode(guildId);
-    await loadMaintenanceStatus(guildId);
-    await fetchUserRoles(currentUser.id, guildId);
-    await loadGuildData(guildId);
-    updatePermissions();
-    showDashboard();
-    startLiveMemberCheck();
-}
-
-async function loadGuildConfig(guildId) {
-    const configRef = ref(db, `guilds/${guildId}/config`);
-    const snap = await get(configRef);
-    if (snap.exists()) {
-        guildConfigs[guildId] = snap.val();
-    } else {
-        const defaultConfig = {
-            adminRoles: [],
-            ownerRoles: [],
-            gpSubmitRole: '',
-            channels: {},
-            roles: {
-                adminPingRole: '',
-                modPingRole: '',
-                panelPingRole: ''
-            },
-            system: {
-                embedColors: {
-                    approve: '#48bb78',
-                    reject: '#f56565',
-                    pending: '#cd7f32',
-                    info: '#5865F2',
-                    leaderboard: '#ffd700'
-                },
-                limits: { maxImagesPerRequest: 1 },
-                musicUrl: 'https://www.youtube.com/embed/BtEkzZoUCpw?autoplay=1&loop=1',
-                updateInterval: 60
-            },
-            maintenance: { enabled: false },
-            testMode: { enabled: false }
-        };
-        guildConfigs[guildId] = defaultConfig;
-        await set(ref(db, `guilds/${guildId}/config`), defaultConfig);
-    }
-}
-
-async function loadTestMode(guildId) {
-    const testRef = ref(db, `guilds/${guildId}/config/testMode`);
-    const snap = await get(testRef);
-    testModeEnabled = snap.exists() && snap.val().enabled === true;
-    updateTestModeIndicator();
-}
-
-async function loadMaintenanceStatus(guildId) {
-    const maintenanceRef = ref(db, `guilds/${guildId}/config/maintenance`);
-    const snap = await get(maintenanceRef);
-    if (snap.exists() && snap.val().enabled) {
-        document.getElementById('maintenanceOverlay').classList.remove('hidden');
-        document.getElementById('maintenanceStatusText').textContent = 'Enabled';
-    } else {
-        document.getElementById('maintenanceOverlay').classList.add('hidden');
-        document.getElementById('maintenanceStatusText').textContent = 'Disabled';
-    }
-}
-
-async function loadGuildData(guildId) {
-    onValue(ref(db, `guilds/${guildId}/users`), (snapshot) => {
-        allUsersData = snapshot.val() || {};
-        const searchValue = document.getElementById('leaderboardSearch')?.value || "";
-        renderLeaderboard(searchValue);
-        updateBotStatus();
-    });
-    onValue(ref(db, `guilds/${guildId}/requests`), (snapshot) => {
-        updateProfileHistory(snapshot.val());
-        if (hasAdminPermission(guildId)) updateAdminPending(snapshot.val());
-    });
-    if (isPanelOwner()) {
-        onValue(ref(db, `guilds/${guildId}/logs/kicks`), (snapshot) => updateKickLogs(snapshot.val()));
-    }
-}
-
-// ==========================================
-// DASHBOARD & UI
-// ==========================================
-
-function showDashboard() {
-    stopMusic();
-    document.getElementById('robloxPage').classList.add('hidden');
-    document.getElementById('mainContent').classList.remove('hidden');
-    document.getElementById('userWelcome').textContent = `Hi, ${currentUser.global_name || currentUser.username}`;
-    if (currentUser.avatar) {
-        document.getElementById('userAvatar').src = `https://cdn.discordapp.com/avatars/${currentUser.id}/${currentUser.avatar}.png`;
-    }
-    updatePermissions();
-    loadLeaderboard();
-    if (hasAdminPermission(currentGuildId) || isPanelOwner()) loadAdminData();
-    if (isPanelOwner()) loadPanelOwnerData();
-    updateBotStatus();
-    setInterval(() => updateBotStatus(), 60000);
-}
-
-function loadPanelOwnerData() {
-    loadAdminRolesList();
-    loadChannelConfigUI();
-    loadRoleConfigUI();
-    loadSystemConfigUI();
-    loadSavedMessages();
-    loadRegisteredUsersCount();
-    loadKickLogs();
-}
-
-function renderLeaderboard(filterText) {
-    const body = document.getElementById('leaderboardBody');
-    if (!body) return;
-    body.innerHTML = '';
-    if (!allUsersData) return;
-    let usersArray = Object.values(allUsersData).filter(u => u.totalGP > 0).sort((a,b) => b.totalGP - a.totalGP);
-    if (filterText) {
-        const lower = filterText.toLowerCase();
-        usersArray = usersArray.filter(u => (u.discordName?.toLowerCase().includes(lower)) || (u.robloxName?.toLowerCase().includes(lower)));
-    }
-    usersArray.forEach((u, i) => {
-        body.innerHTML += `<tr><td>#${i+1}</td><td><div class="user-name-cell"><span class="display-name">${escapeHtml(u.discordName||'Unknown')}</span><span class="username-handle">@${escapeHtml(u.discordUsername||'Unknown')}</span></div></td><td><div class="user-name-cell"><span class="display-name">${escapeHtml(u.robloxName||'Unknown')}</span><span class="username-handle">@${escapeHtml(u.robloxUsername||'Unknown')}</span></div></td><td style="color:#48bb78;font-weight:bold;">${(u.totalGP||0).toLocaleString()} GP</td></tr>`;
-    });
-    if (usersArray.length === 0) body.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#666;">No GP yet</td></tr>';
-    const total = Object.values(allUsersData).reduce((s,u)=>s+(u.totalGP||0),0);
-    const totalEl = document.getElementById('totalGpStat');
-    if (totalEl) totalEl.textContent = total.toLocaleString();
-}
-
-function loadLeaderboard() {
-    if (!currentGuildId) return;
-    onValue(ref(db, `guilds/${currentGuildId}/users`), (snapshot) => {
-        allUsersData = snapshot.val();
-        const search = document.getElementById('leaderboardSearch')?.value || "";
-        renderLeaderboard(search);
-    });
-}
-
-function updateProfileHistory(data) {
-    const body = document.getElementById('profileHistoryBody');
-    if (!body) return;
-    body.innerHTML = '';
-    if (!data || !currentUser) return;
-    const userReqs = Object.values(data).filter(r => r.userId === currentUser.id).sort((a,b)=>b.timestamp - a.timestamp);
-    userReqs.forEach(req => {
-        const date = new Date(req.timestamp).toLocaleString();
-        let statusClass = '';
-        if (req.status === 'pending') statusClass = 'status-pending';
-        else if (req.status === 'approved') statusClass = 'status-approved';
-        else statusClass = 'status-rejected';
-        let statusText = req.status === 'pending' ? 'Pending ⏳' : (req.status === 'approved' ? 'Approved ✅' : 'Rejected ❌');
-        body.innerHTML += `<tr><td>${date}</td><td>+${req.amount.toLocaleString()} GP</td><td><span class="status-badge ${statusClass}">${statusText}</span></td><td>${escapeHtml(req.adminComment || '-')}</td></tr>`;
-    });
-    if (userReqs.length === 0) body.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#666;">No requests</td></tr>';
-}
-
-function updateAdminPending(data) {
-    const body = document.getElementById('adminPendingBody');
-    if (!body) return;
-    body.innerHTML = '';
-    if (!data) { body.innerHTML = '<tr><td colspan="4" style="text-align:center;">No pending</td></tr>'; return; }
-    const pending = Object.values(data).filter(r => r.status === 'pending').sort((a,b)=>a.timestamp - b.timestamp);
-    if (pending.length === 0) { body.innerHTML = '<tr><td colspan="4" style="text-align:center;">No pending</td></tr>'; return; }
-    pending.forEach(req => {
-        body.innerHTML += `
-            <tr>
-                <td><div class="user-name-cell"><span class="display-name">${escapeHtml(req.discordName||'Unknown')}</span><span class="username-handle">@${escapeHtml(req.discordUsername||'Unknown')}</span></div></td>
-                <td><div class="user-name-cell"><span class="display-name">${escapeHtml(req.robloxName||'Unknown')}</span><span class="username-handle">@${escapeHtml(req.robloxUsername||'Unknown')}</span></div></td>
-                <td style="color:#cd7f32;font-weight:bold;">+${req.amount.toLocaleString()} GP</td>
-                <td>
-                    <input type="text" id="comment_${req.id}" placeholder="Comment" style="padding:6px;font-size:12px;margin-bottom:5px;">
-                    <div style="display:flex;gap:5px;">
-                        <button class="btn-small btn-approve" onclick="window.handleAdminActionWithComment('${req.id}','${req.userId}',${req.amount},'approve','${req.dbKey}','${req.robloxId}','${escapeHtml(req.discordName)}','${escapeHtml(req.discordUsername)}','${escapeHtml(req.robloxName)}','${escapeHtml(req.robloxUsername)}')">Approve</button>
-                        <button class="btn-small btn-deny" onclick="window.handleAdminActionWithComment('${req.id}','${req.userId}',${req.amount},'reject','${req.dbKey}','${req.robloxId}','${escapeHtml(req.discordName)}','${escapeHtml(req.discordUsername)}','${escapeHtml(req.robloxName)}','${escapeHtml(req.robloxUsername)}')">Reject</button>
-                    </div>
-                </td>
-            </tr>
-        `;
-    });
-}
-
-function loadAdminData() {
-    if (!currentGuildId) return;
-    onValue(ref(db, `guilds/${currentGuildId}/requests`), (snapshot) => updateAdminPending(snapshot.val()));
-}
-
-// ==========================================
-// ADMIN ACTIONS (GP approve/reject)
-// ==========================================
-
-window.handleAdminActionWithComment = async (reqId, userId, amount, action, dbKey, robloxId, discordName, discordUsername, robloxName, robloxUsername) => {
-    const commentInput = document.getElementById(`comment_${reqId}`);
-    const adminComment = commentInput ? commentInput.value.trim() : '';
-    if (!confirm(`${action === 'approve' ? 'APPROVE' : 'REJECT'}?${adminComment ? '\nComment: '+adminComment : ''}`)) return;
-    if (testModeEnabled) {
-        await update(ref(db, `guilds/${currentGuildId}/requests/${reqId}`), { status: action==='approve'?'approved':'rejected', adminComment, processedAt:Date.now(), processedBy:currentUser.id, testMode:true });
-        showNotify(`Test: ${action==='approve'?'Approved':'Rejected'}`, 'warning');
-        return;
-    }
-    try {
-        await update(ref(db, `guilds/${currentGuildId}/requests/${reqId}`), { status: action==='approve'?'approved':'rejected', adminComment, processedAt:Date.now(), processedBy:currentUser.id });
-        let newTotal = 0;
-        const userRef = ref(db, `guilds/${currentGuildId}/users/${dbKey}`);
-        const snap = await get(userRef);
-        if (snap.exists()) {
-            newTotal = snap.val().totalGP || 0;
-            if (action === 'approve') {
-                newTotal += amount;
-                await update(userRef, { totalGP: newTotal });
-            }
-        }
-        // Weiterleitung in den processed channel (optional)
-        const channels = guildConfigs[currentGuildId]?.channels || {};
-        const processedChannel = channels.CH_GP_PROCESSED;
-        if (processedChannel) {
-            const embed = {
-                title: action==='approve'?'✅ GP Donation Approved':'❌ GP Donation Rejected',
-                color: action==='approve'?0x48bb78:0xf56565,
-                fields: [
-                    { name: "Discord", value: `${discordName} (@${discordUsername})`, inline: true },
-                    { name: "Roblox", value: `${robloxName} (@${robloxUsername})`, inline: true },
-                    { name: "Amount", value: action==='approve'?`+${amount.toLocaleString()} GP`:`-${amount.toLocaleString()} GP`, inline: false },
-                    { name: "New Total", value: `${newTotal.toLocaleString()} GP`, inline: true }
-                ],
-                timestamp: new Date().toISOString()
-            };
-            if (adminComment) embed.fields.push({ name: "Comment", value: adminComment, inline: false });
-            await sendDiscordMessage(processedChannel, `<@${userId}>`, [embed]);
-        }
-        showNotify(`${action==='approve'?'Approved':'Rejected'}!`, 'success');
-    } catch(e) { alert(e.message); }
-};
-
-// ==========================================
-// IMAGE UPLOAD
-// ==========================================
-
-function updateImagePreviews() {
-    const container = document.getElementById('imagePreviewContainer');
-    const countSpan = document.getElementById('fileCountText');
-    const max = guildConfigs[currentGuildId]?.system?.limits?.maxImagesPerRequest || 1;
-    container.innerHTML = '';
-    countSpan.textContent = `${selectedFiles.length} / ${max} selected`;
-    selectedFiles.forEach((file, idx) => {
-        const box = document.createElement('div');
-        box.className = 'preview-box';
-        const img = document.createElement('img');
-        img.src = URL.createObjectURL(file);
-        const rm = document.createElement('button');
-        rm.className = 'remove-img-btn';
-        rm.innerHTML = '&times;';
-        rm.onclick = () => { selectedFiles.splice(idx,1); updateImagePreviews(); };
-        box.appendChild(img); box.appendChild(rm);
-        container.appendChild(box);
-    });
-}
-
-async function submitGPRequest() {
-    if (!hasGpSubmitPermission(currentGuildId)) return showNotify("No permission!", "error");
-    const amount = parseInt(document.getElementById('gpAmount').value);
-    if (isNaN(amount) || amount <= 0) return alert("Valid amount required");
-    if (selectedFiles.length === 0) return alert("At least one screenshot required");
-    const max = guildConfigs[currentGuildId]?.system?.limits?.maxImagesPerRequest || 1;
-    if (selectedFiles.length > max) return alert(`Max ${max} images`);
-    const btn = document.getElementById('addGPBtn');
-    btn.disabled = true;
-    btn.textContent = "SENDING...";
-    try {
-        const dbKey = getSafeDbKey(currentUser.username);
-        const userRef = ref(db, `guilds/${currentGuildId}/users/${dbKey}`);
-        const snap = await get(userRef);
-        const userData = snap.val() || {};
-        const dName = userData.discordName || currentUser.global_name || "Unknown";
-        const dUser = userData.discordUsername || currentUser.username || "Unknown";
-        const dId = currentUser.id;
-        const rName = userData.robloxName || "Unknown";
-        const rUser = userData.robloxUsername || "Unknown";
-        const rId = userData.robloxId || "1";
-        const newReqRef = push(ref(db, `guilds/${currentGuildId}/requests`));
-        const reqKey = newReqRef.key;
-        await set(newReqRef, {
-            id: reqKey, dbKey, userId: dId, discordName: dName, discordUsername: dUser,
-            robloxName: rName, robloxUsername: rUser, robloxId: rId,
-            amount, status: 'pending', timestamp: Date.now()
-        });
-        showNotify("GP Request submitted!", "success");
-        document.getElementById('gpAmount').value = '';
-        selectedFiles = [];
-        updateImagePreviews();
-        switchTab('Profile');
-    } catch(e) { alert(e.message); } finally { btn.disabled = false; btn.textContent = "SUBMIT PROOF"; }
-}
-
-// ==========================================
-// PANEL OWNER CONFIGURATION UI
-// ==========================================
-
-async function loadAdminRolesList() {
-    const container = document.getElementById('adminRolesList');
-    if (!container) return;
-    const config = guildConfigs[currentGuildId] || {};
-    const adminRoles = config.adminRoles || [];
-    const ownerRoles = config.ownerRoles || [];
-    let html = '<table class="table"><thead><tr><th>Role Name</th><th>Role ID</th><th>Type</th><th>Action</th></tr></thead><tbody>';
-    for (const role of adminRoles) {
-        const name = await fetchRoleName(role);
-        html += `<tr><td class="role-name">${escapeHtml(name)}</td><td class="role-id">${escapeHtml(role)}</td><td><span class="status-badge status-approved">Admin</span></td><td><button class="btn-small btn-remove-role" onclick="removeAdminRole('${role}')">Remove</button></td></tr>`;
-    }
-    for (const role of ownerRoles) {
-        const name = await fetchRoleName(role);
-        html += `<tr><td class="role-name">${escapeHtml(name)}</td><td class="role-id">${escapeHtml(role)}</td><td><span class="status-badge status-pending">Guild Leader</span></td><td><button class="btn-small btn-remove-role" onclick="removeOwnerRole('${role}')">Remove</button></td></tr>`;
-    }
-    html += '</tbody></table>';
-    container.innerHTML = html;
-}
-
-window.addAdminRole = async () => {
-    const roleId = document.getElementById('newRoleId').value.trim();
-    const level = document.getElementById('rolePermissionLevel').value;
-    if (!roleId) return showNotify("Enter role ID", "error");
-    const config = guildConfigs[currentGuildId] || {};
-    let admin = config.adminRoles || [];
-    let owner = config.ownerRoles || [];
-    if (level === 'admin') { if (!admin.includes(roleId)) admin.push(roleId); }
-    else { if (!owner.includes(roleId)) owner.push(roleId); }
-    await set(ref(db, `guilds/${currentGuildId}/config`), { ...config, adminRoles: admin, ownerRoles: owner });
-    guildConfigs[currentGuildId].adminRoles = admin;
-    guildConfigs[currentGuildId].ownerRoles = owner;
-    showNotify(`Role added as ${level==='admin'?'Admin':'Guild Leader'}`, "success");
-    document.getElementById('newRoleId').value = '';
-    await loadAdminRolesList();
-    await fetchUserRoles(currentUser.id, currentGuildId);
-    updatePermissions();
-};
-
-window.removeAdminRole = async (roleId) => {
-    const config = guildConfigs[currentGuildId] || {};
-    let admin = config.adminRoles || [];
-    if (admin.includes(roleId)) admin = admin.filter(r => r !== roleId);
-    await set(ref(db, `guilds/${currentGuildId}/config`), { ...config, adminRoles: admin });
-    guildConfigs[currentGuildId].adminRoles = admin;
-    showNotify("Role removed", "success");
-    await loadAdminRolesList();
-    await fetchUserRoles(currentUser.id, currentGuildId);
-    updatePermissions();
-};
-
-window.removeOwnerRole = async (roleId) => {
-    const config = guildConfigs[currentGuildId] || {};
-    let owner = config.ownerRoles || [];
-    if (owner.includes(roleId)) owner = owner.filter(r => r !== roleId);
-    await set(ref(db, `guilds/${currentGuildId}/config`), { ...config, ownerRoles: owner });
-    guildConfigs[currentGuildId].ownerRoles = owner;
-    showNotify("Role removed", "success");
-    await loadAdminRolesList();
-    await fetchUserRoles(currentUser.id, currentGuildId);
-    updatePermissions();
-};
-
-async function loadChannelConfigUI() {
-    const container = document.getElementById('channelConfigList');
-    if (!container) return;
-    const channels = guildConfigs[currentGuildId]?.channels || {};
-    const channelList = [
-        { key: 'CH_LEAVE_LOGS', name: '📤 Leave Logs', desc: 'User leave notifications' },
-        { key: 'CH_USER_INFO', name: '🛡️ User Info Board', desc: 'Guild member list board' },
-        { key: 'CH_PANEL_INFO', name: '💻 Panel Info Board', desc: 'Registration info board' },
-        { key: 'CH_LEADERBOARD', name: '🏆 Leaderboard Channel', desc: 'GP leaderboard' },
-        { key: 'CH_GP_REQUESTS', name: '💎 GP Requests', desc: 'New GP requests' },
-        { key: 'CH_GP_PROCESSED', name: '✅ GP Processed', desc: 'Approved/rejected' },
-        { key: 'CH_LOGIN_LOGS', name: '🔐 Login Logs', desc: 'User login notifications' },
-        { key: 'CH_BOT_DM_LOGS', name: '📨 Bot DM Logs', desc: '/admin command messages' }
-    ];
-    container.innerHTML = channelList.map(ch => `
-        <div class="channel-config-item">
-            <div class="channel-config-name">${ch.name}</div>
-            <div class="channel-config-description">${ch.desc}</div>
-            <div class="channel-config-input">
-                <input type="text" id="cfg_${ch.key}" value="${channels[ch.key] || ''}" placeholder="Channel ID">
-                <span>Channel ID</span>
-            </div>
-        </div>
-    `).join('');
-}
-
-async function saveChannelConfig() {
-    const keys = ['CH_LEAVE_LOGS','CH_USER_INFO','CH_PANEL_INFO','CH_LEADERBOARD','CH_GP_REQUESTS','CH_GP_PROCESSED','CH_LOGIN_LOGS','CH_BOT_DM_LOGS'];
-    const newChannels = {};
-    for (const k of keys) {
-        const val = document.getElementById(`cfg_${k}`)?.value.trim();
-        if (val) newChannels[k] = val;
-    }
-    const config = guildConfigs[currentGuildId] || {};
-    await set(ref(db, `guilds/${currentGuildId}/config/channels`), newChannels);
-    config.channels = newChannels;
-    guildConfigs[currentGuildId] = config;
-    showNotify("Channel config saved", "success");
-}
-
-async function loadRoleConfigUI() {
-    const roles = guildConfigs[currentGuildId]?.roles || {};
-    document.getElementById('roleAdminPing').value = roles.adminPingRole || '';
-    document.getElementById('roleModPing').value = roles.modPingRole || '';
-    document.getElementById('rolePanelPing').value = roles.panelPingRole || '';
-}
-
-async function saveRolesConfig() {
-    const newRoles = {
-        adminPingRole: document.getElementById('roleAdminPing').value.trim(),
-        modPingRole: document.getElementById('roleModPing').value.trim(),
-        panelPingRole: document.getElementById('rolePanelPing').value.trim()
-    };
-    const config = guildConfigs[currentGuildId] || {};
-    config.roles = newRoles;
-    await set(ref(db, `guilds/${currentGuildId}/config/roles`), newRoles);
-    guildConfigs[currentGuildId] = config;
-    showNotify("Role config saved", "success");
-}
-
-function loadSystemConfigUI() {
-    const sys = guildConfigs[currentGuildId]?.system || {};
-    const ec = sys.embedColors || {};
-    document.getElementById('colorApprove').value = ec.approve || '#48bb78';
-    document.getElementById('colorReject').value = ec.reject || '#f56565';
-    document.getElementById('colorPending').value = ec.pending || '#cd7f32';
-    document.getElementById('colorInfo').value = ec.info || '#5865F2';
-    document.getElementById('colorLeaderboard').value = ec.leaderboard || '#ffd700';
-    document.getElementById('maxImagesPerRequest').value = sys.limits?.maxImagesPerRequest || 1;
-    document.getElementById('loginMusicUrl').value = sys.musicUrl || '';
-    document.getElementById('updateInterval').value = sys.updateInterval || 60;
-    document.getElementById('gpSubmitRoleId').value = guildConfigs[currentGuildId]?.gpSubmitRole || '';
-}
-
-async function saveSystemConfig() {
-    const newSystem = {
-        embedColors: {
-            approve: document.getElementById('colorApprove').value,
-            reject: document.getElementById('colorReject').value,
-            pending: document.getElementById('colorPending').value,
-            info: document.getElementById('colorInfo').value,
-            leaderboard: document.getElementById('colorLeaderboard').value
-        },
-        limits: { maxImagesPerRequest: parseInt(document.getElementById('maxImagesPerRequest').value) },
-        musicUrl: document.getElementById('loginMusicUrl').value,
-        updateInterval: parseInt(document.getElementById('updateInterval').value)
-    };
-    const config = guildConfigs[currentGuildId] || {};
-    config.system = newSystem;
-    await set(ref(db, `guilds/${currentGuildId}/config/system`), newSystem);
-    guildConfigs[currentGuildId] = config;
-    showNotify("System config saved", "success");
-}
-
-async function saveGpSubmitRole() {
-    const roleId = document.getElementById('gpSubmitRoleId').value.trim();
-    if (!roleId) return showNotify("Enter role ID", "error");
-    const config = guildConfigs[currentGuildId] || {};
-    config.gpSubmitRole = roleId;
-    await set(ref(db, `guilds/${currentGuildId}/config/gpSubmitRole`), roleId);
-    guildConfigs[currentGuildId] = config;
-    showNotify("GP Submit role saved", "success");
-    updatePermissions();
-}
-
-function updateKickLogs(data) {
-    const body = document.getElementById('kickLogsBody');
-    if (!body) return;
-    body.innerHTML = '';
-    if (!data) { body.innerHTML = '<tr><td colspan="5">No logs</td></tr>'; return; }
-    const logs = Object.values(data).sort((a,b)=>b.timestamp - a.timestamp);
-    logs.forEach(log => {
-        body.innerHTML += `<tr><td>${new Date(log.timestamp).toLocaleString()}</td><td>${escapeHtml(log.kickedUserName||log.kickedUserId)}</td><td>${escapeHtml(log.kickedByUserName||log.kickedByUserId)}</td><td>${escapeHtml(log.reason||'-')}</td><td>${log.dmSent?'✅':'❌'}</td></tr>`;
-    });
-}
-
-function loadKickLogs() {
-    if (!currentGuildId) return;
-    onValue(ref(db, `guilds/${currentGuildId}/logs/kicks`), (snap) => updateKickLogs(snap.val()));
-}
-
-async function loadRegisteredUsersCount() {
-    const snap = await get(ref(db, `guilds/${currentGuildId}/users`));
-    const users = snap.val() || {};
-    let count = 0;
-    for (const u of Object.values(users)) if (u.robloxId && u.robloxId !== '1') count++;
-    document.getElementById('statTotalUsers').textContent = count;
-}
-
-async function setMaintenanceMode(enabled) {
-    if (!isPanelOwner()) return showNotify("Only Panel Owner", "error");
-    await set(ref(db, `guilds/${currentGuildId}/config/maintenance`), { enabled });
-    document.getElementById('maintenanceOverlay').classList.toggle('hidden', !enabled);
-    document.getElementById('maintenanceStatusText').textContent = enabled ? 'Enabled' : 'Disabled';
-    showNotify(`Maintenance ${enabled?'ENABLED':'DISABLED'}`, enabled?'warning':'success');
-}
-
-async function setTestMode(enabled) {
-    if (!isPanelOwner()) return showNotify("Only Panel Owner", "error");
-    await set(ref(db, `guilds/${currentGuildId}/config/testMode`), { enabled });
-    testModeEnabled = enabled;
-    updateTestModeIndicator();
-    showNotify(`Test mode ${enabled?'ENABLED':'DISABLED'}`, enabled?'warning':'success');
-}
-
-// ==========================================
-// SAVED MESSAGES (identisch zu vorher, aber mit guilds/{guildId}/saved_messages)
-// ==========================================
-
-async function loadSavedMessages() {
-    const messagesRef = ref(db, `guilds/${currentGuildId}/saved_messages`);
-    onValue(messagesRef, (snapshot) => {
-        const data = snapshot.val();
-        const container = document.getElementById('savedMessagesList');
-        if (!container) return;
-        if (!data || Object.keys(data).length === 0) {
-            container.innerHTML = '<p style="color:#666;">No saved messages</p>';
-            return;
-        }
-        container.innerHTML = '';
-        Object.entries(data).forEach(([id, msg]) => {
-            container.innerHTML += `
-                <div class="saved-message-item" data-id="${id}">
-                    <div class="message-name">📝 ${escapeHtml(msg.name)}</div>
-                    <div class="message-channel">📡 Channel: ${escapeHtml(msg.channelId||'Not set')}</div>
-                    <div class="message-id">${msg.discordMessageId ? `✅ ID: ${msg.discordMessageId.substring(0,8)}...` : '⚠️ Not sent'}</div>
-                    <div class="message-preview"><strong>Message:</strong> ${escapeHtml(msg.content?.substring(0,100))}${msg.embedTitle?`<br><strong>Embed:</strong> ${escapeHtml(msg.embedTitle)}`:''}</div>
-                    <div class="message-actions">
-                        <button class="btn-edit-message" onclick="window.editSavedMessage('${id}')">✏️ Edit</button>
-                        <button class="btn-send-message" onclick="window.sendSavedMessage('${id}')">📤 Send/Update</button>
-                        <button class="btn-delete-message" onclick="window.deleteSavedMessage('${id}')">🗑️ Delete</button>
-                    </div>
-                </div>
-            `;
-        });
-    });
-}
-
-window.editSavedMessage = async (id) => {
-    const snap = await get(ref(db, `guilds/${currentGuildId}/saved_messages/${id}`));
-    const msg = snap.val();
-    if (!msg) return;
-    currentEditingMessageId = id;
-    document.getElementById('messageName').value = msg.name || '';
-    document.getElementById('messageChannelId').value = msg.channelId || '';
-    document.getElementById('messageContent').value = msg.content || '';
-    document.getElementById('messageEmbedTitle').value = msg.embedTitle || '';
-    document.getElementById('messageEmbedDesc').value = msg.embedDesc || '';
-    if (msg.embedColor) document.getElementById('messageEmbedColor').value = msg.embedColor;
-    const saveBtn = document.getElementById('saveMessageBtn');
-    saveBtn.textContent = '✏️ Update';
-    saveBtn.style.background = '#ffd700';
-    showNotify(`Editing "${msg.name}"`, "success");
-};
-
-async function saveMessage() {
-    const name = document.getElementById('messageName').value.trim();
-    const channelId = document.getElementById('messageChannelId').value.trim();
-    const content = document.getElementById('messageContent').value;
-    const embedTitle = document.getElementById('messageEmbedTitle').value;
-    const embedDesc = document.getElementById('messageEmbedDesc').value;
-    const embedColor = document.getElementById('messageEmbedColor').value;
-    if (!name || !channelId) return showNotify("Name and Channel ID required", "error");
-    const msgData = { name, channelId, content, embedTitle, embedDesc, embedColor, updatedAt: Date.now(), updatedBy: currentUser?.id };
-    try {
-        if (currentEditingMessageId) {
-            const existing = await get(ref(db, `guilds/${currentGuildId}/saved_messages/${currentEditingMessageId}`));
-            if (existing.exists() && existing.val().discordMessageId) msgData.discordMessageId = existing.val().discordMessageId;
-            await update(ref(db, `guilds/${currentGuildId}/saved_messages/${currentEditingMessageId}`), msgData);
-            showNotify(`Updated "${name}"`, "success");
-            currentEditingMessageId = null;
-            const saveBtn = document.getElementById('saveMessageBtn');
-            saveBtn.textContent = '💾 Save';
-            saveBtn.style.background = '#48bb78';
-        } else {
-            await push(ref(db, `guilds/${currentGuildId}/saved_messages`), { ...msgData, createdAt: Date.now(), createdBy: currentUser?.id });
-            showNotify(`Saved "${name}"`, "success");
-        }
-        document.getElementById('messageName').value = '';
-        document.getElementById('messageChannelId').value = '';
-        document.getElementById('messageContent').value = '';
-        document.getElementById('messageEmbedTitle').value = '';
-        document.getElementById('messageEmbedDesc').value = '';
-        document.getElementById('messageEmbedColor').value = '#5865F2';
-        loadSavedMessages();
-    } catch(e) { showNotify("Error saving", "error"); }
-}
-
-window.sendSavedMessage = async (id) => {
-    const snap = await get(ref(db, `guilds/${currentGuildId}/saved_messages/${id}`));
-    const msg = snap.val();
-    if (!msg || !msg.channelId) return showNotify("No channel ID", "error");
-    let embeds = null;
-    if (msg.embedTitle || msg.embedDesc) {
-        embeds = [{
-            title: msg.embedTitle || undefined,
-            description: msg.embedDesc || undefined,
-            color: msg.embedColor ? parseInt(msg.embedColor.replace('#',''),16) : 0x5865F2,
-            timestamp: new Date().toISOString()
-        }];
-    }
-    let storedId = msg.discordMessageId;
-    let success = false;
-    if (storedId) {
-        const res = await fetch(`${BACKEND_URL}/update-message`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ channelId: msg.channelId, messageId: storedId, content: msg.content, embeds })
-        });
-        if (res.ok) success = true;
-        else if (res.status === 404) storedId = null;
-    }
-    if (!storedId) {
-        const res = await fetch(`${BACKEND_URL}/send-channel-message`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ channelId: msg.channelId, content: msg.content, embeds })
-        });
-        if (res.ok) {
-            const data = await res.json();
-            if (data.messageId) await update(ref(db, `guilds/${currentGuildId}/saved_messages/${id}`), { discordMessageId: data.messageId, lastSentAt: Date.now() });
-            success = true;
-        }
-    }
-    if (success) showNotify(`Sent "${msg.name}"`, "success");
-    else showNotify(`Failed to send "${msg.name}"`, "error");
-    loadSavedMessages();
-};
-
-window.deleteSavedMessage = async (id) => {
-    if (!confirm("Delete?")) return;
-    await remove(ref(db, `guilds/${currentGuildId}/saved_messages/${id}`));
-    showNotify("Deleted", "success");
-    loadSavedMessages();
-};
-
-function clearMessageForm() {
-    currentEditingMessageId = null;
-    document.getElementById('messageName').value = '';
-    document.getElementById('messageChannelId').value = '';
-    document.getElementById('messageContent').value = '';
-    document.getElementById('messageEmbedTitle').value = '';
-    document.getElementById('messageEmbedDesc').value = '';
-    document.getElementById('messageEmbedColor').value = '#5865F2';
-    const saveBtn = document.getElementById('saveMessageBtn');
-    saveBtn.textContent = '💾 Save';
-    saveBtn.style.background = '#48bb78';
-    showNotify("Form cleared", "success");
-}
-
-// ==========================================
-// LOGIN / AUTH
-// ==========================================
-
-async function doLiveCheck() {
-    if (!currentUser || !currentGuildId) return false;
-    try {
-        const res = await fetch(`${BACKEND_URL}/check-member`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId: currentUser.id, guildId: currentGuildId })
-        });
-        if (!res.ok) return forceKickUser();
-        const data = await res.json();
-        if (!data.isMember) forceKickUser();
-        return data.isMember;
-    } catch(e) { forceKickUser(); return false; }
-}
-
-function startLiveMemberCheck() {
-    if (liveCheckInterval) clearInterval(liveCheckInterval);
-    liveCheckInterval = setInterval(doLiveCheck, 30000);
 }
 
 function forceKickUser() {
@@ -992,113 +192,1521 @@ function forceKickUser() {
     stopMusic();
 }
 
+function hasAdminPermission() {
+    if (!currentUser) return false;
+    if (currentUser.id === OWNER_USER_ID) return true;
+    return userGuildRoles.some(role => ADMIN_ROLES.includes(role));
+}
+
+function hasOwnerPermission() {
+    if (!currentUser) return false;
+    if (currentUser.id === OWNER_USER_ID) return true;
+    return userGuildRoles.some(role => OWNER_ROLES.includes(role));
+}
+
+function hasGpSubmitPermission() {
+    return userGuildRoles.includes(GP_SUBMIT_ROLE);
+}
+
+function updatePermissions() {
+    const gpSubmitCard = document.getElementById('gpSubmitCard');
+    const noPermissionCard = document.getElementById('noPermissionCard');
+    const tabBtnSpenden = document.getElementById('tabBtnSpenden');
+    const tabBtnAdmin = document.getElementById('tabBtnAdmin');
+    const tabBtnOwner = document.getElementById('tabBtnOwner');
+    const spendenContent = document.getElementById('content-spenden');
+    
+    if (hasGpSubmitPermission()) {
+        if (gpSubmitCard) gpSubmitCard.classList.remove('hidden');
+        if (noPermissionCard) noPermissionCard.classList.add('hidden');
+        if (tabBtnSpenden) tabBtnSpenden.style.display = 'block';
+    } else {
+        if (gpSubmitCard) gpSubmitCard.classList.add('hidden');
+        if (noPermissionCard) noPermissionCard.classList.remove('hidden');
+        if (tabBtnSpenden) tabBtnSpenden.style.display = 'none';
+        if (spendenContent && !spendenContent.classList.contains('hidden')) {
+            switchTab('Leaderboard');
+        }
+    }
+    
+    if (tabBtnAdmin) {
+        tabBtnAdmin.style.display = hasAdminPermission() ? 'block' : 'none';
+    }
+    
+    if (tabBtnOwner) {
+        tabBtnOwner.style.display = hasOwnerPermission() ? 'block' : 'none';
+    }
+}
+
+async function fetchUserRoles(userId) {
+    if (!userId || !BACKEND_URL) {
+        userGuildRoles = [];
+        return [];
+    }
+    
+    try {
+        const response = await fetch(`${BACKEND_URL}/user-roles`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: userId })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            userGuildRoles = data.roles || [];
+            console.log("User roles loaded:", userGuildRoles);
+        } else {
+            userGuildRoles = [];
+        }
+    } catch (e) {
+        console.warn("Error fetching user roles:", e);
+        userGuildRoles = [];
+    }
+    
+    await loadRoleConfig();
+    updatePermissions();
+    return userGuildRoles;
+}
+
+async function fetchRoleName(roleId) {
+    if (roleNameCache[roleId]) return roleNameCache[roleId];
+    
+    try {
+        const response = await fetch(`${BACKEND_URL}/role-name`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ roleId: roleId, guildId: '1439377447630930084' })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            roleNameCache[roleId] = data.name || roleId;
+            return roleNameCache[roleId];
+        }
+    } catch (e) {
+        console.warn("Error fetching role name:", e);
+    }
+    return roleId;
+}
+
+// ==========================================
+// 4. DISCORD BOT MESSAGES
+// ==========================================
+
+async function sendDiscordMessage(channelId, content, embeds = null) {
+    if (!channelId) {
+        console.warn("No channel ID provided");
+        return false;
+    }
+    
+    try {
+        const body = {};
+        if (content) body.content = content;
+        if (embeds && embeds.length > 0) body.embeds = embeds;
+        
+        const response = await fetch(`${BACKEND_URL}/send-channel-message`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ channelId, content, embeds })
+        });
+        
+        if (!response.ok) {
+            const error = await response.text();
+            console.error(`Discord message failed:`, error);
+            return false;
+        }
+        return true;
+    } catch (e) {
+        console.error(`Discord message error:`, e);
+        return false;
+    }
+}
+
+async function updateBotStatus() {
+    try {
+        const totalGP = Object.values(allUsersData).reduce((sum, u) => sum + (u.totalGP || 0), 0);
+        await fetch(`${BACKEND_URL}/update-status`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: `🎮 Total GP: ${totalGP.toLocaleString()}` })
+        });
+    } catch (e) {
+        console.error("Failed to update bot status:", e);
+    }
+}
+
+async function updateDiscordNickname(userId, robloxName, robloxUsername) {
+    try {
+        const newNickname = `${robloxName} (@${robloxUsername})`;
+        
+        const response = await fetch(`${BACKEND_URL}/update-nickname`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                userId: userId, 
+                nickname: newNickname,
+                guildId: '1439377447630930084'
+            })
+        });
+        
+        if (response.ok) {
+            console.log(`Nickname updated to: ${newNickname}`);
+            return true;
+        } else {
+            const error = await response.text();
+            console.error(`Failed to update nickname: ${error}`);
+            return false;
+        }
+    } catch (e) {
+        console.error(`Nickname update error:`, e);
+        return false;
+    }
+}
+
+async function sendLoginToDiscord(userData) {
+    const channels = await getChannelConfig();
+    const loginLogsChannel = channels.CH_LOGIN_LOGS;
+    
+    if (!loginLogsChannel) {
+        console.warn("CH_LOGIN_LOGS not configured - skipping login notification");
+        return false;
+    }
+    
+    const embed = {
+        title: "🟢 New User Registered",
+        url: "https://corleonecity.github.io/SwordArtOnline/",
+        color: parseInt(systemConfig.embedColors.info.replace('#', ''), 16),
+        fields: [
+            { name: "💬 Discord", value: `**Name:** ${userData.discordName}\n**Tag:** @${userData.discordUsername}\n**ID:** <@${userData.userId}>`, inline: true },
+            { name: "🎮 Roblox", value: `**Name:** ${userData.robloxName}\n**User:** @${userData.robloxUsername}\n**Profile:** [Click Here](https://www.roblox.com/users/${userData.robloxId}/profile)`, inline: true },
+            { name: "📝 Nickname Updated", value: `${userData.robloxName} (@${userData.robloxUsername})`, inline: false }
+        ],
+        timestamp: new Date().toISOString(),
+        footer: { text: "SwordArtOnline Panel" }
+    };
+    
+    return sendDiscordMessage(loginLogsChannel, null, [embed]);
+}
+
+async function sendLeftUserToDiscord(userData) {
+    const channels = await getChannelConfig();
+    const leaveLogsChannel = channels.CH_LEAVE_LOGS;
+    
+    if (!leaveLogsChannel) {
+        console.warn("CH_LEAVE_LOGS not configured - skipping leave notification");
+        return false;
+    }
+    
+    const { adminRoles } = await getAdminRoles();
+    const adminRoleId = adminRoles[0] || '1503609455466643547';
+    
+    const robloxProfileLink = userData.robloxUsername 
+        ? `https://www.roblox.com/user.aspx?username=${userData.robloxUsername}`
+        : "";
+    
+    const embed = {
+        title: "🚨 User has left the server!",
+        url: "https://corleonecity.github.io/SwordArtOnline/",
+        color: parseInt(systemConfig.embedColors.reject.replace('#', ''), 16),
+        fields: [
+            { name: "💬 Discord", value: `**Display:** ${userData.discordName || "Unknown"}\n**User:** @${userData.discordUsername || "Unknown"}\n**Ping:** <@${userData.id}>`, inline: true },
+            { name: "🎮 Roblox", value: `**Display:** ${userData.robloxName || "Unknown"}\n**User:** @${userData.robloxUsername || "Unknown"}\n**Profile:** [Click Here](${robloxProfileLink})`, inline: true }
+        ],
+        timestamp: new Date().toISOString(),
+        footer: { text: "SwordArtOnline Panel" }
+    };
+    
+    return sendDiscordMessage(leaveLogsChannel, `<@&${adminRoleId}>`, [embed]);
+}
+
+async function sendGPRequestToDiscord(requestData, images) {
+    const formData = new FormData();
+    
+    const adminRoleId = ADMIN_ROLES[0] || '1503609455466643547';
+    
+    // Get channel config
+    const channels = await getChannelConfig();
+    const gpRequestsChannel = channels.CH_GP_REQUESTS;
+    
+    if (!gpRequestsChannel) {
+        console.error("GP Requests channel not configured!");
+        return false;
+    }
+    
+    const embed = {
+        title: "💎 New GP Donation Request",
+        url: "https://corleonecity.github.io/SwordArtOnline/",
+        color: parseInt(systemConfig.embedColors.pending.replace('#', ''), 16),
+        fields: [
+            { name: "💬 Discord", value: `**Name:** ${requestData.discordName}\n**Tag:** @${requestData.discordUsername}\n**Ping:** <@${requestData.userId}>`, inline: true },
+            { name: "🎮 Roblox", value: `**Name:** ${requestData.robloxName}\n**User:** @${requestData.robloxUsername}\n**Profile:** [Click Here](https://www.roblox.com/users/${requestData.robloxId}/profile)`, inline: true },
+            { name: "💰 Amount", value: `**+${requestData.amount.toLocaleString()} GP**`, inline: false },
+            { name: "📊 Status", value: "⏳ Pending Review", inline: true },
+            { name: "🆔 Request ID", value: `\`${requestData.requestId}\``, inline: true }
+        ],
+        timestamp: new Date().toISOString(),
+        footer: { text: "SwordArtOnline GP System" }
+    };
+    
+    // Add image to embed if exists
+    if (images && images.length > 0) {
+        embed.image = { url: "attachment://proof_1.png" };
+    }
+
+    // Create buttons for interaction
+    const components = [{
+        type: 1,
+        components: [
+            {
+                type: 2,
+                style: 3,
+                label: "Approve",
+                custom_id: `approve_${requestData.requestId}`,
+                emoji: { name: "✅" }
+            },
+            {
+                type: 2,
+                style: 4,
+                label: "Reject",
+                custom_id: `reject_${requestData.requestId}`,
+                emoji: { name: "❌" }
+            }
+        ]
+    }];
+
+    formData.append('payload_json', JSON.stringify({
+        content: `<@&${adminRoleId}>`,
+        embeds: [embed],
+        components: components
+    }));
+    
+    const imagesToSend = images.slice(0, systemConfig.limits.maxImagesPerRequest);
+    for (let i = 0; i < imagesToSend.length; i++) {
+        formData.append(`file${i}`, imagesToSend[i], `proof_${i+1}.png`);
+    }
+
+    try {
+        const response = await fetch(`${BACKEND_URL}/send-gp-request-with-buttons`, {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            console.log("Discord response:", data);
+            if (data.messageId) {
+                await update(ref(db, `requests/${requestData.requestId}`), {
+                    discordMessageId: data.messageId
+                });
+                console.log("Saved discordMessageId:", data.messageId);
+            }
+            return true;
+        } else {
+            const errorText = await response.text();
+            console.error("GP request send failed:", errorText);
+            return false;
+        }
+    } catch (e) {
+        console.error("GP request send error:", e);
+        return false;
+    }
+}
+
+// ==========================================
+// 5. DISCORD & ROBLOX AUTHENTIFICATION
+// ==========================================
+
+async function doLiveCheck() {
+    if (!currentUser) return false;
+    try {
+        const res = await fetch(`${BACKEND_URL}/check-member`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: currentUser.id })
+        });
+        if (!res.ok) {
+            forceKickUser();
+            return false;
+        }
+        const data = await res.json();
+        if (data.isMember === false) {
+            forceKickUser();
+            return false;
+        }
+        return true;
+    } catch (e) {
+        forceKickUser();
+        return false;
+    }
+}
+
+function startLiveMemberCheck() {
+    if (liveCheckInterval) clearInterval(liveCheckInterval);
+    liveCheckInterval = setInterval(doLiveCheck, 30000);
+}
+
+async function sendLoginWebhook(userData) {
+    const dbKey = getSafeDbKey(userData.discordUsername);
+    const userRef = ref(db, `users/${dbKey}`);
+    const snap = await get(userRef);
+    
+    if (snap.exists() && snap.val().loginNotified === true) return;
+
+    const success = await sendLoginToDiscord(userData);
+    
+    if (success) {
+        await update(userRef, { loginNotified: true });
+        console.log("Login notification sent successfully");
+    }
+}
+
 async function handleDiscordLogin(code) {
     try {
         const res = await fetch(`${BACKEND_URL}/token`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ code, redirect_uri: REDIRECT_URI })
         });
         const data = await res.json();
-        if (data.isAuthorized && data.isMember) {
+        
+        if (data.isAuthorized) {
+            if (!data.isMember) {
+                document.getElementById('loginPage').classList.add('hidden');
+                document.getElementById('noPermissionPage').classList.remove('hidden');
+                stopMusic();
+                return;
+            }
             currentUser = data.user;
             sessionStorage.setItem('pn_session', JSON.stringify(currentUser));
             window.history.replaceState({}, '', REDIRECT_URI);
-            await loadAvailableGuilds();
-            if (availableGuilds.length === 0) {
-                document.getElementById('loginPage').classList.add('hidden');
-                document.getElementById('noPermissionPage').classList.remove('hidden');
-            } else if (availableGuilds.length === 1) {
-                await selectGuild(availableGuilds[0].id, availableGuilds[0].name);
-            } else {
-                showGuildSelector();
-            }
-        } else {
-            document.getElementById('loginPage').classList.add('hidden');
-            document.getElementById('noPermissionPage').classList.remove('hidden');
+            checkRobloxLink();
         }
-    } catch(e) { alert("Login Error"); }
+    } catch (e) {
+        alert("Login Error!");
+        console.error(e);
+    }
 }
 
 async function handleRobloxLogin(code) {
     try {
         currentUser = JSON.parse(sessionStorage.getItem('pn_session'));
         const res = await fetch(`${BACKEND_URL}/roblox-token`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ code, redirect_uri: REDIRECT_URI })
         });
         const data = await res.json();
         if (data.success && data.robloxUser) {
-            const rDisplay = data.robloxUser.nickname || data.robloxUser.name;
-            const rUser = data.robloxUser.preferred_username || data.robloxUser.name;
+            const rDisplayName = data.robloxUser.nickname || data.robloxUser.name;
+            const rUsername = data.robloxUser.preferred_username || data.robloxUser.name;
             const rId = data.robloxUser.sub;
-            const dDisplay = currentUser.global_name || currentUser.username;
+            const dDisplayName = currentUser.global_name || currentUser.username || "Unknown";
+            
             const dbKey = getSafeDbKey(currentUser.username);
-            const userRef = ref(db, `guilds/${currentGuildId}/users/${dbKey}`);
+            const userRef = ref(db, `users/${dbKey}`);
             const snap = await get(userRef);
-            const currentGP = snap.exists() ? (snap.val().totalGP || 0) : 0;
+            let currentGP = snap.exists() && snap.val().totalGP ? snap.val().totalGP : 0;
+            
             await update(userRef, {
-                discordName: dDisplay, discordUsername: currentUser.username,
-                robloxName: rDisplay, robloxUsername: rUser, robloxId: rId,
-                totalGP: currentGP, id: currentUser.id, hasLeftServer: false
+                discordName: dDisplayName || "Unknown",
+                discordUsername: currentUser.username || "Unknown",
+                robloxName: rDisplayName || "Unknown",
+                robloxUsername: rUsername || "Unknown",
+                robloxId: rId || "1",
+                totalGP: currentGP,
+                id: currentUser.id || "1",
+                hasLeftServer: false
             });
-            await updateDiscordNickname(currentUser.id, rDisplay, rUser);
+
+            await updateDiscordNickname(currentUser.id, rDisplayName, rUsername);
+
+            await sendLoginWebhook({
+                discordName: dDisplayName,
+                discordUsername: currentUser.username,
+                userId: currentUser.id,
+                robloxName: rDisplayName,
+                robloxUsername: rUsername,
+                robloxId: rId
+            });
+
+            fetch(`${BACKEND_URL}/check-member`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: currentUser.id, updateRoles: true })
+            });
+
             window.location.href = REDIRECT_URI;
         }
-    } catch(e) { alert("Roblox linking error"); }
+    } catch (e) {
+        alert("Linking Error!");
+        console.error(e);
+    }
+}
+
+async function checkRobloxLink() {
+    try {
+        const isStillMember = await doLiveCheck();
+        if (!isStillMember) return;
+
+        await loadMaintenanceStatus();
+        await loadRoleConfig();
+        await loadSystemConfig();
+        await loadTestMode();
+        
+        const dbKey = getSafeDbKey(currentUser.username);
+        const snap = await get(ref(db, `users/${dbKey}`));
+        document.getElementById('loginPage').classList.add('hidden');
+        
+        if (snap.exists() && snap.val().robloxId) {
+            if (currentUser && currentUser.id) {
+                await fetchUserRoles(currentUser.id);
+            }
+            showDashboard();
+            startLiveMemberCheck();
+            fetch(`${BACKEND_URL}/check-member`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: currentUser.id, updateRoles: true })
+            });
+        } else {
+            document.getElementById('robloxPage').classList.remove('hidden');
+            playLoginMusic();
+            startLiveMemberCheck();
+        }
+    } catch (err) {
+        console.error("checkRobloxLink error:", err);
+        if (currentUser) {
+            showDashboard();
+        }
+    }
 }
 
 // ==========================================
-// EVENT LISTENERS
+// 6. DASHBOARD & UI
+// ==========================================
+
+function showDashboard() {
+    stopMusic();
+    document.getElementById('robloxPage').classList.add('hidden');
+    document.getElementById('mainContent').classList.remove('hidden');
+    document.getElementById('userWelcome').textContent = `Hi, ${currentUser.global_name || currentUser.username}`;
+    if (currentUser.avatar) {
+        document.getElementById('userAvatar').src = `https://cdn.discordapp.com/avatars/${currentUser.id}/${currentUser.avatar}.png`;
+    }
+    
+    updatePermissions();
+    
+    loadLeaderboard();
+    loadProfileHistory();
+    
+    if (hasAdminPermission()) {
+        loadAdminData();
+    }
+    
+    if (hasOwnerPermission()) {
+        loadAdminRolesList();
+        loadChannelConfigUI();
+        loadKickLogs();
+        loadSavedMessages();
+        loadSystemConfigUI();
+        loadRegisteredUsersCount();
+    }
+    
+    updateBotStatus();
+    setInterval(updateBotStatus, 60000);
+}
+
+function renderLeaderboard(filterText) {
+    const body = document.getElementById('leaderboardBody');
+    body.innerHTML = '';
+    if (!allUsersData) return;
+    
+    let usersArray = Object.values(allUsersData)
+        .filter(u => u.totalGP && u.totalGP > 0)
+        .sort((a, b) => (b.totalGP || 0) - (a.totalGP || 0));
+    
+    if (filterText) {
+        const lowerFilter = filterText.toLowerCase();
+        usersArray = usersArray.filter(u => 
+            (u.discordName && u.discordName.toLowerCase().includes(lowerFilter)) ||
+            (u.discordUsername && u.discordUsername.toLowerCase().includes(lowerFilter)) ||
+            (u.robloxName && u.robloxName.toLowerCase().includes(lowerFilter))
+        );
+    }
+    
+    usersArray.forEach((u, i) => {
+        body.innerHTML += `
+            <tr>
+                <td>#${i + 1}</td>
+                <td><div class="user-name-cell"><span class="display-name">${escapeHtml(u.discordName || "Unknown")}</span><span class="username-handle">@${escapeHtml(u.discordUsername || "Unknown")}</span></div></td>
+                <td><div class="user-name-cell"><span class="display-name">${escapeHtml(u.robloxName || "Unknown")}</span><span class="username-handle">@${escapeHtml(u.robloxUsername || "Unknown")}</span></div></td>
+                <td style="color:#48bb78; font-weight:bold; font-size:16px;">${(u.totalGP || 0).toLocaleString()} GP</span></td>
+            </tr>
+        `;
+    });
+    
+    if (usersArray.length === 0) {
+        body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No users with GP yet</span></tr></tr>';
+    }
+    
+    const totalGP = Object.values(allUsersData).reduce((sum, u) => sum + (u.totalGP || 0), 0);
+    const totalGpStat = document.getElementById('totalGpStat');
+    if (totalGpStat) totalGpStat.textContent = totalGP.toLocaleString();
+}
+
+function loadLeaderboard() {
+    onValue(ref(db, 'users'), (snapshot) => {
+        allUsersData = snapshot.val();
+        const searchValue = document.getElementById('leaderboardSearch')?.value || "";
+        renderLeaderboard(searchValue);
+        updateBotStatus();
+    });
+}
+
+function loadProfileHistory() {
+    onValue(ref(db, 'requests'), (snapshot) => {
+        const data = snapshot.val();
+        const body = document.getElementById('profileHistoryBody');
+        body.innerHTML = '';
+        if (!data || !currentUser) return;
+        
+        const userRequests = Object.values(data)
+            .filter(r => r.userId === currentUser.id)
+            .sort((a, b) => b.timestamp - a.timestamp);
+        
+        userRequests.forEach(req => {
+            const dateStr = new Date(req.timestamp).toLocaleDateString('en-US', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            
+            let statusHtml = '';
+            if (req.status === 'pending') statusHtml = '<span class="status-badge status-pending">Pending ⏳</span>';
+            else if (req.status === 'approved') statusHtml = '<span class="status-badge status-approved">Approved ✅</span>';
+            else statusHtml = '<span class="status-badge status-rejected">Rejected ❌</span>';
+            
+            body.innerHTML += `
+                <tr>
+                    <td style="font-size:14px; color:#aaa;">${dateStr}</td>
+                    <td style="font-weight:bold;">+${req.amount.toLocaleString()} GP</span></td>
+                    <td>${statusHtml}</td>
+                    <td style="font-size:12px; color:#888;">${escapeHtml(req.adminComment || '-')}</td>
+                </tr>
+            `;
+        });
+        
+        if (userRequests.length === 0) {
+            body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No requests yet</span></tr></table>';
+        }
+    });
+}
+
+// ==========================================
+// 7. IMAGE UPLOAD & PREVIEW
+// ==========================================
+
+function updateImagePreviews() {
+    const previewContainer = document.getElementById('imagePreviewContainer');
+    const fileCountText = document.getElementById('fileCountText');
+    
+    previewContainer.innerHTML = '';
+    fileCountText.textContent = `${selectedFiles.length} / ${systemConfig.limits.maxImagesPerRequest} image(s) selected`;
+    
+    selectedFiles.forEach((file, index) => {
+        const box = document.createElement('div');
+        box.className = 'preview-box';
+        const img = document.createElement('img');
+        img.src = URL.createObjectURL(file);
+        const btn = document.createElement('button');
+        btn.className = 'remove-img-btn';
+        btn.innerHTML = '&times;';
+        btn.onclick = () => {
+            selectedFiles.splice(index, 1);
+            updateImagePreviews();
+        };
+        box.appendChild(img);
+        box.appendChild(btn);
+        previewContainer.appendChild(box);
+    });
+}
+
+// ==========================================
+// 8. GP SUBMIT FUNCTION
+// ==========================================
+
+async function submitGPRequest() {
+    if (!hasGpSubmitPermission()) {
+        showNotify("You don't have permission to submit GP requests!", "error");
+        return;
+    }
+    
+    const amount = parseInt(document.getElementById('gpAmount').value);
+    const btn = document.getElementById('addGPBtn');
+    
+    if (isNaN(amount) || amount <= 0) {
+        alert("Please enter a valid amount!");
+        return;
+    }
+    
+    if (selectedFiles.length === 0) {
+        alert("Please add at least 1 screenshot as proof!");
+        return;
+    }
+    
+    if (selectedFiles.length > systemConfig.limits.maxImagesPerRequest) {
+        alert(`Maximum ${systemConfig.limits.maxImagesPerRequest} images allowed!`);
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = "SENDING...";
+
+    try {
+        const dbKey = getSafeDbKey(currentUser.username);
+        const userRef = ref(db, `users/${dbKey}`);
+        const snap = await get(userRef);
+        const userData = snap.val() || {};
+
+        const dName = userData.discordName || currentUser.global_name || "Unknown";
+        const dUser = userData.discordUsername || currentUser.username || "Unknown";
+        const dId = currentUser.id || "1";
+        const rName = userData.robloxName || "Unknown";
+        const rUser = userData.robloxUsername || "Unknown";
+        const rId = userData.robloxId || "1";
+
+        const newReqRef = push(ref(db, 'requests'));
+        const reqKey = newReqRef.key;
+
+        await set(newReqRef, {
+            id: reqKey,
+            dbKey: dbKey,
+            userId: dId,
+            discordName: dName,
+            discordUsername: dUser,
+            robloxName: rName,
+            robloxUsername: rUser,
+            robloxId: rId,
+            amount: amount,
+            status: 'pending',
+            timestamp: Date.now()
+        });
+
+        console.log("Sending to Discord...");
+        const success = await sendGPRequestToDiscord({
+            discordName: dName,
+            discordUsername: dUser,
+            userId: dId,
+            robloxName: rName,
+            robloxUsername: rUser,
+            robloxId: rId,
+            amount: amount,
+            requestId: reqKey
+        }, selectedFiles);
+        
+        console.log("Discord send result:", success);
+
+        if (success) {
+            showNotify(`GP Request submitted successfully!`, "success");
+        } else {
+            showNotify(`GP Request saved but Discord notification failed!`, "warning");
+        }
+
+        document.getElementById('gpAmount').value = '';
+        selectedFiles = [];
+        updateImagePreviews();
+        
+        switchTab('Profile');
+        
+    } catch (e) {
+        console.error("Submit error:", e);
+        alert("Error: " + e.message);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = "SUBMIT PROOF FOR REVIEW";
+    }
+}
+
+// ==========================================
+// 9. ADMIN FUNCTIONS with comments
+// ==========================================
+
+function loadAdminData() {
+    onValue(ref(db, 'requests'), (snapshot) => {
+        const data = snapshot.val();
+        const body = document.getElementById('adminPendingBody');
+        if (!body) return;
+        
+        body.innerHTML = '';
+        if (!data) {
+            body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No pending requests</span></td></tr>';
+            return;
+        }
+        
+        const pendingRequests = Object.values(data)
+            .filter(r => r.status === 'pending')
+            .sort((a, b) => a.timestamp - b.timestamp);
+        
+        if (pendingRequests.length === 0) {
+            body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No pending requests</span></td></tr>';
+            return;
+        }
+        
+        pendingRequests.forEach(req => {
+            body.innerHTML += `
+                <tr>
+                    <td>
+                        <div class="user-name-cell">
+                            <span class="display-name">${escapeHtml(req.discordName || "Unknown")}</span>
+                            <span class="username-handle">@${escapeHtml(req.discordUsername || "Unknown")}</span>
+                        </div>
+                    </span>
+                    <td>
+                        <div class="user-name-cell">
+                            <span class="display-name">${escapeHtml(req.robloxName || "Unknown")}</span>
+                            <span class="username-handle">@${escapeHtml(req.robloxUsername || "Unknown")}</span>
+                        </div>
+                    </span>
+                    <td style="color:#cd7f32; font-weight:bold;">+${req.amount.toLocaleString()} GP</span>
+                    <td>
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <input type="text" id="comment_${req.id}" placeholder="Admin comment (optional)" style="padding: 6px; font-size: 12px; margin-bottom: 5px;">
+                            <div style="display: flex; gap: 5px;">
+                                <button class="btn-small btn-approve" onclick="window.handleAdminActionWithComment('${req.id}', '${req.userId}', ${req.amount}, 'approve', '${req.dbKey || req.discordUsername}', '${req.robloxId || ''}', '${escapeHtml(req.discordName)}', '${escapeHtml(req.discordUsername)}', '${escapeHtml(req.robloxName)}', '${escapeHtml(req.robloxUsername)}')">
+                                    <i class="fas fa-check"></i> Approve
+                                </button>
+                                <button class="btn-small btn-deny" onclick="window.handleAdminActionWithComment('${req.id}', '${req.userId}', ${req.amount}, 'reject', '${req.dbKey || req.discordUsername}', '${req.robloxId || ''}', '${escapeHtml(req.discordName)}', '${escapeHtml(req.discordUsername)}', '${escapeHtml(req.robloxName)}', '${escapeHtml(req.robloxUsername)}')">
+                                    <i class="fas fa-times"></i> Reject
+                                </button>
+                            </div>
+                        </div>
+                    </span>
+                </tr>
+            `;
+        });
+    });
+}
+
+window.handleAdminActionWithComment = async (reqId, userId, amount, action, passedDbKey, robloxId, discordName, discordUsername, robloxName, robloxUsername) => {
+    const commentInput = document.getElementById(`comment_${reqId}`);
+    const adminComment = commentInput ? commentInput.value.trim() : '';
+    
+    if (!confirm(`Are you sure you want to ${action === 'approve' ? 'APPROVE' : 'REJECT'} this request?${adminComment ? `\n\nComment: ${adminComment}` : ''}`)) return;
+    
+    if (testModeEnabled) {
+        showNotify(`🔬 TEST MODE: ${action === 'approve' ? 'Approved' : 'Rejected'} request ${reqId} (simulated)`, "warning");
+        
+        await update(ref(db, `requests/${reqId}`), {
+            status: action === 'approve' ? 'approved' : 'rejected',
+            adminComment: adminComment,
+            processedAt: Date.now(),
+            processedBy: currentUser.id,
+            testMode: true
+        });
+        
+        showNotify(`Test: Request ${action === 'approve' ? 'approved' : 'rejected'}!`, "success");
+        return;
+    }
+    
+    try {
+        const reqSnap = await get(ref(db, `requests/${reqId}`));
+        const reqData = reqSnap.val();
+        if (!reqData) return alert("Request not found!");
+
+        await update(ref(db, `requests/${reqId}`), {
+            status: action === 'approve' ? 'approved' : 'rejected',
+            adminComment: adminComment,
+            processedAt: Date.now(),
+            processedBy: currentUser.id
+        });
+
+        const dbKey = getSafeDbKey(passedDbKey);
+        let newTotal = 0;
+        const userRef = ref(db, `users/${dbKey}`);
+        const snap = await get(userRef);
+
+        if (snap.exists()) {
+            newTotal = snap.val().totalGP || 0;
+            if (action === 'approve') {
+                newTotal += amount;
+                await update(userRef, { totalGP: newTotal });
+            }
+        }
+
+        const allUsersSnap = await get(ref(db, 'users'));
+        let rank = "?";
+        if (allUsersSnap.exists()) {
+            const sorted = Object.values(allUsersSnap.val())
+                .filter(u => u.totalGP && u.totalGP > 0)
+                .sort((a, b) => (b.totalGP || 0) - (a.totalGP || 0));
+            const index = sorted.findIndex(u => u.id === userId);
+            rank = index !== -1 ? (index + 1).toString() : "?";
+        }
+
+        const channels = await getChannelConfig();
+        const processedChannel = channels.CH_GP_PROCESSED;
+        
+        if (processedChannel) {
+            const actionText = action === 'approve' ? '✅ GP Donation Approved' : '❌ GP Donation Rejected';
+            const amountText = action === 'approve' ? `+${amount.toLocaleString()} GP` : `-${amount.toLocaleString()} GP`;
+            
+            const embed = {
+                title: actionText,
+                url: "https://corleonecity.github.io/SwordArtOnline/",
+                color: action === 'approve' ? parseInt(systemConfig.embedColors.approve.replace('#', ''), 16) : parseInt(systemConfig.embedColors.reject.replace('#', ''), 16),
+                fields: [
+                    { name: "💬 Discord", value: `**Name:** ${discordName}\n**Tag:** @${discordUsername}\n**Ping:** <@${userId}>`, inline: true },
+                    { name: "🎮 Roblox", value: `**Name:** ${robloxName}\n**User:** @${robloxUsername}\n**Profile:** [Click Here](https://www.roblox.com/users/${robloxId}/profile)`, inline: true },
+                    { name: "💰 Amount", value: amountText, inline: false },
+                    { name: "📊 New Total", value: `${newTotal.toLocaleString()} GP`, inline: true },
+                    { name: "🏆 Rank", value: `#${rank}`, inline: true },
+                    { name: "🛡️ Processed By", value: `<@${currentUser.id}>`, inline: false }
+                ],
+                timestamp: new Date().toISOString(),
+                footer: { text: "SwordArtOnline GP System" }
+            };
+            
+            if (adminComment) {
+                embed.fields.push({ name: "💬 Admin Comment", value: adminComment, inline: false });
+            }
+            
+            await sendDiscordMessage(processedChannel, `<@${userId}>`, [embed]);
+        }
+
+        showNotify(`Request ${action === 'approve' ? 'approved' : 'rejected'}!`, "success");
+        
+    } catch (e) {
+        console.error("Admin action error:", e);
+        alert("Error: " + e.message);
+    }
+};
+
+// ==========================================
+// 10. OWNER PANEL FUNCTIONS
+// ==========================================
+
+async function loadAdminRolesList() {
+    const container = document.getElementById('adminRolesList');
+    if (!container) return;
+    
+    try {
+        await loadRoleConfig();
+        
+        let html = '<table class="table"><thead><tr><th>Role Name</th><th>Role ID</th><th>Type</th><th>Action</th></tr></thead><tbody>';
+        
+        for (const role of ADMIN_ROLES) {
+            const roleName = await fetchRoleName(role);
+            html += `<tr><td class="role-name">${escapeHtml(roleName)}</span><td><td class="role-id">${escapeHtml(role)}</span><td><span class="status-badge status-approved">Admin</span></span><td><button class="btn-small btn-remove-role" onclick="removeAdminRole('${role}')">Remove</button></span></tr>`;
+        }
+        
+        for (const role of OWNER_ROLES) {
+            const roleName = await fetchRoleName(role);
+            html += `<tr><td class="role-name">${escapeHtml(roleName)}</span><td><td class="role-id">${escapeHtml(role)}</span><td><span class="status-badge status-pending">Owner</span></span><td><button class="btn-small btn-remove-role" onclick="removeOwnerRole('${role}')">Remove</button></span></tr>`;
+        }
+        
+        html += '</tbody></table>';
+        container.innerHTML = html;
+    } catch (e) {
+        console.error("Error loading roles:", e);
+        container.innerHTML = '<p style="color: #f56565;">Error loading roles</p>';
+    }
+}
+
+window.addAdminRole = async () => {
+    const roleId = document.getElementById('newRoleId').value.trim();
+    const permissionLevel = document.getElementById('rolePermissionLevel').value;
+    
+    if (!roleId) {
+        showNotify("Please enter a role ID!", "error");
+        return;
+    }
+    
+    try {
+        if (permissionLevel === 'admin') {
+            if (!ADMIN_ROLES.includes(roleId)) {
+                ADMIN_ROLES.push(roleId);
+            }
+        } else {
+            if (!OWNER_ROLES.includes(roleId)) {
+                OWNER_ROLES.push(roleId);
+            }
+        }
+        
+        await set(ref(db, 'config/admin_roles'), {
+            adminRoles: ADMIN_ROLES,
+            ownerRoles: OWNER_ROLES
+        });
+        
+        showNotify(`Role added as ${permissionLevel}!`, "success");
+        document.getElementById('newRoleId').value = '';
+        await loadAdminRolesList();
+        await fetchUserRoles(currentUser.id);
+    } catch (e) {
+        showNotify("Error saving role!", "error");
+    }
+};
+
+window.removeAdminRole = async (roleId) => {
+    const index = ADMIN_ROLES.indexOf(roleId);
+    if (index !== -1) {
+        ADMIN_ROLES.splice(index, 1);
+        await set(ref(db, 'config/admin_roles'), {
+            adminRoles: ADMIN_ROLES,
+            ownerRoles: OWNER_ROLES
+        });
+        showNotify(`Role removed from admin!`, "success");
+        await loadAdminRolesList();
+        await fetchUserRoles(currentUser.id);
+    }
+};
+
+window.removeOwnerRole = async (roleId) => {
+    const index = OWNER_ROLES.indexOf(roleId);
+    if (index !== -1) {
+        OWNER_ROLES.splice(index, 1);
+        await set(ref(db, 'config/admin_roles'), {
+            adminRoles: ADMIN_ROLES,
+            ownerRoles: OWNER_ROLES
+        });
+        showNotify(`Role removed from owner!`, "success");
+        await loadAdminRolesList();
+        await fetchUserRoles(currentUser.id);
+    }
+};
+
+async function loadChannelConfigUI() {
+    const container = document.getElementById('channelConfigList');
+    if (!container) return;
+    
+    const channelConfig = await getChannelConfig();
+    
+    const channels = [
+        { key: 'CH_LEAVE_LOGS', name: '📤 Leave Logs Channel', description: 'Channel for user leave notifications' },
+        { key: 'CH_USER_INFO', name: '🛡️ User Info Board', description: 'Channel for Guild User Info board' },
+        { key: 'CH_PANEL_INFO', name: '💻 Panel Info Board', description: 'Channel for Panel Registration Info board' },
+        { key: 'CH_LEADERBOARD', name: '🏆 Leaderboard Channel', description: 'Channel for GP Leaderboard' },
+        { key: 'CH_TRIGGER_BTN', name: '🔄 Trigger Button Channel', description: 'Channel with manual update button' },
+        { key: 'CH_GP_REQUESTS', name: '💎 GP Requests Channel', description: 'Channel for new GP donation requests' },
+        { key: 'CH_GP_PROCESSED', name: '✅ GP Processed Channel', description: 'Channel for approved/rejected GP requests' },
+        { key: 'CH_LOGIN_LOGS', name: '🔐 Login Logs Channel', description: 'Channel for user login notifications' },
+        { key: 'CH_BOT_DM_LOGS', name: '📨 Bot DM Logs Channel', description: 'Channel for /admin command messages' }
+    ];
+    
+    container.innerHTML = channels.map(ch => `
+        <div class="channel-config-item">
+            <div class="channel-config-name">${ch.name}</div>
+            <div class="channel-config-description">${ch.description}</div>
+            <div class="channel-config-input">
+                <input type="text" id="cfg_${ch.key}" value="${channelConfig[ch.key] || ''}" placeholder="Enter Discord Channel ID">
+                <span>Channel ID</span>
+            </div>
+        </div>
+    `).join('');
+}
+
+async function saveChannelConfig() {
+    const channels = [
+        'CH_LEAVE_LOGS', 'CH_USER_INFO', 'CH_PANEL_INFO', 'CH_LEADERBOARD',
+        'CH_TRIGGER_BTN', 'CH_GP_REQUESTS', 'CH_GP_PROCESSED', 'CH_LOGIN_LOGS', 'CH_BOT_DM_LOGS'
+    ];
+    
+    const newConfig = {};
+    let hasChanges = false;
+    
+    for (const ch of channels) {
+        const input = document.getElementById(`cfg_${ch}`);
+        if (input && input.value.trim()) {
+            newConfig[ch] = input.value.trim();
+            hasChanges = true;
+        } else if (input && input.value === '') {
+            newConfig[ch] = null;
+            hasChanges = true;
+        }
+    }
+    
+    if (!hasChanges) {
+        showNotify("No changes to save!", "warning");
+        return;
+    }
+    
+    try {
+        const configToSave = {};
+        for (const [key, value] of Object.entries(newConfig)) {
+            if (value !== null && value !== '') {
+                configToSave[key] = value;
+            }
+        }
+        
+        if (Object.keys(configToSave).length === 0) {
+            await set(ref(db, 'config/channels'), null);
+            showNotify("All channel configurations cleared!", "success");
+        } else {
+            await set(ref(db, 'config/channels'), configToSave);
+            showNotify("Channel configuration saved!", "success");
+        }
+        
+        await loadChannelConfigUI();
+    } catch (e) {
+        console.error("Error saving config:", e);
+        showNotify("Error saving configuration!", "error");
+    }
+}
+
+async function loadKickLogs() {
+    const logsRef = ref(db, 'logs/kicks');
+    onValue(logsRef, (snapshot) => {
+        const data = snapshot.val();
+        const body = document.getElementById('kickLogsBody');
+        if (!body) return;
+        
+        body.innerHTML = '';
+        if (!data) {
+            body.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#666;">No kick logs found</span></td></tr>';
+            return;
+        }
+        
+        const logs = Object.values(data).sort((a, b) => b.timestamp - a.timestamp);
+        
+        logs.forEach(log => {
+            const dateStr = new Date(log.timestamp).toLocaleString();
+            body.innerHTML += `
+                <tr>
+                    <td style="font-size:12px;">${dateStr}</td>
+                    <td><code>${escapeHtml(log.kickedUserId || '?')}</code><br>${escapeHtml(log.kickedUserName || '')}</td>
+                    <td><code>${escapeHtml(log.kickedByUserId || '?')}</code><br>${escapeHtml(log.kickedByUserName || '')}</td>
+                    <td>${escapeHtml(log.reason || 'No reason')}</td>
+                    <td>${log.dmSent ? '✅ Yes' : '❌ No'}</span></td>
+                </tr>
+            `;
+        });
+    });
+}
+
+async function setMaintenanceMode(enabled) {
+    try {
+        await set(ref(db, 'config/maintenance'), { enabled });
+        if (enabled) {
+            document.getElementById('maintenanceOverlay').classList.remove('hidden');
+            document.getElementById('maintenanceStatusText').textContent = 'Enabled';
+            showNotify("Maintenance mode ENABLED", "warning");
+        } else {
+            document.getElementById('maintenanceOverlay').classList.add('hidden');
+            document.getElementById('maintenanceStatusText').textContent = 'Disabled';
+            showNotify("Maintenance mode DISABLED", "success");
+        }
+    } catch (e) {
+        showNotify("Error toggling maintenance mode!", "error");
+    }
+}
+
+async function setTestMode(enabled) {
+    try {
+        await set(ref(db, 'config/testMode'), { enabled });
+        testModeEnabled = enabled;
+        updateTestModeIndicator();
+        showNotify(`Test mode ${enabled ? 'ENABLED' : 'DISABLED'}`, enabled ? "warning" : "success");
+    } catch (e) {
+        showNotify("Error toggling test mode!", "error");
+    }
+}
+
+async function loadRegisteredUsersCount() {
+    try {
+        const usersSnap = await get(ref(db, 'users'));
+        const users = usersSnap.val() || {};
+        let totalUsers = 0;
+        for (const [key, user] of Object.entries(users)) {
+            if (user.robloxId && user.robloxId !== '1') totalUsers++;
+        }
+        const statTotalUsers = document.getElementById('statTotalUsers');
+        if (statTotalUsers) statTotalUsers.textContent = totalUsers;
+    } catch (e) {
+        console.error("Error loading users count:", e);
+    }
+}
+
+function loadSystemConfigUI() {
+    document.getElementById('colorApprove').value = systemConfig.embedColors.approve;
+    document.getElementById('colorReject').value = systemConfig.embedColors.reject;
+    document.getElementById('colorPending').value = systemConfig.embedColors.pending;
+    document.getElementById('colorInfo').value = systemConfig.embedColors.info;
+    document.getElementById('colorLeaderboard').value = systemConfig.embedColors.leaderboard;
+    document.getElementById('maxImagesPerRequest').value = systemConfig.limits.maxImagesPerRequest;
+    document.getElementById('loginMusicUrl').value = systemConfig.musicUrl;
+    document.getElementById('updateInterval').value = systemConfig.updateInterval;
+    document.getElementById('gpSubmitRoleId').value = GP_SUBMIT_ROLE;
+}
+
+async function saveSystemConfig() {
+    const newConfig = {
+        embedColors: {
+            approve: document.getElementById('colorApprove').value,
+            reject: document.getElementById('colorReject').value,
+            pending: document.getElementById('colorPending').value,
+            info: document.getElementById('colorInfo').value,
+            leaderboard: document.getElementById('colorLeaderboard').value
+        },
+        limits: {
+            maxImagesPerRequest: parseInt(document.getElementById('maxImagesPerRequest').value)
+        },
+        musicUrl: document.getElementById('loginMusicUrl').value,
+        updateInterval: parseInt(document.getElementById('updateInterval').value)
+    };
+    
+    try {
+        await set(ref(db, 'config/system'), newConfig);
+        systemConfig.embedColors = newConfig.embedColors;
+        systemConfig.limits.maxImagesPerRequest = newConfig.limits.maxImagesPerRequest;
+        systemConfig.musicUrl = newConfig.musicUrl;
+        systemConfig.updateInterval = newConfig.updateInterval;
+        showNotify("System configuration saved!", "success");
+    } catch (e) {
+        showNotify("Error saving configuration!", "error");
+    }
+}
+
+async function saveGpSubmitRole() {
+    const newRoleId = document.getElementById('gpSubmitRoleId').value.trim();
+    if (!newRoleId) {
+        showNotify("Please enter a role ID!", "error");
+        return;
+    }
+    
+    try {
+        await set(ref(db, 'config/system/gpSubmitRole'), newRoleId);
+        GP_SUBMIT_ROLE = newRoleId;
+        showNotify(`GP Submit Role updated to ${newRoleId}!`, "success");
+        updatePermissions();
+    } catch (e) {
+        showNotify("Error saving GP Submit Role!", "error");
+    }
+}
+
+// ==========================================
+// 11. SAVED MESSAGES FUNCTIONS
+// ==========================================
+
+async function loadSavedMessages() {
+    const messagesRef = ref(db, 'saved_messages');
+    onValue(messagesRef, (snapshot) => {
+        const data = snapshot.val();
+        const container = document.getElementById('savedMessagesList');
+        
+        if (!container) return;
+        
+        if (!data || Object.keys(data).length === 0) {
+            container.innerHTML = '<p style="color: #666; text-align: center;">No saved messages yet. Create one above!</p>';
+            return;
+        }
+        
+        container.innerHTML = '';
+        Object.entries(data).forEach(([id, msg]) => {
+            const previewContent = msg.content ? (msg.content.substring(0, 100) + (msg.content.length > 100 ? '...' : '')) : 'No content';
+            const messageIdDisplay = msg.discordMessageId ? `✅ Message ID: ${msg.discordMessageId.substring(0, 8)}...` : '⚠️ Not sent yet';
+            
+            container.innerHTML += `
+                <div class="saved-message-item" data-id="${id}">
+                    <div class="message-name">📝 ${escapeHtml(msg.name)}</div>
+                    <div class="message-channel">📡 Channel ID: ${escapeHtml(msg.channelId || 'Not set')}</div>
+                    <div class="message-id" style="font-size: 11px; color: ${msg.discordMessageId ? '#48bb78' : '#f56565'}; margin-bottom: 5px;">
+                        ${messageIdDisplay}
+                    </div>
+                    <div class="message-preview">
+                        <strong>Message:</strong> ${escapeHtml(previewContent)}
+                        ${msg.embedTitle ? `<br><strong>Embed:</strong> ${escapeHtml(msg.embedTitle)}` : ''}
+                    </div>
+                    <div class="message-actions">
+                        <button class="btn-edit-message" onclick="editSavedMessage('${id}')">✏️ Edit</button>
+                        <button class="btn-send-message" onclick="sendSavedMessage('${id}')">📤 Send / Update</button>
+                        <button class="btn-delete-message" onclick="deleteSavedMessage('${id}')">🗑️ Delete</button>
+                    </div>
+                </div>
+            `;
+        });
+    });
+}
+
+window.editSavedMessage = async (id) => {
+    const snap = await get(ref(db, `saved_messages/${id}`));
+    const msg = snap.val();
+    if (!msg) return;
+    
+    currentEditingMessageId = id;
+    
+    document.getElementById('messageName').value = msg.name || '';
+    document.getElementById('messageChannelId').value = msg.channelId || '';
+    document.getElementById('messageContent').value = msg.content || '';
+    document.getElementById('messageEmbedTitle').value = msg.embedTitle || '';
+    document.getElementById('messageEmbedDesc').value = msg.embedDesc || '';
+    if (msg.embedColor) document.getElementById('messageEmbedColor').value = msg.embedColor;
+    
+    const saveBtn = document.getElementById('saveMessageBtn');
+    saveBtn.textContent = '✏️ Update Message';
+    saveBtn.style.background = '#ffd700';
+    
+    showNotify(`Editing "${msg.name}" - Click Update to save changes`, "success");
+};
+
+async function saveMessage() {
+    const name = document.getElementById('messageName').value.trim();
+    const channelId = document.getElementById('messageChannelId').value.trim();
+    const content = document.getElementById('messageContent').value;
+    const embedTitle = document.getElementById('messageEmbedTitle').value;
+    const embedDesc = document.getElementById('messageEmbedDesc').value;
+    const embedColor = document.getElementById('messageEmbedColor').value;
+    
+    if (!name) {
+        showNotify("Please enter a message name!", "error");
+        return;
+    }
+    
+    if (!channelId) {
+        showNotify("Please enter a channel ID!", "error");
+        return;
+    }
+    
+    const messageData = {
+        name: name,
+        channelId: channelId,
+        content: content,
+        embedTitle: embedTitle,
+        embedDesc: embedDesc,
+        embedColor: embedColor,
+        updatedAt: Date.now(),
+        updatedBy: currentUser?.id
+    };
+    
+    try {
+        if (currentEditingMessageId) {
+            const existingSnap = await get(ref(db, `saved_messages/${currentEditingMessageId}`));
+            const existing = existingSnap.val();
+            if (existing && existing.discordMessageId) {
+                messageData.discordMessageId = existing.discordMessageId;
+            }
+            await update(ref(db, `saved_messages/${currentEditingMessageId}`), messageData);
+            showNotify(`Message "${name}" updated successfully!`, "success");
+            currentEditingMessageId = null;
+            
+            const saveBtn = document.getElementById('saveMessageBtn');
+            saveBtn.textContent = '💾 Save Message';
+            saveBtn.style.background = '#48bb78';
+        } else {
+            const newRef = push(ref(db, 'saved_messages'));
+            await set(newRef, { ...messageData, createdAt: Date.now(), createdBy: currentUser?.id });
+            showNotify(`Message "${name}" saved successfully!`, "success");
+        }
+        
+        document.getElementById('messageName').value = '';
+        document.getElementById('messageChannelId').value = '';
+        document.getElementById('messageContent').value = '';
+        document.getElementById('messageEmbedTitle').value = '';
+        document.getElementById('messageEmbedDesc').value = '';
+        document.getElementById('messageEmbedColor').value = '#5865F2';
+        
+        loadSavedMessages();
+    } catch (e) {
+        showNotify("Error saving message!", "error");
+    }
+}
+
+window.sendSavedMessage = async (id) => {
+    const snap = await get(ref(db, `saved_messages/${id}`));
+    const msg = snap.val();
+    if (!msg) return;
+    
+    if (!msg.channelId) {
+        showNotify("No channel ID configured for this message!", "error");
+        return;
+    }
+    
+    let embeds = null;
+    if (msg.embedTitle || msg.embedDesc) {
+        embeds = [{
+            title: msg.embedTitle || undefined,
+            description: msg.embedDesc || undefined,
+            color: msg.embedColor ? parseInt(msg.embedColor.replace('#', ''), 16) : 0x5865F2,
+            timestamp: new Date().toISOString()
+        }];
+    }
+    
+    showNotify(`Sending "${msg.name}"...`, "warning");
+    
+    let storedMessageId = msg.discordMessageId;
+    let success = false;
+    
+    if (storedMessageId) {
+        try {
+            const response = await fetch(`${BACKEND_URL}/update-message`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    channelId: msg.channelId, 
+                    messageId: storedMessageId, 
+                    content: msg.content, 
+                    embeds: embeds 
+                })
+            });
+            
+            if (response.ok) {
+                success = true;
+                showNotify(`Message "${msg.name}" updated successfully!`, "success");
+            } else if (response.status === 404) {
+                console.log("Message not found, sending new one");
+                storedMessageId = null;
+            } else {
+                storedMessageId = null;
+            }
+        } catch (e) {
+            console.error("Update failed, sending new message:", e);
+            storedMessageId = null;
+        }
+    }
+    
+    if (!storedMessageId) {
+        const newMsgResponse = await fetch(`${BACKEND_URL}/send-channel-message`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ channelId: msg.channelId, content: msg.content, embeds: embeds })
+        });
+        
+        if (newMsgResponse.ok) {
+            const newMsgData = await newMsgResponse.json();
+            success = true;
+            
+            if (newMsgData.messageId) {
+                await update(ref(db, `saved_messages/${id}`), { 
+                    discordMessageId: newMsgData.messageId,
+                    lastSentAt: Date.now()
+                });
+                showNotify(`Message "${msg.name}" sent successfully! Message ID saved.`, "success");
+            } else {
+                showNotify(`Message "${msg.name}" sent successfully!`, "success");
+            }
+        } else {
+            success = false;
+        }
+    }
+    
+    if (!success) {
+        showNotify(`Failed to send "${msg.name}"!`, "error");
+    }
+    
+    loadSavedMessages();
+};
+
+window.deleteSavedMessage = async (id) => {
+    if (!confirm("Are you sure you want to delete this message?")) return;
+    try {
+        await remove(ref(db, `saved_messages/${id}`));
+        showNotify("Message deleted!", "success");
+        loadSavedMessages();
+    } catch (e) {
+        showNotify("Error deleting message!", "error");
+    }
+};
+
+function clearMessageForm() {
+    currentEditingMessageId = null;
+    document.getElementById('messageName').value = '';
+    document.getElementById('messageChannelId').value = '';
+    document.getElementById('messageContent').value = '';
+    document.getElementById('messageEmbedTitle').value = '';
+    document.getElementById('messageEmbedDesc').value = '';
+    document.getElementById('messageEmbedColor').value = '#5865F2';
+    
+    const saveBtn = document.getElementById('saveMessageBtn');
+    saveBtn.textContent = '💾 Save Message';
+    saveBtn.style.background = '#48bb78';
+    
+    showNotify("Form cleared!", "success");
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// ==========================================
+// 12. EVENT LISTENERS & INITIALIZATION
 // ==========================================
 
 document.getElementById('discordLoginBtn')?.addEventListener('click', () => {
     window.location.href = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=identify%20guilds&state=discord`;
 });
+
 document.getElementById('robloxLoginBtn')?.addEventListener('click', () => {
     window.location.href = `https://apis.roblox.com/oauth/v1/authorize?client_id=${ROBLOX_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=openid%20profile&state=roblox`;
 });
+
 document.getElementById('dcLogoutBtn')?.addEventListener('click', () => {
     sessionStorage.removeItem('pn_session');
     window.location.href = REDIRECT_URI;
 });
-document.getElementById('changeGuildBtn')?.addEventListener('click', async () => {
-    await loadAvailableGuilds();
-    showGuildSelector();
-});
+
 document.getElementById('rbxLogoutBtn')?.addEventListener('click', async () => {
     if (!confirm("Disconnect Roblox?")) return;
-    const dbKey = getSafeDbKey(currentUser.username);
-    await update(ref(db, `guilds/${currentGuildId}/users/${dbKey}`), { robloxId: null, robloxName: null, robloxUsername: null });
-    window.location.reload();
+    try {
+        const dbKey = getSafeDbKey(currentUser.username);
+        await update(ref(db, `users/${dbKey}`), {
+            robloxId: null,
+            robloxName: null,
+            robloxUsername: null
+        });
+        window.location.reload();
+    } catch (e) {
+        showNotify("Error!", "error");
+    }
 });
-document.getElementById('leaderboardSearch')?.addEventListener('input', (e) => renderLeaderboard(e.target.value));
+
+document.getElementById('leaderboardSearch')?.addEventListener('input', (e) => {
+    renderLeaderboard(e.target.value);
+});
+
 document.getElementById('proofImage')?.addEventListener('change', (e) => {
-    const max = guildConfigs[currentGuildId]?.system?.limits?.maxImagesPerRequest || 1;
     const newFiles = Array.from(e.target.files);
-    if (selectedFiles.length + newFiles.length > max) return alert(`Max ${max} images`);
+    const maxImages = systemConfig.limits.maxImagesPerRequest;
+    if (selectedFiles.length + newFiles.length > maxImages) {
+        alert(`Only ${maxImages} screenshot(s) are allowed!`);
+        return;
+    }
     selectedFiles = selectedFiles.concat(newFiles);
     updateImagePreviews();
     e.target.value = '';
 });
+
 document.getElementById('addGPBtn')?.addEventListener('click', submitGPRequest);
+
 document.getElementById('tabBtnSpenden')?.addEventListener('click', () => switchTab('Spenden'));
 document.getElementById('tabBtnLeaderboard')?.addEventListener('click', () => switchTab('Leaderboard'));
 document.getElementById('tabBtnProfile')?.addEventListener('click', () => switchTab('Profile'));
 document.getElementById('tabBtnAdmin')?.addEventListener('click', () => {
-    if (hasAdminPermission(currentGuildId) || isPanelOwner()) switchTab('Admin');
-    else showNotify("No permission", "error");
+    if (hasAdminPermission()) {
+        switchTab('Admin');
+        loadAdminData();
+    } else {
+        showNotify("You don't have permission to access Admin Panel!", "error");
+    }
 });
-document.getElementById('tabBtnGuildLeader')?.addEventListener('click', () => {
-    if (hasGuildLeaderPermission(currentGuildId) || isPanelOwner()) switchTab('GuildLeader');
-    else showNotify("No permission", "error");
+document.getElementById('tabBtnOwner')?.addEventListener('click', () => {
+    if (hasOwnerPermission()) {
+        switchTab('Owner');
+        loadAdminRolesList();
+        loadChannelConfigUI();
+        loadKickLogs();
+        loadSavedMessages();
+        loadSystemConfigUI();
+        loadRegisteredUsersCount();
+    } else {
+        showNotify("You don't have permission to access Owner Panel!", "error");
+    }
 });
-document.getElementById('tabBtnPanelOwner')?.addEventListener('click', () => {
-    if (isPanelOwner()) switchTab('PanelOwner');
-    else showNotify("No permission", "error");
-});
+
 document.getElementById('addRoleBtn')?.addEventListener('click', window.addAdminRole);
 document.getElementById('saveChannelConfigBtn')?.addEventListener('click', saveChannelConfig);
-document.getElementById('saveRolesConfigBtn')?.addEventListener('click', saveRolesConfig);
 document.getElementById('saveSystemConfigBtn')?.addEventListener('click', saveSystemConfig);
 document.getElementById('saveGpSubmitRoleBtn')?.addEventListener('click', saveGpSubmitRole);
 document.getElementById('refreshUsersBtn')?.addEventListener('click', loadRegisteredUsersCount);
@@ -1106,9 +1714,14 @@ document.getElementById('enableTestModeBtn')?.addEventListener('click', () => se
 document.getElementById('disableTestModeBtn')?.addEventListener('click', () => setTestMode(false));
 document.getElementById('saveMessageBtn')?.addEventListener('click', saveMessage);
 document.getElementById('sendMessageBtn')?.addEventListener('click', () => {
-    if (currentEditingMessageId) window.sendSavedMessage(currentEditingMessageId);
-    else {
-        if (!document.getElementById('messageName').value.trim()) return showNotify("Save or load first", "error");
+    if (currentEditingMessageId) {
+        sendSavedMessage(currentEditingMessageId);
+    } else {
+        const name = document.getElementById('messageName').value.trim();
+        if (!name) {
+            showNotify("Please save the message first or load an existing one!", "error");
+            return;
+        }
         saveMessage();
     }
 });
@@ -1117,33 +1730,30 @@ document.getElementById('enableMaintenanceBtn')?.addEventListener('click', () =>
 document.getElementById('disableMaintenanceBtn')?.addEventListener('click', () => setMaintenanceMode(false));
 
 // ==========================================
-// APP START
+// 13. APP START (AUTH CHECK)
 // ==========================================
 
 const urlParams = new URLSearchParams(window.location.search);
 const code = urlParams.get('code');
 const state = urlParams.get('state');
+
 if (code) {
-    if (state === 'discord') handleDiscordLogin(code);
-    else if (state === 'roblox') handleRobloxLogin(code);
+    if (state === 'discord') {
+        handleDiscordLogin(code);
+    } else if (state === 'roblox') {
+        handleRobloxLogin(code);
+    }
 } else {
     const saved = sessionStorage.getItem('pn_session');
     if (saved) {
         try {
             currentUser = JSON.parse(saved);
-            if (!currentUser.id) throw new Error();
-            (async () => {
-                await loadAvailableGuilds();
-                if (availableGuilds.length === 1) {
-                    await selectGuild(availableGuilds[0].id, availableGuilds[0].name);
-                } else if (availableGuilds.length > 1) {
-                    showGuildSelector();
-                } else {
-                    document.getElementById('loginPage').classList.add('hidden');
-                    document.getElementById('noPermissionPage').classList.remove('hidden');
-                }
-            })();
-        } catch(e) { sessionStorage.removeItem('pn_session'); playLoginMusic(); }
+            if (!currentUser.id) throw new Error("Broken session");
+            checkRobloxLink();
+        } catch (e) {
+            sessionStorage.removeItem('pn_session');
+            playLoginMusic();
+        }
     } else {
         playLoginMusic();
     }
