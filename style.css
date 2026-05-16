@@ -795,12 +795,22 @@ input[type="file"] {
     cursor: pointer;
 }
 
-/* Role Items im Role Management */
+/* DYNAMIC ROLES CONTAINER (scrollbar) */
+#dynamicRolesContainer {
+    max-height: 400px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-right: 5px;
+}
+
+/* Role Items */
 .role-item {
     background: #0f0f0f;
     border: 1px solid #222;
     border-radius: 12px;
-    padding: 15px;
+    padding: 12px 15px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -811,14 +821,25 @@ input[type="file"] {
     border-color: #ffd70040;
 }
 
+.role-name {
+    font-weight: bold;
+    font-size: 14px;
+    color: #ffd700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 60%;
+}
+
 .role-open-btn {
     background: #5865F2;
     border: none;
-    padding: 8px 16px;
+    padding: 6px 12px;
     border-radius: 8px;
     color: white;
     cursor: pointer;
     font-weight: bold;
+    font-size: 12px;
     transition: 0.2s;
 }
 
