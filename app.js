@@ -224,26 +224,15 @@ async function renderDynamicRoles() {
     console.log("Roles rendered, total buttons:", document.querySelectorAll('.role-open-btn').length);
 }
 
-// GLOBALE Funktion für das Modal - damit sie von überall aufgerufen werden kann
-window.openRolePermissionModal = function(roleId, roleName) {
-    console.log("window.openRolePermissionModal called with:", roleId, roleName);
-    openRolePermissionModal(roleId, roleName);
-};
-
+// VARIABLE für die aktuell bearbeitete Rolle
 let currentEditingRoleId = null;
 
-function openRolePermissionModal(roleId, roleName) {
-    console.log("OPENING MODAL for role:", roleId, roleName);
-    alert("Modal should open now! Role: " + roleName); // TEST-ALERT
+// DIE EIGENTLICHE MODAL-FUNKTION (umbenannt, um Rekursion zu vermeiden)
+function showRolePermissionModal(roleId, roleName) {
+    console.log("showRolePermissionModal called for role:", roleId, roleName);
     
     currentEditingRoleId = roleId;
     const modal = document.getElementById('rolePermissionModal');
-    if (!modal) {
-        console.error("Modal element not found!");
-        alert("Modal element not found in HTML!");
-        return;
-    }
-    
     const title = document.getElementById('modalRoleTitle');
     title.textContent = `Permissions for ${roleName}`;
     
@@ -290,6 +279,11 @@ function openRolePermissionModal(roleId, roleName) {
     modal.classList.remove('hidden');
     console.log("Modal opened, classList now:", modal.classList);
 }
+
+// GLOBALE Funktion für den Zugriff von außen (vermeidet Rekursion)
+window.openRolePermissionModal = function(roleId, roleName) {
+    showRolePermissionModal(roleId, roleName);
+};
 
 function closeModal() {
     document.getElementById('rolePermissionModal').classList.add('hidden');
@@ -717,7 +711,7 @@ function renderLeaderboard(filterText) {
             <td style="color:#48bb78; font-weight:bold;">${(u.totalGP || 0).toLocaleString()} GP</span>
         </tr>`;
     });
-    if (usersArray.length === 0) body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No users with GP yet</td></tr>';
+    if (usersArray.length === 0) body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No users with GP yet</span></tr>';
     const totalGP = Object.values(allUsersData).reduce((sum, u) => sum + (u.totalGP || 0), 0);
     const totalGpStat = document.getElementById('totalGpStat');
     if (totalGpStat) totalGpStat.textContent = totalGP.toLocaleString();
@@ -877,7 +871,6 @@ window.handleAdminActionWithComment = async (reqId, userId, amount, action, pass
                 { name: "🎮 Roblox", value: `**Name:** ${robloxName}\n**User:** @${robloxUsername}\n**Profile:** [Click Here](https://www.roblox.com/users/${robloxId}/profile)`, inline: true },
                 { name: "💰 Amount", value: action === 'approve' ? `+${amount.toLocaleString()} GP` : `-${amount.toLocaleString()} GP`, inline: false },
                 { name: "📊 New Total", value: `${newTotal.toLocaleString()} GP`, inline: true },
-                { name: "🏆 Rank", value: `#${rank}`, inline: true },
                 { name: "🛡️ Processed By", value: `<@${currentUser.id}>`, inline: false }
             ], timestamp: new Date().toISOString(), footer: { text: "SwordArtOnline GP System" } };
             if (adminComment) embed.fields.push({ name: "💬 Admin Comment", value: adminComment, inline: false });
@@ -975,7 +968,7 @@ async function loadKickLogs() {
         body.innerHTML = '';
         if (!data) { body.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#666;">No kick logs found</td></tr>'; return; }
         const logs = Object.values(data).sort((a, b) => b.timestamp - a.timestamp);
-        logs.forEach(log => { body.innerHTML += `<tr><td style="font-size:12px;">${new Date(log.timestamp).toLocaleString()}</td><td><code>${escapeHtml(log.kickedUserId || '?')}</code><br>${escapeHtml(log.kickedUserName || '')}</td><td><code>${escapeHtml(log.kickedByUserId || '?')}</code><br>${escapeHtml(log.kickedByUserName || '')}</td><td>${escapeHtml(log.reason || 'No reason')}</td><td>${log.dmSent ? '✅ Yes' : '❌ No'}</td>`; });
+        logs.forEach(log => { body.innerHTML += `<tr><td style="font-size:12px;">${new Date(log.timestamp).toLocaleString()}</td><td><code>${escapeHtml(log.kickedUserId || '?')}</code><br>${escapeHtml(log.kickedUserName || '')}</td><td><code>${escapeHtml(log.kickedByUserId || '?')}</code><br>${escapeHtml(log.kickedByUserName || '')}</td><td>${escapeHtml(log.reason || 'No reason')}</td><td>${log.dmSent ? '✅ Yes' : '❌ No'}</td></tr>`; });
     });
 }
 
@@ -1198,7 +1191,7 @@ document.addEventListener('click', function(e) {
         const roleName = openBtn.getAttribute('data-role-name');
         e.preventDefault();
         e.stopPropagation();
-        openRolePermissionModal(roleId, roleName);
+        showRolePermissionModal(roleId, roleName);
     }
 });
 
