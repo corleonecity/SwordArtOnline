@@ -41,7 +41,7 @@ const REDIRECT_URI = 'https://corleonecity.github.io/SwordArtOnline/';
 
 // Firebase Imports
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
-import { getDatabase, ref, set, onValue, get, update, push, remove } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
+import { getDatabase, ref, set, onValue, get, update, push, remove, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
 
 // Firebase Configuration
 const firebaseConfig = {
@@ -162,8 +162,10 @@ function updateTestModeIndicator() {
 // 3. HELPER FUNCTIONS
 // ==========================================
 
-function getSafeDbKey(username) {
-    return username ? username.replace(/[.#$\[\]]/g, '_') : 'unknown_user';
+// Wichtig: Benutzer werden mit Discord-Username als Key gespeichert!
+function getSafeDbKey(discordUsername) {
+    if (!discordUsername) return 'unknown_user';
+    return discordUsername.toLowerCase().replace(/[.#$\[\]]/g, '_');
 }
 
 function playLoginMusic() {
@@ -335,6 +337,153 @@ async function fetchRoleName(roleId) {
 }
 
 // ==========================================
+// 3.5 MANUAL USER REGISTRATION
+// ==========================================
+
+async function checkExistingUserByDiscordUsername(discordUsername) {
+    if (!discordUsername) return { exists: false };
+    
+    try {
+        const dbKey = getSafeDbKey(discordUsername);
+        const userRef = ref(db, `users/${dbKey}`);
+        const snap = await get(userRef);
+        
+        if (snap.exists()) {
+            return { exists: true, userKey: dbKey, userData: snap.val() };
+        }
+        return { exists: false };
+    } catch (e) {
+        console.error("Error checking existing user:", e);
+        return { exists: false, error: e.message };
+    }
+}
+
+async function manualRegisterUser() {
+    if (!hasOwnerPermission()) {
+        showNotify("Only the owner can manually register users!", "error");
+        return;
+    }
+    
+    const discordId = document.getElementById('manualDiscordId')?.value.trim();
+    const discordName = document.getElementById('manualDiscordName')?.value.trim() || "Unknown";
+    const discordUsername = document.getElementById('manualDiscordUsername')?.value.trim();
+    const robloxId = document.getElementById('manualRobloxId')?.value.trim();
+    const robloxName = document.getElementById('manualRobloxName')?.value.trim() || "Unknown";
+    const robloxUsername = document.getElementById('manualRobloxUsername')?.value.trim();
+    const initialGp = parseInt(document.getElementById('manualInitialGp')?.value) || 0;
+    
+    const resultDiv = document.getElementById('manualRegisterResult');
+    
+    if (!discordId) {
+        resultDiv.innerHTML = '<span style="color: #f56565;">❌ Discord User ID is required!</span>';
+        return;
+    }
+    
+    if (!discordUsername) {
+        resultDiv.innerHTML = '<span style="color: #f56565;">❌ Discord Username is required!</span>';
+        return;
+    }
+    
+    if (!robloxId) {
+        resultDiv.innerHTML = '<span style="color: #f56565;">❌ Roblox User ID is required!</span>';
+        return;
+    }
+    
+    if (!robloxUsername) {
+        resultDiv.innerHTML = '<span style="color: #f56565;">❌ Roblox Username is required!</span>';
+        return;
+    }
+    
+    resultDiv.innerHTML = '<span style="color: #ffd700;"><i class="fas fa-spinner fa-spin"></i> Saving user...</span>';
+    
+    try {
+        const dbKey = getSafeDbKey(discordUsername);
+        
+        const userData = {
+            id: discordId,
+            discordName: discordName,
+            discordUsername: discordUsername,
+            robloxId: robloxId,
+            robloxName: robloxName,
+            robloxUsername: robloxUsername,
+            totalGP: initialGp,
+            hasLeftServer: false,
+            manuallyRegistered: true,
+            registeredAt: Date.now(),
+            registeredBy: currentUser?.id
+        };
+        
+        const existing = await checkExistingUserByDiscordUsername(discordUsername);
+        
+        if (existing.exists) {
+            await update(ref(db, `users/${dbKey}`), {
+                ...userData,
+                updatedAt: Date.now(),
+                updatedBy: currentUser?.id
+            });
+            resultDiv.innerHTML = `<span style="color: #48bb78;">✅ User UPDATED successfully! Discord: @${discordUsername}</span>`;
+            showNotify(`User ${discordUsername} has been updated!`, "success");
+        } else {
+            await set(ref(db, `users/${dbKey}`), {
+                ...userData,
+                createdAt: Date.now()
+            });
+            resultDiv.innerHTML = `<span style="color: #48bb78;">✅ User CREATED successfully! Discord: @${discordUsername}</span>`;
+            showNotify(`User ${discordUsername} has been registered manually!`, "success");
+        }
+        
+        loadRegisteredUsersCount();
+        
+    } catch (e) {
+        console.error("Manual registration error:", e);
+        resultDiv.innerHTML = `<span style="color: #f56565;">❌ Error: ${e.message}</span>`;
+    }
+}
+
+async function manualCheckUser() {
+    const discordUsername = document.getElementById('manualDiscordUsername')?.value.trim();
+    const resultDiv = document.getElementById('manualRegisterResult');
+    
+    if (!discordUsername) {
+        resultDiv.innerHTML = '<span style="color: #f56565;">❌ Please enter a Discord Username first!</span>';
+        return;
+    }
+    
+    resultDiv.innerHTML = '<span style="color: #ffd700;"><i class="fas fa-spinner fa-spin"></i> Checking...</span>';
+    
+    try {
+        const existing = await checkExistingUserByDiscordUsername(discordUsername);
+        
+        if (existing.exists) {
+            const user = existing.userData;
+            resultDiv.innerHTML = `
+                <span style="color: #48bb78;">✅ User FOUND!</span><br>
+                📝 Discord: ${user.discordName} (@${user.discordUsername})<br>
+                🎮 Roblox: ${user.robloxName} (@${user.robloxUsername})<br>
+                💰 GP: ${(user.totalGP || 0).toLocaleString()}<br>
+                📅 Registered: ${user.manuallyRegistered ? 'Manually' : 'Via Login'}
+            `;
+        } else {
+            resultDiv.innerHTML = '<span style="color: #f56565;">❌ User NOT found in database. You can create them using the form above.</span>';
+        }
+    } catch (e) {
+        resultDiv.innerHTML = `<span style="color: #f56565;">❌ Error: ${e.message}</span>`;
+    }
+}
+
+function clearManualForm() {
+    document.getElementById('manualDiscordId').value = '';
+    document.getElementById('manualDiscordName').value = '';
+    document.getElementById('manualDiscordUsername').value = '';
+    document.getElementById('manualRobloxId').value = '';
+    document.getElementById('manualRobloxName').value = '';
+    document.getElementById('manualRobloxUsername').value = '';
+    document.getElementById('manualInitialGp').value = '0';
+    document.getElementById('manualRegisterResult').innerHTML = '';
+    showNotify("Form cleared!", "success");
+}
+
+// ==========================================
 // 4. DISCORD BOT MESSAGES
 // ==========================================
 
@@ -376,9 +525,9 @@ async function updateBotStatus() {
     }
 }
 
-async function updateDiscordNickname(userId, robloxDisplayName, robloxUsername) {
+async function updateDiscordNickname(userId, robloxName, robloxUsername) {
     try {
-        const newNickname = `${robloxDisplayName} (@${robloxUsername})`;
+        const newNickname = `${robloxName} (@${robloxUsername})`;
         
         const response = await fetch(`${BACKEND_URL}/update-nickname`, {
             method: 'POST',
@@ -419,14 +568,44 @@ async function sendLoginToDiscord(userData) {
         color: parseInt(systemConfig.embedColors.info.replace('#', ''), 16),
         fields: [
             { name: "💬 Discord", value: `**Name:** ${userData.discordName}\n**Tag:** @${userData.discordUsername}\n**ID:** <@${userData.userId}>`, inline: true },
-            { name: "🎮 Roblox", value: `**Display Name:** ${userData.robloxDisplayName}\n**Username:** @${userData.robloxUsername}\n**Profile:** [Click Here](https://www.roblox.com/users/${userData.robloxId}/profile)`, inline: true },
-            { name: "📝 Account Type", value: userData.isManual ? "✨ Manually Created" : "🔗 Auto-Linked", inline: false }
+            { name: "🎮 Roblox", value: `**Name:** ${userData.robloxName}\n**User:** @${userData.robloxUsername}\n**Profile:** [Click Here](https://www.roblox.com/users/${userData.robloxId}/profile)`, inline: true },
+            { name: "📝 Nickname Updated", value: `${userData.robloxName} (@${userData.robloxUsername})`, inline: false }
         ],
         timestamp: new Date().toISOString(),
         footer: { text: "SwordArtOnline Panel" }
     };
     
     return sendDiscordMessage(loginLogsChannel, null, [embed]);
+}
+
+async function sendLeftUserToDiscord(userData) {
+    const channels = await getChannelConfig();
+    const leaveLogsChannel = channels.CH_LEAVE_LOGS;
+    
+    if (!leaveLogsChannel) {
+        console.warn("CH_LEAVE_LOGS not configured - skipping leave notification");
+        return false;
+    }
+    
+    const adminRoleId = ADMIN_ROLES[0] || '1503609455466643547';
+    
+    const robloxProfileLink = userData.robloxUsername 
+        ? `https://www.roblox.com/user.aspx?username=${userData.robloxUsername}`
+        : "";
+    
+    const embed = {
+        title: "🚨 User has left the server!",
+        url: "https://corleonecity.github.io/SwordArtOnline/",
+        color: parseInt(systemConfig.embedColors.reject.replace('#', ''), 16),
+        fields: [
+            { name: "💬 Discord", value: `**Display:** ${userData.discordName || "Unknown"}\n**User:** @${userData.discordUsername || "Unknown"}\n**Ping:** <@${userData.id}>`, inline: true },
+            { name: "🎮 Roblox", value: `**Display:** ${userData.robloxName || "Unknown"}\n**User:** @${userData.robloxUsername || "Unknown"}\n**Profile:** [Click Here](${robloxProfileLink})`, inline: true }
+        ],
+        timestamp: new Date().toISOString(),
+        footer: { text: "SwordArtOnline Panel" }
+    };
+    
+    return sendDiscordMessage(leaveLogsChannel, `<@&${adminRoleId}>`, [embed]);
 }
 
 async function sendGPRequestToDiscord(requestData, images) {
@@ -448,7 +627,7 @@ async function sendGPRequestToDiscord(requestData, images) {
         color: parseInt(systemConfig.embedColors.pending.replace('#', ''), 16),
         fields: [
             { name: "💬 Discord", value: `**Name:** ${requestData.discordName}\n**Tag:** @${requestData.discordUsername}\n**Ping:** <@${requestData.userId}>`, inline: true },
-            { name: "🎮 Roblox", value: `**Display Name:** ${requestData.robloxDisplayName}\n**Username:** @${requestData.robloxUsername}\n**Profile:** [Click Here](https://www.roblox.com/users/${requestData.robloxId}/profile)`, inline: true },
+            { name: "🎮 Roblox", value: `**Name:** ${requestData.robloxName}\n**User:** @${requestData.robloxUsername}\n**Profile:** [Click Here](https://www.roblox.com/users/${requestData.robloxId}/profile)`, inline: true },
             { name: "💰 Amount", value: `**+${requestData.amount.toLocaleString()} GP**`, inline: false },
             { name: "📊 Status", value: "⏳ Pending Review", inline: true },
             { name: "🆔 Request ID", value: `\`${requestData.requestId}\``, inline: true }
@@ -520,7 +699,7 @@ async function sendGPRequestToDiscord(requestData, images) {
 }
 
 // ==========================================
-// 5. DISCORD & ROBLOX AUTHENTIFICATION
+// 5. DISCORD & ROBLOX AUTHENTIFICATION (mit automatischer Erkennung)
 // ==========================================
 
 async function doLiveCheck() {
@@ -568,216 +747,6 @@ async function sendLoginWebhook(userData) {
     }
 }
 
-// Roblox User Info mit Display Name holen
-async function getRobloxUserInfo(userId) {
-    try {
-        // Zuerst die Summary API für den Benutzernamen
-        const summaryRes = await fetch(`https://users.roblox.com/v1/users/${userId}`);
-        if (!summaryRes.ok) throw new Error("Failed to get user summary");
-        const summary = await summaryRes.json();
-        
-        // Dann die Display Names API für den Anzeigenamen
-        const displayRes = await fetch(`https://users.roblox.com/v1/users/${userId}/display-names`);
-        let displayName = summary.name;
-        if (displayRes.ok) {
-            const displayData = await displayRes.json();
-            if (displayData.displayNames && displayData.displayNames[userId]) {
-                displayName = displayData.displayNames[userId];
-            }
-        }
-        
-        return {
-            displayName: displayName,
-            username: summary.name,
-            userId: userId
-        };
-    } catch (e) {
-        console.error("Error fetching Roblox user info:", e);
-        return null;
-    }
-}
-
-// Manuelle User-Erstellung ohne Roblox Auth
-async function createManualUser(discordId, discordName, discordUsername, robloxDisplayName, robloxUsername, robloxId) {
-    const dbKey = getSafeDbKey(discordUsername);
-    const userRef = ref(db, `users/${dbKey}`);
-    const snap = await get(userRef);
-    
-    if (snap.exists()) {
-        return { success: false, error: "User already exists!" };
-    }
-    
-    // Wenn kein Roblox Name angegeben, Discord Namen verwenden
-    const finalRobloxDisplayName = robloxDisplayName && robloxDisplayName.trim() !== '' ? robloxDisplayName : discordName;
-    const finalRobloxUsername = robloxUsername && robloxUsername.trim() !== '' ? robloxUsername : discordUsername;
-    const finalRobloxId = robloxId && robloxId.trim() !== '' ? robloxId : "manual_" + Date.now();
-    
-    const userData = {
-        discordName: discordName,
-        discordUsername: discordUsername,
-        robloxDisplayName: finalRobloxDisplayName,
-        robloxUsername: finalRobloxUsername,
-        robloxId: finalRobloxId,
-        totalGP: 0,
-        id: discordId,
-        hasLeftServer: false,
-        linkedAt: Date.now(),
-        isManual: true
-    };
-    
-    await set(userRef, userData);
-    
-    // Nickname im Discord aktualisieren
-    await updateDiscordNickname(discordId, finalRobloxDisplayName, finalRobloxUsername);
-    
-    // Login Webhook senden
-    await sendLoginWebhook({
-        discordName: discordName,
-        discordUsername: discordUsername,
-        userId: discordId,
-        robloxDisplayName: finalRobloxDisplayName,
-        robloxUsername: finalRobloxUsername,
-        robloxId: finalRobloxId,
-        isManual: true
-    });
-    
-    return { success: true, user: userData };
-}
-
-// Manuelle User im Owner Panel anzeigen und bearbeiten
-async function loadManualUsersList() {
-    const container = document.getElementById('manualUsersList');
-    if (!container) return;
-    
-    try {
-        const usersSnap = await get(ref(db, 'users'));
-        const users = usersSnap.val() || {};
-        
-        let html = '<table class="table"><thead><tr><th>Discord Name</th><th>Discord ID</th><th>Roblox Display Name</th><th>Roblox Username</th><th>Roblox ID</th><th>Total GP</th><th>Type</th><th>Actions</th></tr></thead><tbody>';
-        
-        for (const [key, user] of Object.entries(users)) {
-            const isManual = user.isManual === true;
-            html += `
-                <tr data-key="${key}">
-                    <td>${escapeHtml(user.discordName || '?')}<br><span class="username-handle">@${escapeHtml(user.discordUsername || '?')}</span></td>
-                    <td><code>${escapeHtml(user.id || '?')}</code></td>
-                    <td><input type="text" id="robloxDisplayName_${key}" value="${escapeHtml(user.robloxDisplayName || user.robloxName || '')}" placeholder="Display Name" style="width: 120px; margin:0; padding:4px;"></td>
-                    <td><input type="text" id="robloxUsername_${key}" value="${escapeHtml(user.robloxUsername || '')}" placeholder="Username" style="width: 100px; margin:0; padding:4px;"></td>
-                    <td><input type="text" id="robloxId_${key}" value="${escapeHtml(user.robloxId || '')}" placeholder="ID" style="width: 80px; margin:0; padding:4px;"></td>
-                    <td>${(user.totalGP || 0).toLocaleString()} GP</td>
-                    <td><span class="status-badge ${isManual ? 'status-pending' : 'status-approved'}">${isManual ? '📝 Manual' : '🔗 Auto'}</span></td>
-                    <td>
-                        <button class="btn-small btn-approve" onclick="updateManualUser('${key}', '${user.id}')">💾 Update</button>
-                        ${isManual ? `<button class="btn-small btn-remove-role" onclick="deleteManualUser('${key}')">🗑️ Delete</button>` : ''}
-                    </td>
-                </tr>
-            `;
-        }
-        
-        html += '</tbody></table>';
-        container.innerHTML = html;
-        
-        // Globale Funktionen für Buttons
-        window.updateManualUser = async (key, discordId) => {
-            const robloxDisplayName = document.getElementById(`robloxDisplayName_${key}`)?.value;
-            const robloxUsername = document.getElementById(`robloxUsername_${key}`)?.value;
-            const robloxId = document.getElementById(`robloxId_${key}`)?.value;
-            
-            if (!robloxDisplayName || !robloxUsername || !robloxId) {
-                showNotify("Roblox Display Name, Username and ID are required!", "error");
-                return;
-            }
-            
-            try {
-                await update(ref(db, `users/${key}`), {
-                    robloxDisplayName: robloxDisplayName,
-                    robloxUsername: robloxUsername,
-                    robloxId: robloxId
-                });
-                
-                await updateDiscordNickname(discordId, robloxDisplayName, robloxUsername);
-                
-                showNotify("User updated successfully!", "success");
-                loadManualUsersList();
-            } catch (e) {
-                console.error("Error updating user:", e);
-                showNotify("Error updating user!", "error");
-            }
-        };
-        
-        window.deleteManualUser = async (key) => {
-            if (!confirm("Are you sure you want to delete this user? This action cannot be undone!")) return;
-            try {
-                await remove(ref(db, `users/${key}`));
-                showNotify("User deleted!", "success");
-                loadManualUsersList();
-            } catch (e) {
-                console.error("Error deleting user:", e);
-                showNotify("Error deleting user!", "error");
-            }
-        };
-        
-    } catch (e) {
-        console.error("Error loading manual users:", e);
-        container.innerHTML = '<p style="color: #f56565;">Error loading users</p>';
-    }
-}
-
-async function showCreateManualUserForm() {
-    const container = document.getElementById('createManualUserForm');
-    if (!container) return;
-    
-    container.innerHTML = `
-        <div style="background: #0f0f0f; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
-            <h4 style="margin-bottom: 15px;">➕ Create Manual User</h4>
-            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px;">
-                <input type="text" id="manualDiscordId" placeholder="Discord User ID *">
-                <input type="text" id="manualDiscordName" placeholder="Discord Display Name *">
-                <input type="text" id="manualDiscordUsername" placeholder="Discord Username (without @) *">
-                <input type="text" id="manualRobloxDisplayName" placeholder="Roblox Display Name">
-                <input type="text" id="manualRobloxUsername" placeholder="Roblox Username">
-                <input type="text" id="manualRobloxId" placeholder="Roblox User ID">
-            </div>
-            <p style="color: #888; font-size: 12px; margin-top: 10px;">* = required fields. User will NOT need to link Roblox account.</p>
-            <p style="color: #ffd700; font-size: 12px;">💡 Tip: If you leave Roblox fields empty, Discord name will be used.</p>
-            <button id="createManualUserBtn" class="btn-primary" style="background: #48bb78; margin-top: 15px;">✨ Create Manual User</button>
-        </div>
-    `;
-    
-    const createBtn = document.getElementById('createManualUserBtn');
-    if (createBtn) {
-        createBtn.addEventListener('click', async () => {
-            const discordId = document.getElementById('manualDiscordId')?.value.trim();
-            const discordName = document.getElementById('manualDiscordName')?.value.trim();
-            const discordUsername = document.getElementById('manualDiscordUsername')?.value.trim();
-            const robloxDisplayName = document.getElementById('manualRobloxDisplayName')?.value.trim();
-            const robloxUsername = document.getElementById('manualRobloxUsername')?.value.trim();
-            const robloxId = document.getElementById('manualRobloxId')?.value.trim();
-            
-            if (!discordId || !discordName || !discordUsername) {
-                showNotify("Discord ID, Name and Username are required!", "error");
-                return;
-            }
-            
-            const result = await createManualUser(discordId, discordName, discordUsername, robloxDisplayName, robloxUsername, robloxId);
-            
-            if (result.success) {
-                showNotify(`User ${discordName} created successfully!`, "success");
-                loadManualUsersList();
-                // Clear form
-                document.getElementById('manualDiscordId').value = '';
-                document.getElementById('manualDiscordName').value = '';
-                document.getElementById('manualDiscordUsername').value = '';
-                document.getElementById('manualRobloxDisplayName').value = '';
-                document.getElementById('manualRobloxUsername').value = '';
-                document.getElementById('manualRobloxId').value = '';
-            } else {
-                showNotify(result.error, "error");
-            }
-        });
-    }
-}
-
 async function handleDiscordLogin(code) {
     try {
         showLoading(true, 'discordLoginBtn');
@@ -799,7 +768,31 @@ async function handleDiscordLogin(code) {
             currentUser = data.user;
             sessionStorage.setItem('pn_session', JSON.stringify(currentUser));
             window.history.replaceState({}, '', REDIRECT_URI);
-            await checkRobloxLink();
+            
+            // AUTOMATISCH PRÜFEN OB USER BEREITS IN DB EXISTIERT
+            const dbKey = getSafeDbKey(currentUser.username);
+            const userSnap = await get(ref(db, `users/${dbKey}`));
+            
+            if (userSnap.exists() && userSnap.val().robloxId && userSnap.val().robloxId !== '1') {
+                // User existiert bereits in DB -> Roblox überspringen!
+                console.log("User exists in DB, skipping Roblox link");
+                const userData = userSnap.val();
+                
+                await update(ref(db, `users/${dbKey}`), {
+                    discordName: currentUser.global_name || currentUser.username,
+                    discordUsername: currentUser.username,
+                    lastLoginAt: Date.now()
+                });
+                
+                await updateDiscordNickname(currentUser.id, userData.robloxName, userData.robloxUsername);
+                await fetchUserRoles(currentUser.id);
+                showDashboard();
+                startLiveMemberCheck();
+                showNotify(`Welcome back ${currentUser.global_name || currentUser.username}!`, "success");
+            } else {
+                // Neuer User -> Roblox Linking nötig
+                await checkRobloxLink();
+            }
         } else {
             showNotify("Discord authorization failed!", "error");
         }
@@ -840,18 +833,9 @@ async function handleRobloxLogin(code) {
         }
         
         if (data.success && data.robloxUser) {
-            const robloxUserId = data.robloxUser.sub;
-            
-            // Roblox User Info mit Display Name holen
-            const robloxInfo = await getRobloxUserInfo(robloxUserId);
-            
-            if (!robloxInfo) {
-                throw new Error("Could not fetch Roblox user info");
-            }
-            
-            const rDisplayName = robloxInfo.displayName;
-            const rUsername = robloxInfo.username;
-            const rId = robloxUserId;
+            const rDisplayName = data.robloxUser.preferred_username || data.robloxUser.name;
+            const rUsername = data.robloxUser.preferred_username || data.robloxUser.name;
+            const rId = data.robloxUser.sub;
             const dDisplayName = currentUser.global_name || currentUser.username || "Unknown";
             
             const dbKey = getSafeDbKey(currentUser.username);
@@ -860,16 +844,15 @@ async function handleRobloxLogin(code) {
             let currentGP = snap.exists() && snap.val().totalGP ? snap.val().totalGP : 0;
             
             await update(userRef, {
-                discordName: dDisplayName,
+                discordName: dDisplayName || "Unknown",
                 discordUsername: currentUser.username || "Unknown",
-                robloxDisplayName: rDisplayName,
-                robloxUsername: rUsername,
-                robloxId: rId,
+                robloxName: rDisplayName || "Unknown",
+                robloxUsername: rUsername || "Unknown",
+                robloxId: rId || "1",
                 totalGP: currentGP,
-                id: currentUser.id,
+                id: currentUser.id || "1",
                 hasLeftServer: false,
-                linkedAt: Date.now(),
-                isManual: false
+                linkedAt: Date.now()
             });
 
             await updateDiscordNickname(currentUser.id, rDisplayName, rUsername);
@@ -878,10 +861,9 @@ async function handleRobloxLogin(code) {
                 discordName: dDisplayName,
                 discordUsername: currentUser.username,
                 userId: currentUser.id,
-                robloxDisplayName: rDisplayName,
+                robloxName: rDisplayName,
                 robloxUsername: rUsername,
-                robloxId: rId,
-                isManual: false
+                robloxId: rId
             });
 
             await fetch(`${BACKEND_URL}/check-member`, {
@@ -918,7 +900,7 @@ async function checkRobloxLink() {
         const loginPage = document.getElementById('loginPage');
         if (loginPage) loginPage.classList.add('hidden');
         
-        if (snap.exists() && (snap.val().robloxId || snap.val().isManual === true)) {
+        if (snap.exists() && snap.val().robloxId && snap.val().robloxId !== '1') {
             if (currentUser && currentUser.id) {
                 await fetchUserRoles(currentUser.id);
             }
@@ -977,8 +959,6 @@ function showDashboard() {
         loadSavedMessages();
         loadSystemConfigUI();
         loadRegisteredUsersCount();
-        loadManualUsersList();
-        showCreateManualUserForm();
     }
     
     updateBotStatus();
@@ -1000,8 +980,7 @@ function renderLeaderboard(filterText) {
         usersArray = usersArray.filter(u => 
             (u.discordName && u.discordName.toLowerCase().includes(lowerFilter)) ||
             (u.discordUsername && u.discordUsername.toLowerCase().includes(lowerFilter)) ||
-            (u.robloxDisplayName && u.robloxDisplayName.toLowerCase().includes(lowerFilter)) ||
-            (u.robloxUsername && u.robloxUsername.toLowerCase().includes(lowerFilter))
+            (u.robloxName && u.robloxName.toLowerCase().includes(lowerFilter))
         );
     }
     
@@ -1012,14 +991,11 @@ function renderLeaderboard(filterText) {
     
     usersArray.forEach((u, i) => {
         const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}`;
-        const robloxDisplayName = u.robloxDisplayName || u.robloxName || "Unknown";
-        const robloxUsername = u.robloxUsername || robloxDisplayName;
-        
         body.innerHTML += `
             <tr>
                 <td><strong>${medal}</strong></td>
                 <td><div class="user-name-cell"><span class="display-name">${escapeHtml(u.discordName || "Unknown")}</span><span class="username-handle">@${escapeHtml(u.discordUsername || "Unknown")}</span></div></td>
-                <td><div class="user-name-cell"><span class="display-name">${escapeHtml(robloxDisplayName)}</span><span class="username-handle">@${escapeHtml(robloxUsername)}</span></div></td>
+                <td><div class="user-name-cell"><span class="display-name">${escapeHtml(u.robloxName || "Unknown")}</span><span class="username-handle">@${escapeHtml(u.robloxUsername || "Unknown")}</span></div></td>
                 <td style="color:#48bb78; font-weight:bold; font-size:16px;">${(u.totalGP || 0).toLocaleString()} GP</td>
             </tr>
         `;
@@ -1166,9 +1142,9 @@ async function submitGPRequest() {
 
         const dName = userData.discordName || currentUser.global_name || "Unknown";
         const dUser = userData.discordUsername || currentUser.username || "Unknown";
-        const dId = currentUser.id;
-        const rDisplayName = userData.robloxDisplayName || userData.robloxName || "Unknown";
-        const rUsername = userData.robloxUsername || rDisplayName;
+        const dId = currentUser.id || "1";
+        const rName = userData.robloxName || "Unknown";
+        const rUser = userData.robloxUsername || "Unknown";
         const rId = userData.robloxId || "1";
 
         const newReqRef = push(ref(db, 'requests'));
@@ -1180,8 +1156,8 @@ async function submitGPRequest() {
             userId: dId,
             discordName: dName,
             discordUsername: dUser,
-            robloxDisplayName: rDisplayName,
-            robloxUsername: rUsername,
+            robloxName: rName,
+            robloxUsername: rUser,
             robloxId: rId,
             amount: amount,
             status: 'pending',
@@ -1193,8 +1169,8 @@ async function submitGPRequest() {
             discordName: dName,
             discordUsername: dUser,
             userId: dId,
-            robloxDisplayName: rDisplayName,
-            robloxUsername: rUsername,
+            robloxName: rName,
+            robloxUsername: rUser,
             robloxId: rId,
             amount: amount,
             requestId: reqKey
@@ -1252,9 +1228,6 @@ function loadAdminData() {
         }
         
         pendingRequests.forEach(req => {
-            const robloxDisplayName = req.robloxDisplayName || req.robloxName || "Unknown";
-            const robloxUsername = req.robloxUsername || robloxDisplayName;
-            
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td>
@@ -1262,34 +1235,34 @@ function loadAdminData() {
                         <span class="display-name">${escapeHtml(req.discordName || "Unknown")}</span>
                         <span class="username-handle">@${escapeHtml(req.discordUsername || "Unknown")}</span>
                     </div>
-                 </td>
+                </td>
                 <td>
                     <div class="user-name-cell">
-                        <span class="display-name">${escapeHtml(robloxDisplayName)}</span>
-                        <span class="username-handle">@${escapeHtml(robloxUsername)}</span>
+                        <span class="display-name">${escapeHtml(req.robloxName || "Unknown")}</span>
+                        <span class="username-handle">@${escapeHtml(req.robloxUsername || "Unknown")}</span>
                     </div>
-                 </td>
+                </td>
                 <td style="color:#cd7f32; font-weight:bold;">+${req.amount.toLocaleString()} GP</td>
                 <td>
                     <div style="display: flex; flex-direction: column; gap: 8px;">
                         <input type="text" id="comment_${req.id}" placeholder="Admin comment (optional)" style="padding: 6px; font-size: 12px; border-radius: 6px;">
                         <div style="display: flex; gap: 5px;">
-                            <button class="btn-small btn-approve" onclick="window.handleAdminAction('${req.id}', '${req.userId}', ${req.amount}, 'approve', '${req.dbKey || req.discordUsername}', '${req.robloxId || ''}', '${escapeHtml(req.discordName)}', '${escapeHtml(req.discordUsername)}', '${escapeHtml(robloxDisplayName)}', '${escapeHtml(robloxUsername)}')">
+                            <button class="btn-small btn-approve" onclick="window.handleAdminAction('${req.id}', '${req.userId}', ${req.amount}, 'approve', '${req.dbKey || req.discordUsername}', '${req.robloxId || ''}', '${escapeHtml(req.discordName)}', '${escapeHtml(req.discordUsername)}', '${escapeHtml(req.robloxName)}', '${escapeHtml(req.robloxUsername)}')">
                                 <i class="fas fa-check"></i> Approve
                             </button>
-                            <button class="btn-small btn-deny" onclick="window.handleAdminAction('${req.id}', '${req.userId}', ${req.amount}, 'reject', '${req.dbKey || req.discordUsername}', '${req.robloxId || ''}', '${escapeHtml(req.discordName)}', '${escapeHtml(req.discordUsername)}', '${escapeHtml(robloxDisplayName)}', '${escapeHtml(robloxUsername)}')">
+                            <button class="btn-small btn-deny" onclick="window.handleAdminAction('${req.id}', '${req.userId}', ${req.amount}, 'reject', '${req.dbKey || req.discordUsername}', '${req.robloxId || ''}', '${escapeHtml(req.discordName)}', '${escapeHtml(req.discordUsername)}', '${escapeHtml(req.robloxName)}', '${escapeHtml(req.robloxUsername)}')">
                                 <i class="fas fa-times"></i> Reject
                             </button>
                         </div>
                     </div>
-                 </td>
+                </td>
             `;
             body.appendChild(row);
         });
     });
 }
 
-window.handleAdminAction = async (reqId, userId, amount, action, passedDbKey, robloxId, discordName, discordUsername, robloxDisplayName, robloxUsername) => {
+window.handleAdminAction = async (reqId, userId, amount, action, passedDbKey, robloxId, discordName, discordUsername, robloxName, robloxUsername) => {
     const commentInput = document.getElementById(`comment_${reqId}`);
     const adminComment = commentInput ? commentInput.value.trim() : '';
     
@@ -1335,7 +1308,7 @@ window.handleAdminAction = async (reqId, userId, amount, action, passedDbKey, ro
             processedByName: currentUser.global_name || currentUser.username
         });
 
-        const dbKey = getSafeDbKey(passedDbKey);
+        const dbKey = getSafeDbKey(discordUsername);
         let newTotal = 0;
         const userRef = ref(db, `users/${dbKey}`);
         const snap = await get(userRef);
@@ -1371,7 +1344,7 @@ window.handleAdminAction = async (reqId, userId, amount, action, passedDbKey, ro
                 color: action === 'approve' ? parseInt(systemConfig.embedColors.approve.replace('#', ''), 16) : parseInt(systemConfig.embedColors.reject.replace('#', ''), 16),
                 fields: [
                     { name: "💬 Discord", value: `**Name:** ${discordName}\n**Tag:** @${discordUsername}\n**Ping:** <@${userId}>`, inline: true },
-                    { name: "🎮 Roblox", value: `**Display Name:** ${robloxDisplayName}\n**Username:** @${robloxUsername}\n**Profile:** [Click Here](https://www.roblox.com/users/${robloxId}/profile)`, inline: true },
+                    { name: "🎮 Roblox", value: `**Name:** ${robloxName}\n**User:** @${robloxUsername}\n**Profile:** [Click Here](https://www.roblox.com/users/${robloxId}/profile)`, inline: true },
                     { name: "💰 Amount", value: amountText, inline: false },
                     { name: "📊 New Total", value: `${newTotal.toLocaleString()} GP`, inline: true },
                     { name: "🏆 Rank", value: `#${rank}`, inline: true },
@@ -2025,6 +1998,11 @@ function initEventListeners() {
     const enableMaintenanceBtn = document.getElementById('enableMaintenanceBtn');
     const disableMaintenanceBtn = document.getElementById('disableMaintenanceBtn');
     
+    // Manual registration buttons
+    const manualRegisterBtn = document.getElementById('manualRegisterBtn');
+    const manualCheckUserBtn = document.getElementById('manualCheckUserBtn');
+    const manualClearFormBtn = document.getElementById('manualClearFormBtn');
+    
     if (discordLoginBtn) discordLoginBtn.addEventListener('click', () => {
         window.location.href = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=identify%20guilds&state=discord`;
     });
@@ -2044,7 +2022,7 @@ function initEventListeners() {
             const dbKey = getSafeDbKey(currentUser.username);
             await update(ref(db, `users/${dbKey}`), {
                 robloxId: null,
-                robloxDisplayName: null,
+                robloxName: null,
                 robloxUsername: null
             });
             window.location.reload();
@@ -2090,8 +2068,6 @@ function initEventListeners() {
             loadSavedMessages();
             loadSystemConfigUI();
             loadRegisteredUsersCount();
-            loadManualUsersList();
-            showCreateManualUserForm();
         } else {
             showNotify("You don't have permission to access Owner Panel!", "error");
         }
@@ -2120,6 +2096,11 @@ function initEventListeners() {
     if (clearMessageFormBtn) clearMessageFormBtn.addEventListener('click', clearMessageForm);
     if (enableMaintenanceBtn) enableMaintenanceBtn.addEventListener('click', () => setMaintenanceMode(true));
     if (disableMaintenanceBtn) disableMaintenanceBtn.addEventListener('click', () => setMaintenanceMode(false));
+    
+    // Manual registration event listeners
+    if (manualRegisterBtn) manualRegisterBtn.addEventListener('click', manualRegisterUser);
+    if (manualCheckUserBtn) manualCheckUserBtn.addEventListener('click', manualCheckUser);
+    if (manualClearFormBtn) manualClearFormBtn.addEventListener('click', clearManualForm);
 }
 
 // ==========================================
