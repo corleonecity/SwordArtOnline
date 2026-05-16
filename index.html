@@ -86,7 +86,7 @@
                     <h3>Submit GP Donation</h3>
                     <p style="color:#888; margin-bottom: 25px; margin-top: 5px;">Enter your amount and select images as proof. (Admin will verify)</p>
                     
-                    <input type="number" id="gpAmount" placeholder="Amount (e.g. 5000)">
+                    <input type="number" id="gpAmount" placeholder="Amount (e.g. 5000)" min="100">
                     
                     <div class="file-upload-wrapper">
                         <label for="proofImage" class="custom-file-btn">
@@ -228,7 +228,7 @@
 
                     <div style="background: #0f0f0f; border-radius: 12px; padding: 20px;">
                         <h4 style="margin-bottom: 15px;">🖼️ Image Settings</h4>
-                        <div><label>Max Images per Request:</label><input type="number" id="maxImagesPerRequest" value="1" style="width: 100%;"></div>
+                        <div><label>Max Images per Request:</label><input type="number" id="maxImagesPerRequest" value="3" style="width: 100%;"></div>
                         <p style="color: #888; font-size: 12px; margin-top: 8px;">Maximum number of screenshots allowed per GP request.</p>
                     </div>
 
@@ -293,7 +293,7 @@
                         <table class="table">
                             <thead><tr><th>Date</th><th>Kicked User</th><th>Kicked By</th><th>Reason</th><th>DM Sent</th></tr></thead>
                             <tbody id="kickLogsBody"></tbody>
-                        <tr>
+                        </table>
                     </div>
                 </div>
 
