@@ -336,7 +336,7 @@ async function fetchRoleName(roleId) {
 }
 
 // ==========================================
-// 3.5 MANUAL USER REGISTRATION
+// 3.5 MANUAL USER REGISTRATION & ROLE SYNC
 // ==========================================
 
 async function checkExistingUserByDiscordUsername(discordUsername) {
@@ -354,6 +354,43 @@ async function checkExistingUserByDiscordUsername(discordUsername) {
     } catch (e) {
         console.error("Error checking existing user:", e);
         return { exists: false, error: e.message };
+    }
+}
+
+async function syncUserRolesManually() {
+    const discordId = document.getElementById('manualDiscordId')?.value.trim();
+    if (!discordId) {
+        showNotify("Please enter a Discord User ID first!", "error");
+        return;
+    }
+    
+    if (!hasOwnerPermission()) {
+        showNotify("Only the owner can sync roles!", "error");
+        return;
+    }
+    
+    const resultDiv = document.getElementById('manualRegisterResult');
+    resultDiv.innerHTML = '<span style="color: #ffd700;"><i class="fas fa-spinner fa-spin"></i> Synchronizing roles...</span>';
+    
+    try {
+        const response = await fetch(`${BACKEND_URL}/sync-user-roles`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                userId: discordId,
+                executorId: currentUser.id
+            })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            resultDiv.innerHTML = `<span style="color: #48bb78;">✅ Roles synchronized! Panel-Reg added, Unreg removed.</span>`;
+            showNotify(`Roles for <@${discordId}> updated.`, "success");
+        } else {
+            resultDiv.innerHTML = `<span style="color: #f56565;">❌ Error: ${data.error}</span>`;
+        }
+    } catch (e) {
+        resultDiv.innerHTML = `<span style="color: #f56565;">❌ Error: ${e.message}</span>`;
     }
 }
 
@@ -429,6 +466,26 @@ async function manualRegisterUser() {
             });
             resultDiv.innerHTML = `<span style="color: #48bb78;">✅ User CREATED successfully! Discord: @${discordUsername}</span>`;
             showNotify(`User ${discordUsername} has been registered manually!`, "success");
+        }
+        
+        // After saving, sync Discord roles (add panel-reg, remove unreg)
+        try {
+            const syncRes = await fetch(`${BACKEND_URL}/sync-user-roles`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: discordId,
+                    executorId: currentUser.id
+                })
+            });
+            const syncData = await syncRes.json();
+            if (syncData.success) {
+                resultDiv.innerHTML += `<br><span style="color: #48bb78;">✅ Discord roles also updated (Panel-Reg added).</span>`;
+            } else {
+                resultDiv.innerHTML += `<br><span style="color: #ffaa00;">⚠️ Role sync failed: ${syncData.error}</span>`;
+            }
+        } catch (e) {
+            console.warn("Role sync after manual registration failed:", e);
         }
         
         loadRegisteredUsersCount();
@@ -767,6 +824,10 @@ async function handleDiscordLogin(code) {
             currentUser = data.user;
             sessionStorage.setItem('pn_session', JSON.stringify(currentUser));
             window.history.replaceState({}, '', REDIRECT_URI);
+            
+            // Hide login page immediately
+            const loginPage = document.getElementById('loginPage');
+            if (loginPage) loginPage.classList.add('hidden');
             
             const dbKey = getSafeDbKey(currentUser.username);
             const userSnap = await get(ref(db, `users/${dbKey}`));
@@ -1214,7 +1275,7 @@ function loadAdminData() {
         
         body.innerHTML = '';
         if (!data) {
-            body.innerHTML = '<td><td colspan="4" style="text-align:center; color:#666;">No pending requests</td></tr>';
+            body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No pending requests</td></tr>';
             return;
         }
         
@@ -1262,7 +1323,6 @@ function loadAdminData() {
     });
 }
 
-// NEUE FUNKTION: Ruft den Worker auf, um die Discord-Nachricht zu aktualisieren (Panel-Aktion)
 async function updateDiscordRequestMessage(requestId, action, comment, adminId, adminName) {
     try {
         const response = await fetch(`${BACKEND_URL}/process-request`, {
@@ -1270,7 +1330,7 @@ async function updateDiscordRequestMessage(requestId, action, comment, adminId, 
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 requestId,
-                action, // 'approve' oder 'reject'
+                action,
                 comment,
                 adminId,
                 adminName
@@ -1388,7 +1448,6 @@ window.handleAdminAction = async (reqId, userId, amount, action, passedDbKey, ro
             await sendDiscordMessage(processedChannel, `<@${userId}>`, [embed]);
         }
 
-        // NEU: Discord-Nachricht im GP-Requests-Kanal aktualisieren (Buttons entfernen, Embed ändern)
         await updateDiscordRequestMessage(reqId, action, adminComment, currentUser.id, currentUser.global_name || currentUser.username);
 
         showNotify(`Request ${action === 'approve' ? 'approved' : 'rejected'}!`, "success");
@@ -2030,6 +2089,7 @@ function initEventListeners() {
     const manualRegisterBtn = document.getElementById('manualRegisterBtn');
     const manualCheckUserBtn = document.getElementById('manualCheckUserBtn');
     const manualClearFormBtn = document.getElementById('manualClearFormBtn');
+    const syncRolesBtn = document.getElementById('syncRolesBtn');
     
     if (discordLoginBtn) discordLoginBtn.addEventListener('click', () => {
         window.location.href = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=identify%20guilds&state=discord`;
@@ -2128,6 +2188,7 @@ function initEventListeners() {
     if (manualRegisterBtn) manualRegisterBtn.addEventListener('click', manualRegisterUser);
     if (manualCheckUserBtn) manualCheckUserBtn.addEventListener('click', manualCheckUser);
     if (manualClearFormBtn) manualClearFormBtn.addEventListener('click', clearManualForm);
+    if (syncRolesBtn) syncRolesBtn.addEventListener('click', syncUserRolesManually);
 }
 
 function init() {
