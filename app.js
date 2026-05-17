@@ -385,7 +385,7 @@ async function syncUserRolesManually() {
         const data = await response.json();
         if (data.success) {
             resultDiv.innerHTML = `<span style="color: #48bb78;">✅ Roles synchronized! Panel-Reg added, Unreg removed.</span>`;
-            showNotify(`Roles for <@${discordId}> updated.`, "success");
+            showNotify(`Roles for <@${discordId}} updated.`, "success");
         } else {
             resultDiv.innerHTML = `<span style="color: #f56565;">❌ Error: ${data.error}</span>`;
         }
@@ -1091,7 +1091,7 @@ function loadProfileHistory() {
             .sort((a, b) => b.timestamp - a.timestamp);
         
         if (userRequests.length === 0) {
-            body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No requests yet</td></tr>';
+            body.innerHTML = '<td><td colspan="4" style="text-align:center; color:#666;">No requests yet</td></tr>';
             return;
         }
         
@@ -1325,6 +1325,7 @@ function loadAdminData() {
 
 async function updateDiscordRequestMessage(requestId, action, comment, adminId, adminName) {
     try {
+        console.log(`Sending process-request for ${requestId} with action ${action}`);
         const response = await fetch(`${BACKEND_URL}/process-request`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -1338,13 +1339,21 @@ async function updateDiscordRequestMessage(requestId, action, comment, adminId, 
         });
         if (!response.ok) {
             const error = await response.text();
-            console.error("Failed to update Discord message via worker:", error);
+            console.error(`process-request failed (${response.status}):`, error);
+            showNotify(`Discord message could not be updated (${response.status})`, "error");
             return false;
         }
         const data = await response.json();
+        console.log("process-request response:", data);
+        if (data.success) {
+            showNotify("Discord message successfully updated!", "success");
+        } else {
+            showNotify("Discord update failed: " + (data.error || "Unknown error"), "error");
+        }
         return data.success === true;
     } catch (e) {
         console.error("Error calling process-request:", e);
+        showNotify("Network error while updating Discord message", "error");
         return false;
     }
 }
@@ -1448,6 +1457,7 @@ window.handleAdminAction = async (reqId, userId, amount, action, passedDbKey, ro
             await sendDiscordMessage(processedChannel, `<@${userId}>`, [embed]);
         }
 
+        // Update Discord message in GP requests channel
         await updateDiscordRequestMessage(reqId, action, adminComment, currentUser.id, currentUser.global_name || currentUser.username);
 
         showNotify(`Request ${action === 'approve' ? 'approved' : 'rejected'}!`, "success");
