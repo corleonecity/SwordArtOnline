@@ -1,312 +1,381 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Sword Art Online | GP Panel</title>
-    
-    <!-- Fonts & Icons -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    
-    <!-- Styles -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SwordArtOnline | GP Panel</title>
+    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <!-- ========== MAINTENANCE OVERLAY ========== -->
+    <div id="audioPlayerContainer" class="hidden"></div>
+
+    <!-- Maintenance Mode Overlay -->
     <div id="maintenanceOverlay" class="maintenance-overlay hidden">
-        <div class="maintenance-card">
+        <div class="maintenance-content">
             <i class="fas fa-tools"></i>
-            <h2>Wartungsarbeiten</h2>
-            <p>Das System wird gerade aktualisiert.<br>Bitte schau später wieder vorbei.</p>
-            <div class="spinner"></div>
+            <h2>Maintenance Mode</h2>
+            <p>The system is currently being updated. Please check back soon!</p>
+            <div class="loader"></div>
         </div>
     </div>
 
-    <!-- ========== TEST MODE BADGE ========== -->
-    <div id="testModeBadge" class="test-badge hidden">
-        <i class="fas fa-flask"></i> TEST MODUS
+    <!-- Test Mode Indicator -->
+    <div id="testModeIndicator" class="test-mode-indicator hidden">
+        <i class="fas fa-flask"></i> TEST MODE ACTIVE - No real GP changes
     </div>
 
-    <!-- ========== LOGIN SCREEN ========== -->
-    <div id="loginScreen" class="screen">
-        <div class="login-card">
-            <div class="logo">⚔️ SAO</div>
-            <h1>Sword Art Online</h1>
-            <p>GP Management System</p>
-            
-            <button id="discordLoginBtn" class="btn btn-discord">
-                <i class="fab fa-discord"></i> Mit Discord anmelden
-            </button>
-        </div>
+    <div id="loginPage" class="login-container">
+        <div class="logo-main logo-pn">SAO</div>
+        <h1>SwordArtOnline</h1>
+        <p>Login with your Discord account to access the GP Panel.</p>
+        <button id="discordLoginBtn" class="btn-discord">
+            <i class="fab fa-discord"></i> Login with Discord
+        </button>
     </div>
 
-    <!-- ========== ROBLOX LINK SCREEN ========== -->
-    <div id="robloxScreen" class="screen hidden">
-        <div class="login-card">
-            <div class="logo">🎮 RBLX</div>
-            <h2>Roblox verbinden</h2>
-            <p>Bitte verbinde dein Roblox-Konto, um fortzufahren.</p>
-            
-            <button id="robloxLoginBtn" class="btn btn-roblox">
-                <i class="fab fa-discord"></i> Mit Roblox verbinden
-            </button>
-        </div>
-    </div>
-
-    <!-- ========== NO PERMISSION SCREEN ========== -->
-    <div id="noPermScreen" class="screen hidden">
-        <div class="login-card error-card">
+    <div id="noPermissionPage" class="login-container hidden">
+        <div class="logo-main" style="background: #f56565; color: white; font-size: 35px; border: none;">
             <i class="fas fa-lock"></i>
-            <h2>Kein Zugriff</h2>
-            <p>Du bist kein Mitglied unseres Discord-Servers.<br>Bitte trete dem Server bei, um das Panel zu nutzen.</p>
         </div>
+        <h2>Access Denied</h2>
+        <p>You do not have permission to view this page. You must be a member of our official Discord server to access the panel.</p>
     </div>
 
-    <!-- ========== MAIN APP ========== -->
-    <div id="mainApp" class="hidden">
-        
-        <!-- HEADER -->
-        <header class="header">
+    <div id="robloxPage" class="login-container hidden">
+        <div class="logo-main logo-rblx">RBLX</div>
+        <h2>Almost there!</h2>
+        <p>Please link your official Roblox account to continue tracking your GP.</p>
+        <button id="robloxLoginBtn" class="btn-roblox">
+            <i class="fas fa-gamepad"></i> Connect with Roblox
+        </button>
+    </div>
+
+    <div id="mainContent" class="hidden">
+        <div class="header">
             <div class="user-info">
-                <img id="userAvatar" class="avatar" src="https://cdn.discordapp.com/embed/avatars/0.png" alt="Avatar">
-                <div>
-                    <h3 id="userName">Laden...</h3>
-                    <span id="userDiscordTag" class="user-tag"></span>
-                </div>
+                <img id="userAvatar" class="avatar" src="https://cdn.discordapp.com/embed/avatars/0.png">
+                <h2 id="userWelcome">Hi, ...</h2>
             </div>
             
             <div class="header-actions">
-                <button id="logoutRbxBtn" class="icon-btn" title="Roblox trennen">
-                    <i class="fas fa-gamepad"></i>
+                <button id="rbxLogoutBtn" class="btn-logout rbx" title="Change Roblox Account">
+                    <i class="fas fa-exchange-alt"></i> RBX Logout
                 </button>
-                <button id="logoutAllBtn" class="icon-btn danger" title="Abmelden">
-                    <i class="fas fa-sign-out-alt"></i>
+                <button id="dcLogoutBtn" class="btn-logout dc" title="Log out completely">
+                    <i class="fas fa-sign-out-alt"></i> DC Logout
                 </button>
             </div>
-        </header>
-
-        <!-- TABS -->
-        <div class="tabs">
-            <button id="tabDonate" class="tab active">
-                <i class="fas fa-coins"></i> GP Spenden
-            </button>
-            <button id="TabLeaderboard" class="tab">
-                <i class="fas fa-trophy"></i> Rangliste
-            </button>
-            <button id="tabProfile" class="tab">
-                <i class="fas fa-user"></i> Mein Konto
-            </button>
-            <button id="tabAdmin" class="tab admin-tab hidden">
-                <i class="fas fa-shield-alt"></i> Admin
-            </button>
-            <button id="tabOwner" class="tab owner-tab hidden">
-                <i class="fas fa-crown"></i> Owner
-            </button>
         </div>
 
-        <!-- ========== DONATE TAB ========== -->
-        <div id="donateTab" class="tab-content">
-            <div class="card">
-                <h3><i class="fas fa-gift"></i> GP Spende einreichen</h3>
-                <p class="card-desc">Reiche einen GP-Spendenantrag mit Nachweis ein.</p>
-                
-                <div id="noPermWarning" class="warning-box hidden">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    Du hast keine Berechtigung, GP anzufordern. Kontaktiere einen Admin.
+        <div class="container">
+            <div class="nav-tabs-wrapper">
+                <div class="nav-tabs">
+                    <button id="tabBtnSpenden" class="nav-tab active">Add GP</button>
+                    <button id="tabBtnLeaderboard" class="nav-tab">Leaderboard</button>
+                    <button id="tabBtnProfile" class="nav-tab">My Profile</button>
+                    <button id="tabBtnAdmin" class="nav-tab admin-tab"><i class="fas fa-shield-alt"></i> Admin Panel</button>
+                    <button id="tabBtnOwner" class="nav-tab owner-tab"><i class="fas fa-crown"></i> Owner Panel</button>
                 </div>
-                
-                <div id="donateForm">
-                    <div class="form-group">
-                        <label>Betrag (GP)</label>
-                        <input type="number" id="amount" placeholder="z.B. 5000" min="1">
+            </div>
+
+            <div id="content-spenden">
+                <div class="system-card" id="gpSubmitCard">
+                    <h3>Submit GP Donation</h3>
+                    <p style="color:#888; margin-bottom: 25px; margin-top: 5px;">Enter your amount and select images as proof. (Admin will verify)</p>
+                    
+                    <input type="number" id="gpAmount" placeholder="Amount (e.g. 5000)" min="100">
+                    
+                    <div class="file-upload-wrapper">
+                        <label for="proofImage" class="custom-file-btn">
+                            <i class="fas fa-image"></i> Add Screenshots
+                        </label>
+                        <input type="file" id="proofImage" accept="image/*" multiple>
+                        <span class="file-instruction" id="fileCountText">0 images selected</span>
+                    </div>
+
+                    <div id="imagePreviewContainer"></div>
+                    
+                    <button id="addGPBtn" class="btn-primary">SUBMIT PROOF FOR REVIEW</button>
+                </div>
+                <div id="noPermissionCard" class="system-card hidden" style="text-align: center; border-color: #f56565;">
+                    <i class="fas fa-lock" style="font-size: 48px; color: #f56565; margin-bottom: 15px;"></i>
+                    <h3 style="color: #f56565;">No Permission</h3>
+                    <p>You need the required Discord role to submit GP donation requests.</p>
+                    <p style="color: #888; font-size: 14px; margin-top: 10px;">Please contact an admin if you believe this is an error.</p>
+                </div>
+            </div>
+
+            <div id="content-leaderboard" class="hidden">
+                <div class="system-card">
+                    <h3>🏆 Leaderboard</h3>
+                    <p style="color:#888; margin-bottom: 15px; font-size:14px;">Shows all verified GP.</p>
+                    
+                    <div class="search-bar">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="leaderboardSearch" placeholder="Search for Discord or Roblox name...">
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead><tr><th>Rank</th><th>Discord</th><th>Roblox</th><th>Total GP</th></tr></thead>
+                            <tbody id="leaderboardBody"></tbody>
+                        </table>
                     </div>
                     
-                    <div class="form-group">
-                        <label>Screenshots</label>
-                        <div class="file-area">
-                            <label for="fileInput" class="file-label">
-                                <i class="fas fa-upload"></i> Bilder auswählen
-                            </label>
-                            <input type="file" id="fileInput" accept="image/*" multiple hidden>
-                            <span id="fileCount" class="file-info">Keine Dateien</span>
+                    <div style="margin-top: 20px; padding: 15px; background: #0f0f0f; border-radius: 12px; text-align: center;">
+                        <div style="font-size: 14px; color: #888;">Total GP in System</div>
+                        <div style="font-size: 28px; color: #ffd700; font-weight: bold;" id="totalGpStat">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="content-profile" class="hidden">
+                <div class="system-card">
+                    <h3>👤 My Requests</h3>
+                    <p style="color:#888; margin-bottom: 15px; font-size:14px;">Here you can see the status of your submitted GP.</p>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead><tr><th>Date</th><th>Amount</th><th>Status</th><th>Admin Comment</th></tr></thead>
+                            <tbody id="profileHistoryBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="content-admin" class="hidden">
+                <div class="system-card" style="border-color: #cd7f32;">
+                    <h3 style="color: #cd7f32;"><i class="fas fa-clock"></i> Pending Requests</h3>
+                    <p style="color:#888; margin-bottom: 15px; font-size:14px;">Please check proof photos before approving.</p>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead><tr><th>User (Discord)</th><th>Roblox</th><th>Amount</th><th>Action</th></tr></thead>
+                            <tbody id="adminPendingBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="content-owner" class="hidden">
+                <!-- MANUAL USER REGISTRATION SECTION -->
+                <div class="system-card" style="border-color: #ffd700; margin-bottom: 20px;">
+                    <h3 style="color: #ffd700;"><i class="fas fa-user-plus"></i> Manual User Registration</h3>
+                    <p style="color:#888; margin-bottom: 15px; font-size:14px;">Manually add or update users in the database. Use this for users who cannot link Roblox themselves (age restriction, etc.).</p>
+                    
+                    <div style="background: #0f0f0f; border-radius: 12px; padding: 20px;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                            <div>
+                                <label style="color: #aaa;">Discord User ID *</label>
+                                <input type="text" id="manualDiscordId" placeholder="e.g., 917426398120005653" style="width: 100%;">
+                            </div>
+                            <div>
+                                <label style="color: #aaa;">Discord Display Name</label>
+                                <input type="text" id="manualDiscordName" placeholder="e.g., Keule">
+                            </div>
+                            <div>
+                                <label style="color: #aaa;">Discord Username *</label>
+                                <input type="text" id="manualDiscordUsername" placeholder="e.g., keulecolin2005">
+                            </div>
+                            <div>
+                                <label style="color: #aaa;">Roblox User ID *</label>
+                                <input type="text" id="manualRobloxId" placeholder="e.g., 123456789">
+                            </div>
+                            <div>
+                                <label style="color: #aaa;">Roblox Display Name</label>
+                                <input type="text" id="manualRobloxName" placeholder="e.g., KeulePro">
+                            </div>
+                            <div>
+                                <label style="color: #aaa;">Roblox Username *</label>
+                                <input type="text" id="manualRobloxUsername" placeholder="e.g., keulepro">
+                            </div>
+                            <div>
+                                <label style="color: #aaa;">Initial GP (optional)</label>
+                                <input type="number" id="manualInitialGp" placeholder="0" value="0" min="0">
+                            </div>
                         </div>
-                        <div id="previewContainer" class="preview-grid"></div>
+                        
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button id="manualRegisterBtn" class="btn-primary" style="background: #ffd700; color: black; width: auto;">
+                                <i class="fas fa-save"></i> Save User to Database
+                            </button>
+                            <button id="manualCheckUserBtn" class="btn-primary" style="background: #5865F2; width: auto;">
+                                <i class="fas fa-search"></i> Check Existing User
+                            </button>
+                            <button id="manualClearFormBtn" class="btn-primary" style="background: #555; width: auto;">
+                                <i class="fas fa-trash"></i> Clear Form
+                            </button>
+                        </div>
+                        <div id="manualRegisterResult" style="margin-top: 15px; font-size: 13px; color: #888;"></div>
                     </div>
+                </div>
+
+                <!-- Role & Channel Management Section -->
+                <div class="system-card" style="border-color: #ffd700; margin-bottom: 20px;">
+                    <h3 style="color: #ffd700;"><i class="fas fa-user-shield"></i> Role & Channel Management</h3>
+                    <p style="color:#888; margin-bottom: 15px; font-size:14px;">Manage admin roles, GP submit role, and server channels.</p>
                     
-                    <button id="submitBtn" class="btn btn-primary btn-full">
-                        <i class="fas fa-paper-plane"></i> Antrag abschicken
-                    </button>
-                </div>
-            </div>
-        </div>
+                    <div style="background: #0f0f0f; border-radius: 12px; padding: 20px; margin-bottom: 25px;">
+                        <h4 style="margin-bottom: 15px;">➕ Add Admin Role</h4>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <input type="text" id="newRoleId" placeholder="Discord Role ID" style="flex: 2;">
+                            <select id="rolePermissionLevel" style="flex: 1;">
+                                <option value="admin">Admin</option>
+                                <option value="owner">Owner</option>
+                            </select>
+                            <button id="addRoleBtn" class="btn-primary" style="background: #48bb78; color: white; width: auto;">Add Role</button>
+                        </div>
+                    </div>
 
-        <!-- ========== LEADERBOARD TAB ========== -->
-        <div id="leaderboardTab" class="tab-content hidden">
-            <div class="card">
-                <h3><i class="fas fa-chart-line"></i> GP Rangliste</h3>
-                
-                <div class="search-box">
-                    <i class="fas fa-search"></i>
-                    <input type="text" id="leaderboardSearch" placeholder="Suche nach Discord oder Roblox...">
-                </div>
-                
-                <div class="table-wrapper">
-                    <table class="table">
-                        <thead>
-                            <tr><th>#</th><th>Discord</th><th>Roblox</th><th>GP</th></tr>
-                        </thead>
-                        <tbody id="leaderboardBody">
-                            <tr><td colspan="4" class="text-center">Laden...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-                
-                <div class="stats-card">
-                    <span class="stats-label">💰 Gesamt GP im System</span>
-                    <span id="totalGP" class="stats-value">0</span>
-                </div>
-            </div>
-        </div>
+                    <div style="background: #0f0f0f; border-radius: 12px; padding: 20px; margin-bottom: 25px;">
+                        <h4 style="margin-bottom: 15px;">📋 Current Roles</h4>
+                        <div id="adminRolesList" class="table-responsive">
+                            <p style="color: #666;">Loading roles...</p>
+                        </div>
+                    </div>
 
-        <!-- ========== PROFILE TAB ========== -->
-        <div id="profileTab" class="tab-content hidden">
-            <div class="card">
-                <h3><i class="fas fa-history"></i> Meine Anträge</h3>
-                
-                <div class="table-wrapper">
-                    <table class="table">
-                        <thead>
-                            <tr><th>Datum</th><th>Betrag</th><th>Status</th><th>Admin Kommentar</th></tr>
-                        </thead>
-                        <tbody id="profileBody">
-                            <tr><td colspan="4" class="text-center">Keine Anträge</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+                    <div style="background: #0f0f0f; border-radius: 12px; padding: 20px; margin-bottom: 25px;">
+                        <h4 style="margin-bottom: 15px;">🎮 GP Submit Role (User permission)</h4>
+                        <div><label>GP Submit Role ID:</label><input type="text" id="gpSubmitRoleId" value="1503193408280330400" style="width: 100%;" placeholder="Role ID required to submit GP"></div>
+                        <p style="color: #888; font-size: 12px; margin-top: 8px;">Users need this Discord role to submit GP donation requests.</p>
+                        <button id="saveGpSubmitRoleBtn" class="btn-primary" style="background: #ffd700; color: black; margin-top: 10px; width: auto;">Save GP Submit Role</button>
+                    </div>
 
-        <!-- ========== ADMIN TAB ========== -->
-        <div id="adminTab" class="tab-content hidden">
-            <div class="card">
-                <h3><i class="fas fa-clock"></i> Ausstehende Anträge</h3>
-                
-                <div class="table-wrapper">
-                    <table class="table">
-                        <thead>
-                            <tr><th>Discord</th><th>Roblox</th><th>Betrag</th><th>Aktion</th></tr>
-                        </thead>
-                        <tbody id="adminBody">
-                            <tr><td colspan="4" class="text-center">Keine ausstehenden Anträge</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- ========== OWNER TAB ========== -->
-        <div id="ownerTab" class="tab-content hidden">
-            
-            <!-- Roles Section -->
-            <div class="card">
-                <h3><i class="fas fa-user-shield"></i> Rollen Verwaltung</h3>
-                
-                <div class="form-row">
-                    <input type="text" id="newRoleId" placeholder="Rollen-ID">
-                    <select id="roleType">
-                        <option value="admin">Admin</option>
-                        <option value="owner">Owner</option>
-                    </select>
-                    <button id="addRoleBtn" class="btn btn-secondary">Hinzufügen</button>
-                </div>
-                
-                <div id="rolesList" class="roles-grid">
-                    <p>Laden...</p>
-                </div>
-            </div>
-            
-            <!-- GP Submit Role -->
-            <div class="card">
-                <h3><i class="fas fa-key"></i> GP Berechtigungs-Rolle</h3>
-                <p class="card-desc">Benutzer mit dieser Rolle können GP-Anträge stellen.</p>
-                
-                <div class="form-row">
-                    <input type="text" id="gpSubmitRoleId" placeholder="Rollen-ID">
-                    <button id="saveGpRoleBtn" class="btn btn-secondary">Speichern</button>
-                </div>
-            </div>
-            
-            <!-- Channels Section -->
-            <div class="card">
-                <h3><i class="fas fa-hashtag"></i> Channel Konfiguration</h3>
-                <div id="channelsList" class="channels-grid">
-                    <p>Laden...</p>
-                </div>
-                <button id="saveChannelsBtn" class="btn btn-primary btn-full mt-3">Speichern</button>
-            </div>
-            
-            <!-- System Config -->
-            <div class="card">
-                <h3><i class="fas fa-sliders-h"></i> System Einstellungen</h3>
-                
-                <div class="form-group">
-                    <label>Embed Farben</label>
-                    <div class="color-row">
-                        <div><span>✅ Approve:</span> <input type="color" id="colorApprove" value="#48bb78"></div>
-                        <div><span>❌ Reject:</span> <input type="color" id="colorReject" value="#f56565"></div>
-                        <div><span>⏳ Pending:</span> <input type="color" id="colorPending" value="#cd7f32"></div>
+                    <div style="background: #0f0f0f; border-radius: 12px; padding: 20px;">
+                        <h4 style="margin-bottom: 15px;">👥 Manage Server Channels</h4>
+                        <p style="color:#888; margin-bottom: 15px;">Configure which channels the bot uses for notifications.</p>
+                        <div id="channelConfigList">
+                            <p style="color: #666;">Loading channel configuration...</p>
+                        </div>
+                        <button id="saveChannelConfigBtn" class="btn-primary" style="background: #5865F2; margin-top: 15px;">Save Channel Configuration</button>
                     </div>
                 </div>
-                
-                <div class="form-group">
-                    <label>Max. Bilder pro Antrag</label>
-                    <input type="number" id="maxImages" value="3" min="1" max="10">
+
+                <!-- System Configuration Section -->
+                <div class="system-card" style="border-color: #ffd700; margin-bottom: 20px;">
+                    <h3 style="color: #ffd700;"><i class="fas fa-sliders-h"></i> System Configuration</h3>
+                    <p style="color:#888; margin-bottom: 15px; font-size:14px;">Configure embed colors, music, and update interval.</p>
+                    
+                    <div style="background: #0f0f0f; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                        <h4 style="margin-bottom: 15px;">🎨 Embed Colors</h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px;">
+                            <div><label>Approve Color:</label><input type="color" id="colorApprove" value="#48bb78"></div>
+                            <div><label>Reject Color:</label><input type="color" id="colorReject" value="#f56565"></div>
+                            <div><label>Pending Color:</label><input type="color" id="colorPending" value="#cd7f32"></div>
+                            <div><label>Info Color:</label><input type="color" id="colorInfo" value="#5865F2"></div>
+                            <div><label>Leaderboard Color:</label><input type="color" id="colorLeaderboard" value="#ffd700"></div>
+                        </div>
+                    </div>
+
+                    <div style="background: #0f0f0f; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                        <h4 style="margin-bottom: 15px;">🎵 Music Settings</h4>
+                        <div><label>Login Music URL:</label><input type="text" id="loginMusicUrl" value="https://www.youtube.com/embed/BtEkzZoUCpw?autoplay=1&loop=1" style="width: 100%;"></div>
+                    </div>
+
+                    <div style="background: #0f0f0f; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                        <h4 style="margin-bottom: 15px;">🔄 Update Settings</h4>
+                        <div><label>Update Interval (seconds):</label><input type="number" id="updateInterval" value="60" style="width: 100%;"></div>
+                    </div>
+
+                    <div style="background: #0f0f0f; border-radius: 12px; padding: 20px;">
+                        <h4 style="margin-bottom: 15px;">🖼️ Image Settings</h4>
+                        <div><label>Max Images per Request:</label><input type="number" id="maxImagesPerRequest" value="3" style="width: 100%;"></div>
+                        <p style="color: #888; font-size: 12px; margin-top: 8px;">Maximum number of screenshots allowed per GP request.</p>
+                    </div>
+
+                    <button id="saveSystemConfigBtn" class="btn-primary" style="background: #ffd700; color: black; margin-top: 20px;">Save System Configuration</button>
                 </div>
-                
-                <button id="saveSystemBtn" class="btn btn-primary btn-full">System speichern</button>
-            </div>
-            
-            <!-- Kick Logs -->
-            <div class="card">
-                <h3><i class="fas fa-history"></i> Kick Verlauf</h3>
-                <div class="table-wrapper">
-                    <table class="table">
-                        <thead><tr><th>Datum</th><th>User</th><th>Grund</th></tr></thead>
-                        <tbody id="kickLogsBody">
-                            <tr><td colspan="3" class="text-center">Keine Logs</td></tr>
-                        </tbody>
-                    </table>
+
+                <!-- Registered Users Count & Management -->
+                <div class="system-card" style="border-color: #ffd700; margin-bottom: 20px;">
+                    <h3 style="color: #ffd700;"><i class="fas fa-users"></i> Registered Users</h3>
+                    <p style="color:#888; margin-bottom: 15px; font-size:14px;">Total users registered in the system.</p>
+                    <div style="background: #0f0f0f; border-radius: 12px; padding: 20px; text-align: center;">
+                        <div style="font-size: 48px; color: #ffd700; font-weight: bold;" id="statTotalUsers">0</div>
+                        <div style="color: #888;">Registered Users</div>
+                        <button id="refreshUsersBtn" class="btn-primary" style="background: #5865F2; margin-top: 15px; width: auto;">🔄 Refresh</button>
+                    </div>
+                </div>
+
+                <!-- Saved Custom Messages Section -->
+                <div class="system-card" style="border-color: #ffd700; margin-bottom: 20px;">
+                    <h3 style="color: #ffd700;"><i class="fas fa-save"></i> Saved Custom Messages</h3>
+                    <p style="color:#888; margin-bottom: 15px; font-size:14px;">Create, edit, and send saved messages. Messages are updated (not duplicated) when sent again.</p>
+                    
+                    <div style="background: #0f0f0f; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                        <h4 style="margin-bottom: 15px;">✏️ Create / Edit Message</h4>
+                        <input type="text" id="messageName" placeholder="Message Name (e.g., Welcome Message, Announcement)" style="margin-bottom: 10px;">
+                        <input type="text" id="messageChannelId" placeholder="Target Channel ID" style="margin-bottom: 10px;">
+                        
+                        <div style="background: #111; border-radius: 8px; padding: 15px; margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 8px; color: #aaa;">Message Content</label>
+                            <textarea id="messageContent" rows="4" style="width: 100%; background: #0a0a0a; border: 1px solid #222; border-radius: 8px; padding: 12px; color: white;" placeholder="Your message here... Supports @mentions and #channels"></textarea>
+                        </div>
+                        
+                        <div style="background: #111; border-radius: 8px; padding: 15px; margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 8px; color: #aaa;">Embed Title (optional)</label>
+                            <input type="text" id="messageEmbedTitle" style="margin-bottom: 10px;">
+                            <label style="display: block; margin-bottom: 8px; color: #aaa;">Embed Description</label>
+                            <textarea id="messageEmbedDesc" rows="3" style="width: 100%; background: #0a0a0a; border: 1px solid #222; border-radius: 8px; padding: 12px; color: white;"></textarea>
+                            <label style="display: block; margin-bottom: 8px; color: #aaa;">Embed Color (Hex)</label>
+                            <input type="color" id="messageEmbedColor" value="#5865F2" style="width: 60px; height: 40px; background: #0a0a0a; border: 1px solid #222; border-radius: 8px;">
+                        </div>
+                        
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button id="saveMessageBtn" class="btn-primary" style="background: #48bb78; color: white; width: auto;">💾 Save Message</button>
+                            <button id="sendMessageBtn" class="btn-primary" style="background: #5865F2; width: auto;">📤 Send / Update</button>
+                            <button id="clearMessageFormBtn" class="btn-primary" style="background: #555; width: auto;">🗑️ Clear Form</button>
+                        </div>
+                    </div>
+
+                    <div style="background: #0f0f0f; border-radius: 12px; padding: 20px;">
+                        <h4 style="margin-bottom: 15px;">📋 Saved Messages</h4>
+                        <div id="savedMessagesList" style="max-height: 400px; overflow-y: auto;">
+                            <p style="color: #666; text-align: center;">Loading saved messages...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Kick Logs Viewer -->
+                <div class="system-card" style="border-color: #ffd700; margin-bottom: 20px;">
+                    <h3 style="color: #ffd700;"><i class="fas fa-history"></i> Kick History</h3>
+                    <p style="color:#888; margin-bottom: 15px; font-size:14px;">All user kicks are logged here.</p>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead><tr><th>Date</th><th>Kicked User</th><th>Kicked By</th><th>Reason</th><th>DM Sent</th></tr></thead>
+                            <tbody id="kickLogsBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Maintenance Mode Toggle -->
+                <div class="system-card" style="border-color: #ffd700;">
+                    <h3 style="color: #ffd700;"><i class="fas fa-wrench"></i> Maintenance Mode</h3>
+                    <p style="color:#888; margin-bottom: 15px; font-size:14px;">Toggle maintenance mode when updating the system.</p>
+                    <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                        <button id="enableMaintenanceBtn" class="btn-primary" style="background: #f56565; color: white; width: auto;">Enable Maintenance</button>
+                        <button id="disableMaintenanceBtn" class="btn-primary" style="background: #48bb78; color: white; width: auto;">Disable Maintenance</button>
+                        <span id="maintenanceStatus" style="color: #888;">Status: <span id="maintenanceStatusText">Disabled</span></span>
+                    </div>
+                </div>
+
+                <!-- Test Mode Toggle -->
+                <div class="system-card" style="border-color: #ffd700;">
+                    <h3 style="color: #ffd700;"><i class="fas fa-flask"></i> Test Mode</h3>
+                    <p style="color:#888; margin-bottom: 15px; font-size:14px;">Test mode simulates GP changes without affecting real data.</p>
+                    <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                        <button id="enableTestModeBtn" class="btn-primary" style="background: #f56565; color: white; width: auto;">Enable Test Mode</button>
+                        <button id="disableTestModeBtn" class="btn-primary" style="background: #48bb78; color: white; width: auto;">Disable Test Mode</button>
+                        <span id="testModeStatus" style="color: #888;">Status: <span id="testModeStatusText">Disabled</span></span>
+                    </div>
+                    <p style="color: #ffd700; font-size: 12px; margin-top: 15px;">When Test Mode is enabled, all GP approvals/rejections will be simulated without changing actual GP balances.</p>
                 </div>
             </div>
-            
-            <!-- Maintenance Mode -->
-            <div class="card">
-                <h3><i class="fas fa-wrench"></i> Wartungsmodus</h3>
-                <div class="toggle-row">
-                    <button id="enableMaintenanceBtn" class="btn btn-danger">Aktivieren</button>
-                    <button id="disableMaintenanceBtn" class="btn btn-secondary">Deaktivieren</button>
-                    <span id="maintenanceStatus">Status: <strong>Aus</strong></span>
-                </div>
-            </div>
-            
-            <!-- Test Mode -->
-            <div class="card">
-                <h3><i class="fas fa-flask"></i> Testmodus</h3>
-                <p class="card-desc">Im Testmodus werden keine echten GP-Änderungen vorgenommen.</p>
-                <div class="toggle-row">
-                    <button id="enableTestModeBtn" class="btn btn-warning">Aktivieren</button>
-                    <button id="disableTestModeBtn" class="btn btn-secondary">Deaktivieren</button>
-                    <span id="testModeStatus">Status: <strong>Aus</strong></span>
-                </div>
-            </div>
-            
         </div>
     </div>
 
-    <!-- ========== NOTIFICATION TOAST ========== -->
-    <div id="toast" class="toast hidden"></div>
+    <div id="notification" class="notification"></div>
 
     <script type="module" src="app.js"></script>
 </body>
