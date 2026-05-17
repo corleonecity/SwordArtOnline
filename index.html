@@ -214,10 +214,45 @@
                     </div>
                 </div>
 
+                <!-- SYSTEM ROLES CONFIGURATION (NEU) -->
+                <div class="system-card" style="border-color: #ffd700; margin-bottom: 20px;">
+                    <h3 style="color: #ffd700;"><i class="fas fa-tags"></i> System Roles Configuration</h3>
+                    <p style="color:#888; margin-bottom: 15px; font-size:14px;">Configure the role IDs used by the panel and bot.</p>
+                    
+                    <div style="background: #0f0f0f; border-radius: 12px; padding: 20px;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                            <div>
+                                <label style="color: #aaa;">✅ Registered User Role ID</label>
+                                <input type="text" id="sysRoleReg" placeholder="e.g., 1503217692843180083" style="width: 100%;">
+                                <small style="color: #48bb78;">Users get this role after linking Roblox</small>
+                            </div>
+                            <div>
+                                <label style="color: #aaa;">❌ Unregistered User Role ID</label>
+                                <input type="text" id="sysRoleUnreg" placeholder="e.g., 1503218754643820624" style="width: 100%;">
+                                <small style="color: #f56565;">Users get this role if not registered</small>
+                            </div>
+                            <div>
+                                <label style="color: #aaa;">🎮 GP Submit Role ID</label>
+                                <input type="text" id="sysRoleGpSubmit" placeholder="e.g., 1503193408280330400" style="width: 100%;">
+                                <small>Required to submit GP donations</small>
+                            </div>
+                            <div>
+                                <label style="color: #aaa;">⏳ Pending Role ID</label>
+                                <input type="text" id="sysRolePending" placeholder="e.g., 1503265048162996385" style="width: 100%;">
+                                <small>Shown in "Pending" section of Guild User Info</small>
+                            </div>
+                        </div>
+                        <button id="saveSystemRolesBtn" class="btn-primary" style="background: #ffd700; color: black; margin-top: 20px; width: auto;">
+                            <i class="fas fa-save"></i> Save System Roles
+                        </button>
+                        <div id="systemRolesResult" style="margin-top: 10px; font-size: 13px; color: #888;"></div>
+                    </div>
+                </div>
+
                 <!-- Role & Channel Management Section -->
                 <div class="system-card" style="border-color: #ffd700; margin-bottom: 20px;">
                     <h3 style="color: #ffd700;"><i class="fas fa-user-shield"></i> Role & Channel Management</h3>
-                    <p style="color:#888; margin-bottom: 15px; font-size:14px;">Manage admin roles, GP submit role, and server channels.</p>
+                    <p style="color:#888; margin-bottom: 15px; font-size:14px;">Manage admin roles, and server channels.</p>
                     
                     <div style="background: #0f0f0f; border-radius: 12px; padding: 20px; margin-bottom: 25px;">
                         <h4 style="margin-bottom: 15px;">➕ Add Admin Role</h4>
@@ -236,13 +271,6 @@
                         <div id="adminRolesList" class="table-responsive">
                             <p style="color: #666;">Loading roles...</p>
                         </div>
-                    </div>
-
-                    <div style="background: #0f0f0f; border-radius: 12px; padding: 20px; margin-bottom: 25px;">
-                        <h4 style="margin-bottom: 15px;">🎮 GP Submit Role (User permission)</h4>
-                        <div><label>GP Submit Role ID:</label><input type="text" id="gpSubmitRoleId" value="1503193408280330400" style="width: 100%;" placeholder="Role ID required to submit GP"></div>
-                        <p style="color: #888; font-size: 12px; margin-top: 8px;">Users need this Discord role to submit GP donation requests.</p>
-                        <button id="saveGpSubmitRoleBtn" class="btn-primary" style="background: #ffd700; color: black; margin-top: 10px; width: auto;">Save GP Submit Role</button>
                     </div>
 
                     <div style="background: #0f0f0f; border-radius: 12px; padding: 20px;">
