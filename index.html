@@ -159,58 +159,6 @@
             </div>
 
             <div id="content-owner" class="hidden">
-                <!-- MANUAL USER REGISTRATION SECTION -->
-                <div class="system-card" style="border-color: #ffd700; margin-bottom: 20px;">
-                    <h3 style="color: #ffd700;"><i class="fas fa-user-plus"></i> Manual User Registration</h3>
-                    <p style="color:#888; margin-bottom: 15px; font-size:14px;">Manually add or update users in the database. Use this for users who cannot link Roblox themselves (age restriction, etc.).</p>
-                    
-                    <div style="background: #0f0f0f; border-radius: 12px; padding: 20px;">
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
-                            <div>
-                                <label style="color: #aaa;">Discord User ID *</label>
-                                <input type="text" id="manualDiscordId" placeholder="e.g., 917426398120005653" style="width: 100%;">
-                            </div>
-                            <div>
-                                <label style="color: #aaa;">Discord Display Name</label>
-                                <input type="text" id="manualDiscordName" placeholder="e.g., Keule">
-                            </div>
-                            <div>
-                                <label style="color: #aaa;">Discord Username *</label>
-                                <input type="text" id="manualDiscordUsername" placeholder="e.g., keulecolin2005">
-                            </div>
-                            <div>
-                                <label style="color: #aaa;">Roblox User ID *</label>
-                                <input type="text" id="manualRobloxId" placeholder="e.g., 123456789">
-                            </div>
-                            <div>
-                                <label style="color: #aaa;">Roblox Display Name</label>
-                                <input type="text" id="manualRobloxName" placeholder="e.g., KeulePro">
-                            </div>
-                            <div>
-                                <label style="color: #aaa;">Roblox Username *</label>
-                                <input type="text" id="manualRobloxUsername" placeholder="e.g., keulepro">
-                            </div>
-                            <div>
-                                <label style="color: #aaa;">Initial GP (optional)</label>
-                                <input type="number" id="manualInitialGp" placeholder="0" value="0" min="0">
-                            </div>
-                        </div>
-                        
-                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                            <button id="manualRegisterBtn" class="btn-primary" style="background: #ffd700; color: black; width: auto;">
-                                <i class="fas fa-save"></i> Save User to Database
-                            </button>
-                            <button id="manualCheckUserBtn" class="btn-primary" style="background: #5865F2; width: auto;">
-                                <i class="fas fa-search"></i> Check Existing User
-                            </button>
-                            <button id="manualClearFormBtn" class="btn-primary" style="background: #555; width: auto;">
-                                <i class="fas fa-trash"></i> Clear Form
-                            </button>
-                        </div>
-                        <div id="manualRegisterResult" style="margin-top: 15px; font-size: 13px; color: #888;"></div>
-                    </div>
-                </div>
-
                 <!-- Role & Channel Management Section -->
                 <div class="system-card" style="border-color: #ffd700; margin-bottom: 20px;">
                     <h3 style="color: #ffd700;"><i class="fas fa-user-shield"></i> Role & Channel Management</h3>
@@ -287,7 +235,7 @@
                     <button id="saveSystemConfigBtn" class="btn-primary" style="background: #ffd700; color: black; margin-top: 20px;">Save System Configuration</button>
                 </div>
 
-                <!-- Registered Users Count & Management -->
+                <!-- Registered Users Count -->
                 <div class="system-card" style="border-color: #ffd700; margin-bottom: 20px;">
                     <h3 style="color: #ffd700;"><i class="fas fa-users"></i> Registered Users</h3>
                     <p style="color:#888; margin-bottom: 15px; font-size:14px;">Total users registered in the system.</p>
