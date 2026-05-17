@@ -803,30 +803,6 @@ async function sendLoginWebhook(userData) {
     }
 }
 
-// Neue Funktion: Rollen nach Login synchronisieren (entfernt Unreg, fügt Reg hinzu)
-async function syncRolesAfterLogin(userId) {
-    try {
-        const response = await fetch(`${BACKEND_URL}/sync-user-roles`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                userId: userId,
-                executorId: userId  // der User selbst oder Owner? Der User selbst hat keine Owner-Rechte, aber der Endpunkt prüft auf Owner. 
-                // Deshalb rufen wir hier mit executorId = Owner? Besser: Wir rufen einen separaten internen Endpunkt ohne Berechtigungsprüfung auf.
-                // Wir ändern daher den Endpunkt /sync-user-roles so, dass er im Fall executorId === userId (beim Login) trotzdem erlaubt.
-            })
-        });
-        // Achtung: Der Endpunkt prüft auf Owner. Wir werden ihn im Worker anpassen.
-        if (!response.ok) {
-            console.warn("Role sync after login failed:", await response.text());
-        } else {
-            console.log("Roles synced successfully after login");
-        }
-    } catch (e) {
-        console.warn("Role sync after login error:", e);
-    }
-}
-
 async function handleDiscordLogin(code) {
     try {
         showLoading(true, 'discordLoginBtn');
@@ -869,7 +845,11 @@ async function handleDiscordLogin(code) {
                 await fetchUserRoles(currentUser.id);
                 
                 // Rollen synchronisieren (nach erfolgreichem Login)
-                await syncRolesAfterLogin(currentUser.id);
+                await fetch(`${BACKEND_URL}/sync-user-roles`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: currentUser.id, executorId: currentUser.id })
+                });
                 
                 showDashboard();
                 startLiveMemberCheck();
@@ -952,7 +932,11 @@ async function handleRobloxLogin(code) {
             });
             
             // Rollen synchronisieren nach erfolgreichem Roblox-Link
-            await syncRolesAfterLogin(currentUser.id);
+            await fetch(`${BACKEND_URL}/sync-user-roles`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: currentUser.id, executorId: currentUser.id })
+            });
             
             await fetch(`${BACKEND_URL}/check-member`, {
                 method: 'POST',
