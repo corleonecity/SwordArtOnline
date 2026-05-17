@@ -23,7 +23,7 @@ let systemConfig = {
     limits: {
         maxImagesPerRequest: 3  // Erhöht auf 3 Bilder
     },
-    musicUrl: 'https://www.youtube.com/embed/BtEkzZoUCpw?autoplay=1&loop=1',
+    musicUrl: 'https://www.youtube.com/watch?v=3Ion7Vwt0Y8&list=RD3Ion7Vwt0Y8&start_radio=1',
     updateInterval: 60
 };
 
