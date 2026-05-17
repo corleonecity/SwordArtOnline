@@ -960,8 +960,8 @@ async function submitGPRequest() {
         return;
     }
     
-    if (amount < 100) {
-        showNotify("Minimum donation is 100 GP!", "warning");
+    if (amount < 1) {
+        showNotify("Minimum donation is 1 GP!", "warning");
         return;
     }
     
