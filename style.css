@@ -280,6 +280,7 @@ h1, h2, h3 {
     overflow-x: auto;
     margin-bottom: 30px;
     padding-bottom: 5px;
+    -webkit-overflow-scrolling: touch;
 }
 
 .nav-tabs {
@@ -496,6 +497,7 @@ input[type="file"] {
     overflow-x: auto;
     width: 100%;
     border-radius: 10px;
+    -webkit-overflow-scrolling: touch;
 }
 
 .table {
@@ -850,5 +852,46 @@ input[type="file"] {
     
     .user-name-cell .username-handle {
         font-size: 9px;
+    }
+
+    /* Extra mobile improvements */
+    .container {
+        padding: 0 12px;
+    }
+
+    .system-card {
+        padding: 18px;
+    }
+
+    .file-upload-wrapper {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .custom-file-btn {
+        justify-content: center;
+    }
+
+    #imagePreviewContainer {
+        max-height: 150px;
+    }
+
+    .preview-box img {
+        width: 70px;
+        height: 70px;
+    }
+
+    .login-container {
+        padding: 30px 20px;
+        width: 95%;
+    }
+
+    .login-container h1 {
+        font-size: 24px;
+    }
+
+    .btn-primary, .btn-discord, .btn-roblox {
+        padding: 12px 20px;
+        font-size: 14px;
     }
 }
