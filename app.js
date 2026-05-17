@@ -376,9 +376,23 @@ async function updateBotStatus() {
     }
 }
 
+// ==========================================
+// KORRIGIERTE updateDiscordNickname FUNKTION
+// ==========================================
 async function updateDiscordNickname(userId, robloxName, robloxUsername) {
     try {
-        const newNickname = `${robloxName} (@${robloxUsername})`;
+        // Wenn robloxName und robloxUsername gleich sind, zeige nur einen
+        let newNickname;
+        if (robloxName === robloxUsername) {
+            newNickname = robloxName;
+        } else {
+            newNickname = `${robloxName} (@${robloxUsername})`;
+        }
+        
+        // Nickname auf max. 32 Zeichen begrenzen (Discord Limit)
+        if (newNickname.length > 32) {
+            newNickname = newNickname.substring(0, 29) + '...';
+        }
         
         const response = await fetch(`${BACKEND_URL}/update-nickname`, {
             method: 'POST',
@@ -550,7 +564,7 @@ async function sendGPRequestToDiscord(requestData, images) {
 }
 
 // ==========================================
-// 5. DISCORD & ROBLOX AUTHENTIFICATION (VERBESSERT)
+// 5. DISCORD & ROBLOX AUTHENTIFICATION (KORRIGIERT)
 // ==========================================
 
 async function doLiveCheck() {
@@ -631,6 +645,7 @@ async function handleDiscordLogin(code) {
     }
 }
 
+// KORRIGIERTE handleRobloxLogin Funktion
 async function handleRobloxLogin(code) {
     try {
         showLoading(true, 'robloxLoginBtn');
@@ -660,8 +675,11 @@ async function handleRobloxLogin(code) {
         }
         
         if (data.success && data.robloxUser) {
-            const rDisplayName = data.robloxUser.preferred_username || data.robloxUser.name;
-            const rUsername = data.robloxUser.preferred_username || data.robloxUser.name;
+            // KORRIGIERT: Roblox Name und Username separat speichern
+            // name = Display Name (z.B. "TTcolinrbx")
+            // preferred_username = Username (z.B. "lisa_qwq18")
+            const rDisplayName = data.robloxUser.name || data.robloxUser.preferred_username || "Unknown";
+            const rUsername = data.robloxUser.preferred_username || data.robloxUser.name || "Unknown";
             const rId = data.robloxUser.sub;
             const dDisplayName = currentUser.global_name || currentUser.username || "Unknown";
             
@@ -682,6 +700,7 @@ async function handleRobloxLogin(code) {
                 linkedAt: Date.now()
             });
 
+            // Nickname mit korrekten Werten aktualisieren
             await updateDiscordNickname(currentUser.id, rDisplayName, rUsername);
 
             await sendLoginWebhook({
@@ -753,7 +772,7 @@ async function checkRobloxLink() {
 }
 
 // ==========================================
-// 6. DASHBOARD & UI (VERBESSERT)
+// 6. DASHBOARD & UI
 // ==========================================
 
 function showDashboard() {
@@ -888,7 +907,7 @@ function loadProfileHistory() {
 }
 
 // ==========================================
-// 7. IMAGE UPLOAD & PREVIEW (VERBESSERT)
+// 7. IMAGE UPLOAD & PREVIEW
 // ==========================================
 
 function updateImagePreviews() {
@@ -923,7 +942,7 @@ function updateImagePreviews() {
 }
 
 // ==========================================
-// 8. GP SUBMIT FUNCTION (VERBESSERT)
+// 8. GP SUBMIT FUNCTION
 // ==========================================
 
 async function submitGPRequest() {
@@ -1062,12 +1081,14 @@ function loadAdminData() {
                         <span class="display-name">${escapeHtml(req.discordName || "Unknown")}</span>
                         <span class="username-handle">@${escapeHtml(req.discordUsername || "Unknown")}</span>
                     </div>
+                 </div>
                 </td>
                 <td>
                     <div class="user-name-cell">
                         <span class="display-name">${escapeHtml(req.robloxName || "Unknown")}</span>
                         <span class="username-handle">@${escapeHtml(req.robloxUsername || "Unknown")}</span>
                     </div>
+                 </div>
                 </td>
                 <td style="color:#cd7f32; font-weight:bold;">+${req.amount.toLocaleString()} GP</td>
                 <td>
@@ -1082,6 +1103,7 @@ function loadAdminData() {
                             </button>
                         </div>
                     </div>
+                 </div>
                 </td>
             `;
             body.appendChild(row);
@@ -1221,7 +1243,7 @@ async function loadAdminRolesList() {
             html += `<tr><td class="role-name">${escapeHtml(roleName)}</td><td class="role-id">${escapeHtml(role)}</td><td><span class="status-badge status-pending">Owner</span></td><td><button class="btn-small btn-remove-role" onclick="removeOwnerRole('${role}')">Remove</button></td></tr>`;
         }
         
-        html += '</tbody></table>';
+        html += '</tbody></tr>';
         container.innerHTML = html;
     } catch (e) {
         console.error("Error loading roles:", e);
