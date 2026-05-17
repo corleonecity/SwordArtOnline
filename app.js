@@ -1170,6 +1170,24 @@ window.handleAdminAction = async (reqId, userId, amount, action, passedDbKey, ro
             }
         }
 
+        // 🔁 Discord-Nachricht aktualisieren (Bilder bleiben erhalten)
+        try {
+            const panelActionRes = await fetch(`${BACKEND_URL}/panel-action`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    requestId: reqId,
+                    action: action,
+                    adminId: currentUser.id,
+                    adminName: currentUser.global_name || currentUser.username,
+                    adminComment: adminComment
+                })
+            });
+            if (!panelActionRes.ok) console.warn("Discord message update failed");
+        } catch (e) {
+            console.error("Error updating Discord message:", e);
+        }
+
         const allUsersSnap = await get(ref(db, 'users'));
         let rank = "?";
         if (allUsersSnap.exists()) {
@@ -1190,7 +1208,7 @@ window.handleAdminAction = async (reqId, userId, amount, action, passedDbKey, ro
             const embed = {
                 title: actionText,
                 url: "https://corleonecity.github.io/SwordArtOnline/",
-                color: action === 'approve' ? parseInt(systemConfig.embedColors.approve.replace('#', ''), 16) : parseInt(systemConfig.embedColors.reject.replace('#', ''), 16),
+                color: action === 'approve' ? 0x48bb78 : 0xf56565,
                 fields: [
                     { name: "💬 Discord", value: `**Name:** ${discordName}\n**Tag:** @${discordUsername}\n**Ping:** <@${userId}>`, inline: true },
                     { name: "🎮 Roblox", value: `**Name:** ${robloxName}\n**User:** @${robloxUsername}\n**Profile:** [Click Here](https://www.roblox.com/users/${robloxId}/profile)`, inline: true },
@@ -1217,6 +1235,8 @@ window.handleAdminAction = async (reqId, userId, amount, action, passedDbKey, ro
         alert("Error: " + e.message);
     } finally {
         if (btn) btn.disabled = false;
+        // Refresh admin table
+        loadAdminData();
     }
 };
 
