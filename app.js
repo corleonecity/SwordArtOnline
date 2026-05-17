@@ -8,8 +8,16 @@ const OWNER_USER_ID = '917426398120005653';
 let ADMIN_ROLES = ['1503609455466643547'];
 let OWNER_ROLES = ['1504646932243546152'];
 
-// GP Submit Role - now configurable via panel
-let GP_SUBMIT_ROLE = '1503193408280330400';
+// System Roles (können im Owner Panel konfiguriert werden)
+let SYSTEM_ROLES = {
+    regRole: '1503217692843180083',
+    unregRole: '1503218754643820624',
+    gpSubmitRole: '1503193408280330400',
+    pendingRole: '1503265048162996385'
+};
+
+// GP Submit Role (wird aus SYSTEM_ROLES.gpSubmitRole gesetzt)
+let GP_SUBMIT_ROLE = SYSTEM_ROLES.gpSubmitRole;
 
 // System configuration
 let systemConfig = {
@@ -109,6 +117,77 @@ async function loadSystemConfig() {
         }
     } catch (e) {
         console.error("Error loading system config:", e);
+    }
+}
+
+async function loadSystemRoles() {
+    try {
+        const rolesRef = ref(db, 'config/system_roles');
+        const snap = await get(rolesRef);
+        if (snap.exists()) {
+            const data = snap.val();
+            if (data.regRole) SYSTEM_ROLES.regRole = data.regRole;
+            if (data.unregRole) SYSTEM_ROLES.unregRole = data.unregRole;
+            if (data.gpSubmitRole) SYSTEM_ROLES.gpSubmitRole = data.gpSubmitRole;
+            if (data.pendingRole) SYSTEM_ROLES.pendingRole = data.pendingRole;
+        }
+        // Update UI fields
+        const regInput = document.getElementById('sysRoleReg');
+        const unregInput = document.getElementById('sysRoleUnreg');
+        const gpInput = document.getElementById('sysRoleGpSubmit');
+        const pendingInput = document.getElementById('sysRolePending');
+        if (regInput) regInput.value = SYSTEM_ROLES.regRole;
+        if (unregInput) unregInput.value = SYSTEM_ROLES.unregRole;
+        if (gpInput) gpInput.value = SYSTEM_ROLES.gpSubmitRole;
+        if (pendingInput) pendingInput.value = SYSTEM_ROLES.pendingRole;
+        
+        // Auch die globale Variable GP_SUBMIT_ROLE aktualisieren
+        GP_SUBMIT_ROLE = SYSTEM_ROLES.gpSubmitRole;
+    } catch (e) {
+        console.error("Error loading system roles:", e);
+    }
+}
+
+async function saveSystemRoles() {
+    const regRole = document.getElementById('sysRoleReg')?.value.trim();
+    const unregRole = document.getElementById('sysRoleUnreg')?.value.trim();
+    const gpSubmitRole = document.getElementById('sysRoleGpSubmit')?.value.trim();
+    const pendingRole = document.getElementById('sysRolePending')?.value.trim();
+    
+    if (!regRole || !unregRole || !gpSubmitRole || !pendingRole) {
+        showNotify("All role IDs are required!", "error");
+        return;
+    }
+    
+    try {
+        await set(ref(db, 'config/system_roles'), {
+            regRole: regRole,
+            unregRole: unregRole,
+            gpSubmitRole: gpSubmitRole,
+            pendingRole: pendingRole
+        });
+        
+        SYSTEM_ROLES.regRole = regRole;
+        SYSTEM_ROLES.unregRole = unregRole;
+        SYSTEM_ROLES.gpSubmitRole = gpSubmitRole;
+        SYSTEM_ROLES.pendingRole = pendingRole;
+        GP_SUBMIT_ROLE = gpSubmitRole; // Update global
+        
+        showNotify("System roles saved successfully!", "success");
+        const resultDiv = document.getElementById('systemRolesResult');
+        if (resultDiv) resultDiv.innerHTML = '<span style="color: #48bb78;">✅ Roles updated. The bot will use the new IDs.</span>';
+        
+        // Optional: Sync roles for current user
+        if (currentUser) {
+            await fetch(`${BACKEND_URL}/sync-user-roles`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: currentUser.id, executorId: currentUser.id })
+            });
+        }
+    } catch (e) {
+        console.error("Error saving system roles:", e);
+        showNotify("Error saving roles!", "error");
     }
 }
 
@@ -914,7 +993,7 @@ async function handleRobloxLogin(code) {
                 discordUsername: currentUser.username || "Unknown",
                 robloxName: rDisplayName || "Unknown",
                 robloxUsername: rUsername || "Unknown",
-                robloxId: rId || "1",
+                robloxId: String(rId) || "1",
                 totalGP: currentGP,
                 id: currentUser.id || "1",
                 hasLeftServer: false,
@@ -928,7 +1007,7 @@ async function handleRobloxLogin(code) {
                 userId: currentUser.id,
                 robloxName: rDisplayName,
                 robloxUsername: rUsername,
-                robloxId: rId
+                robloxId: String(rId)
             });
             
             // Rollen synchronisieren nach erfolgreichem Roblox-Link
@@ -966,6 +1045,7 @@ async function checkRobloxLink() {
         await loadMaintenanceStatus();
         await loadRoleConfig();
         await loadSystemConfig();
+        await loadSystemRoles(); // Lade die System-Rollen
         await loadTestMode();
         
         const dbKey = getSafeDbKey(currentUser.username);
@@ -1035,6 +1115,7 @@ function showDashboard() {
         loadSavedMessages();
         loadSystemConfigUI();
         loadRegisteredUsersCount();
+        loadSystemRoles(); // Lade die System-Rollen für das UI
     }
     
     updateBotStatus();
@@ -1290,7 +1371,7 @@ function loadAdminData() {
         
         body.innerHTML = '';
         if (!data) {
-            body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No pending requests</td></tr>';
+            body.innerHTML = '<td><td colspan="4" style="text-align:center; color:#666;">No pending requests</td></tr>';
             return;
         }
         
@@ -2109,6 +2190,7 @@ function initEventListeners() {
     const clearMessageFormBtn = document.getElementById('clearMessageFormBtn');
     const enableMaintenanceBtn = document.getElementById('enableMaintenanceBtn');
     const disableMaintenanceBtn = document.getElementById('disableMaintenanceBtn');
+    const saveSystemRolesBtn = document.getElementById('saveSystemRolesBtn');
     
     const manualRegisterBtn = document.getElementById('manualRegisterBtn');
     const manualCheckUserBtn = document.getElementById('manualCheckUserBtn');
@@ -2180,6 +2262,7 @@ function initEventListeners() {
             loadSavedMessages();
             loadSystemConfigUI();
             loadRegisteredUsersCount();
+            loadSystemRoles();
         } else {
             showNotify("You don't have permission to access Owner Panel!", "error");
         }
@@ -2208,6 +2291,7 @@ function initEventListeners() {
     if (clearMessageFormBtn) clearMessageFormBtn.addEventListener('click', clearMessageForm);
     if (enableMaintenanceBtn) enableMaintenanceBtn.addEventListener('click', () => setMaintenanceMode(true));
     if (disableMaintenanceBtn) disableMaintenanceBtn.addEventListener('click', () => setMaintenanceMode(false));
+    if (saveSystemRolesBtn) saveSystemRolesBtn.addEventListener('click', saveSystemRoles);
     
     if (manualRegisterBtn) manualRegisterBtn.addEventListener('click', manualRegisterUser);
     if (manualCheckUserBtn) manualCheckUserBtn.addEventListener('click', manualCheckUser);
