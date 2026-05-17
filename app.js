@@ -41,7 +41,7 @@ const REDIRECT_URI = 'https://corleonecity.github.io/SwordArtOnline/';
 
 // Firebase Imports
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
-import { getDatabase, ref, set, onValue, get, update, push, remove, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
+import { getDatabase, ref, set, onValue, get, update, push, remove } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
 
 // Firebase Configuration
 const firebaseConfig = {
@@ -162,7 +162,6 @@ function updateTestModeIndicator() {
 // 3. HELPER FUNCTIONS
 // ==========================================
 
-// Wichtig: Benutzer werden mit Discord-Username als Key gespeichert!
 function getSafeDbKey(discordUsername) {
     if (!discordUsername) return 'unknown_user';
     return discordUsername.toLowerCase().replace(/[.#$\[\]]/g, '_');
@@ -769,12 +768,10 @@ async function handleDiscordLogin(code) {
             sessionStorage.setItem('pn_session', JSON.stringify(currentUser));
             window.history.replaceState({}, '', REDIRECT_URI);
             
-            // AUTOMATISCH PRÜFEN OB USER BEREITS IN DB EXISTIERT
             const dbKey = getSafeDbKey(currentUser.username);
             const userSnap = await get(ref(db, `users/${dbKey}`));
             
             if (userSnap.exists() && userSnap.val().robloxId && userSnap.val().robloxId !== '1') {
-                // User existiert bereits in DB -> Roblox überspringen!
                 console.log("User exists in DB, skipping Roblox link");
                 const userData = userSnap.val();
                 
@@ -790,7 +787,6 @@ async function handleDiscordLogin(code) {
                 startLiveMemberCheck();
                 showNotify(`Welcome back ${currentUser.global_name || currentUser.username}!`, "success");
             } else {
-                // Neuer User -> Roblox Linking nötig
                 await checkRobloxLink();
             }
         } else {
@@ -835,10 +831,8 @@ async function handleRobloxLogin(code) {
         }
         
         if (data.success && data.robloxUser) {
-            // KORREKTUR: Verwende displayName für Anzeigename und preferred_username/name für Benutzername
             const rDisplayName = data.robloxUser.displayName || data.robloxUser.name;
             const rUsername = data.robloxUser.preferred_username || data.robloxUser.name;
-            
             const rId = data.robloxUser.sub;
             const dDisplayName = currentUser.global_name || currentUser.username || "Unknown";
             
@@ -860,7 +854,6 @@ async function handleRobloxLogin(code) {
             });
 
             await updateDiscordNickname(currentUser.id, rDisplayName, rUsername);
-
             await sendLoginWebhook({
                 discordName: dDisplayName,
                 discordUsername: currentUser.username,
@@ -869,13 +862,11 @@ async function handleRobloxLogin(code) {
                 robloxUsername: rUsername,
                 robloxId: rId
             });
-
             await fetch(`${BACKEND_URL}/check-member`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ userId: currentUser.id, updateRoles: true })
             });
-
             showNotify("Roblox account linked successfully!", "success");
             window.location.href = REDIRECT_URI;
         } else {
@@ -884,7 +875,6 @@ async function handleRobloxLogin(code) {
     } catch (e) {
         console.error("Roblox login error:", e);
         showNotify(`Linking Error: ${e.message}`, "error");
-        // Bei Fehler zurück zur Login-Seite? Oder zur Roblox-Seite? Besser zur Login-Seite.
         document.getElementById('robloxPage').classList.add('hidden');
         document.getElementById('loginPage').classList.remove('hidden');
     } finally {
@@ -905,7 +895,6 @@ async function checkRobloxLink() {
         const dbKey = getSafeDbKey(currentUser.username);
         const snap = await get(ref(db, `users/${dbKey}`));
         
-        // Login-Seite ausblenden (wichtig!)
         const loginPage = document.getElementById('loginPage');
         if (loginPage) loginPage.classList.add('hidden');
         
@@ -928,16 +917,11 @@ async function checkRobloxLink() {
         }
     } catch (err) {
         console.error("checkRobloxLink error:", err);
-        // Bei Fehler: Login-Seite wieder einblenden und Fehlermeldung
         const loginPage = document.getElementById('loginPage');
         if (loginPage) loginPage.classList.remove('hidden');
         showNotify("Failed to load user data. Please try again.", "error");
-        // Nicht zum Dashboard springen
-        if (currentUser) {
-            // Notfall: Trotzdem Dashboard versuchen? Nein, besser logout.
-            sessionStorage.removeItem('pn_session');
-            currentUser = null;
-        }
+        sessionStorage.removeItem('pn_session');
+        currentUser = null;
     }
 }
 
@@ -1230,7 +1214,7 @@ function loadAdminData() {
         
         body.innerHTML = '';
         if (!data) {
-            body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No pending requests</td></tr>';
+            body.innerHTML = '<td><td colspan="4" style="text-align:center; color:#666;">No pending requests</td></tr>';
             return;
         }
         
@@ -1276,6 +1260,33 @@ function loadAdminData() {
             body.appendChild(row);
         });
     });
+}
+
+// NEUE FUNKTION: Ruft den Worker auf, um die Discord-Nachricht zu aktualisieren (Panel-Aktion)
+async function updateDiscordRequestMessage(requestId, action, comment, adminId, adminName) {
+    try {
+        const response = await fetch(`${BACKEND_URL}/process-request`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                requestId,
+                action, // 'approve' oder 'reject'
+                comment,
+                adminId,
+                adminName
+            })
+        });
+        if (!response.ok) {
+            const error = await response.text();
+            console.error("Failed to update Discord message via worker:", error);
+            return false;
+        }
+        const data = await response.json();
+        return data.success === true;
+    } catch (e) {
+        console.error("Error calling process-request:", e);
+        return false;
+    }
 }
 
 window.handleAdminAction = async (reqId, userId, amount, action, passedDbKey, robloxId, discordName, discordUsername, robloxName, robloxUsername) => {
@@ -1376,6 +1387,9 @@ window.handleAdminAction = async (reqId, userId, amount, action, passedDbKey, ro
             
             await sendDiscordMessage(processedChannel, `<@${userId}>`, [embed]);
         }
+
+        // NEU: Discord-Nachricht im GP-Requests-Kanal aktualisieren (Buttons entfernen, Embed ändern)
+        await updateDiscordRequestMessage(reqId, action, adminComment, currentUser.id, currentUser.global_name || currentUser.username);
 
         showNotify(`Request ${action === 'approve' ? 'approved' : 'rejected'}!`, "success");
         
@@ -1833,7 +1847,6 @@ async function saveMessage() {
             showNotify(`Message "${name}" saved successfully!`, "success");
         }
         
-        // Clear form
         const messageName = document.getElementById('messageName');
         const messageChannelId = document.getElementById('messageChannelId');
         const messageContent = document.getElementById('messageContent');
@@ -2014,7 +2027,6 @@ function initEventListeners() {
     const enableMaintenanceBtn = document.getElementById('enableMaintenanceBtn');
     const disableMaintenanceBtn = document.getElementById('disableMaintenanceBtn');
     
-    // Manual registration buttons
     const manualRegisterBtn = document.getElementById('manualRegisterBtn');
     const manualCheckUserBtn = document.getElementById('manualCheckUserBtn');
     const manualClearFormBtn = document.getElementById('manualClearFormBtn');
@@ -2113,15 +2125,10 @@ function initEventListeners() {
     if (enableMaintenanceBtn) enableMaintenanceBtn.addEventListener('click', () => setMaintenanceMode(true));
     if (disableMaintenanceBtn) disableMaintenanceBtn.addEventListener('click', () => setMaintenanceMode(false));
     
-    // Manual registration event listeners
     if (manualRegisterBtn) manualRegisterBtn.addEventListener('click', manualRegisterUser);
     if (manualCheckUserBtn) manualCheckUserBtn.addEventListener('click', manualCheckUser);
     if (manualClearFormBtn) manualClearFormBtn.addEventListener('click', clearManualForm);
 }
-
-// ==========================================
-// 13. APP START (AUTH CHECK)
-// ==========================================
 
 function init() {
     initEventListeners();
@@ -2153,5 +2160,4 @@ function init() {
     }
 }
 
-// Start the app
 init();
